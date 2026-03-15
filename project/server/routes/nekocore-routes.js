@@ -9,6 +9,7 @@
 
 const { appendAuditRecord, readAuditRecords } = require('../brain/nekocore/audit');
 const { ROLE_DEFINITIONS }                    = require('../brain/nekocore/model-intelligence');
+const SkillManager                            = require('../brain/skill-manager');
 const { getMemoryRoot }                       = require('../entityPaths');
 const {
   getPersonaPresets,
@@ -33,12 +34,38 @@ function _shortId() {
 
 function createNekoCoreRoutes(ctx) {
   const { fs, path } = ctx;
+  const NEKO_ENTITY_ID = 'nekocore';
+
+  function getNekoEntityFile() {
+    return path.join(entityPaths.getEntityRoot(NEKO_ENTITY_ID), 'entity.json');
+  }
+
+  function readNekoEntity() {
+    ensureSystemEntity();
+    const entityFile = getNekoEntityFile();
+    if (!fs.existsSync(entityFile)) {
+      throw new Error('NekoCore entity profile not found');
+    }
+    return JSON.parse(fs.readFileSync(entityFile, 'utf8'));
+  }
+
+  function writeNekoEntity(entity) {
+    fs.writeFileSync(getNekoEntityFile(), JSON.stringify(entity, null, 2), 'utf8');
+  }
+
+  function getNekoSkillManager() {
+    const manager = new SkillManager({ entityId: NEKO_ENTITY_ID });
+    manager.loadAll();
+    return manager;
+  }
 
   // ── GET /api/nekocore/status ────────────────────────────────────────────────
   function getStatus(req, res, apiHeaders) {
     try {
       const memRoot = entityPaths.getMemoryRoot('nekocore');
       const isReady = fs.existsSync(memRoot);
+      const entity = readNekoEntity();
+      const skillManager = getNekoSkillManager();
 
       let activeModel = null;
       if (isReady) {
@@ -60,11 +87,118 @@ function createNekoCoreRoutes(ctx) {
         ok: true,
         isSystemEntityReady: isReady,
         activeModel,
-        pendingCount: _pendingRecommendations.size
+        pendingCount: _pendingRecommendations.size,
+        workspacePath: entity.workspacePath || '',
+        workspaceScope: entity.workspaceScope || 'workspace-root',
+        skillApprovalRequired: entity.skillApprovalRequired !== false,
+        enabledSkillCount: skillManager.enabledSkills.size,
+        totalSkillCount: skillManager.skills.size
       }));
     } catch (e) {
       res.writeHead(500, apiHeaders);
       res.end(JSON.stringify({ error: e.message }));
+    }
+  }
+
+  function getTooling(req, res, apiHeaders) {
+    try {
+      const entity = readNekoEntity();
+      const skillManager = getNekoSkillManager();
+      res.writeHead(200, apiHeaders);
+      res.end(JSON.stringify({
+        ok: true,
+        entityId: NEKO_ENTITY_ID,
+        workspacePath: entity.workspacePath || '',
+        workspaceScope: entity.workspaceScope || 'workspace-root',
+        skillApprovalRequired: entity.skillApprovalRequired !== false,
+        skills: skillManager.list()
+      }));
+    } catch (e) {
+      res.writeHead(500, apiHeaders);
+      res.end(JSON.stringify({ ok: false, error: e.message }));
+    }
+  }
+
+  async function postToolingApproval(req, res, apiHeaders, readBody) {
+    try {
+      const body = JSON.parse(await readBody(req));
+      const entity = readNekoEntity();
+      entity.skillApprovalRequired = body.required !== false;
+      writeNekoEntity(entity);
+
+      appendAuditRecord({
+        event: 'tooling_approval_mode',
+        requestor: req.accountId || 'unknown',
+        targetEntityId: NEKO_ENTITY_ID,
+        targetAspect: 'nekocore',
+        decision: 'applied',
+        notes: `required=${entity.skillApprovalRequired}`
+      });
+
+      res.writeHead(200, apiHeaders);
+      res.end(JSON.stringify({ ok: true, required: entity.skillApprovalRequired }));
+    } catch (e) {
+      res.writeHead(400, apiHeaders);
+      res.end(JSON.stringify({ ok: false, error: e.message }));
+    }
+  }
+
+  async function postToolingSkillToggle(req, res, apiHeaders, readBody) {
+    try {
+      const body = JSON.parse(await readBody(req));
+      const name = String(body.name || '').trim();
+      if (!name) throw new Error('Skill name required');
+      const manager = getNekoSkillManager();
+      const ok = manager.setEnabled(name, !!body.enabled);
+      if (!ok) {
+        res.writeHead(404, apiHeaders);
+        res.end(JSON.stringify({ ok: false, error: 'Skill not found' }));
+        return;
+      }
+
+      appendAuditRecord({
+        event: 'tooling_skill_toggle',
+        requestor: req.accountId || 'unknown',
+        targetEntityId: NEKO_ENTITY_ID,
+        targetAspect: 'nekocore',
+        decision: 'applied',
+        notes: `${name}=${body.enabled ? 'enabled' : 'disabled'}`
+      });
+
+      res.writeHead(200, apiHeaders);
+      res.end(JSON.stringify({ ok: true, name, enabled: !!body.enabled }));
+    } catch (e) {
+      res.writeHead(400, apiHeaders);
+      res.end(JSON.stringify({ ok: false, error: e.message }));
+    }
+  }
+
+  async function postToolingWorkspace(req, res, apiHeaders, readBody) {
+    try {
+      const body = JSON.parse(await readBody(req));
+      const workspacePath = String(body.workspacePath || '').trim();
+      if (!workspacePath) throw new Error('workspacePath is required');
+      if (!path.isAbsolute(workspacePath)) throw new Error('workspacePath must be absolute');
+
+      const entity = readNekoEntity();
+      entity.workspacePath = workspacePath;
+      entity.workspaceScope = 'workspace-root';
+      writeNekoEntity(entity);
+
+      appendAuditRecord({
+        event: 'tooling_workspace_update',
+        requestor: req.accountId || 'unknown',
+        targetEntityId: NEKO_ENTITY_ID,
+        targetAspect: 'nekocore',
+        decision: 'applied',
+        notes: `workspacePath=${workspacePath}`
+      });
+
+      res.writeHead(200, apiHeaders);
+      res.end(JSON.stringify({ ok: true, workspacePath, workspaceScope: 'workspace-root' }));
+    } catch (e) {
+      res.writeHead(400, apiHeaders);
+      res.end(JSON.stringify({ ok: false, error: e.message }));
     }
   }
 
@@ -370,6 +504,10 @@ function createNekoCoreRoutes(ctx) {
     const m = req.method;
 
     if (p === '/api/nekocore/status'          && m === 'GET')  { getStatus(req, res, apiHeaders); return true; }
+    if (p === '/api/nekocore/tooling'         && m === 'GET')  { getTooling(req, res, apiHeaders); return true; }
+    if (p === '/api/nekocore/tooling/approval' && m === 'POST') { await postToolingApproval(req, res, apiHeaders, readBody); return true; }
+    if (p === '/api/nekocore/tooling/skill-toggle' && m === 'POST') { await postToolingSkillToggle(req, res, apiHeaders, readBody); return true; }
+    if (p === '/api/nekocore/tooling/workspace' && m === 'POST') { await postToolingWorkspace(req, res, apiHeaders, readBody); return true; }
     if (p === '/api/nekocore/persona'         && m === 'GET')  { getPersona(req, res, apiHeaders); return true; }
     if (p === '/api/nekocore/persona'         && m === 'POST') { await postPersona(req, res, apiHeaders, readBody); return true; }
     if (p === '/api/nekocore/persona/reset'   && m === 'POST') { await postPersonaReset(req, res, apiHeaders); return true; }

@@ -84,11 +84,36 @@ const API = {
       headers: { 'Content-Type': 'application/json' },
       body: '{}'
     }).then((r) => r.json());
+  },
+  tooling() {
+    return fetch('/api/nekocore/tooling').then((r) => r.json());
+  },
+  saveToolingApproval(required) {
+    return fetch('/api/nekocore/tooling/approval', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ required: !!required })
+    }).then((r) => r.json());
+  },
+  toggleToolSkill(name, enabled) {
+    return fetch('/api/nekocore/tooling/skill-toggle', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, enabled: !!enabled })
+    }).then((r) => r.json());
+  },
+  saveWorkspacePath(workspacePath) {
+    return fetch('/api/nekocore/tooling/workspace', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ workspacePath })
+    }).then((r) => r.json());
   }
 };
 
 let _personaState = null;
 let _presetState = [];
+let _toolingState = null;
 
 function _setInfoPanelOpen(isOpen) {
   const panel = document.getElementById('nkInfoPanel');
@@ -119,6 +144,65 @@ function _setPersonaForm(persona) {
   if (tone) tone.value = src.tone || '';
   if (mood) mood.value = src.mood || '';
   if (personality) personality.value = src.llmPersonality || '';
+}
+
+function _renderTooling(tooling) {
+  _toolingState = tooling || null;
+  const approval = document.getElementById('nkSkillApprovalToggle');
+  const workspacePath = document.getElementById('nkWorkspacePath');
+  const workspaceStatus = document.getElementById('nkWorkspaceStatus');
+  const skillList = document.getElementById('nkToolSkillList');
+
+  if (approval) approval.checked = tooling?.skillApprovalRequired !== false;
+  if (workspacePath) workspacePath.value = tooling?.workspacePath || '';
+  if (workspaceStatus) {
+    const scope = tooling?.workspaceScope || 'workspace-root';
+    workspaceStatus.textContent = `Workspace scope: ${scope}`;
+  }
+  if (!skillList) return;
+
+  const skills = Array.isArray(tooling?.skills) ? tooling.skills : [];
+  if (!skills.length) {
+    skillList.innerHTML = '<div class="nk-empty">No skills available for NekoCore.</div>';
+    return;
+  }
+
+  skillList.innerHTML = skills.map((skill) => {
+    const enabled = !!skill.enabled;
+    const trigger = skill.trigger || skill.name;
+    return `
+      <div class="nk-tool-skill-card">
+        <div class="nk-tool-skill-top">
+          <div>
+            <div class="nk-tool-skill-name">${esc(skill.name)}</div>
+            <div class="nk-tool-skill-desc">${esc(skill.description || 'No description')}</div>
+          </div>
+          <span class="nk-tool-skill-state${enabled ? ' is-enabled' : ''}">${enabled ? 'Enabled' : 'Disabled'}</span>
+        </div>
+        <div class="nk-tool-skill-meta">Trigger: /skill ${esc(trigger)}</div>
+        <div class="nk-tool-skill-actions">
+          <span class="nk-tool-skill-meta">${skill.hasWorkspace ? 'Has workspace' : 'No skill workspace'}</span>
+          <button class="nk-refresh-btn" type="button" data-nk-skill="${esc(skill.name)}" data-enabled="${enabled ? 'true' : 'false'}">${enabled ? 'Disable' : 'Enable'}</button>
+        </div>
+      </div>`;
+  }).join('');
+
+  skillList.querySelectorAll('[data-nk-skill]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const name = btn.getAttribute('data-nk-skill') || '';
+      const currentlyEnabled = btn.getAttribute('data-enabled') === 'true';
+      btn.disabled = true;
+      try {
+        const result = await API.toggleToolSkill(name, !currentlyEnabled);
+        if (!result.ok) throw new Error(result.error || 'Skill toggle failed');
+        _toast(`Skill ${!currentlyEnabled ? 'enabled' : 'disabled'}: ${name}`, 'ok');
+        await App.refresh();
+      } catch (e) {
+        _toast('Skill toggle failed: ' + e.message, 'error');
+        btn.disabled = false;
+      }
+    });
+  });
 }
 
 function _collectPersonaForm() {
@@ -219,10 +303,11 @@ function renderPending(items) {
 const App = {
   async refresh() {
     try {
-      const [statusData, pendingData, personaData] = await Promise.all([
+      const [statusData, pendingData, personaData, toolingData] = await Promise.all([
         API.status(),
         API.pending(),
-        API.persona()
+        API.persona(),
+        API.tooling()
       ]);
       renderStatus(statusData);
       renderPending(pendingData.pending || []);
@@ -230,6 +315,9 @@ const App = {
         _personaState = personaData.persona || {};
         _setPersonaForm(_personaState);
         _renderPresets(personaData.presets || []);
+      }
+      if (toolingData && toolingData.ok) {
+        _renderTooling(toolingData);
       }
     } catch (e) {
       _toast('Error loading NekoCore status: ' + e.message, 'error');
@@ -295,6 +383,35 @@ const App = {
       await this.refresh();
     } catch (e) {
       _toast('Factory reset failed: ' + e.message, 'error');
+    }
+  },
+
+  async saveToolingApproval(required) {
+    try {
+      const result = await API.saveToolingApproval(required);
+      if (!result.ok) throw new Error(result.error || 'Approval mode update failed');
+      _toast(`Tool approval ${required ? 'enabled' : 'disabled'}.`, 'ok');
+      await this.refresh();
+    } catch (e) {
+      _toast('Approval mode update failed: ' + e.message, 'error');
+      await this.refresh();
+    }
+  },
+
+  async saveWorkspacePath() {
+    const input = document.getElementById('nkWorkspacePath');
+    const nextPath = (input?.value || '').trim();
+    if (!nextPath) {
+      _toast('Workspace path is required.', 'error');
+      return;
+    }
+    try {
+      const result = await API.saveWorkspacePath(nextPath);
+      if (!result.ok) throw new Error(result.error || 'Workspace save failed');
+      _toast('NekoCore workspace updated.', 'ok');
+      await this.refresh();
+    } catch (e) {
+      _toast('Workspace save failed: ' + e.message, 'error');
     }
   }
 };
@@ -383,6 +500,8 @@ const Chat = (() => {
     const saveBtn = document.getElementById('nkSavePersona');
     const resetBtn = document.getElementById('nkResetPersona');
     const factoryBtn = document.getElementById('nkFactoryResetNeko');
+    const approvalToggle = document.getElementById('nkSkillApprovalToggle');
+    const saveWorkspaceBtn = document.getElementById('nkSaveWorkspace');
     if (infoToggle) infoToggle.addEventListener('click', () => {
       const panel = document.getElementById('nkInfoPanel');
       const isOpen = panel ? panel.classList.contains('is-collapsed') : false;
@@ -391,6 +510,8 @@ const Chat = (() => {
     if (saveBtn) saveBtn.addEventListener('click', () => App.savePersona());
     if (resetBtn) resetBtn.addEventListener('click', () => App.resetPersona());
     if (factoryBtn) factoryBtn.addEventListener('click', () => App.factoryResetNeko());
+    if (approvalToggle) approvalToggle.addEventListener('change', (e) => App.saveToolingApproval(!!e.target.checked));
+    if (saveWorkspaceBtn) saveWorkspaceBtn.addEventListener('click', () => App.saveWorkspacePath());
 
     _setInfoPanelOpen(false);
 

@@ -6373,6 +6373,24 @@ body.popout-mode .app {
 .nk-persona { border-bottom:1px solid #d1d1d6; background:#fbfbfd; padding:10px 16px 12px; display:flex; flex-direction:column; gap:8px; flex-shrink:0; }
 .nk-persona-header { padding:0; border-bottom:none; background:transparent; }
 .nk-persona-note { font-size:.72rem; color:#8e8e93; }
+.nk-tooling { border-bottom:1px solid #d1d1d6; background:#ffffff; padding:10px 16px 12px; display:flex; flex-direction:column; gap:10px; flex-shrink:0; }
+.nk-tooling-header { padding:0; border-bottom:none; background:transparent; }
+.nk-tooling-toggle { display:flex; align-items:flex-start; gap:10px; padding:10px 12px; border:1px solid #d1d1d6; border-radius:10px; background:#f9fafb; color:#3c3c43; font-size:.78rem; }
+.nk-tooling-toggle input { margin-top:2px; }
+.nk-tooling-toggle strong { display:block; font-size:.78rem; color:#1c1c1e; }
+.nk-tooling-subtext { display:block; margin-top:2px; font-size:.7rem; color:#6c6c70; }
+.nk-workspace-row { display:flex; gap:8px; align-items:flex-end; }
+.nk-workspace-field { flex:1; }
+.nk-workspace-status { font-size:.72rem; color:#6c6c70; }
+.nk-tool-skill-list { display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:8px; }
+.nk-tool-skill-card { border:1px solid #d1d1d6; border-radius:10px; background:#fbfbfd; padding:10px 12px; display:flex; flex-direction:column; gap:8px; }
+.nk-tool-skill-top { display:flex; justify-content:space-between; gap:8px; align-items:flex-start; }
+.nk-tool-skill-name { font-size:.8rem; font-weight:600; color:#1c1c1e; }
+.nk-tool-skill-desc { font-size:.72rem; color:#6c6c70; line-height:1.45; }
+.nk-tool-skill-meta { font-size:.66rem; color:#8e8e93; }
+.nk-tool-skill-actions { display:flex; justify-content:space-between; align-items:center; gap:8px; }
+.nk-tool-skill-state { font-size:.66rem; padding:3px 7px; border-radius:999px; background:#e5e7eb; color:#4b5563; }
+.nk-tool-skill-state.is-enabled { background:rgba(52,199,89,.12); color:#1a7a36; }
 .nk-preset-row { display:flex; gap:8px; flex-wrap:wrap; }
 .nk-preset-btn {
   padding:5px 10px;
@@ -6453,6 +6471,7 @@ body.popout-mode .app {
   .nk-topbar-actions { width:100%; justify-content:space-between; }
   .nk-status-strip { grid-template-columns:1fr; }
   .nk-persona-grid { grid-template-columns:1fr; }
+  .nk-workspace-row { flex-direction:column; align-items:stretch; }
   .nk-chat-header-actions { flex-direction:column; align-items:flex-end; }
   .nk-chat-note { text-align:right; }
 }

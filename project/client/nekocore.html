@@ -79,6 +79,29 @@
       </div>
     </div>
 
+    <div class="nk-tooling">
+      <div class="nk-section-header nk-tooling-header">
+        <span class="nk-section-title">Tools and Workspace</span>
+        <span class="nk-persona-note">System entity tool access, skill toggles, and workspace root.</span>
+      </div>
+      <label class="nk-tooling-toggle">
+        <input id="nkSkillApprovalToggle" type="checkbox">
+        <span>
+          <strong>Require approval before tool execution</strong>
+          <span class="nk-tooling-subtext">When enabled, NekoCore asks before running workspace or web tools.</span>
+        </span>
+      </label>
+      <div class="nk-workspace-row">
+        <label class="nk-persona-field nk-workspace-field">
+          <span>Workspace root</span>
+          <input id="nkWorkspacePath" type="text" spellcheck="false" placeholder="C:\path\to\workspace">
+        </label>
+        <button class="nk-refresh-btn" id="nkSaveWorkspace">Save Workspace</button>
+      </div>
+      <div id="nkWorkspaceStatus" class="nk-workspace-status">Workspace scope: workspace-root</div>
+      <div id="nkToolSkillList" class="nk-tool-skill-list"></div>
+    </div>
+
     <!-- ── Recommendations body ──────────────────────────── -->
     <div class="nk-body">
       <div class="nk-section-header">
