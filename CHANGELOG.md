@@ -8,6 +8,8 @@ Built with MA (Memory Architect v1).
 ### Changed
 - Repository packaging wrapper: moved the runnable codebase, assets, tests, browser host, and runtime folders under `project/` so the repository root stays documentation-first for visitors. Updated root README instructions and root ignore rules to match the new source location.
 - NekoCore OS panel now exposes its own Tools and Workspace settings: per-skill enable/disable controls, approval-mode toggle, and editable workspace root path for the system entity.
+- NekoCore direct chat now writes multi-layer memory again: each turn still keeps a raw decay-free conversation snapshot, and it now also runs the shared post-response encoder to create `core_memory` plus `semantic_knowledge` records. Shared memory storage now prunes stale index entries when the backing memory folders are gone, preventing repeated `Memory not found` retrieval noise.
+- NekoCore subconscious retrieval now always injects a recent conversation recall window from her own latest episodic chat memories, so continuity works even when current-message wording does not overlap prior-turn topics.
 
 ### Added
 - **NekoCore Browser Phase NB-6 — LLM Mode Foundation (complete)**

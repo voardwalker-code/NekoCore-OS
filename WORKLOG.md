@@ -19,6 +19,7 @@ The only exception is a newly discovered bug of critical severity (data loss, se
 
 Emergency exception log:
 1. 2026-03-15: Reserved system-identity namespace protection added for entity creation (blocked names: NekoCore, Neko, Echo, AgentEcho). Classified as security/QoL hardening tied to active entity-state bugfix stream. Formal plan: `Documents/current/PLAN-NEKOCORE-SYSTEM-ENTITY-v1.md`
+2. 2026-03-15: NekoCore memory-healing follow-up approved under the critical bug exception because stale memory-index entries were causing retrieval misses and direct NekoCore chat was not consolidating multi-layer memory records.
 
 ### Phase Priority Order
 
@@ -166,7 +167,7 @@ Next action:
 
 - Current phase: `Phase 2 — Refactor and Cleanup`
 - Current slice: `Phase 2 not yet started — post-bugfix cleanup queued`
-- Last completed slice: `Ad-hoc bug fix — NekoCore panel tooling controls + workspace settings`
+- Last completed slice: `Critical bug fix — NekoCore memory healing + multi-layer chat encoding`
 - In-progress item: `none`
 - Next action on resume: `Begin Phase 2 — Refactor and Cleanup`
 
@@ -175,6 +176,8 @@ Implementation note (ad-hoc bugfix):
 - Taskbar shell regression fix — taskbar row layout repaired so the quick bar stays in-line, default sizing reduced, right-clicking the taskbar exposes `Edit Taskbar`, and edit mode now supports drag-to-move (left/center/right) plus true width/height drag resizing with persistent layout storage. `[BOUNDARY_OK]`
 
 Slice ledger update (2026-03-15):
+- Critical bug fix completed — NekoCore subconscious retrieval now includes a bounded recent-conversation recall block from her latest episodic chat memories, so continuity survives wording shifts between turns and prior-conversation context is available even on weak topic overlap. `[BOUNDARY_OK] [JS_OFFLOAD]`
+- Critical bug fix completed — NekoCore direct chat now keeps its raw conversation snapshot but also runs the shared post-response memory encoder so each turn can produce `core_memory` and `semantic_knowledge` layers. Shared `MemoryStorage` now prunes stale index entries when backing folders are missing, stopping repeated `Memory not found` loops after index/file drift. `[BOUNDARY_OK] [JS_OFFLOAD]`
 - Ad-hoc bug fix completed — NekoCore OS panel now exposes system-entity tool settings, including per-skill enable/disable toggles, skill approval-mode control, and editable workspace-root path. System bootstrap now preserves an explicit NekoCore workspace path instead of overwriting it on every start. `[BOUNDARY_OK]`
 - Ad-hoc repo packaging wrapper completed — tracked runnable source, browser host, tests, assets, and runtime folders moved under `project/`; root kept documentation/governance-first for GitHub visitors. Root README and ignore rules updated to match the new source location. `[BOUNDARY_OK]`
 - `BUG-16` completed — entity creation now auto-creates a VFS desktop folder under `workspace/desktop/<Entity Name>/` across all four create flows (`create`, `create-hatch`, `create-guided`, `create-character`). Guard tests added for regression prevention. `[BOUNDARY_OK]`
