@@ -41,7 +41,7 @@ function ensureSystemEntity(overrideEntitiesDir, overrideWorkspaceDesktopDir) {
     try {
       const existing = JSON.parse(fs.readFileSync(entityFile, 'utf8'));
       const expectedWorkspace = getSystemWorkspacePath();
-      const needsWorkspace = expectedWorkspace && existing.workspacePath !== expectedWorkspace;
+      const needsWorkspace = expectedWorkspace && !existing.workspacePath;
       const needsScope = existing.workspaceScope !== 'workspace-root';
       if (!needsWorkspace && !needsScope) return false;
 

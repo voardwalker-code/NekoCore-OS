@@ -7,6 +7,7 @@ Built with MA (Memory Architect v1).
 
 ### Changed
 - Repository packaging wrapper: moved the runnable codebase, assets, tests, browser host, and runtime folders under `project/` so the repository root stays documentation-first for visitors. Updated root README instructions and root ignore rules to match the new source location.
+- NekoCore OS panel now exposes its own Tools and Workspace settings: per-skill enable/disable controls, approval-mode toggle, and editable workspace root path for the system entity.
 
 ### Added
 - **NekoCore Browser Phase NB-6 — LLM Mode Foundation (complete)**
