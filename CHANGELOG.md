@@ -5,6 +5,9 @@ Built with MA (Memory Architect v1).
 
 ## [Unreleased]
 
+### Changed
+- Repository packaging wrapper: moved the runnable codebase, assets, tests, browser host, and runtime folders under `project/` so the repository root stays documentation-first for visitors. Updated root README instructions and root ignore rules to match the new source location.
+
 ### Added
 - **NekoCore Browser Phase NB-6 — LLM Mode Foundation (complete)**
   - Mode switch: toggle between Human Mode (🧠) and LLM Mode (🤖) via toolbar button, LLM panel slides in as sidebar

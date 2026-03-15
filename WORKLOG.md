@@ -3,6 +3,11 @@
 Status: active architecture refactor tracking.
 Last updated: 2026-03-15
 
+Repository packaging note:
+1. The runnable source tree now lives under `project/`.
+2. Root remains documentation/governance-first (`README.md`, `WORKLOG.md`, `BUGS.md`, `CHANGELOG.md`, `.github/`).
+3. Historical file paths below may use the pre-wrapper root-relative layout.
+
 ---
 
 ## ⚠️ ACTIVE MANDATE — Bug Fix → Cleanup → Modularization (Precedence Order)
@@ -161,7 +166,7 @@ Next action:
 
 - Current phase: `Phase 2 — Refactor and Cleanup`
 - Current slice: `Phase 2 not yet started — post-bugfix cleanup queued`
-- Last completed slice: `Ad-hoc regression fix — taskbar true resize + shell dock row-layout repair`
+- Last completed slice: `Ad-hoc repo packaging wrapper — moved runnable source under project/ while keeping repo root docs-first`
 - In-progress item: `none`
 - Next action on resume: `Begin Phase 2 — Refactor and Cleanup`
 
@@ -170,6 +175,7 @@ Implementation note (ad-hoc bugfix):
 - Taskbar shell regression fix — taskbar row layout repaired so the quick bar stays in-line, default sizing reduced, right-clicking the taskbar exposes `Edit Taskbar`, and edit mode now supports drag-to-move (left/center/right) plus true width/height drag resizing with persistent layout storage. `[BOUNDARY_OK]`
 
 Slice ledger update (2026-03-15):
+- Ad-hoc repo packaging wrapper completed — tracked runnable source, browser host, tests, assets, and runtime folders moved under `project/`; root kept documentation/governance-first for GitHub visitors. Root README and ignore rules updated to match the new source location. `[BOUNDARY_OK]`
 - `BUG-16` completed — entity creation now auto-creates a VFS desktop folder under `workspace/desktop/<Entity Name>/` across all four create flows (`create`, `create-hatch`, `create-guided`, `create-character`). Guard tests added for regression prevention. `[BOUNDARY_OK]`
 - NekoCore workspace policy correction — system entity no longer expects a dedicated desktop subfolder; `nekocore` is now mapped to the workspace root (`workspacePath` + `workspaceScope: workspace-root`) and this mapping is enforced during bootstrap, including migration for pre-existing installs. `[BOUNDARY_OK]`
 - `BUG-05` completed — Creator personality trait fields now provide dropdown/autocomplete suggestions and an Auto-fill Traits action in Empty and Guided modes. `[BOUNDARY_OK]`

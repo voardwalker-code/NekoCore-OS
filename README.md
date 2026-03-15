@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/neko-cat.svg" width="180" alt="NekoCore mascot"/>
+  <img src="project/assets/neko-cat.svg" width="180" alt="NekoCore mascot"/>
 </p>
 
 <h1 align="center">NekoCore OS</h1>
@@ -17,12 +17,14 @@
   <img src="https://img.shields.io/badge/node-%3E%3D18-brightgreen?style=flat-square&logo=node.js" alt="Node 18+"/>
   <img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"/>
   <img src="https://img.shields.io/badge/dependencies-0-brightgreen?style=flat-square" alt="zero deps"/>
-  <img src="https://img.shields.io/badge/tests-318%20passing-brightgreen?style=flat-square" alt="318 tests"/>
+  <img src="https://img.shields.io/badge/tests-403%20passing-brightgreen?style=flat-square" alt="403 tests"/>
 </p>
 
 ---
 
 NekoCore OS is a Cognitive WebOS that gives AI entities persistent memory, evolving personality, and layered reasoning, modeled after how biological minds process experience. Zero external dependencies. Pure Node.js.
+
+Repository layout note: the runnable project now lives under `project/` so the repository root stays documentation-first for visitors.
 
 Instead of stateless prompt-response cycles, NekoCore OS maintains **Echoes** - structured memory fragments that are stored, recalled, reinforced, and naturally decay over time. Conversations are processed through a multi-layer pipeline (subconscious, conscious, and dream), consolidated during simulated REM sleep cycles, and used to gradually evolve the entity's identity and goals.
 
@@ -57,7 +59,7 @@ Each entity operates in full isolation — separate memory stores, personality t
 - 3D Neural Visualizer — Three.js WebGL real-time cognitive state display
 - SSE diagnostic bus — live streaming of pipeline events to browser
 - Post-response memory encoding — async write after each turn, no latency impact
-- 318 passing tests (unit + integration)
+- 403 passing tests (unit + integration)
 - Zero external runtime dependencies — pure Node.js, file-system JSON persistence
 
 ---
@@ -146,7 +148,7 @@ Each entity operates in full isolation — separate memory stores, personality t
 
 ## Architecture
 
-See [NekoCore.html](NekoCore.html) for the full interactive architecture deck or visit [neko-core.com](https://neko-core.com).
+See [project/NekoCore.html](project/NekoCore.html) for the full interactive architecture deck or visit [neko-core.com](https://neko-core.com).
 
 ### Cognitive Pipeline
 
@@ -259,9 +261,12 @@ All internal pipeline events are emitted to the browser via Server-Sent Events:
 
 ### Clone & Install
 
+All shell commands below assume you enter `project/` after cloning.
+
 ```bash
 git clone https://github.com/voardwalker-code/NekoCore-OS.git
 cd NekoCore-OS
+cd project
 npm install
 ```
 
@@ -432,7 +437,7 @@ The current in-shell browser app uses an embedded page model and some sites may 
 
 ### Skills
 
-Skills are tool plugins in `skills/<name>/`. To invoke a skill, the entity's LLM simply uses it via function call syntax. Available by default:
+Skills are tool plugins in `project/skills/<name>/`. To invoke a skill, the entity's LLM simply uses it via function call syntax. Available by default:
 
 - `web-search` — searches the web and summarizes results
 - `memory-tools` — query, tag, or reinforce specific memories
@@ -465,34 +470,21 @@ rm -rf NekoCore
 
 ```
 NekoCore/
-├── client/                    # Browser frontend
-│   ├── index.html             # Main chat UI
-│   ├── visualizer.html        # 3D neural visualizer
-│   ├── css/                   # UI stylesheets
-│   ├── js/                    # Frontend module scripts
-│   └── shared/                # Shared API client, SSE, notify
-├── server/                    # Backend server
-│   ├── server.js              # Bootstrap and route composition
-│   ├── brain/                 # Brain loop, pipeline orchestrator
-│   ├── services/              # Memory, belief, relationship, dream services
-│   ├── routes/                # Express route modules (10 modules)
-│   ├── contracts/             # Schema validators
-│   ├── tools/                 # Internal tool implementations
-│   └── integrations/          # Telegram, external LLM adapters
-├── skills/                    # Pluggable skill plugins
-│   ├── web-search/
-│   ├── memory-tools/
-│   └── ws_mkdir/ ws_move/
-├── tests/
-│   ├── unit/                  # Unit tests (service/module level)
-│   └── integration/           # Integration tests (route + pipeline)
-├── entities/                  # Runtime entity data (gitignored)
-├── memories/                  # System memory (gitignored)
-├── Config/
-│   └── ma-config.json         # API keys and runtime config (gitignored)
-├── NekoCore.html              # Interactive architecture deck
-├── package.json
-└── README.md
+├── README.md                  # Visitor-first overview at repo root
+├── WORKLOG.md                 # Active process and phase ledger
+├── BUGS.md                    # Bug queue and status tracking
+├── CHANGELOG.md               # Repo-level release notes
+└── project/
+  ├── client/                # Browser frontend
+  ├── server/                # Backend server
+  ├── browser-host/          # Browser host modules
+  ├── skills/                # Pluggable skill plugins
+  ├── tests/                 # Unit + integration tests
+  ├── Config/                # Runtime config template/example
+  ├── entities/              # Runtime entity data (gitignored)
+  ├── memories/              # System memory (gitignored)
+  ├── NekoCore.html          # Interactive architecture deck
+  └── package.json
 ```
 
 ---
