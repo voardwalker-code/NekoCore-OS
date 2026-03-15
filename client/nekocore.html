@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NekoCore OS</title>
+  <link rel="stylesheet" href="css/ui-v2.css">
+  <link rel="stylesheet" href="themes/neko-default.css">
+</head>
+<body>
+
+<div class="nk-shell">
+
+  <!-- ── Top bar ────────────────────────────────────────── -->
+  <header class="nk-topbar">
+    <div class="nk-brand">
+      <span class="nk-brand-icon">⬡</span>
+      <span class="nk-brand-name">NekoCore <span class="nk-brand-sub">OS</span></span>
+    </div>
+    <div class="nk-topbar-actions">
+      <div class="nk-topbar-status">
+        <span id="nkStatusDot" class="nk-status-dot"></span>
+        <span id="nkStatusLabel" class="nk-status-label">Loading…</span>
+      </div>
+      <button id="nkInfoToggle" class="nk-refresh-btn" type="button" aria-expanded="false">Show Voice &amp; Info</button>
+    </div>
+  </header>
+
+  <div id="nkInfoPanel" class="nk-info-panel is-collapsed">
+    <!-- ── Status strip ──────────────────────────────────── -->
+    <div class="nk-status-strip">
+      <div class="nk-status-tile">
+        <span class="nk-tile-label">Active Model</span>
+        <code id="nkActiveModel" class="nk-tile-value">—</code>
+      </div>
+      <div class="nk-status-tile">
+        <span class="nk-tile-label">Pending Reviews</span>
+        <span id="nkPendingCount" class="nk-tile-value">—</span>
+      </div>
+      <div class="nk-status-tile">
+        <span class="nk-tile-label">System Entity</span>
+        <span id="nkEntityReady" class="nk-tile-value">—</span>
+      </div>
+    </div>
+
+    <!-- ── Voice and Character ─────────────────────────────── -->
+    <div class="nk-persona">
+      <div class="nk-section-header nk-persona-header">
+        <span class="nk-section-title">NekoCore Voice and Character</span>
+        <span class="nk-persona-note">No roleplay: this only tunes system communication style.</span>
+      </div>
+      <div id="nkPresetRow" class="nk-preset-row"></div>
+      <div class="nk-persona-grid">
+        <label class="nk-persona-field">
+          <span>What NekoCore calls you</span>
+          <input id="nkUserName" type="text" maxlength="80" placeholder="Operator">
+        </label>
+        <label class="nk-persona-field">
+          <span>Voice style</span>
+          <input id="nkVoiceStyle" type="text" maxlength="220" placeholder="clear, structured, and practical">
+        </label>
+        <label class="nk-persona-field">
+          <span>Tone</span>
+          <input id="nkTone" type="text" maxlength="120" placeholder="professional-warm">
+        </label>
+        <label class="nk-persona-field">
+          <span>Mood baseline</span>
+          <input id="nkMood" type="text" maxlength="80" placeholder="focused">
+        </label>
+      </div>
+      <label class="nk-persona-field nk-persona-textarea">
+        <span>Character guidance</span>
+        <textarea id="nkPersonalityText" rows="3" maxlength="2500" placeholder="How should NekoCore sound and behave while staying system-focused?"></textarea>
+      </label>
+      <div class="nk-persona-actions">
+        <button class="nk-refresh-btn" id="nkSavePersona">Save Voice</button>
+        <button class="nk-refresh-btn" id="nkResetPersona">Reset Voice</button>
+        <button class="nk-refresh-btn nk-danger-btn" id="nkFactoryResetNeko">Factory Reset NekoCore Memory</button>
+      </div>
+    </div>
+
+    <!-- ── Recommendations body ──────────────────────────── -->
+    <div class="nk-body">
+      <div class="nk-section-header">
+        <span class="nk-section-title">Pending Model Recommendations</span>
+        <button class="nk-refresh-btn" onclick="App.refresh()" title="Refresh">↺ Refresh</button>
+      </div>
+      <div id="nkPendingList" class="nk-pending-list">
+        <p class="nk-empty">Loading…</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Chat with NekoCore ────────────────────────────── -->
+  <div class="nk-chat">
+    <div class="nk-section-header">
+      <span class="nk-section-title">Chat with NekoCore</span>
+      <div class="nk-chat-header-actions">
+        <span class="nk-chat-note">Minimal chat view. Open Voice &amp; Info only when needed.</span>
+        <button class="nk-refresh-btn" onclick="Chat.clear()" title="Clear chat">✕ Clear</button>
+      </div>
+    </div>
+    <div id="nkChatMessages" class="nk-chat-messages"></div>
+    <div class="nk-chat-input-row">
+      <textarea id="nkChatInput" class="nk-chat-input" rows="2" placeholder="Message NekoCore…"></textarea>
+      <button id="nkChatSend" class="nk-chat-send" onclick="Chat.send()">Send</button>
+    </div>
+  </div>
+
+</div>
+
+<script src="js/nekocore-app.js"></script>
+</body>
+</html>
