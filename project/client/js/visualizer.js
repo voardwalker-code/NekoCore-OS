@@ -128,6 +128,10 @@
         if (!nextId || nextId === selectedEntityId) return;
         await switchVisualizerEntity(nextId);
       };
+
+      if (selectedEntityId) {
+        await switchVisualizerEntity(selectedEntityId, { forceReload: true, preservePickerState: true });
+      }
     } catch (e) {
       setEntitySwitchStatus('Load failed', 'err');
       picker.innerHTML = '<option value="">Unavailable</option>';
@@ -135,7 +139,9 @@
     }
   }
 
-  async function switchVisualizerEntity(entityId) {
+  async function switchVisualizerEntity(entityId, options = {}) {
+    const forceReload = options.forceReload === true;
+    const preservePickerState = options.preservePickerState === true;
     const picker = document.getElementById('vizEntityPicker');
     const searchInput = document.getElementById('memorySearchInput');
     const typeFilter = document.getElementById('memoryTypeFilter');
@@ -155,6 +161,9 @@
       }
 
       selectedEntityId = entityId;
+      if (picker && preservePickerState) {
+        picker.value = entityId;
+      }
       chatExchanges = [];
       selectedExchangeId = null;
       selectedMemoryId = null;
@@ -177,7 +186,7 @@
     } catch (e) {
       setEntitySwitchStatus('Switch failed', 'err');
       diagLog('events', 'error', 'Entity switch failed: ' + e.message);
-      if (picker && selectedEntityId) picker.value = selectedEntityId;
+      if (picker && selectedEntityId && !forceReload) picker.value = selectedEntityId;
     } finally {
       if (picker) picker.disabled = false;
       setTimeout(() => {
