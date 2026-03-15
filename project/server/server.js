@@ -95,6 +95,7 @@ const TimelineLogger = require('./services/timeline-logger');
 const createRuntimeLifecycle = require('./services/runtime-lifecycle');
 const { runPostResponseMemoryEncoding } = require('./services/post-response-memory');
 const { postProcessResponse } = require('./services/response-postprocess');
+const { storeNekoConversationSnapshot, encodeNekoConversationMemory } = require('./services/nekocore-memory');
 const {
   runtimeLabel,
   toChatEndpoint,
@@ -1731,21 +1732,17 @@ async function processNekoCoreChatMessage(userMessage, chatHistory = []) {
     getSomaticState:           () => null,
     getConsciousContext:       async (topics) => nekoCoreConscious.getContext(topics, 5),
     storeConsciousObservation: async (msg, response, topics) => {
-      const summary = (response || msg || '').slice(0, 300);
-      nekoCoreConscious.addToStm({ summary, topics, source: 'conscious_observation' });
-      nekoCoreConscious.reinforce(topics);
-      // Persist a decay:0 episodic memory so conversations survive server restarts
-      const semantic = `[Conversation] ${(msg || '').slice(0, 150)} → ${(response || '').slice(0, 200)}`;
-      nekoCoreStorage.storeMemory({
-        semantic,
-        content:    { userMessage: (msg || '').slice(0, 500), response: (response || '').slice(0, 500) },
-        topics:     Array.isArray(topics) ? topics : [],
-        importance: 0.75,
-        decay:      0,
-        emotion:    'neutral',
-        type:       'episodic',
-        source:     'nekocore_conversation',
-      }).catch(() => {});
+      try {
+        await storeNekoConversationSnapshot({
+          consciousMemory: nekoCoreConscious,
+          memoryStorage: nekoCoreStorage,
+          message: msg,
+          response,
+          topics
+        });
+      } catch (err) {
+        console.warn('  ⚠ NekoCore conversation snapshot failed:', err.message);
+      }
     },
     reconstructedChatlogCache: null,
     cognitiveBus:              null,
@@ -1766,6 +1763,33 @@ async function processNekoCoreChatMessage(userMessage, chatHistory = []) {
     memoryStorage:   nekoCoreStorage,
     identityManager: null
   });
+
+  if (aspectConfigs.subconscious) {
+    setImmediate(async () => {
+      try {
+        await encodeNekoConversationMemory({
+          effectiveUserMessage: userMessage,
+          finalResponse: result.finalResponse,
+          innerDialog: result.innerDialog,
+          memoryEntityId: NEKOCORE_ID,
+          memoryAspectConfigs: aspectConfigs,
+          callLLMWithRuntime,
+          getTokenLimit,
+          broadcastSSE,
+          traceGraph: null,
+          memoryGraph: null,
+          logTimeline,
+          memoryStorage: nekoCoreStorage,
+          entityName: nekoCoreEntity?.name || 'NekoCore OS',
+          userName: nekoCoreEntity?.persona?.userName || null,
+          activeUserId: nekoCoreEntity?.persona?.activeUserId || null,
+          entityPersona: nekoCoreEntity?.persona || null
+        });
+      } catch (err) {
+        console.warn('  ⚠ NekoCore post-response memory encoding failed:', err.message);
+      }
+    });
+  }
 
   return { ok: true, response: result.finalResponse, innerDialog: result.innerDialog };
 }

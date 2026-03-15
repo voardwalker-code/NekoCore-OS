@@ -16,6 +16,7 @@
 
 const fs          = require('fs');
 const path        = require('path');
+const zlib        = require('zlib');
 const entityPaths = require('../../entityPaths');
 
 // ── Topic extractor — min-length 3 to catch "rem", "api", "llm", "sse" ──────
@@ -99,8 +100,68 @@ function scanEpisodicDir(episodicDir, topics, limit, srcType, entityName) {
   return results;
 }
 
+function scanRecentConversationMemories(episodicDir, limit = 6) {
+  if (!fs.existsSync(episodicDir)) return [];
+
+  let entries;
+  try {
+    entries = fs.readdirSync(episodicDir).filter((f) => {
+      if (!f.startsWith('mem_') && !f.startsWith('ltm_')) return false;
+      try { return fs.statSync(path.join(episodicDir, f)).isDirectory(); } catch { return false; }
+    });
+  } catch (_) {
+    return [];
+  }
+
+  const candidates = [];
+  for (const folder of entries) {
+    const folderPath = path.join(episodicDir, folder);
+    const logPath = path.join(folderPath, 'log.json');
+    if (!fs.existsSync(logPath)) continue;
+
+    let log;
+    try { log = JSON.parse(fs.readFileSync(logPath, 'utf8')); } catch (_) { continue; }
+
+    const source = String(log.source || '');
+    const type = String(log.type || '');
+    if (source !== 'nekocore_conversation' && type !== 'episodic') continue;
+
+    let semantic = '';
+    try { semantic = fs.readFileSync(path.join(folderPath, 'semantic.txt'), 'utf8').trim(); } catch (_) {}
+
+    let convoPreview = '';
+    const zipPath = path.join(folderPath, 'memory.zip');
+    if (fs.existsSync(zipPath)) {
+      try {
+        const unzipped = zlib.gunzipSync(fs.readFileSync(zipPath)).toString('utf8');
+        const parsed = JSON.parse(unzipped);
+        const userPart = String(parsed.userMessage || '').replace(/\s+/g, ' ').trim().slice(0, 100);
+        const responsePart = String(parsed.response || '').replace(/\s+/g, ' ').trim().slice(0, 120);
+        if (userPart || responsePart) {
+          convoPreview = `User: ${userPart || '(empty)'} | NekoCore: ${responsePart || '(empty)'}`;
+        }
+      } catch (_) {}
+    }
+
+    const created = Date.parse(log.created || '') || 0;
+    candidates.push({
+      id: folder,
+      created,
+      source: 'self_recent',
+      topics: Array.isArray(log.topics) ? log.topics : [],
+      semantic,
+      convoPreview,
+      relevanceScore: 1000000000000 + created,
+      importance: Number(log.importance || 0.7)
+    });
+  }
+
+  candidates.sort((a, b) => b.created - a.created);
+  return candidates.slice(0, limit);
+}
+
 // ── Build context block in the shape the Orchestrator's subconscious expects ─
-function buildContextBlock(userMessage, topics, matches) {
+function buildContextBlock(userMessage, topics, matches, recentRecalls = []) {
   const lines = [];
   lines.push('[SUBCONSCIOUS MEMORY CONTEXT]');
   lines.push('User message: ' + userMessage);
@@ -126,6 +187,17 @@ function buildContextBlock(userMessage, topics, matches) {
     lines.push('DOCUMENT memories are from architecture docs. SELF_MEMORY entries are NekoCore\'s own past experiences. ENTITY entries belong to active entities — use these to understand what each entity has been experiencing.');
   }
 
+  if (recentRecalls.length > 0) {
+    lines.push('');
+    lines.push('[CONVERSATION RECALL]');
+    recentRecalls.forEach((m, idx) => {
+      const when = m.created > 0 ? new Date(m.created).toISOString() : 'unknown-time';
+      const preview = (m.convoPreview || m.semantic || '').replace(/\s+/g, ' ').trim().slice(0, 220);
+      lines.push(`${idx + 1}. ${m.id} (${when}) ${preview}`);
+    });
+    lines.push('Use these recent turns for continuity even when topic words differ from the current message.');
+  }
+
   return lines.join('\n');
 }
 
@@ -143,16 +215,16 @@ function buildContextBlock(userMessage, topics, matches) {
  */
 function buildNekoKnowledgeContext(userMessage, memRoot, opts = {}) {
   const limit  = opts.limit || 10;
+  const recentConversationLimit = opts.recentConversationLimit || 6;
   const topics = extractTopics(userMessage || '');
 
-  if (!topics.length) {
-    return { contextBlock: buildContextBlock(userMessage, topics, []), topics, connections: [], chatlogContext: [] };
-  }
+  const selfEpisodicDir = path.join(memRoot, 'episodic');
+  const recentRecalls = scanRecentConversationMemories(selfEpisodicDir, recentConversationLimit);
 
   // ── 1. Architecture docs (nkdoc_* under semantic/) ─────────────────────────
   const nkdocMatches = [];
   const semanticDir  = path.join(memRoot, 'semantic');
-  if (fs.existsSync(semanticDir)) {
+  if (topics.length > 0 && fs.existsSync(semanticDir)) {
     let entries = [];
     try {
       entries = fs.readdirSync(semanticDir).filter(f => {
@@ -181,12 +253,14 @@ function buildNekoKnowledgeContext(userMessage, memRoot, opts = {}) {
   }
 
   // ── 2. NekoCore's own episodic memories ─────────────────────────────────────
-  const selfEpisodicDir = path.join(memRoot, 'episodic');
-  const selfMatches     = scanEpisodicDir(selfEpisodicDir, topics, 3, 'self_memory', null);
+  const selfMatches = topics.length > 0
+    ? scanEpisodicDir(selfEpisodicDir, topics, 3, 'self_memory', null)
+    : [];
 
   // ── 3. Other entities' episodic memories (read-only, no approval required) ──
   const entityMatches = [];
-  try {
+  if (topics.length > 0) {
+    try {
     const entitiesDir = entityPaths.ENTITIES_DIR;
     const nekoDirName = `entity_${entityPaths.normalizeEntityId('nekocore')}`;
     const entityDirs  = fs.readdirSync(entitiesDir).filter(f => {
@@ -202,16 +276,29 @@ function buildNekoKnowledgeContext(userMessage, memRoot, opts = {}) {
       const ep = path.join(entitiesDir, dir, 'memories', 'episodic');
       entityMatches.push(...scanEpisodicDir(ep, topics, 2, 'entity_memory', entityName));
     }
-    entityMatches.sort((a, b) => b.relevanceScore - a.relevanceScore);
-  } catch (_) {}
+      entityMatches.sort((a, b) => b.relevanceScore - a.relevanceScore);
+    } catch (_) {}
+  }
 
-  // ── 4. Merge — nkdocs first, then self, then entities capped at ~40% budget ─
-  const connections = [
-    ...nkdocMatches,
-    ...selfMatches,
-    ...entityMatches.slice(0, Math.floor(limit * 0.4)),
-  ];
-  const contextBlock = buildContextBlock(userMessage, topics, connections);
+  // ── 4. Merge — recent recall first, then docs/self/entities topic matches ───
+  const merged = [];
+  const seen = new Set();
+  const pushUnique = (arr) => {
+    for (const item of arr) {
+      if (!item || !item.id || seen.has(item.id)) continue;
+      seen.add(item.id);
+      merged.push(item);
+    }
+  };
+
+  pushUnique(recentRecalls);
+  pushUnique(nkdocMatches);
+  pushUnique(selfMatches);
+  pushUnique(entityMatches.slice(0, Math.floor(limit * 0.4)));
+
+  const maxConnections = limit + recentConversationLimit;
+  const connections = merged.slice(0, maxConnections);
+  const contextBlock = buildContextBlock(userMessage, topics, connections, recentRecalls);
   return { contextBlock, topics, connections, chatlogContext: [] };
 }
 

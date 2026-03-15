@@ -114,6 +114,14 @@ class MemoryStorage {
     return path.join(this.memDir, memId);
   }
 
+  _pruneStaleIndexEntry(memId) {
+    if (!this.indexCache || !memId) return false;
+    const meta = this.indexCache.getMemoryMeta(memId);
+    if (!meta) return false;
+    this.indexCache.removeMemory(memId);
+    return true;
+  }
+
   /**
    * Retrieve a memory by ID
    */
@@ -122,7 +130,11 @@ class MemoryStorage {
       const memPath = this._resolveMemPath(memId);
       
       if (!fs.existsSync(memPath)) {
-        console.warn(`  ⚠ Memory not found: ${memId}`);
+        const pruned = this._pruneStaleIndexEntry(memId);
+        if (pruned) {
+          this.indexCache.save();
+        }
+        console.warn(`  ⚠ Memory not found: ${memId}${pruned ? ' (pruned stale index entry)' : ''}`);
         return null;
       }
       
@@ -164,7 +176,11 @@ class MemoryStorage {
       const logPath = path.join(memPath, 'log.json');
       
       if (!fs.existsSync(logPath)) {
-        console.warn(`  ⚠ Memory log not found: ${memId}`);
+        const pruned = this._pruneStaleIndexEntry(memId);
+        if (pruned) {
+          this.indexCache.save();
+        }
+        console.warn(`  ⚠ Memory log not found: ${memId}${pruned ? ' (pruned stale index entry)' : ''}`);
         return false;
       }
       
@@ -389,9 +405,20 @@ class MemoryStorage {
       // Fast path: use index cache
       if (this.indexCache) {
         const recent = this.indexCache.getRecentMemories(offset + limit);
-        return recent.slice(offset, offset + limit).map(entry => {
+        const staleIds = [];
+        const results = [];
+
+        for (const entry of recent.slice(offset, offset + limit)) {
           const meta = this.indexCache.getMemoryMeta(entry.memId);
-          return {
+          const memPath = this._resolveMemPath(entry.memId);
+          const logPath = path.join(memPath, 'log.json');
+
+          if (!fs.existsSync(memPath) || !fs.existsSync(logPath)) {
+            staleIds.push(entry.memId);
+            continue;
+          }
+
+          results.push({
             id: entry.memId,
             type: meta?.type || 'episodic',
             created: meta?.created || entry.created,
@@ -399,8 +426,18 @@ class MemoryStorage {
             decay: meta?.decay ?? 1.0,
             importance: meta?.importance ?? 0.5,
             topics: meta?.topics || []
-          };
-        });
+          });
+        }
+
+        if (staleIds.length > 0) {
+          for (const memId of staleIds) {
+            this.indexCache.removeMemory(memId);
+          }
+          this.indexCache.save();
+          console.warn(`  ⚠ Pruned ${staleIds.length} stale memory index entr${staleIds.length === 1 ? 'y' : 'ies'}`);
+        }
+
+        return results;
       }
 
       // Fallback: scan folders
