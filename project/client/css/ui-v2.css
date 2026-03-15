@@ -6356,7 +6356,8 @@ body.popout-mode .app {
   flex-direction:column;
   min-height:0;
   max-height:52vh;
-  overflow:hidden;
+  overflow-x:hidden;
+  overflow-y:auto;
   transition:max-height .24s ease, opacity .2s ease, border-color .2s ease;
   opacity:1;
 }
