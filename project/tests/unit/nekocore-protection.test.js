@@ -100,6 +100,17 @@ test('postEntitiesVisibility has system entity guard returning 403', () => {
     'postEntitiesVisibility guard must use the correct error message');
 });
 
+test('getEntities visibility filter explicitly includes system entities', () => {
+  const src = readEntityRoutes();
+  const start = src.indexOf('function getEntities(req, res, apiHeaders) {');
+  const end = src.indexOf('function getEntitiesCurrent(req, res, apiHeaders) {');
+  const block = src.slice(start, end > start ? end : start + 900);
+  assert.ok(
+    block.includes('.filter(e => _isSystemEntityId(e.id) || !e.ownerId || e.ownerId === accountId || e.isPublic)'),
+    'getEntities must include system entities regardless of owner/public state'
+  );
+});
+
 // ── Bootstrap SYSTEM_ENTITY_ID matches routes guard ───────────────────────────
 
 test('SYSTEM_ENTITY_ID from bootstrap matches the entity-routes SYSTEM_ENTITY_IDS set', () => {

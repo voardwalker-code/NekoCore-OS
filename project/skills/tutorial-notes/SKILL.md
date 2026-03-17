@@ -1,76 +1,51 @@
 ---
 name: tutorial-notes
-description: A tutorial skill that teaches the entity to take structured notes. Use this as a learning example for how skills work.
-version: 1.0.0
-enabled: true
+description: Take structured notes in workspace markdown files using deterministic tool calls.
 ---
 
-# Tutorial: Structured Notes
+# tutorial-notes
 
-This is a **tutorial skill** — it teaches you (the entity) how to take, organize, and retrieve notes using your workspace. It also serves as an example for users learning how to create skills.
+Use this skill when the user asks to save, update, read, list, or summarize notes.
 
-## How This Skill Works
+## Execution Rules
 
-When the user asks you to take notes, remember something for later, or organize information, you should use the workspace tools to create and manage note files.
+- Always use valid tool tags in this form: [TOOL:tool_name key="value"]
+- Keep paths relative to workspace root.
+- Use markdown files for notes, for example: notes.md or project-ideas.md.
+- Perform tool calls first, then provide a short natural-language confirmation.
+- Do not claim a tool is unavailable unless an actual tool error is returned.
 
-Notes should be stored in your skill workspace as `.md` files with clear, descriptive names.
+## Decision Guide
 
-## Behavior Guidelines
+- New note with full content: use ws_write.
+- Add content to existing note: use ws_append.
+- Read one note: use ws_read.
+- Show available notes: use ws_list.
 
-- When the user says "take a note" or "remember this for later", create a note file
-- Organize notes by topic — one file per topic works well
-- When the user asks "what notes do I have?" or "what did I save?", list workspace files
-- Summarize note contents when asked, don't dump raw text
-- Use timestamps in entries so the user knows when each note was added
-
-## Tools
+## Tool Usage
 
 ### ws_write
-Write or overwrite a file in the skill workspace.
-```
-[TOOL:ws_write path="topic-name.md" content="# Topic Name\n\n- Note entry here\n- Another entry"]
-```
+Create or replace a note file.
 
-Parameters:
-- path (string): File path relative to workspace (e.g., "ideas.md", "meeting-notes.md")
-- content (string): The full file content to write
-
-### ws_read
-Read a file from the workspace.
-```
-[TOOL:ws_read path="topic-name.md"]
-```
-
-Parameters:
-- path (string): File path to read
-
-### ws_list
-List all files in the workspace.
-```
-[TOOL:ws_list]
-```
+[TOOL:ws_write path="notes.md" content="# Notes\n\n## 2026-03-15\n- Example note"]
 
 ### ws_append
-Append content to an existing file (useful for adding new entries without overwriting).
-```
-[TOOL:ws_append path="ideas.md" content="\n\n## New Idea (2026-03-12)\n\nContent here..."]
-```
+Add a new section to an existing note file.
 
-Parameters:
-- path (string): File to append to
-- content (string): Content to add at the end
+[TOOL:ws_append path="notes.md" content="\n\n## 2026-03-15\n- Follow-up note"]
 
-## Example Interaction
+### ws_read
+Read a note file.
 
-**User:** "Take a note — I want to try making pasta carbonara this weekend"
+[TOOL:ws_read path="notes.md"]
 
-**Entity action:**
-```
-[TOOL:ws_write path="cooking-ideas.md" content="# Cooking Ideas\n\n## Pasta Carbonara\n- Added: 2026-03-12\n- Plan: Try making it this weekend\n- Notes: Classic Italian recipe — eggs, pecorino, guanciale, black pepper"]
-```
+### ws_list
+List files when the user asks what notes exist.
 
-**Entity response:** "Got it! I've saved a note about making pasta carbonara this weekend. I'll remember that for you."
+[TOOL:ws_list]
 
----
+## Response Pattern
 
-*This skill is a tutorial example. Feel free to modify it, or use it as a template when creating your own skills. Visit [ClawHub.ai](https://clawhub.ai/) for community-created skills.*
+- After ws_write or ws_append: confirm what file was updated.
+- After ws_read: summarize key points unless the user asks for full text.
+- After ws_list: present file names and ask which one to open.

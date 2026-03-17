@@ -34,7 +34,7 @@ const TOKEN_LIMIT_DEFAULTS = {
 
   // ── ORCHESTRATOR ──────────────────────────────────────────────────────────
   orchestratorRefinement: { value: 800,  label: '(Orchestrator) Refinement (2B)',   desc: 'Tokens for the 2B refinement pass — distilling constraints, emotional cues, and conflicts from all three aspects before final synthesis.' },
-  orchestratorFinal:      { value: 1200, label: '(Orchestrator) Final Synthesis',   desc: 'Tokens for the final Orchestrator synthesis pass — this IS the response the user sees. Low values cut off replies mid-thought.' },
+  orchestratorFinal:      { value: 1600,  label: '(Orchestrator) Final Synthesis',   desc: 'Tokens for the final Orchestrator synthesis pass — this IS the response the user sees. Low values cut off replies mid-thought.' },
   orchestratorSummary:    { value: 1000, label: '(Orchestrator) Chatlog Decode',    desc: 'Tokens for reconstructing V4-compressed chatlogs inside the Orchestrator memory context pass.' },
 
   // ── BACKGROUND (Brain Loop / Post-Response) ───────────────────────────────

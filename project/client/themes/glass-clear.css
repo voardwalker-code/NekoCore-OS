@@ -1,0 +1,52 @@
+/* ══════════════════════════════════════════════════════════
+   Glass Clear — Transparent / Minimal
+   No wallpaper. Pure black backdrop. Maximum glass opacity.
+   Good for debugging and for system with its own wallpaper.
+   ══════════════════════════════════════════════════════════ */
+:root {
+  /* ── Surfaces ── */
+  --surface-0: #000000;
+  --surface-1: #0a0a0a;
+  --surface-2: #111111;
+  --surface-3: #1a1a1a;
+
+  /* ── Borders: soft white ── */
+  --border-default:  rgba(255, 255, 255, 0.10);
+  --border-emphasis: rgba(255, 255, 255, 0.22);
+  --border-subtle:   rgba(255, 255, 255, 0.04);
+
+  /* ── Text ── */
+  --text-primary:   #f4f4f5;
+  --text-secondary: #a1a1aa;
+  --text-tertiary:  #52525b;
+
+  /* ── Accent: neutral white-blue ── */
+  --accent:        #e4e4e7;
+  --accent-strong: #ffffff;
+  --accent-subtle: rgba(255, 255, 255, 0.06);
+  --accent-muted:  rgba(255, 255, 255, 0.12);
+
+  /* ── Semantic ── */
+  --cyan:   #22d3ee;
+  --indigo: #818cf8;
+  --purple: #a855f7;
+  --pink:   #f472b6;
+  --orange: #fb923c;
+  --gold:   #fbbf24;
+  --teal:   #2dd4bf;
+
+  /* ── Desktop: pure black, no wallpaper ── */
+  --desktop-wallpaper: #000000;
+  --desktop-overlay: none;
+  --desktop-grid-line: rgba(255, 255, 255, 0.03);
+
+  /* ── Shell surfaces: maximum transparency ── */
+  --taskbar-bg:          rgba(0, 0, 0, 0.55);
+  --window-bg:           rgba(10, 10, 10, 0.65);
+  --start-surface:       rgba(10, 10, 10, 0.80);
+  --shortcut-bg:         rgba(255, 255, 255, 0.04);
+  --shortcut-bg-hover:   rgba(255, 255, 255, 0.09);
+
+  /* ── Stars: off — no distractions ── */
+  --stars-opacity: 0;
+}

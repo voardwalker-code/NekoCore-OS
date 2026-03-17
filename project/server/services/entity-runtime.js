@@ -1,5 +1,6 @@
 const path = require('path');
 
+const ConsciousMemory = require('../brain/memory/conscious-memory');
 const MemoryService = require('./memory-service');
 const TraceGraph = require('../brain/trace-graph');
 const GoalsManager = require('../brain/goals-manager');
@@ -53,6 +54,7 @@ class EntityRuntime {
     this.cognitivePulse = null;
     this.dreamSeedPool = null;
     this.dreamMemory = null;
+    this.consciousMemory = null;
   }
 
   get isActive() {
@@ -71,7 +73,18 @@ class EntityRuntime {
 
   activate(entityId) {
     const entityPaths = require('../entityPaths');
-    const { cognitiveBus, modelRouter, attentionSystem, identityManager, consciousEngine, archiveManager, hatchEntity, loadConfig, broadcastSSE } = this.globals;
+    const {
+      cognitiveBus,
+      modelRouter,
+      attentionSystem,
+      identityManager,
+      consciousEngine,
+      archiveManager,
+      hatchEntity,
+      loadConfig,
+      broadcastSSE,
+      shareMutableGlobals = true
+    } = this.globals;
 
     const entityDir = entityPaths.getEntityRoot(entityId);
     const entityMemDir = entityPaths.getMemoryRoot(entityId);
@@ -96,17 +109,19 @@ class EntityRuntime {
 
     this.beliefGraph = new BeliefGraph({ entityId, cognitiveBus });
 
-    if (identityManager) identityManager.setMemDir(entityMemDir);
-    if (consciousEngine) {
-      consciousEngine.setMemDir(entityMemDir);
-      consciousEngine.setEntityId(entityId);
-    }
-    if (archiveManager) archiveManager.setMemDir(entityMemDir);
+    if (shareMutableGlobals) {
+      if (identityManager) identityManager.setMemDir(entityMemDir);
+      if (consciousEngine) {
+        consciousEngine.setMemDir(entityMemDir);
+        consciousEngine.setEntityId(entityId);
+      }
+      if (archiveManager) archiveManager.setMemDir(entityMemDir);
 
-    if (hatchEntity) {
-      hatchEntity.entityId = entityId;
-      hatchEntity.entityDir = entityDir;
-      hatchEntity.entityFile = path.join(entityDir, 'entity.json');
+      if (hatchEntity) {
+        hatchEntity.entityId = entityId;
+        hatchEntity.entityDir = entityDir;
+        hatchEntity.entityFile = path.join(entityDir, 'entity.json');
+      }
     }
 
     try {
@@ -129,11 +144,17 @@ class EntityRuntime {
 
     this.somaticAwareness = new SomaticAwareness({ cognitiveBus, neurochemistry: this.neurochemistry, memoryStorage: this.memoryStorage });
     this.somaticAwareness.startPolling(15000);
+    this.somaticAwareness.emitSomaticState();
+    console.log(`  \u2713 Somatic awareness online \u2014 ${this.somaticAwareness.bodyNarrative}`);
+
+    this.consciousMemory = new ConsciousMemory({ entityId });
 
     this.skillManager = new SkillManager({ entityId });
     this.skillManager.loadAll();
 
-    if (attentionSystem) attentionSystem.neurochemistry = this.neurochemistry;
+    if (shareMutableGlobals && attentionSystem) {
+      attentionSystem.neurochemistry = this.neurochemistry;
+    }
 
     this.curiosityEngine = new CuriosityEngine({ cognitiveBus, memoryGraph: this.memoryGraph, identityManager });
     this.curiosityEngine.start();
@@ -170,6 +191,7 @@ class EntityRuntime {
     this.neurochemistry = null;
     try { this.globals?.consciousEngine?.setEntityId(null); } catch (_) {}
     if (this.somaticAwareness) { this.somaticAwareness.destroy(); this.somaticAwareness = null; }
+    this.consciousMemory = null;
     if (this.curiosityEngine) { try { this.curiosityEngine.stop?.(); } catch (_) {} this.curiosityEngine = null; }
     if (this.boredomEngine) { try { this.boredomEngine.stop?.(); } catch (_) {} this.boredomEngine = null; }
     if (this.cognitivePulse) { try { this.cognitivePulse.stop(); } catch (_) {} this.cognitivePulse = null; }

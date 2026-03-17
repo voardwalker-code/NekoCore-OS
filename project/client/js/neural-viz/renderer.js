@@ -273,12 +273,20 @@ window._NVR = (() => {
   }
 
   // ── Data Loading ──
-  async function loadGraphData() {
+  async function loadGraphData(entityId) {
     try {
+      var graphUrl = '/api/memory-graph/nodes';
+      var traceUrl = '/api/traces';
+      var beliefUrl = '/api/belief-graph/nodes';
+      if (entityId) {
+        graphUrl += '?entityId=' + encodeURIComponent(entityId);
+        traceUrl += '?entityId=' + encodeURIComponent(entityId);
+        beliefUrl += '?entityId=' + encodeURIComponent(entityId);
+      }
       const [graphRes, traceRes, beliefRes] = await Promise.all([
-        fetch('/api/memory-graph/nodes'),
-        fetch('/api/traces'),
-        fetch('/api/belief-graph/nodes')
+        fetch(graphUrl),
+        fetch(traceUrl),
+        fetch(beliefUrl)
       ]);
 
       const graphData = await graphRes.json();
@@ -2048,11 +2056,17 @@ window._NVR = (() => {
   }
 
   // ── Load graph from a custom URL (e.g. /api/memory-graph/full-mind) ──
-  async function loadFromUrl(url) {
+  async function loadFromUrl(url, entityId) {
+    var traceUrl = '/api/traces';
+    var beliefUrl = '/api/belief-graph/nodes';
+    if (entityId) {
+      traceUrl += '?entityId=' + encodeURIComponent(entityId);
+      beliefUrl += '?entityId=' + encodeURIComponent(entityId);
+    }
     const [graphRes, traceRes, beliefRes] = await Promise.all([
       fetch(url),
-      fetch('/api/traces'),
-      fetch('/api/belief-graph/nodes')
+      fetch(traceUrl),
+      fetch(beliefUrl)
     ]);
     const graphData = await graphRes.json();
     const traceData = await traceRes.json();

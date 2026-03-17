@@ -179,3 +179,29 @@ test('POST /api/nekocore/reset — returns ok true', async () => {
   const data = res.json();
   assert.equal(data.ok, true);
 });
+
+test('POST /api/nekocore/chat — returns finalResponse from the chat pipeline', async () => {
+  const routes = createNekoCoreRoutes({
+    ...makeCtx(),
+    processNekoCoreChatMessage: async (message, chatHistory) => ({
+      finalResponse: `Echo: ${message} (${chatHistory.length})`
+    })
+  });
+  const res = makeRes();
+  const body = JSON.stringify({
+    message: 'hello neko',
+    chatHistory: [{ role: 'user', content: 'earlier' }]
+  });
+
+  const handled = await routes.dispatch(
+    makeReq('POST', body),
+    res,
+    makeUrl('/api/nekocore/chat'),
+    BASE_HEADERS,
+    readBodyFn(body)
+  );
+
+  assert.equal(handled, true);
+  assert.equal(res.statusCode, 200);
+  assert.deepEqual(res.json(), { ok: true, response: 'Echo: hello neko (1)' });
+});

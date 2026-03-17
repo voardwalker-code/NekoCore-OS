@@ -99,6 +99,16 @@ function _onAuthSuccess(account) {
   // Refresh entity list so the new user's entities are shown
   if (typeof refreshSidebarEntities === 'function') refreshSidebarEntities();
   resolveAuthWaiters(getCurrentAccount());
+  // Auto-launch setup wizard if no valid LLM profile is configured yet
+  setTimeout(() => {
+    try {
+      const profiles = (typeof savedConfig !== 'undefined' && savedConfig && savedConfig.profiles) ? savedConfig.profiles : {};
+      const hasValidProfile = Object.values(profiles).some(p => typeof getMainConfigFromProfile === 'function' && getMainConfigFromProfile(p) !== null);
+      if (!hasValidProfile && typeof showSetupWizard === 'function') {
+        showSetupWizard();
+      }
+    } catch (_) {}
+  }, 350);
 }
 
 async function getAuthBootstrap() {

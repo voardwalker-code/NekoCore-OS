@@ -1,7 +1,7 @@
 // ============================================================
-// REM System â€” Brain Loop Module
+// REM System — Brain Loop Module
 // Thin scheduler that drives 14 cognitive phases every 30 seconds.
-// Phase logic lives in ./phases/ â€” each file exports async fn(loop).
+// Phase logic lives in ./phases/ — each file exports async fn(loop).
 // ============================================================
 
 const fs = require('fs');
@@ -120,11 +120,11 @@ class BrainLoop {
         const data = JSON.parse(fs.readFileSync(this._stateFile, 'utf8'));
         if (typeof data.cycleCount === 'number' && data.cycleCount > 0) {
           this.cycleCount = data.cycleCount;
-          console.log(`  âœ“ Brain loop state restored: cycle ${this.cycleCount}`);
+          console.log(`  ✓ Brain loop state restored: cycle ${this.cycleCount}`);
         }
       }
     } catch (err) {
-      console.warn('  âš  Could not restore brain loop state:', err.message);
+      console.warn('  ⚠ Could not restore brain loop state:', err.message);
     }
   }
 
@@ -213,12 +213,12 @@ class BrainLoop {
     this._callLLM = callLLM;
     this._subconsciousAgent = subconsciousAgent;
     this._memoryIndex = memoryIndex;
-    console.log('  âœ“ Brain loop started with extended subsystems');
+    console.log('  ✓ Brain loop started with extended subsystems');
     this.loopHandle = setInterval(() => this.tick(), this.interval);
   }
 
   /**
-   * Execute one brain loop cycle â€” runs all 14 cognitive phases with per-phase error isolation.
+   * Execute one brain loop cycle — runs all 14 cognitive phases with per-phase error isolation.
    */
   async tick() {
     this._tryCloseCircuitBreaker();
@@ -243,21 +243,21 @@ class BrainLoop {
           console.log(`  ℹ Pulse interrupted: was thinking about [${interrupted.title}]`);
         }
       }
-      // â”€â”€ Homeostatic check â”€â”€ read somatic directives from last tick
+      // ── Homeostatic check ── read somatic directives from last tick
       const directives = this.somaticAwareness
         ? this.somaticAwareness.getHomeostaticDirectives()
         : null;
       this._lastDirectives = directives;
 
       if (directives && directives.reason.length > 0) {
-        console.log(`  âš  Homeostasis: ${directives.reason.join('; ')}`);
+        console.log(`  ⚠ Homeostasis: ${directives.reason.join('; ')}`);
         this._emitHomeostaticResponse(directives);
       }
 
       const deepSleepInterval = this.deepSleepInterval || 150;
       const cyclesUntilDeepSleep = deepSleepInterval - (this.cycleCount % deepSleepInterval);
-      const deepSleepNote = cyclesUntilDeepSleep === deepSleepInterval ? ' âŸ DeepSleep THIS cycle' : ` (DeepSleep in ${cyclesUntilDeepSleep} cycles)`;
-      console.log(`  â„¹ Brain loop cycle ${this.cycleCount}${this.beliefGraph ? deepSleepNote : ''}`);
+      const deepSleepNote = cyclesUntilDeepSleep === deepSleepInterval ? ' ⟐ DeepSleep THIS cycle' : ` (DeepSleep in ${cyclesUntilDeepSleep} cycles)`;
+      console.log(`  ℹ Brain loop cycle ${this.cycleCount}${this.beliefGraph ? deepSleepNote : ''}`);
       this._emit('cycle_start', { cycleCount: this.cycleCount, cyclesUntilDeepSleep: this.beliefGraph ? cyclesUntilDeepSleep : null });
 
       // Run all cognitive phases with per-phase error isolation
@@ -277,7 +277,7 @@ class BrainLoop {
           phaseHealth.lastError = err.message;
           this._health.totalPhaseErrors++;
           this._health.lastError = err.message;
-          console.error(`  âš  Brain loop phase [${name}] error:`, err.message);
+          console.error(`  ⚠ Brain loop phase [${name}] error:`, err.message);
           this._emit('phase', { name, status: 'error', error: err.message });
         }
       }
@@ -302,25 +302,25 @@ class BrainLoop {
         this._openCircuitBreaker(`phase_error_threshold:${phaseErrorsThisTick}`);
       }
 
-      // â”€â”€ Dynamic interval adjustment based on homeostatic directives â”€â”€
+      // ── Dynamic interval adjustment based on homeostatic directives ──
       if (directives && directives.throttleMultiplier !== 1.0) {
         const desired = Math.round(this._baseInterval * directives.throttleMultiplier);
         if (desired !== this.interval) {
           this.interval = desired;
           clearInterval(this.loopHandle);
           this.loopHandle = setInterval(() => this.tick(), this.interval);
-          console.log(`  âš  Brain loop throttled to ${this.interval}ms (Ã—${directives.throttleMultiplier})`);
+          console.log(`  ⚠ Brain loop throttled to ${this.interval}ms (×${directives.throttleMultiplier})`);
         }
       } else if (this.interval !== this._baseInterval) {
-        // Stress resolved â€” restore normal cadence
+        // Stress resolved — restore normal cadence
         this.interval = this._baseInterval;
         clearInterval(this.loopHandle);
         this.loopHandle = setInterval(() => this.tick(), this.interval);
-        console.log(`  âœ“ Brain loop restored to ${this.interval}ms`);
+        console.log(`  ✓ Brain loop restored to ${this.interval}ms`);
       }
 
     } catch (err) {
-      console.error('  âš  Brain loop tick error:', err.message);
+      console.error('  ⚠ Brain loop tick error:', err.message);
       this._health.failedTicks++;
       this._health.consecutiveTickFailures++;
       this._health.lastError = err.message;
@@ -383,7 +383,7 @@ class BrainLoop {
       this.loopHandle = null;
     }
     this.running = false;
-    console.log('  âœ“ Brain loop stopped');
+    console.log('  ✓ Brain loop stopped');
   }
 
   /**
@@ -420,10 +420,10 @@ class BrainLoop {
    * @param {Object} memoryIndex
    * @param {Object} identityManager
    * @param {Function} callLLM
-   * @param {Object} opts â€” { maxDreams: number, isShutdown: boolean }
+   * @param {Object} opts — { maxDreams: number, isShutdown: boolean }
    */
   async triggerSleepCycle(subconsciousAgent, memoryIndex, identityManager, callLLM = null, opts = {}) {
-    console.log(`  âœ“ Triggering ${opts.isShutdown ? 'shutdown' : 'manual'} sleep cycle...`);
+    console.log(`  ✓ Triggering ${opts.isShutdown ? 'shutdown' : 'manual'} sleep cycle...`);
 
     // Temporarily override instance refs so the phase functions see the right objects
     const saved = {
@@ -484,7 +484,7 @@ class BrainLoop {
         status.boredom_stats = this.boredomEngine.getStats();
       }
     } catch (err) {
-      console.warn('  âš  Error gathering status:', err.message);
+      console.warn('  ⚠ Error gathering status:', err.message);
     }
 
     status.health = this.getHealthDiagnostics();

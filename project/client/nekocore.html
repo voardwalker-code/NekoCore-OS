@@ -102,6 +102,33 @@
       <div id="nkToolSkillList" class="nk-tool-skill-list"></div>
     </div>
 
+    <!-- ── Knowledge Docs ─────────────────────────────────── -->
+    <div class="nk-tooling">
+      <div class="nk-section-header">
+        <span class="nk-section-title">Knowledge Docs</span>
+        <span class="nk-persona-note">Ingest architecture documents into NekoCore's semantic memory.</span>
+      </div>
+      <!-- Memory capacity meter -->
+      <div id="nkMemoryMeter" class="nk-memory-meter">
+        <div class="nk-memory-meter-header">
+          <span class="nk-memory-meter-title">Mind Capacity</span>
+          <span id="nkMemoryMeterDetail" class="nk-memory-meter-detail">—</span>
+        </div>
+        <div class="nk-memory-meter-track">
+          <div id="nkMemoryMeterFill" class="nk-memory-meter-fill" style="width:0%"></div>
+        </div>
+        <div id="nkMemoryMeterSub" class="nk-memory-meter-sub">Loading…</div>
+      </div>
+      <div class="nk-workspace-row">
+        <label class="nk-persona-field nk-workspace-field">
+          <span>Documents path</span>
+          <input id="nkDocsDir" type="text" spellcheck="false" placeholder="(uses default Documents/current)">
+        </label>
+        <button class="nk-refresh-btn" id="nkDocsIngestBtn">↺ Ingest Docs</button>
+      </div>
+      <div id="nkDocsIngestStatus" class="nk-workspace-status"></div>
+    </div>
+
     <!-- ── Recommendations body ──────────────────────────── -->
     <div class="nk-body">
       <div class="nk-section-header">

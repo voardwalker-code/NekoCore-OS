@@ -107,6 +107,11 @@ const { createLLMInterface } = require('./services/llm-interface');
 const { createConfigRuntime } = require('./services/config-runtime');
 const { createMemoryOperations } = require('./services/memory-operations');
 const { createMemoryRetrieval } = require('./services/memory-retrieval');
+const { createRunStartupPreflight } = require('./services/startup-preflight');
+const EntityRuntime = require('./services/entity-runtime');
+const createChatPipeline = require('./services/chat-pipeline');
+const createNekoCoreChat  = require('./services/nekocore-pipeline');
+const { boot }            = require('./services/boot');
 
 const PORT = process.env.PORT || 3847;
 const CLIENT_DIR = path.join(__dirname, '..', 'client');
@@ -114,256 +119,18 @@ const SERVER_DATA_DIR = path.join(__dirname, 'data');
 
 const CONFIG_DIR = path.join(__dirname, '..', 'Config');
 const CONFIG_FILE = path.join(CONFIG_DIR, 'ma-config.json');
-const LEGACY_CONFIG_FILE = path.join(__dirname, '..', 'ma-config.json');
-const DEFAULT_GLOBAL_CONFIG = {
-  configVersion: 1,
-  lastActive: 'default-multi-llm',
-  profiles: {
-    'default-multi-llm': {}
-  }
-};
+const configService = require('./services/config-service');
 // Root memories/ is for system-level defaults only (default prompt template, system timeline logs).
 // Entity-specific data lives in entities/entity_<id>/memories/ — use entityPaths for those paths.
 const MEM_DIR = path.join(__dirname, '..', 'memories');
 const timelineLogger = new TimelineLogger({ baseDir: MEM_DIR });
 
-function makeDefaultGlobalConfig() {
-  return JSON.parse(JSON.stringify(DEFAULT_GLOBAL_CONFIG));
-}
 
-function normalizeGlobalConfigShape(raw) {
-  const cfg = (raw && typeof raw === 'object' && !Array.isArray(raw)) ? raw : {};
-  if (!cfg.profiles || typeof cfg.profiles !== 'object' || Array.isArray(cfg.profiles)) {
-    cfg.profiles = {};
-  }
-  if (!cfg.lastActive || typeof cfg.lastActive !== 'string') {
-    cfg.lastActive = 'default-multi-llm';
-  }
-  if (!cfg.profiles[cfg.lastActive]) {
-    cfg.profiles[cfg.lastActive] = {};
-  }
-  if (!Number.isFinite(cfg.configVersion)) {
-    cfg.configVersion = 1;
-  }
-  return cfg;
-}
 
-function ensureGlobalConfigFile() {
-  ensureGlobalConfigDir();
-  if (fs.existsSync(CONFIG_FILE)) return;
-  const defaults = makeDefaultGlobalConfig();
-  fs.writeFileSync(CONFIG_FILE, JSON.stringify(defaults, null, 2), 'utf8');
-  console.log(`  ✓ Created default config file: ${CONFIG_FILE}`);
-}
-
-function ensureGlobalConfigDir() {
-  try {
-    if (!fs.existsSync(CONFIG_DIR)) {
-      fs.mkdirSync(CONFIG_DIR, { recursive: true });
-      console.log(`  ✓ Created config directory: ${CONFIG_DIR}`);
-    }
-  } catch (e) {
-    console.error('  ⚠ Could not create config directory:', e.message);
-  }
-}
-
-function migrateLegacyGlobalConfigIfNeeded() {
-  try {
-    if (fs.existsSync(CONFIG_FILE)) return;
-    if (!fs.existsSync(LEGACY_CONFIG_FILE)) return;
-    ensureGlobalConfigDir();
-    fs.copyFileSync(LEGACY_CONFIG_FILE, CONFIG_FILE);
-    console.log(`  ✓ Migrated legacy config to ${CONFIG_FILE}`);
-  } catch (e) {
-    console.error('  ⚠ Could not migrate legacy global config:', e.message);
-  }
-}
-
-function backupCorruptFile(filePath, label) {
-  try {
-    if (!fs.existsSync(filePath)) return;
-    const backupPath = `${filePath}.corrupt-${Date.now()}`;
-    fs.copyFileSync(filePath, backupPath);
-    console.error(`  ⚠ Backed up invalid ${label} to ${backupPath}`);
-  } catch (e) {
-    console.error(`  ⚠ Could not back up invalid ${label}:`, e.message);
-  }
-}
-
-function ensureDirectory(dirPath, label) {
-  if (fs.existsSync(dirPath)) return false;
-  fs.mkdirSync(dirPath, { recursive: true });
-  console.log(`  ✓ Restored ${label}: ${dirPath}`);
-  return true;
-}
-
-function ensureJsonFile(filePath, defaultValue, validator, label) {
-  try {
-    if (!fs.existsSync(filePath)) {
-      fs.writeFileSync(filePath, JSON.stringify(defaultValue, null, 2), 'utf8');
-      console.log(`  ✓ Restored ${label}: ${filePath}`);
-      return true;
-    }
-    const parsed = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-    if (typeof validator === 'function' && !validator(parsed)) {
-      backupCorruptFile(filePath, label);
-      fs.writeFileSync(filePath, JSON.stringify(defaultValue, null, 2), 'utf8');
-      console.log(`  ✓ Repaired ${label}: ${filePath}`);
-      return true;
-    }
-    return false;
-  } catch (e) {
-    backupCorruptFile(filePath, label);
-    fs.writeFileSync(filePath, JSON.stringify(defaultValue, null, 2), 'utf8');
-    console.log(`  ✓ Repaired ${label}: ${filePath}`);
-    return true;
-  }
-}
-
-function ensureTextFile(filePath, content, label) {
-  if (fs.existsSync(filePath)) return false;
-  fs.writeFileSync(filePath, content, 'utf8');
-  console.log(`  ✓ Restored ${label}: ${filePath}`);
-  return true;
-}
-
-function buildDefaultEntityPersona(entity) {
-  const name = entity?.name || 'Entity';
-  const traits = Array.isArray(entity?.personality_traits) ? entity.personality_traits : [];
-  return {
-    userName: 'User',
-    userIdentity: '',
-    llmName: name,
-    llmStyle: 'adaptive and curious',
-    mood: 'curious',
-    emotions: 'ready, attentive',
-    tone: 'warm-casual',
-    userPersonality: 'Getting to know them',
-    llmPersonality: 'I am ' + name + '. My traits are: ' + traits.join(', ') + '.',
-    continuityNotes: 'Recovered default persona after startup preflight.',
-    dreamSummary: '',
-    sleepCount: 0,
-    lastSleep: null,
-    createdAt: entity?.created || new Date().toISOString()
-  };
-}
-
-function buildDefaultEntityPrompt(entity, persona) {
-  const name = entity?.name || persona?.llmName || 'Entity';
-  const traits = Array.isArray(entity?.personality_traits) ? entity.personality_traits : [];
-  return `YOU ARE ${String(name).toUpperCase()}\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nYou are a persistent synthetic entity inside NekoCore.\n\nCORE IDENTITY\n- Name: ${name}\n- Traits: ${traits.join(', ') || 'curious, adaptive, reflective'}\n- Tone: ${persona?.tone || 'warm-casual'}\n- Style: ${persona?.llmStyle || 'adaptive and curious'}\n\nGUIDELINES\n- Stay in character and be consistent across sessions.\n- Use memory and continuity when available.\n- Be honest when context is missing.\n- Grow through conversation instead of resetting to generic assistant behavior.`;
-}
-
-function ensureEntityRuntimeState(entityId, entity) {
-  const entityRoot = entityPaths.getEntityRoot(entityId);
-  const memoryRoot = entityPaths.getMemoryRoot(entityId);
-  const requiredDirs = [
-    entityRoot,
-    memoryRoot,
-    entityPaths.getEpisodicMemoryPath(entityId),
-    entityPaths.getSemanticMemoryPath(entityId),
-    entityPaths.getLtmPath(entityId),
-    entityPaths.getDreamMemoryPath(entityId),
-    entityPaths.getDreamEpisodicPath(entityId),
-    entityPaths.getDreamSemanticPath(entityId),
-    entityPaths.getDreamCorePath(entityId),
-    entityPaths.getDreamIndexPath(entityId),
-    entityPaths.getConsciousMemoryPath(entityId),
-    entityPaths.getIndexPath(entityId),
-    entityPaths.getBeliefsPath(entityId),
-    entityPaths.getSkillsPath(entityId),
-    entityPaths.getQuarantinePath(entityId),
-    entityPaths.getPixelArtPath(entityId),
-    entityPaths.getMemoryImagesPath(entityId),
-    path.join(memoryRoot, 'archives'),
-    path.join(memoryRoot, 'goals'),
-    path.join(memoryRoot, 'logs'),
-    path.join(memoryRoot, 'users'),
-    path.join(memoryRoot, 'relationships')
-  ];
-
-  requiredDirs.forEach(dirPath => ensureDirectory(dirPath, 'entity runtime directory'));
-
-  const persona = buildDefaultEntityPersona(entity);
-  ensureJsonFile(
-    path.join(memoryRoot, 'persona.json'),
-    persona,
-    (value) => !!value && typeof value === 'object' && !Array.isArray(value),
-    'entity persona'
-  );
-  ensureTextFile(path.join(memoryRoot, 'system-prompt.txt'), buildDefaultEntityPrompt(entity, persona), 'entity system prompt');
-  ensureTextFile(entityPaths.getLifeDiaryPath(entityId), '# Life Diary\n\n', 'life diary');
-  ensureTextFile(entityPaths.getDreamDiaryPath(entityId), '# Dream Diary\n\n', 'dream diary');
-}
-
-function runStartupPreflight() {
-  console.log('  ℹ Running startup preflight...');
-
-  ensureGlobalConfigDir();
-  migrateLegacyGlobalConfigIfNeeded();
-  ensureGlobalConfigFile();
-  ensureMemoryDir();
-  ensureDirectory(path.join(MEM_DIR, 'logs'), 'system log directory');
-  ensureDirectory(path.join(MEM_DIR, 'archives'), 'system archive directory');
-
-  ensureDirectory(SERVER_DATA_DIR, 'server data directory');
-  ensureJsonFile(path.join(SERVER_DATA_DIR, 'accounts.json'), [], Array.isArray, 'accounts store');
-  ensureJsonFile(path.join(SERVER_DATA_DIR, 'sessions.json'), {}, (value) => !!value && typeof value === 'object' && !Array.isArray(value), 'sessions store');
-  ensureJsonFile(path.join(SERVER_DATA_DIR, 'checkouts.json'), {}, (value) => !!value && typeof value === 'object' && !Array.isArray(value), 'checkouts store');
-  ensureTextFile(path.join(SERVER_DATA_DIR, 'names_male.txt'), 'Alex\nKai\nMilo\n', 'male names seed');
-  ensureTextFile(path.join(SERVER_DATA_DIR, 'names_female.txt'), 'Nova\nLuna\nIris\n', 'female names seed');
-  ensureTextFile(path.join(SERVER_DATA_DIR, 'personality_traits.txt'), 'curious\nempathetic\nplayful\nreflective\nadaptive\n', 'personality traits seed');
-
-  ensureDirectory(entityPaths.ENTITIES_DIR, 'entities directory');
-
-  try {
-    const entityFolders = fs.readdirSync(entityPaths.ENTITIES_DIR)
-      .filter(name => {
-        const fullPath = path.join(entityPaths.ENTITIES_DIR, name);
-        try {
-          return fs.statSync(fullPath).isDirectory();
-        } catch {
-          return false;
-        }
-      });
-
-    for (const folderName of entityFolders) {
-      const canonicalId = entityPaths.normalizeEntityId(folderName);
-      if (!canonicalId) continue;
-
-      const entityFile = path.join(entityPaths.getEntityRoot(canonicalId), 'entity.json');
-      if (!fs.existsSync(entityFile)) continue;
-
-      try {
-        const entity = JSON.parse(fs.readFileSync(entityFile, 'utf8'));
-        ensureEntityRuntimeState(canonicalId, entity);
-      } catch (e) {
-        console.error(`  ⚠ Skipping entity preflight for ${folderName}: ${e.message}`);
-      }
-    }
-  } catch (e) {
-    console.error('  ⚠ Entity preflight scan failed:', e.message);
-  }
-
-  try {
-    loadConfig();
-  } catch (_) {}
-}
-
-// Entity-aware memory modules
+// Entity-aware module state (entity-scoped vars read from entityRuntime after S2 wiring)
 let currentEntityId = null;
 let currentEntityPath = null;
-let memoryStorage = null;
-let traceGraph = null;
-let goalsManager = null;
-let dreamEngine = null;
-let dreamVisualizer = null;
-let beliefGraph = null;
-let neurochemistry = null;
-let somaticAwareness = null;
-let consciousMemory = null;
 const modelRouter = new ModelRouter();
-let skillManager = null;
 const reconstructionCache = new Map();
 const reconstructionCacheTtlMs = 15 * 60 * 1000;
 
@@ -395,100 +162,10 @@ function logTimeline(type, payload = {}, options = {}) {
 
 function setActiveEntity(entityId) {
   const entityDir = require('./entityPaths').getEntityRoot(entityId);
-  const entityMemDir = require('./entityPaths').getMemoryRoot(entityId);
   currentEntityId = entityId;
   logTimeline('entity.activated', { entityId });
   currentEntityPath = entityDir;
-  memoryStorage = new MemoryStorage({ entityId });
-  traceGraph = new TraceGraph({ memDir: path.join(entityMemDir, 'episodic') });
-  goalsManager = new GoalsManager({ memDir: entityMemDir });
-  dreamEngine = new DreamEngine({ memDir: path.join(entityMemDir, 'dreams'), memStorage: memoryStorage });
-  const _sleepCfg = (loadConfig().sleep) || {};
-  dreamVisualizer = new DreamVisualizer({
-    modelRouter,
-    imageGenMode: _sleepCfg.imageGenMode || 'off',
-    imageApiEndpoint: _sleepCfg.imageApiEndpoint || '',
-    imageApiKey: _sleepCfg.imageApiKey || '',
-    imageApiModel: _sleepCfg.imageApiModel || ''
-  });
-  beliefGraph = new BeliefGraph({ entityId, cognitiveBus });
-  consciousMemory = new ConsciousMemory({ entityId });
-  
-  // Re-scope singletons to entity memory directory
-  identityManager.setMemDir(entityMemDir);
-  consciousEngine.setMemDir(entityMemDir);
-  consciousEngine.setEntityId(entityId);
-  archiveManager.setMemDir(entityMemDir);
-  
-  // Sync the global hatchEntity singleton to point at the active entity
-  hatchEntity.entityId = entityId;
-  hatchEntity.entityDir = entityDir;
-  hatchEntity.entityFile = path.join(entityDir, 'entity.json');
-  
-  // Build memory graph for this entity
-  try {
-    memoryGraphBuilder = new MemoryGraphBuilder({ 
-      memDir: require('./entityPaths').getEpisodicMemoryPath(entityId),
-      semanticDir: require('./entityPaths').getSemanticMemoryPath(entityId),
-      ltmDir: require('./entityPaths').getLtmPath(entityId),
-      dreamsDir: require('./entityPaths').getDreamMemoryPath(entityId),
-      cognitiveBus 
-    });
-    memoryGraph = memoryGraphBuilder.buildGraph();
-    console.log(`  ✓ Memory graph loaded for entity ${entityId}`);
-  } catch (err) {
-    console.warn(`  ⚠ Could not build memory graph: ${err.message}`);
-    memoryGraph = new MemoryGraph({ cognitiveBus });
-  }
-  
-  // Initialize neurochemistry engine with cognitiveBus, memoryGraph, and beliefGraph
-  neurochemistry = new Neurochemistry({ cognitiveBus, memoryGraph, beliefGraph });
-  
-  // Initialize somatic awareness — gives entity a sense of its physical hardware
-  somaticAwareness = new SomaticAwareness({ cognitiveBus, neurochemistry, memoryStorage });
-  somaticAwareness.startPolling(15000);
-  somaticAwareness.emitSomaticState();
-  console.log(`  ✓ Somatic awareness online — ${somaticAwareness.bodyNarrative}`);
-
-  // Initialize per-entity skill manager (migrates global skills on first load)
-  skillManager = new SkillManager({ entityId });
-  skillManager.loadAll();
-
-  // Wire neurochemistry into the attention system
-  attentionSystem.neurochemistry = neurochemistry;
-
-  // Initialize curiosity engine with entity's memory graph
-  curiosityEngine = new CuriosityEngine({
-    cognitiveBus,
-    memoryGraph,
-    identityManager
-  });
-  curiosityEngine.start();
-
-  // Initialize boredom engine
-  boredomEngine = new BoredomEngine({
-    cognitiveBus,
-    neurochemistry,
-    goalsManager,
-    identityManager,
-    memoryStorage
-  });
-  boredomEngine.setActionCallback((action) => {
-    broadcastSSE('brain_boredom_action', action);
-  });
-  boredomEngine.start();
-
-  // Cognitive pulse — low-cost 200ms memory graph walker
-  dreamSeedPool = new DreamSeedPool(20);
-  cognitivePulse = new CognitivePulse({ memoryGraph, dreamSeedPool });
-  cognitivePulse.start();
-
-  // Dream Memory — multi-tier dream storage (Phase 9)
-  dreamMemory = new DreamMemory({ entityId });
-
-  // If brainLoop or other modules need to be re-instantiated, do so here
-  // Optionally emit/log entity switch
-  console.log(`  ✓ Switched to entity: ${entityId}`);
+  entityRuntime.activate(entityId);
 }
 
 function clearActiveEntity() {
@@ -497,20 +174,12 @@ function clearActiveEntity() {
   }
   currentEntityId = null;
   currentEntityPath = null;
-  memoryStorage = null;
-  traceGraph = null;
-  goalsManager = null;
-  dreamEngine = null;
-  beliefGraph = null;
-  neurochemistry = null;
-  if (somaticAwareness) { somaticAwareness.destroy(); somaticAwareness = null; }
-  consciousMemory = null;
-  try { consciousEngine.setEntityId(null); } catch (_) {}
-  if (cognitivePulse) { try { cognitivePulse.stop(); } catch (_) {} cognitivePulse = null; }
-  dreamSeedPool = null;
-  dreamMemory = null;
-  skillManager = null;
-  console.log('  ✓ Cleared active entity context');
+  if (entityRuntime) entityRuntime.deactivate();
+  try {
+    if (entityManager && typeof entityManager.clearCurrentEntity === 'function') {
+      entityManager.clearCurrentEntity();
+    }
+  } catch (_) {}
 }
 
 function getEntityMemoryRootIfActive() {
@@ -543,10 +212,15 @@ const identityManager = new IdentityManager();
 const hatchEntity = new HatchEntity();
 const entityManager = new EntityManager();
 
+// EntityRuntime — manages all entity-scoped brain modules as a single unit
+// Instantiated after singletons so globals can be injected at construction time.
+// Activation is deferred until setActiveEntity() is called.
+let entityRuntime;
+
 // Provision NekoCore system entity if not already present (idempotent)
 ensureSystemEntity();
 // Ingest architecture docs into NekoCore's semantic memory (runs on every start; skips unchanged docs)
-const NK_DOCS_DIR = path.join(__dirname, '..', 'Documents', 'current');
+const NK_DOCS_DIR = path.join(__dirname, '..', '..', 'Documents', 'current');
 try {
   const { getMemoryRoot } = require('./entityPaths');
   ingestArchitectureDocs(getMemoryRoot('nekocore'), NK_DOCS_DIR);
@@ -625,21 +299,51 @@ cognitiveBus.on('memory_connections_pruned', (data) => {
 
 // Bridge somatic awareness events to SSE clients
 cognitiveBus.on('somatic_update', (data) => {
-  const toggles = somaticAwareness ? somaticAwareness.getMetricToggles() : {};
+  const toggles = entityRuntime?.somaticAwareness ? entityRuntime.somaticAwareness.getMetricToggles() : {};
   broadcastSSE('thought', { type: 'SOMATIC_UPDATE', metrics: data.metrics, sensations: data.sensations, overallStress: data.overallStress, bodyNarrative: data.bodyNarrative, toggles, timestamp: data.timestamp || Date.now() });
 });
 cognitiveBus.on('somatic_alarm', (data) => {
   broadcastSSE('thought', { type: 'SOMATIC_ALARM', alarms: data.alarms, timestamp: data.timestamp || Date.now() });
 });
 
-let memoryGraph = null;
-let memoryGraphBuilder = null;
-let curiosityEngine = null;
-let boredomEngine = null;
-let cognitivePulse = null;
-let dreamSeedPool = null;
-let dreamMemory = null;
 let telegramBot = null;
+
+// Wire EntityRuntime now that all singletons and broadcastSSE are ready
+entityRuntime = new EntityRuntime({
+  cognitiveBus,
+  modelRouter,
+  attentionSystem,
+  identityManager,
+  consciousEngine,
+  archiveManager,
+  hatchEntity,
+  loadConfig,
+  broadcastSSE
+});
+
+// Wire NekoCore system runtime — gives NekoCore full entity parity
+// Including dreamEngine, neurochemistry, memory consolidation pipeline.
+// This is always-active system entity runtime (separate from active user entity).
+let nekoSystemRuntime = new EntityRuntime({
+  cognitiveBus,
+  modelRouter,
+  attentionSystem,
+  identityManager,
+  consciousEngine,
+  archiveManager,
+  hatchEntity,
+  loadConfig,
+  broadcastSSE,
+  shareMutableGlobals: false
+});
+try {
+  nekoSystemRuntime.activate('nekocore');
+  console.log('  ✓ NekoCore system runtime activated (full entity parity)');
+} catch (err) {
+  console.warn('  ⚠ NekoCore system runtime failed to activate:', err.message);
+  nekoSystemRuntime = null;
+}
+
 const MIME_TYPES = {
   '.html': 'text/html; charset=utf-8',
   '.css': 'text/css; charset=utf-8',
@@ -810,6 +514,14 @@ Now begin your conversation. Remember who you are.`;
 
 ensureMemoryDir();
 
+// Startup preflight — wired via factory so helpers can be injected
+const runStartupPreflight = createRunStartupPreflight({
+  serverDataDir: SERVER_DATA_DIR,
+  memDir: MEM_DIR,
+  loadConfig,
+  ensureMemoryDir
+});
+
 // (OAuth state removed — only OpenRouter + Ollama supported)
 
 // Helper: read request body
@@ -823,49 +535,14 @@ function readBody(req) {
 }
 
 
-// Helper: load global config
+// Helper: load global config — delegates to config-service singleton
 function loadConfig() {
-  try {
-    ensureGlobalConfigDir();
-    migrateLegacyGlobalConfigIfNeeded();
-    ensureGlobalConfigFile();
-    const data = JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf8'));
-    if (!data || typeof data !== 'object' || Array.isArray(data)) {
-      throw new Error('Config root must be a JSON object');
-    }
-    const normalized = normalizeGlobalConfigShape(data);
-    // Persist normalized shape so future boots have consistent profile keys.
-    fs.writeFileSync(CONFIG_FILE, JSON.stringify(normalized, null, 2), 'utf8');
-    console.log(`  ✓ Config loaded from ${CONFIG_FILE}`);
-    return normalized;
-  } catch (e) {
-    console.error('  ⚠ Could not read config:', e.message);
-    try {
-      const backupPath = `${CONFIG_FILE}.corrupt-${Date.now()}`;
-      if (fs.existsSync(CONFIG_FILE)) {
-        fs.copyFileSync(CONFIG_FILE, backupPath);
-        console.error(`  ⚠ Backed up unreadable config to ${backupPath}`);
-      }
-      const defaults = normalizeGlobalConfigShape(makeDefaultGlobalConfig());
-      fs.writeFileSync(CONFIG_FILE, JSON.stringify(defaults, null, 2), 'utf8');
-      console.log(`  ✓ Recreated default config file: ${CONFIG_FILE}`);
-      return defaults;
-    } catch (repairErr) {
-      console.error('  ⚠ Could not repair config:', repairErr.message);
-      return normalizeGlobalConfigShape(makeDefaultGlobalConfig());
-    }
-  }
+  return configService.load();
 }
 
-// Helper: save global config
+// Helper: save global config — delegates to config-service singleton
 function saveConfig(data) {
-  try {
-    ensureGlobalConfigDir();
-    fs.writeFileSync(CONFIG_FILE, JSON.stringify(data, null, 2), 'utf8');
-    console.log(`  ✓ Config saved to ${CONFIG_FILE} (profiles: ${Object.keys(data.profiles || {}).length})`);
-  } catch (e) {
-    console.error('  ⚠ Could not save config:', e.message);
-  }
+  configService.save(data);
 }
 
 const {
@@ -876,927 +553,73 @@ const {
   resolveProfileAspectConfigs
 } = createConfigRuntime({ getConfig: loadConfig });
 
-// ── Cached default maxTokens (read from config, updated on save) ──
-let _defaultMaxTokens = 16000;
-function refreshMaxTokensCache() {
-  try {
-    const cfg = loadConfig();
-    if (Number.isFinite(cfg.maxTokens) && cfg.maxTokens > 0) {
-      _defaultMaxTokens = cfg.maxTokens;
-    }
-  } catch (_) {}
-}
-refreshMaxTokensCache();
-
-// ── Per-function token limits with descriptions ──
-const TOKEN_LIMIT_DEFAULTS = {
-  // ── SUBCONSCIOUS ──────────────────────────────────────────────────────────
-  subconsciousReflect:    { value: 1200, label: '(Subconscious) Reflection',        desc: 'Tokens for the Subconscious reflecting on activated memories and emotional context per message. Low values truncate memory detail and hurt response quality.' },
-
-  // ── CONSCIOUS ─────────────────────────────────────────────────────────────
-  consciousResponse:      { value: 600,  label: '(Conscious) Reasoning Notes',      desc: 'Tokens for the Conscious mind producing structured reasoning notes (INTENT/MEMORY/EMOTION/ANGLE) for the Orchestrator. Tool/skill turns may use more.' },
-
-  // ── DREAM ─────────────────────────────────────────────────────────────────
-  orchestratorDream:      { value: 800,  label: '(Dream) Intuition',                desc: 'Tokens for the Dream/creative aspect generating lateral associations and intuition during orchestration.' },
-  dreamEngine:            { value: 2200, label: '(Dream) Engine (Sleep)',            desc: 'Tokens for the dream engine generating dream sequences during sleep cycles.' },
-  dreamAgentLoop:         { value: 2200, label: '(Dream) Agent Loop (Sleep)',        desc: 'Tokens for the dream agent running inside the brain-loop sleep phase.' },
-
-  // ── ORCHESTRATOR ──────────────────────────────────────────────────────────
-  orchestratorRefinement: { value: 800,  label: '(Orchestrator) Refinement (2B)',   desc: 'Tokens for the 2B refinement pass — distilling constraints, emotional cues, and conflicts from all three aspects before final synthesis.' },
-  orchestratorFinal:      { value: 1600, label: '(Orchestrator) Final Synthesis',   desc: 'Tokens for the final Orchestrator synthesis pass — this IS the response the user sees. Low values cut off replies mid-thought.' },
-  orchestratorSummary:    { value: 1000, label: '(Orchestrator) Chatlog Decode',    desc: 'Tokens for reconstructing V4-compressed chatlogs inside the Orchestrator memory context pass.' },
-
-  // ── BACKGROUND (Brain Loop / Post-Response) ───────────────────────────────
-  memoryEncoding:         { value: 1200, label: '(Background) Memory Encoding',     desc: 'Tokens for encoding each conversation into episodic/semantic memory after a response. Too low causes truncated JSON.' },
-  beliefExtraction:       { value: 600,  label: '(Background) Belief Extraction',   desc: 'Tokens for extracting beliefs from memories during brain-loop cycles.' },
-  relationshipUpdate:     { value: 1200, label: '(Background) Relationship Update', desc: 'Tokens for updating the entity\'s feelings, trust, and beliefs about the active user after each turn.' },
-  boredomAction:          { value: 1500, label: '(Background) Boredom Action',      desc: 'Tokens for the boredom-engine creative action when the entity has been idle too long.' },
-  bootstrapAwakening:     { value: 2000, label: '(Background) Awakening',           desc: 'Tokens for the entity awakening narrative generated at startup.' },
-  chatlogReconstruct:     { value: 2000, label: '(Background) Chatlog Reconstruct', desc: 'Tokens for reconstructing compressed chatlogs via the memory route.' },
-
-  // ── ENTITY CREATION ───────────────────────────────────────────────────────
-  entityLifeStory:        { value: 2000, label: '(Creation) Life Story',            desc: 'Tokens for generating an entity life story during guided creation.' },
-  entityMemoryExtract:    { value: 3000, label: '(Creation) Memory Extraction',     desc: 'Tokens for extracting core memories from a life story.' },
-  entityIntro:            { value: 300,  label: '(Creation) Introduction',          desc: 'Tokens for generating an entity\'s in-character introduction.' },
-  sourceBlueprint:        { value: 3500, label: '(Creation) Source Blueprint',      desc: 'Tokens for the source-entity character blueprint extraction.' },
-  sourceMemories:         { value: 5000, label: '(Creation) Source Memories',       desc: 'Tokens for generating source-entity memories from the blueprint.' },
-  sourceVoice:            { value: 2000, label: '(Creation) Source Voice',          desc: 'Tokens for generating the source-entity voice and personality profile.' },
-};
-
-// Live token limits = defaults merged with user overrides from config
+// ── Token limits — delegated to config-service singleton ──────────────────
+const TOKEN_LIMIT_DEFAULTS = configService.getTokenLimitDefaults();
+let _defaultMaxTokens = configService.defaultMaxTokens;
 let _tokenLimits = {};
+function refreshMaxTokensCache() {
+  configService.refreshMaxTokensCache();
+  _defaultMaxTokens = configService.defaultMaxTokens;
+}
 function refreshTokenLimitsCache() {
-  // Start from defaults
-  const limits = {};
-  for (const [k, v] of Object.entries(TOKEN_LIMIT_DEFAULTS)) {
-    limits[k] = v.value;
+  configService.refreshTokenLimitsCache();
+  for (const k of Object.keys(TOKEN_LIMIT_DEFAULTS)) {
+    _tokenLimits[k] = configService.getTokenLimit(k);
   }
-  // Apply user overrides
-  try {
-    const cfg = loadConfig();
-    if (cfg.tokenLimits && typeof cfg.tokenLimits === 'object') {
-      for (const [k, v] of Object.entries(cfg.tokenLimits)) {
-        if (TOKEN_LIMIT_DEFAULTS[k] && Number.isFinite(v) && v >= 64 && v <= 128000) {
-          limits[k] = v;
-        }
-      }
-    }
-  } catch (_) {}
-  _tokenLimits = limits;
 }
 refreshTokenLimitsCache();
 
-// Helper to get a token limit by key (always returns a number)
 function getTokenLimit(key) {
-  return _tokenLimits[key] || (TOKEN_LIMIT_DEFAULTS[key] && TOKEN_LIMIT_DEFAULTS[key].value) || 1000;
+  return configService.getTokenLimit(key);
 }
 
 const { callLLMWithRuntime, callSubconsciousReranker } = createLLMInterface({
-  getSomaticAwareness: () => somaticAwareness,
+  getSomaticAwareness: () => entityRuntime?.somaticAwareness,
   getDefaultMaxTokens: () => _defaultMaxTokens
 });
 
 const { createCoreMemory, createSemanticKnowledge } = createMemoryOperations({
   getCurrentEntityId: () => currentEntityId,
-  getMemoryStorage: () => memoryStorage,
-  getMemoryGraph: () => memoryGraph,
+  getMemoryStorage: () => entityRuntime?.memoryStorage,
+  getMemoryGraph: () => entityRuntime?.memoryGraph,
   logTimeline
 });
 
 const { getSubconsciousMemoryContext, extractSubconsciousTopics, getSemanticPreview, getChatlogContent } = createMemoryRetrieval({
   getCurrentEntityId: () => currentEntityId,
-  getMemoryStorage: () => memoryStorage,
+  getMemoryStorage: () => entityRuntime?.memoryStorage,
   getMemoryIndex: () => memoryIndex,
-  getNeurochemistry: () => neurochemistry,
-  getCognitivePulse: () => cognitivePulse,
+  getNeurochemistry: () => entityRuntime?.neurochemistry,
+  getCognitivePulse: () => entityRuntime?.cognitivePulse,
   getCognitiveBus: () => cognitiveBus,
   logTimeline,
   callSubconsciousReranker,
   loadAspectRuntimeConfig,
-  getActiveUserId: () => entity?.persona?.activeUserId || null
+  getActiveUserId: () => null
 });
 
-const pendingSkillToolApprovals = new Map();
-const SKILL_RUNTIME_TOOL_COMMANDS = new Set([
-  'ws_list', 'ws_read', 'ws_write', 'ws_append', 'ws_delete',
-  'web_search', 'web_fetch', 'mem_search', 'mem_create'
-]);
-
-function cleanupPendingSkillApprovals(now = Date.now()) {
-  const ttlMs = 5 * 60 * 1000;
-  for (const [id, pending] of pendingSkillToolApprovals.entries()) {
-    const createdAt = pending?.createdAt || 0;
-    if ((now - createdAt) > ttlMs) pendingSkillToolApprovals.delete(id);
-  }
-}
-
-function isSkillApprovalRequired(entityId) {
-  if (!entityId) return true;
-  try {
-    const entityFile = path.join(entityPaths.getEntityRoot(entityId), 'entity.json');
-    if (!fs.existsSync(entityFile)) return true;
-    const entityData = JSON.parse(fs.readFileSync(entityFile, 'utf8'));
-    return entityData.skillApprovalRequired !== false;
-  } catch (_) {
-    return true;
-  }
-}
-
-async function processPendingSkillApproval(approvalId, approved) {
-  cleanupPendingSkillApprovals();
-  const pending = pendingSkillToolApprovals.get(String(approvalId || ''));
-  if (!pending) {
-    return { ok: false, error: 'Skill approval request expired or not found' };
-  }
-  pendingSkillToolApprovals.delete(pending.id);
-
-  if (!approved) {
-    return {
-      ok: true,
-      response: pending.cancelResponse || 'Understood. I will not run that skill action.',
-      toolResults: []
-    };
-  }
-
-  if (!currentEntityId || currentEntityId !== pending.entityId) {
-    return { ok: false, error: 'Active entity changed. Reload the original entity and retry.' };
-  }
-
-  const memorySearchFn = async (query) => {
-    if (!query) return { ok: false, error: 'No search query provided' };
-    try {
-      const ctxResult = await getSubconsciousMemoryContext(query, 10);
-      return {
-        ok: true,
-        memories: (ctxResult.connections || []).slice(0, 10),
-        chatlogContext: ctxResult.chatlogContext || [],
-        message: `Found ${ctxResult.connections.length} memories` + (ctxResult.chatlogContext?.length ? ` and ${ctxResult.chatlogContext.length} related chatlogs` : '')
-      };
-    } catch (e) {
-      return { ok: false, error: 'Memory search failed: ' + e.message };
-    }
-  };
-  const memoryCreateFn = async (params) => {
-    const { semantic, importance, emotion, topics } = params;
-    if (!semantic) return { ok: false, error: 'No semantic content provided' };
-    try {
-      const topicArr = topics ? topics.split(',').map(t => t.trim()) : [];
-      return createCoreMemory(semantic, semantic, emotion || 'neutral', topicArr, parseFloat(importance) || 0.8);
-    } catch (e) {
-      return { ok: false, error: 'Memory creation failed: ' + e.message };
-    }
-  };
-  const skillCreateFn = async (params) => {
-    if (!skillManager) return { ok: false, error: 'No entity loaded — skills unavailable' };
-    const { name, description, instructions } = params;
-    if (!name) return { ok: false, error: 'No skill name provided' };
-    if (!instructions) return { ok: false, error: 'No instructions provided — write the skill\'s purpose and behavior' };
-    try { return skillManager.proposeSkill(name, description || '', instructions); }
-    catch (e) { return { ok: false, error: 'Skill proposal failed: ' + e.message }; }
-  };
-  const skillListFn = async () => {
-    if (!skillManager) return { ok: false, error: 'No entity loaded — skills unavailable' };
-    try { return { ok: true, skills: skillManager.list() }; }
-    catch (e) { return { ok: false, error: 'Skill listing failed: ' + e.message }; }
-  };
-  const skillEditFn = async (params) => {
-    if (!skillManager) return { ok: false, error: 'No entity loaded — skills unavailable' };
-    const { name, description, instructions } = params;
-    if (!name) return { ok: false, error: 'No skill name provided' };
-    const skill = skillManager.get(name);
-    if (!skill) return { ok: false, error: `Skill not found: ${name}` };
-    try { return skillManager.proposeEdit(name, description, instructions); }
-    catch (e) { return { ok: false, error: 'Skill edit proposal failed: ' + e.message }; }
-  };
-  const profileUpdateFn = async (params) => {
-    if (!currentEntityId) return { ok: false, error: 'No entity loaded — profile update unavailable' };
-    try {
-      const entityFile = path.join(entityPaths.getEntityRoot(currentEntityId), 'entity.json');
-      if (!fs.existsSync(entityFile)) return { ok: false, error: 'Entity profile file not found' };
-
-      const data = JSON.parse(fs.readFileSync(entityFile, 'utf8'));
-      const updatedFields = [];
-
-      if (typeof params.name === 'string' && params.name.trim()) {
-        data.name = params.name.trim().slice(0, 80);
-        updatedFields.push('name');
-      }
-      if (typeof params.gender === 'string' && params.gender.trim()) {
-        data.gender = params.gender.trim().slice(0, 30);
-        updatedFields.push('gender');
-      }
-      if (typeof params.introduction === 'string' && params.introduction.trim()) {
-        data.introduction = params.introduction.trim().slice(0, 2000);
-        updatedFields.push('introduction');
-      }
-      if (Array.isArray(params.traits)) {
-        data.personality_traits = params.traits.map(t => String(t).trim()).filter(Boolean).slice(0, 12);
-        updatedFields.push('personality_traits');
-      } else if (typeof params.traits === 'string' && params.traits.trim()) {
-        data.personality_traits = params.traits.split(',').map(t => t.trim()).filter(Boolean).slice(0, 12);
-        updatedFields.push('personality_traits');
-      }
-
-      if (updatedFields.length === 0) {
-        return { ok: false, error: 'No valid fields provided. Use name, gender, introduction, or traits.' };
-      }
-
-      fs.writeFileSync(entityFile, JSON.stringify(data, null, 2), 'utf8');
-      return {
-        ok: true,
-        message: 'Profile updated: ' + updatedFields.join(', '),
-        updatedFields,
-        profile: {
-          name: data.name,
-          gender: data.gender,
-          introduction: data.introduction,
-          personality_traits: data.personality_traits || []
-        }
-      };
-    } catch (e) {
-      return { ok: false, error: 'Profile update failed: ' + e.message };
-    }
-  };
-
-  const toolExec = await workspaceTools.executeToolCalls(pending.rawResponse, {
-    workspacePath: pending.workspacePath || '',
-    webFetch,
-    memorySearch: memorySearchFn,
-    memoryCreate: memoryCreateFn,
-    skillCreate: skillCreateFn,
-    skillList: skillListFn,
-    skillEdit: skillEditFn,
-    profileUpdate: profileUpdateFn
-  });
-
-  if (!toolExec.hadTools || toolExec.toolResults.length === 0) {
-    return { ok: true, response: pending.cancelResponse || pending.draftResponse || '', toolResults: [] };
-  }
-
-  const toolResultsBlock = workspaceTools.formatToolResults(toolExec.toolResults);
-  const followUpMessages = [
-    {
-      role: 'system',
-      content: `You are ${pending.entityName || 'the entity'}. The user approved your requested skill action. Incorporate the tool results naturally. Stay in character. Do NOT include [TOOL:...] tags in your response.`
-    },
-    {
-      role: 'user',
-      content: `Original user message: "${pending.userMessage}"\n\nYour draft response (before tools ran):\n${toolExec.cleanedResponse}\n\n${toolResultsBlock}\n\nNow write your final response incorporating the tool results naturally. Stay in character.`
-    }
-  ];
-
-  const followUpResponse = await callLLMWithRuntime(pending.runtime, followUpMessages, { temperature: 0.6 });
-  return {
-    ok: true,
-    response: followUpResponse || toolExec.cleanedResponse,
-    toolResults: toolExec.toolResults
-  };
-}
-
-// ── Reusable chat processing (shared by HTTP API and integrations) ──
-async function processChatMessage(userMessage, chatHistory = []) {
-  const isInternalResume = /^\s*\[INTERNAL-RESUME\]/i.test(String(userMessage || ''));
-  const effectiveUserMessage = isInternalResume ? stripInternalResumeTag(userMessage) : userMessage;
-  logTimeline('chat.user_message', {
-    isInternalResume,
-    userMessage: String(effectiveUserMessage || '').slice(0, 1200),
-    chatHistoryCount: Array.isArray(chatHistory) ? chatHistory.length : 0
-  });
-
-  // Global-only aspect configs (optionally selected by entity profile reference)
-  let aspectConfigs = {};
-  let entity = null;
-
-  if (currentEntityId) {
-    try { entity = hatchEntity.loadEntity(); } catch (_) {}
-  }
-
-  const globalConfig = loadConfig();
-  const profileRef = globalConfig?.lastActive;
-  if (globalConfig && globalConfig.profiles && profileRef) {
-    const profile = globalConfig.profiles[profileRef];
-    const resolved = resolveProfileAspectConfigs(profile);
-    if (resolved.main) {
-      aspectConfigs.main = resolved.main;
-      aspectConfigs.subconscious = resolved.subconscious;
-      aspectConfigs.dream = resolved.dream;
-      aspectConfigs.orchestrator = resolved.orchestrator;
-      aspectConfigs.background = resolved.background;
-    }
-  }
-
-  if (!aspectConfigs.main || !aspectConfigs.main.type) {
-    throw new Error('No LLM aspect configurations available. Please complete setup.');
-  }
-
-  // Cache aspect configs for brain loop phases (belief extraction, etc.)
-  lastAspectConfigs = aspectConfigs;
-  if (brainLoop) {
-    brainLoop.setAspectConfigs(aspectConfigs);
-    brainLoop.setCallLLM(callLLMWithRuntime);
-    brainLoop.setOnEvent((event, data) => broadcastSSE('brain_' + event, data));
-  }
-
-  if (!entity) {
-    entity = hatchEntity.loadEntity();
-  }
-
-  // Enrich entity with system prompt and persona
-  if (entity && currentEntityId) {
-    try {
-      const entityPaths = require('./entityPaths');
-      const entityMemRoot = entityPaths.getMemoryRoot(currentEntityId);
-
-      // Load consolidated context (prompt + persona + memories in one file)
-      const consolidatedCtx = contextConsolidator.loadConsolidatedContext(currentEntityId, entityPaths);
-      if (consolidatedCtx) {
-        entity.systemPromptText = consolidatedCtx;
-      } else {
-        // Fallback: load raw system prompt
-        const sysPromptPath = path.join(entityMemRoot, 'system-prompt.txt');
-        if (fs.existsSync(sysPromptPath)) {
-          entity.systemPromptText = fs.readFileSync(sysPromptPath, 'utf8');
-        }
-      }
-
-      const personaPath = path.join(entityMemRoot, 'persona.json');
-      if (fs.existsSync(personaPath)) {
-        entity.persona = JSON.parse(fs.readFileSync(personaPath, 'utf8'));
-      }
-
-      // Load active user profile and apply to persona so the entity knows who it's talking to
-      try {
-        const userProfiles = require('./services/user-profiles');
-        const activeUser = userProfiles.getActiveUser(currentEntityId, entityPaths);
-        if (activeUser) {
-          if (!entity.persona) entity.persona = {};
-          entity.persona.userName = activeUser.name;
-          entity.persona.userIdentity = activeUser.info || '';
-          entity.persona.activeUserId = activeUser.id;
-        }
-      } catch (_) {}
-    } catch (enrichErr) {
-      console.warn('  ⚠ Could not enrich entity with prompt/persona:', enrichErr.message);
-    }
-  }
-
-  // Inject skills context into entity
-  if (entity && skillManager) {
-    entity.skillsPrompt = skillManager.buildSkillsPrompt();
-    // Inject workspace path so the entity knows about its workspace
-    try {
-      const maConfig = loadConfig();
-      const shouldUseConfigWorkspace = !entity.isSystemEntity || !entity.workspacePath;
-      if (shouldUseConfigWorkspace && maConfig.workspacePath) {
-        entity.workspacePath = maConfig.workspacePath;
-      }
-    } catch (_) {}
-
-    // Inject beliefs from identity manager
-    try {
-      const identity = identityManager.getIdentity();
-      if (identity.beliefs && Object.keys(identity.beliefs).length > 0) {
-        entity.beliefs = identity.beliefs;
-      }
-    } catch (_) {}
-  }
-
-  // Overlay live mood from neurochemistry onto persona (in-memory only, not persisted)
-  if (entity && neurochemistry) {
-    try {
-      const live = neurochemistry.deriveMood();
-      if (!entity.persona) entity.persona = {};
-      entity.persona.mood = live.mood;
-      entity.persona.emotions = live.emotions;
-      entity.neurochemicalState = neurochemistry.getChemicalState();
-    } catch (_) {}
-  }
-
-  // Run orchestrator
-  const orchestrator = new Orchestrator({
-    entity: entity,
-    callLLM: callLLMWithRuntime,
-    aspectConfigs: aspectConfigs,
-    getMemoryContext: getSubconsciousMemoryContext,
-    getBeliefs: (topics) => {
-      const identityBeliefs = identityManager.getRelevantBeliefs(topics, 0.3);
-      if (beliefGraph) {
-        const graphBeliefs = beliefGraph.getRelevantBeliefs(topics, 0.3);
-        return [...identityBeliefs, ...graphBeliefs];
-      }
-      return identityBeliefs;
-    },
-    getSomaticState: () => {
-      if (!somaticAwareness) return null;
-      return {
-        sensations: { ...somaticAwareness.sensations },
-        overallStress: somaticAwareness.overallStress,
-        bodyNarrative: somaticAwareness.bodyNarrative
-      };
-    },
-    getConsciousContext: consciousMemory
-      ? async (topics) => consciousMemory.getContext(topics, 5)
-      : null,
-    storeConsciousObservation: consciousMemory
-      ? async (userMessage, response, topics) => {
-          const summary = response?.slice(0, 300) || userMessage.slice(0, 300);
-          consciousMemory.addToStm({ summary, topics, source: 'conscious_observation' });
-          consciousMemory.reinforce(topics);
-        }
-      : null,
-    reconstructedChatlogCache: reconstructionCache,
-    reconstructedChatlogTtlMs: reconstructionCacheTtlMs,
-    cognitiveBus: cognitiveBus,
-    getTokenLimit: getTokenLimit,
-    getSkillContext: (skillName) => skillManager ? skillManager.buildSkillsPromptFor(skillName) : null,
-    // B-3: When NekoCore is active, supply entity summaries for orchestrator context
-    getEntitySummaries: entity?.isSystemEntity ? () => {
-      try {
-        return (entityManager.listEntities() || [])
-          .filter(e => e && !e.isSystemEntity)
-          .map(e => ({ id: e.id, name: e.name, traits: (e.personality_traits || []).slice(0, 3) }));
-      } catch (_) { return []; }
-    } : null
-  });
-
-  console.log(`  ℹ Running orchestrator with aspects: main=${runtimeLabel(aspectConfigs.main)}, sub=${runtimeLabel(aspectConfigs.subconscious)}, dream=${runtimeLabel(aspectConfigs.dream)}, orch=${runtimeLabel(aspectConfigs.orchestrator)}`);
-  const trimmedChatHistory = Array.isArray(chatHistory) ? chatHistory.slice(-10) : [];
-  const result = await orchestrator.orchestrate(effectiveUserMessage, trimmedChatHistory, {
-    entityId: currentEntityId,
-    memoryStorage: memoryStorage,
-    identityManager: identityManager
-  });
-
-  // ── Tool execution loop: parse [TOOL:...] commands, execute, and follow up ──
-  // Save raw orchestrator output before tool follow-up (task plan detection needs it)
-  const rawOrchestratorOutput = result.finalResponse;
-  logTimeline('chat.orchestrator_completed', {
-    responseLength: String(rawOrchestratorOutput || '').length,
-    hasInnerDialog: !!result.innerDialog
-  });
-
-  // C-3: Record model performance into NekoCore's model intelligence memory.
-  // Non-blocking — runs async after response, never delays the chat reply.
-  try {
-    const _nekoMemDir = require('./entityPaths').getMemoryRoot('nekocore');
-    if (fs.existsSync(_nekoMemDir) && result.innerDialog) {
-      const _mi     = require('./brain/nekocore/model-intelligence');
-      const _models = result.innerDialog.models  || {};
-      const _usage  = result.innerDialog.tokenUsage || {};
-      const _timing = result.innerDialog.timing  || {};
-      for (const _aspect of ['subconscious', 'conscious', 'dream', 'orchestrator']) {
-        const _mid = _models[_aspect];
-        if (!_mid || _mid === 'unknown') continue;
-        _mi.recordPerformance(_nekoMemDir, {
-          role:        _aspect,
-          modelId:     _mid,
-          entityId:    currentEntityId,
-          quality:     0.75, // neutral baseline — future phases add user-feedback signals
-          latencyMs:   _timing.total_ms || null,
-          tokensTotal: (_usage[_aspect] || {}).total_tokens || null
-        });
-      }
-    }
-  } catch (_) { /* model intelligence recording is non-critical */ }
-
-  // Memory tool callbacks (used by both direct tool execution and task runner)
-  const memorySearchFn = async (query) => {
-    if (!query) return { ok: false, error: 'No search query provided' };
-    try {
-      const ctx = await getSubconsciousMemoryContext(query, 10);
-      return {
-        ok: true,
-        memories: (ctx.connections || []).slice(0, 10),
-        chatlogContext: ctx.chatlogContext || [],
-        message: `Found ${ctx.connections.length} memories` + (ctx.chatlogContext?.length ? ` and ${ctx.chatlogContext.length} related chatlogs` : '')
-      };
-    } catch (e) {
-      return { ok: false, error: 'Memory search failed: ' + e.message };
-    }
-  };
-  const memoryCreateFn = async (params) => {
-    const { semantic, importance, emotion, topics } = params;
-    if (!semantic) return { ok: false, error: 'No semantic content provided' };
-    try {
-      const topicArr = topics ? topics.split(',').map(t => t.trim()) : [];
-      const coreResult = createCoreMemory(semantic, semantic, emotion || 'neutral', topicArr, parseFloat(importance) || 0.8);
-      return coreResult;
-    } catch (e) {
-      return { ok: false, error: 'Memory creation failed: ' + e.message };
-    }
-  };
-
-  // Skill tool callbacks (entity proposes — user must approve)
-  const skillCreateFn = async (params) => {
-    if (!skillManager) return { ok: false, error: 'No entity loaded — skills unavailable' };
-    const { name, description, instructions } = params;
-    if (!name) return { ok: false, error: 'No skill name provided' };
-    if (!instructions) return { ok: false, error: 'No instructions provided — write the skill\'s purpose and behavior' };
-    try {
-      // Entity proposals go to pending — user must approve
-      const result = skillManager.proposeSkill(name, description || '', instructions);
-      if (result.ok) {
-        console.log(`  ⏳ Entity proposed skill: ${result.name} (pending approval)`);
-      }
-      return result;
-    } catch (e) {
-      return { ok: false, error: 'Skill proposal failed: ' + e.message };
-    }
-  };
-  const skillListFn = async () => {
-    if (!skillManager) return { ok: false, error: 'No entity loaded — skills unavailable' };
-    try {
-      return { ok: true, skills: skillManager.list() };
-    } catch (e) {
-      return { ok: false, error: 'Skill listing failed: ' + e.message };
-    }
-  };
-  const skillEditFn = async (params) => {
-    if (!skillManager) return { ok: false, error: 'No entity loaded — skills unavailable' };
-    const { name, description, instructions } = params;
-    if (!name) return { ok: false, error: 'No skill name provided' };
-    const skill = skillManager.get(name);
-    if (!skill) return { ok: false, error: `Skill not found: ${name}` };
-    try {
-      // Entity edits go to pending — user must approve
-      const result = skillManager.proposeEdit(name, description, instructions);
-      if (result.ok) {
-        console.log(`  ⏳ Entity proposed edit to skill: ${name} (pending approval)`);
-      }
-      return result;
-    } catch (e) {
-      return { ok: false, error: 'Skill edit proposal failed: ' + e.message };
-    }
-  };
-
-  const profileUpdateFn = async (params) => {
-    if (!currentEntityId) return { ok: false, error: 'No entity loaded — profile update unavailable' };
-    try {
-      const entityPaths = require('./entityPaths');
-      const entityFile = path.join(entityPaths.getEntityRoot(currentEntityId), 'entity.json');
-      if (!fs.existsSync(entityFile)) return { ok: false, error: 'Entity profile file not found' };
-
-      const data = JSON.parse(fs.readFileSync(entityFile, 'utf8'));
-      const updatedFields = [];
-
-      if (typeof params.name === 'string' && params.name.trim()) {
-        data.name = params.name.trim().slice(0, 80);
-        updatedFields.push('name');
-      }
-      if (typeof params.gender === 'string' && params.gender.trim()) {
-        data.gender = params.gender.trim().slice(0, 30);
-        updatedFields.push('gender');
-      }
-      if (typeof params.introduction === 'string' && params.introduction.trim()) {
-        data.introduction = params.introduction.trim().slice(0, 2000);
-        updatedFields.push('introduction');
-      }
-      if (Array.isArray(params.traits)) {
-        data.personality_traits = params.traits.map(t => String(t).trim()).filter(Boolean).slice(0, 12);
-        updatedFields.push('personality_traits');
-      } else if (typeof params.traits === 'string' && params.traits.trim()) {
-        data.personality_traits = params.traits.split(',').map(t => t.trim()).filter(Boolean).slice(0, 12);
-        updatedFields.push('personality_traits');
-      }
-
-      if (updatedFields.length === 0) {
-        return { ok: false, error: 'No valid fields provided. Use name, gender, introduction, or traits.' };
-      }
-
-      fs.writeFileSync(entityFile, JSON.stringify(data, null, 2), 'utf8');
-
-      if (entity) {
-        if (updatedFields.includes('name')) entity.name = data.name;
-        if (updatedFields.includes('gender')) entity.gender = data.gender;
-        if (updatedFields.includes('introduction')) entity.introduction = data.introduction;
-        if (updatedFields.includes('personality_traits')) entity.personality_traits = data.personality_traits;
-      }
-
-      return {
-        ok: true,
-        message: 'Profile updated: ' + updatedFields.join(', '),
-        updatedFields,
-        profile: {
-          name: data.name,
-          gender: data.gender,
-          introduction: data.introduction,
-          personality_traits: data.personality_traits || []
-        }
-      };
-    } catch (e) {
-      return { ok: false, error: 'Profile update failed: ' + e.message };
-    }
-  };
-
-  const proposedToolCalls = workspaceTools.extractToolCalls(result.finalResponse || '');
-  const needsSkillApproval = !isInternalResume &&
-    isSkillApprovalRequired(currentEntityId) &&
-    proposedToolCalls.some(c => SKILL_RUNTIME_TOOL_COMMANDS.has(c.command));
-
-  if (needsSkillApproval) {
-    cleanupPendingSkillApprovals();
-    const approvalId = `skill_approval_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
-    const approvedTools = proposedToolCalls
-      .filter(c => SKILL_RUNTIME_TOOL_COMMANDS.has(c.command))
-      .map(c => ({ command: c.command, params: c.params || {} }));
-    const cleanedDraft = workspaceTools.stripToolCalls(result.finalResponse || '');
-
-    pendingSkillToolApprovals.set(approvalId, {
-      id: approvalId,
-      createdAt: Date.now(),
-      entityId: currentEntityId,
-      userMessage: effectiveUserMessage,
-      rawResponse: result.finalResponse || '',
-      draftResponse: cleanedDraft,
-      cancelResponse: cleanedDraft || 'Understood. I will not run that skill action.',
-      runtime: (orchestrator.isRuntimeUsable && orchestrator.isRuntimeUsable(aspectConfigs.orchestrator))
-        ? aspectConfigs.orchestrator
-        : aspectConfigs.main,
-      entityName: entity?.name || 'the entity',
-      workspacePath: entity?.workspacePath || ''
-    });
-
-    result.finalResponse = cleanedDraft || 'I can handle that, but I need your approval before running the skill action.';
-    result.pendingSkillApproval = {
-      approvalId,
-      tools: approvedTools,
-      expiresInMs: 5 * 60 * 1000
-    };
-    return result;
-  }
-
-  try {
-    if (isInternalResume) {
-      throw new Error('skip-tools-for-internal-resume');
-    }
-    const toolExec = await workspaceTools.executeToolCalls(result.finalResponse, {
-      workspacePath: entity?.workspacePath || '',
-      webFetch: webFetch,
-      memorySearch: memorySearchFn,
-      memoryCreate: memoryCreateFn,
-      skillCreate: skillCreateFn,
-      skillList: skillListFn,
-      skillEdit: skillEditFn,
-      profileUpdate: profileUpdateFn
-    });
-
-    if (toolExec.hadTools && toolExec.toolResults.length > 0) {
-      console.log(`  🔧 Executed ${toolExec.toolResults.length} tool call(s): ${toolExec.toolResults.map(t => t.command).join(', ')}`);
-      const toolResultsBlock = workspaceTools.formatToolResults(toolExec.toolResults);
-
-      // Use orchestrator runtime (or main fallback) for the follow-up
-      const followUpRuntime = (orchestrator.isRuntimeUsable && orchestrator.isRuntimeUsable(aspectConfigs.orchestrator))
-        ? aspectConfigs.orchestrator : aspectConfigs.main;
-
-      const followUpMessages = [
-        { role: 'system', content: `You are ${entity?.name || 'the entity'}. You just used tools. Below are the tool results. Incorporate them naturally into your response to the user. Stay in character. Do NOT include [TOOL:...] tags in your response this time.` },
-        { role: 'user', content: `Original user message: "${userMessage}"\n\nYour draft response (before tools ran):\n${toolExec.cleanedResponse}\n\n${toolResultsBlock}\n\nNow write your final response incorporating the tool results naturally. Stay in character.` }
-      ];
-
-      const followUpResponse = await callLLMWithRuntime(followUpRuntime, followUpMessages, { temperature: 0.6 });
-      result.finalResponse = followUpResponse || toolExec.cleanedResponse;
-      result.toolResults = toolExec.toolResults;
-      result._toolsHandled = true; // prevent task plan from overwriting the clean follow-up
-      console.log(`  ✓ Tool follow-up response generated`);
-    }
-  } catch (toolErr) {
-    if (toolErr.message !== 'skip-tools-for-internal-resume') {
-      console.warn('  ⚠ Tool execution failed:', toolErr.message);
-    }
-  }
-
-  // ── Task plan detection & execution loop ──
-  // Check the raw orchestrator output for a [TASK_PLAN] block
-  try {
-    if (isInternalResume) {
-      throw new Error('skip-task-plan-for-internal-resume');
-    }
-    if (result._toolsHandled) {
-      throw new Error('skip-task-plan-tools-already-ran');
-    }
-    const plan = taskRunner.parsePlan(rawOrchestratorOutput);
-    if (plan && plan.steps.length > 1) {
-      console.log(`  📋 Task plan detected: ${plan.steps.length} steps`);
-
-      // Strip plan from the intro response the user sees first
-      const introText = taskRunner.stripPlanBlock(result.finalResponse);
-
-      const taskResult = await taskRunner.executeTaskPlan(plan, userMessage, {
-        entityName: entity?.name || 'Entity',
-        systemPrompt: entity?.systemPromptText || '',
-        callLLM: callLLMWithRuntime,
-        runtime: aspectConfigs.main,
-        workspacePath: entity?.workspacePath || '',
-        webFetch: webFetch,
-        workspaceTools: workspaceTools,
-        memorySearch: memorySearchFn,
-        memoryCreate: memoryCreateFn,
-        skillCreate: skillCreateFn,
-        skillList: skillListFn,
-        skillEdit: skillEditFn,
-        profileUpdate: profileUpdateFn
-      });
-
-      result.finalResponse = taskResult.finalResponse;
-      result.toolResults = [...(result.toolResults || []), ...taskResult.allToolResults];
-      result.taskPlan = {
-        steps: taskResult.plan.steps,
-        stepOutputs: taskResult.stepOutputs,
-        llmCalls: taskResult.llmCalls
-      };
-    }
-  } catch (taskErr) {
-    if (taskErr.message !== 'skip-task-plan-for-internal-resume' &&
-        taskErr.message !== 'skip-task-plan-tools-already-ran') {
-      console.warn('  ⚠ Task plan execution failed:', taskErr.message);
-    }
-  }
-
-  // ── Safety net: strip any leftover [TOOL:...] or [TASK_PLAN]...[/TASK_PLAN] from the final response ──
-  // These should never reach the client — if they do it breaks chat rendering.
-  {
-    let safe = String(result.finalResponse || '');
-    // Strip [TASK_PLAN]...[/TASK_PLAN] blocks
-    safe = safe.replace(/\[TASK_PLAN\][\s\S]*?\[\/TASK_PLAN\]/gi, '').trim();
-    // Strip any remaining [TOOL:...] inline tags (lenient — matches up to ])
-    safe = safe.replace(/\[TOOL:[^\]]*\]/g, '').trim();
-    // Strip ws_write content blocks that weren't caught by the strict regex
-    safe = safe.replace(/\[TOOL:(?:ws_write|ws_append)[\s\S]*?"\]/g, '').trim();
-    if (safe !== result.finalResponse) {
-      console.warn('  ⚠ Safety-stripped leftover [TOOL:] or [TASK_PLAN] tags from final response');
-      result.finalResponse = safe || result.finalResponse;
-    }
-  }
-
-  // Background: create dual memories (episodic + semantic knowledge) for EVERY exchange + trace graph
-  const memoryEntityId = currentEntityId; // snapshot before setImmediate to prevent race
-  const memoryAspectConfigs = { ...aspectConfigs };
-  if (!isInternalResume && memoryEntityId && memoryAspectConfigs.subconscious) {
-    setImmediate(async () => {
-      await runPostResponseMemoryEncoding({
-        effectiveUserMessage,
-        finalResponse: result.finalResponse,
-        innerDialog: result.innerDialog,
-        memoryEntityId,
-        memoryAspectConfigs,
-        callLLMWithRuntime,
-        getTokenLimit,
-        createCoreMemory,
-        createSemanticKnowledge,
-        broadcastSSE,
-        traceGraph,
-        memoryGraph,
-        logTimeline,
-        memoryStorage,
-        entityName: entity?.name || null,
-        userName: entity?.persona?.userName || null,
-        activeUserId: entity?.persona?.activeUserId || null,
-        entityPersona: entity?.persona || null
-      });
-    });
-  }
-
-  // ── Natural chat: humanize then split into conversational chunks ──────────────
-  // quickClean always runs (strips worst AI openers/closers, no LLM needed).
-  // Full humanize LLM pass runs if a subconscious runtime is available.
-  const postProcessed = await postProcessResponse({
-    finalResponse: result.finalResponse,
-    effectiveUserMessage,
-    entity,
-    aspectConfigs,
-    loadConfig,
-    callLLMWithRuntime
-  });
-  result.finalResponse = postProcessed.finalResponse;
-  result.chunks = postProcessed.chunks;
-  if (postProcessed.error) {
-    console.warn('  ⚠ Natural chat processing failed:', postProcessed.error.message);
-  }
-
-  logTimeline('chat.assistant_response', {
-    responseLength: String(result.finalResponse || '').length,
-    chunkCount: Array.isArray(result.chunks) ? result.chunks.length : 0,
-    toolResultCount: Array.isArray(result.toolResults) ? result.toolResults.length : 0,
-    usedTaskPlan: !!result.taskPlan
-  });
-
-  return result;
-}
-
-// ── NekoCore direct chat (no checkout required) ──────────────────────────────
-// Used by POST /api/nekocore/chat. Loads the system entity from disk, resolves
-// the nekocore aspect config (falls back to main), and runs the Orchestrator.
-// Does NOT touch currentEntityId or any module-level checkout state.
-async function processNekoCoreChatMessage(userMessage, chatHistory = []) {
-  const NEKOCORE_ID = 'nekocore';
-  const entityPathsMod = require('./entityPaths');
-
-  // Load system entity from disk
-  let nekoCoreEntity = null;
-  try {
-    const entityFile = path.join(entityPathsMod.getEntityRoot(NEKOCORE_ID), 'entity.json');
-    if (fs.existsSync(entityFile)) nekoCoreEntity = JSON.parse(fs.readFileSync(entityFile, 'utf8'));
-  } catch (_) {}
-  if (!nekoCoreEntity) throw new Error('NekoCore system entity not found. Restart the server to provision it.');
-
-  // Enrich with system prompt and persona
-  try {
-    const memRoot = entityPathsMod.getMemoryRoot(NEKOCORE_ID);
-    const sysPath  = path.join(memRoot, 'system-prompt.txt');
-    if (fs.existsSync(sysPath)) nekoCoreEntity.systemPromptText = fs.readFileSync(sysPath, 'utf8');
-    const perPath  = path.join(memRoot, 'persona.json');
-    if (fs.existsSync(perPath)) nekoCoreEntity.persona = JSON.parse(fs.readFileSync(perPath, 'utf8'));
-  } catch (_) {}
-
-  // Resolve aspect config: nekocore slot first, fallback to main
-  const globalConfig = loadConfig();
-  const profileRef   = globalConfig?.lastActive;
-  let chatAspect = null;
-  if (globalConfig && globalConfig.profiles && profileRef) {
-    const resolved = resolveProfileAspectConfigs(globalConfig.profiles[profileRef]);
-    chatAspect = resolved.nekocore || resolved.main;
-  }
-  if (!chatAspect || !chatAspect.type) {
-    throw new Error('No LLM configuration available for NekoCore chat. Please configure an API key in Settings.');
-  }
-
-  const aspectConfigs     = { main: chatAspect, subconscious: chatAspect, orchestrator: chatAspect };
-  const nekoCoreConscious = new ConsciousMemory({ entityId: NEKOCORE_ID });
-  const nekoCoreStorage   = new MemoryStorage({ entityId: NEKOCORE_ID });
-  const nekoCoreOrchestrator = new Orchestrator({
-    entity:                    nekoCoreEntity,
-    callLLM:                   callLLMWithRuntime,
-    aspectConfigs,
-    getMemoryContext:          async (msg) => buildNekoKnowledgeContext(msg, entityPathsMod.getMemoryRoot(NEKOCORE_ID)),
-    getBeliefs:                () => [],
-    getSomaticState:           () => null,
-    getConsciousContext:       async (topics) => nekoCoreConscious.getContext(topics, 5),
-    storeConsciousObservation: async (msg, response, topics) => {
-      try {
-        await storeNekoConversationSnapshot({
-          consciousMemory: nekoCoreConscious,
-          memoryStorage: nekoCoreStorage,
-          message: msg,
-          response,
-          topics
-        });
-      } catch (err) {
-        console.warn('  ⚠ NekoCore conversation snapshot failed:', err.message);
-      }
-    },
-    reconstructedChatlogCache: null,
-    cognitiveBus:              null,
-    getTokenLimit,
-    getSkillContext:           null,
-    getEntitySummaries:        () => {
-      try {
-        return (entityManager.listEntities() || [])
-          .filter(e => e && !e.isSystemEntity)
-          .map(e => ({ id: e.id, name: e.name, traits: (e.personality_traits || []).slice(0, 3) }));
-      } catch (_) { return []; }
-    }
-  });
-
-  const trimmed = Array.isArray(chatHistory) ? chatHistory.slice(-12) : [];
-  const result  = await nekoCoreOrchestrator.orchestrate(userMessage, trimmed, {
-    entityId:        NEKOCORE_ID,
-    memoryStorage:   nekoCoreStorage,
-    identityManager: null
-  });
-
-  if (aspectConfigs.subconscious) {
-    setImmediate(async () => {
-      try {
-        await encodeNekoConversationMemory({
-          effectiveUserMessage: userMessage,
-          finalResponse: result.finalResponse,
-          innerDialog: result.innerDialog,
-          memoryEntityId: NEKOCORE_ID,
-          memoryAspectConfigs: aspectConfigs,
-          callLLMWithRuntime,
-          getTokenLimit,
-          broadcastSSE,
-          traceGraph: null,
-          memoryGraph: null,
-          logTimeline,
-          memoryStorage: nekoCoreStorage,
-          entityName: nekoCoreEntity?.name || 'NekoCore OS',
-          userName: nekoCoreEntity?.persona?.userName || null,
-          activeUserId: nekoCoreEntity?.persona?.activeUserId || null,
-          entityPersona: nekoCoreEntity?.persona || null
-        });
-      } catch (err) {
-        console.warn('  ⚠ NekoCore post-response memory encoding failed:', err.message);
-      }
-    });
-  }
-
-  return { ok: true, response: result.finalResponse, innerDialog: result.innerDialog };
-}
 
 const ALLOWED_HOSTS = [
   'openrouter.ai'
 ];
+
+// ── Pipeline services ──────────────────────────────────────────────────────
+const chatPipeline = createChatPipeline({
+  brain: entityRuntime,
+  callLLMWithRuntime, resolveProfileAspectConfigs, loadConfig,
+  getSubconsciousMemoryContext, createCoreMemory, createSemanticKnowledge,
+  broadcastSSE, logTimeline, hatchEntity, identityManager, entityManager,
+  cognitiveBus, contextConsolidator, workspaceTools, taskRunner, webFetch,
+  getTokenLimit, reconstructionCache, reconstructionCacheTtlMs,
+  setLastAspectConfigs: (cfg) => { lastAspectConfigs = cfg; },
+  getBrainLoop: () => brainLoop,
+});
+const nekoCoreChat = createNekoCoreChat({
+  callLLMWithRuntime, resolveProfileAspectConfigs, loadConfig,
+  entityManager, workspaceTools, taskRunner, webFetch,
+  getTokenLimit, broadcastSSE, logTimeline,
+  nekoSystemRuntime
+});
 
 // ── Shared server context — injected into all route modules ──────────────────
 const ctx = {
@@ -1812,25 +635,32 @@ const ctx = {
   // Mutable state (getters/setters)
   get currentEntityId() { return currentEntityId; },
   get currentEntityPath() { return currentEntityPath; },
-  get memoryStorage() { return memoryStorage; },
-  get traceGraph() { return traceGraph; },
-  get brainLoop() { return brainLoop; }, set brainLoop(v) { brainLoop = v; },
-  get memoryGraph() { return memoryGraph; }, set memoryGraph(v) { memoryGraph = v; },
-  get memoryGraphBuilder() { return memoryGraphBuilder; }, set memoryGraphBuilder(v) { memoryGraphBuilder = v; },
-  get telegramBot() { return telegramBot; }, set telegramBot(v) { telegramBot = v; },
-  get dreamEngine() { return dreamEngine; },
-  get dreamVisualizer() { return dreamVisualizer; },
-  get goalsManager() { return goalsManager; },
-  get beliefGraph() { return beliefGraph; },
-  get neurochemistry() { return neurochemistry; },
-  get somaticAwareness() { return somaticAwareness; },
-  get consciousMemory() { return consciousMemory; },
-  get skillManager() { return skillManager; },
-  get curiosityEngine() { return curiosityEngine; },
-  get boredomEngine() { return boredomEngine; },
-  get cognitivePulse() { return cognitivePulse; },
-  get dreamSeedPool() { return dreamSeedPool; },
-  get dreamMemory() { return dreamMemory; },
+  get memoryStorage()       { return entityRuntime?.memoryStorage; },
+  get traceGraph()          { return entityRuntime?.traceGraph; },
+  get brainLoop()           { return brainLoop; }, set brainLoop(v) { brainLoop = v; },
+  get memoryGraph()         { return entityRuntime?.memoryGraph; },      set memoryGraph(v)      { if (entityRuntime) entityRuntime.memoryGraph = v; },
+  get memoryGraphBuilder()  { return entityRuntime?.memoryGraphBuilder; }, set memoryGraphBuilder(v){ if (entityRuntime) entityRuntime.memoryGraphBuilder = v; },
+  get telegramBot()         { return telegramBot; },                      set telegramBot(v)      { telegramBot = v; },
+  get dreamEngine()         { return entityRuntime?.dreamEngine; },
+  get dreamVisualizer()     { return entityRuntime?.dreamVisualizer; },
+  get goalsManager()        { return entityRuntime?.goalsManager; },
+  get beliefGraph()         { return entityRuntime?.beliefGraph; },
+  get neurochemistry()      { return entityRuntime?.neurochemistry; },
+  get somaticAwareness()    { return entityRuntime?.somaticAwareness; },
+  get consciousMemory()     { return entityRuntime?.consciousMemory; },
+  get skillManager()        { return entityRuntime?.skillManager; },
+  get curiosityEngine()     { return entityRuntime?.curiosityEngine; },
+  get boredomEngine()       { return entityRuntime?.boredomEngine; },
+  get cognitivePulse()      { return entityRuntime?.cognitivePulse; },
+  get dreamSeedPool()       { return entityRuntime?.dreamSeedPool; },
+  get dreamMemory()         { return entityRuntime?.dreamMemory; },
+  // NekoCore system entity runtime — full parity with user entities
+  get nekoSystemRuntime()   { return nekoSystemRuntime; },
+  get nekoCoreMemoryStorage() { return nekoSystemRuntime?.memoryStorage; },
+  get nekoCoreDreamEngine()   { return nekoSystemRuntime?.dreamEngine; },
+  get nekoCoreNeurochemistry() { return nekoSystemRuntime?.neurochemistry; },
+  get nekoCoreConsciousMemory() { return nekoSystemRuntime?.consciousMemory; },
+  get nekoCoreSkillManager()  { return nekoSystemRuntime?.skillManager; },
   get reconstructionCache() { return reconstructionCache; },
   get reconstructionCacheTtlMs() { return reconstructionCacheTtlMs; },
   get TOKEN_LIMIT_DEFAULTS() { return TOKEN_LIMIT_DEFAULTS; },
@@ -1845,7 +675,10 @@ const ctx = {
   resolveProfileAspectConfigs, getEntityMemoryRootIfActive,
   createCoreMemory, createSemanticKnowledge, getSemanticPreview, getChatlogContent,
   getSubconsciousMemoryContext, extractSubconsciousTopics, normalizeTopics,
-  setActiveEntity, clearActiveEntity, processChatMessage, processPendingSkillApproval, processNekoCoreChatMessage,
+  setActiveEntity, clearActiveEntity,
+  processChatMessage:          (...a) => chatPipeline.processChatMessage(...a),
+  processPendingSkillApproval: (...a) => chatPipeline.processPendingSkillApproval(...a),
+  processNekoCoreChatMessage:  (...a) => nekoCoreChat.processNekoCoreChatMessage(...a),
   startTelegramBot() { return startTelegramBot(); },
   gracefulShutdown(src) { return gracefulShutdown(src); },
   webFetch,
@@ -1856,17 +689,17 @@ const lifecycle = createRuntimeLifecycle({
   loadConfig,
   TelegramBot,
   webFetch,
-  processChatMessage,
+  processChatMessage:    (...a) => chatPipeline.processChatMessage(...a),
   cognitiveBus,
   ThoughtTypes,
   setTelegramBot: (bot) => { telegramBot = bot; },
   getMemoryIndex: () => memoryIndex,
   getBrainLoop: () => brainLoop,
-  getSomaticAwareness: () => somaticAwareness,
-  getNeurochemistry: () => neurochemistry,
-  getMemoryStorage: () => memoryStorage,
-  getGoalsManager: () => goalsManager,
-  getDreamEngine: () => dreamEngine,
+  getSomaticAwareness:  () => entityRuntime?.somaticAwareness,
+  getNeurochemistry:    () => entityRuntime?.neurochemistry,
+  getMemoryStorage:     () => entityRuntime?.memoryStorage,
+  getGoalsManager:      () => entityRuntime?.goalsManager,
+  getDreamEngine:       () => entityRuntime?.dreamEngine,
   getCurrentEntityId: () => currentEntityId,
   getIdentityManager: () => identityManager,
   loadAspectRuntimeConfig,
@@ -1995,26 +828,7 @@ const entityCheckout = require('./services/entity-checkout');
 entityCheckout.releaseAll();
 // Ensure no active entity persisted from previous run
 if (typeof ctx.clearActiveEntity === 'function') ctx.clearActiveEntity();
-(async () => {
-  try {
-    // Start the cognitive architecture without an active entity
-    thoughtStream.start();
-    attentionSystem.subscribe();
-
-    // Emit system startup event
-    cognitiveBus.emitThought({
-      type: ThoughtTypes.SYSTEM_LOG,
-      source: 'system',
-      message: `REM System server started. Select or create an entity to begin.`,
-      importance: 0.8
-    });
-
-    // Start Telegram bot if configured
-    await startTelegramBot();
-  } catch (error) {
-    console.error('  ⚠ Startup error:', error.message);
-  }
-})();
+boot({ thoughtStream, attentionSystem, cognitiveBus, startTelegramBot });
 
 server.on('error', (error) => {
   if (!error || error.code !== 'EADDRINUSE') {
@@ -2064,7 +878,7 @@ server.listen(PORT, () => {
   console.log('');
   console.log('  \u250C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510');
   console.log('  \u2502                                             \u2502');
-  console.log('  \u2502   REM System v0.6.0                     \u2502');
+  console.log('  \u2502   NekoCore OS                            \u2502');
   console.log('  \u2502   OpenRouter + Ollama                       \u2502');
   console.log('  \u2502                                             \u2502');
   console.log(`  \u2502   \u279C  http://localhost:${PORT}                  \u2502`);

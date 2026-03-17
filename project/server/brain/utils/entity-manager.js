@@ -153,6 +153,14 @@ class EntityManager {
   }
 
   /**
+   * Clear current active entity state used by getEntityState().
+   */
+  clearCurrentEntity() {
+    this.currentEntity = null;
+    this.currentEntityPath = null;
+  }
+
+  /**
    * Get current entity path
    */
   getCurrentEntityPath() {

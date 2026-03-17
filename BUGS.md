@@ -220,6 +220,55 @@ Logged after testing session: 2026-03-15. Priority and complexity estimates are 
 
 ---
 
+## BUG-19 — Context chat accepts/sends text when no entity is checked out
+**Area:** Context Chat / Entity Guard Rails  
+**Severity:** High  
+**Status:** Open (Pre-Phase-2 tracking)  
+**Description:** The main context chat can still accept/send messages even when no entity is currently checked out, which causes confusing behavior where responses can appear detached from explicit entity checkout state.
+
+**Expected:**
+- Context chat text input is guarded when no entity is checked out.
+- Send action is blocked with clear guidance to check out an entity first.
+- Once an entity is checked out, input and send controls re-enable automatically.
+
+---
+
+## BUG-20 — Visualizer does not render NekoCore OS memories while other entities do
+**Area:** Visualizer / Memory Rendering  
+**Severity:** High  
+**Status:** Fixed  
+**Description:** In the Visualizer, memory content renders correctly for regular entities such as Reveca, but NekoCore OS memories do not render. The system entity can be selected, yet its memory data is missing or not displayed in the visualizer panels.
+**Fix:** NekoCore direct chat now instantiates entity-scoped `MemoryStorage` with `entityId: 'nekocore'` so new memories land in the standard entity folders instead of legacy `Memory2`. Visualizer search/detail/full-mind routes now also scan legacy entity `Memory2` folders for backward compatibility, so previously stored NekoCore memories render again without migration.
+
+**Expected:**
+- Selecting NekoCore OS in the Visualizer renders its available memories the same way regular entities do.
+- Memory graph, search/detail panels, and related visualizer views treat NekoCore OS as a first-class entity source.
+- If NekoCore uses a distinct storage path or schema edge case, the Visualizer handles it without dropping the render.
+
+---
+
+## BUG-21 — Visualizer memory panel not fully functional / NekoCore knowledge docs not ingested
+**Area:** Visualizer / NekoCore OS Knowledge  
+**Severity:** High  
+**Status:** In Progress  
+**Description:** Two related issues found after factory reset:  
+1. The visualizer memory browser still has gaps — structural subdirs (`dreams/core/`, `traces/`, etc.) were counting as fake memory records (no `log.json` guard), and `dreams/` was scanned at the flat root instead of its proper `episodic/`, `semantic/`, `core/` subdirs.  
+2. NekoCore's architecture doc ingestion never ran because the `Documents/current` path in both `server.js` and `reset-runtime.js` was one directory level too shallow (`project/Documents/current` instead of `NekoCore-OS-main/Documents/current`). NekoCore had no knowledge of the system she orchestrates.  
+**Root cause:** Path calc off by one `..` level in two files. No guard test caught it because the ingestion silently skips missing dirs.  
+**Fix applied (2026-03-16):**  
+- `server.js` NK_DOCS_DIR: `path.join(__dirname, '..', 'Documents', 'current')` → `path.join(__dirname, '..', '..', 'Documents', 'current')`  
+- `reset-runtime.js` docsDir default: 3 levels up → 4 levels up  
+- `getMemoriesSearch` in `memory-routes.js`: added `log.json` existence guard to skip structural dirs  
+- `getEntityMemoryScanDirs` in `entity-memory-compat.js`: `dreams/` flat scan replaced with proper `dreams/episodic`, `dreams/semantic`, `dreams/core` subdirs  
+- `POST /api/nekocore/docs-ingest` added to `nekocore-routes.js` — triggers ingestion on demand with optional path override  
+- NekoCore OS panel now has a "Knowledge Docs" section with an Ingest Docs button so users can trigger ingestion without restarting the server  
+**Expected:**  
+- On server start, `✓ NekoCore knowledge: ingested X doc(s)` appears (not "not found, skipping")  
+- Visualizer shows only real memory records — never empty structural subdirs  
+- NekoCore OS panel "Ingest Docs" button re-runs ingestion and reports success/path
+
+---
+
 ## Summary Table
 
 | ID | Area | Severity | Status |
@@ -242,3 +291,6 @@ Logged after testing session: 2026-03-15. Priority and complexity estimates are 
 | BUG-16 | Entity Workspace Setup | Medium | Open |
 | BUG-17 | Skills Default State | High | Open |
 | BUG-18 | NekoCore Persistent Memory | High | Fixed |
+| BUG-19 | Context Chat / No-Entity Guard | High | Open |
+| BUG-20 | Visualizer / NekoCore Memory Rendering | High | Fixed |
+| BUG-21 | Visualizer / NekoCore Knowledge Docs Ingestion | High | In Progress |

@@ -153,14 +153,26 @@ async function openrouterConnect(panel = 'main') {
 async function saveNekocoreConfig() {
   const endpoint = (document.getElementById('apikeyEndpoint-nekocore')?.value || '').trim()
     || 'https://openrouter.ai/api/v1/chat/completions';
-  const key   = (document.getElementById('nekocoreApiKey')?.value || '').trim();
+  let key   = (document.getElementById('nekocoreApiKey')?.value || '').trim();
   const model = (document.getElementById('nekocoreModel')?.value || '').trim();
   const statusEl = document.getElementById('nekocoreConfigStatus');
   function setStatus(msg, ok) {
     if (statusEl) { statusEl.textContent = msg; statusEl.style.color = ok ? 'var(--accent-green)' : 'var(--accent-red, #e55)'; }
   }
-  if (!key)   { setStatus('API key is required', false); return; }
   if (!model) { setStatus('Model is required', false); return; }
+
+  // Allow model-only updates by reusing the currently stored key when the field is blank.
+  if (!key) {
+    try {
+      const existingResp = await fetch('/api/entity-config?provider=nekocore');
+      if (existingResp.ok) {
+        const existing = await existingResp.json();
+        key = String(existing?.apiKey || existing?.key || '').trim();
+      }
+    } catch (_) {}
+  }
+  if (!key) { setStatus('API key is required (or save one once first)', false); return; }
+
   try {
     const resp = await fetch('/api/entity-config', {
       method: 'POST',
@@ -174,6 +186,33 @@ async function saveNekocoreConfig() {
     setStatus('Save failed: ' + e.message, false);
   }
 }
+
+async function loadNekocoreConfig() {
+  const endpointEl = document.getElementById('apikeyEndpoint-nekocore');
+  const keyEl = document.getElementById('nekocoreApiKey');
+  const modelEl = document.getElementById('nekocoreModel');
+  if (!endpointEl || !keyEl || !modelEl) return;
+
+  try {
+    const resp = await fetch('/api/entity-config?provider=nekocore');
+    if (!resp.ok) return;
+    const cfg = await resp.json();
+
+    if (cfg && typeof cfg === 'object') {
+      if (cfg.endpoint) endpointEl.value = String(cfg.endpoint);
+      if (cfg.model) modelEl.value = String(cfg.model);
+
+      const hasSavedKey = !!String(cfg.apiKey || cfg.key || '').trim();
+      if (hasSavedKey && !keyEl.value.trim()) {
+        keyEl.placeholder = 'Saved key on file (leave blank to keep current key)';
+      }
+    }
+  } catch (_) {}
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  loadNekocoreConfig();
+});
 
 // ============================================================
 // HELPERS

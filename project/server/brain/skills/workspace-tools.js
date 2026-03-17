@@ -20,15 +20,16 @@ const fs = require('fs');
 const path = require('path');
 
 // ── Tool-call parser ──
-// Strict regex for simple tools (no unescaped quotes in values)
-const TOOL_REGEX = /\[TOOL:(\w+)((?:\s+\w+="(?:[^"\\]|\\.)*")*)\s*\]/g;
+// Accepts flexible spacing/casing and both "double" / 'single' quoted values.
+const TOOL_REGEX = /\[TOOL:\s*([a-zA-Z_][\w-]*)\s*((?:\s+[a-zA-Z_][\w-]*\s*=\s*(?:"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'))*)\s*\]/gi;
 
 function parseToolParams(paramStr) {
   const params = {};
-  const paramRegex = /(\w+)="((?:[^"\\]|\\.)*)"/g;
+  const paramRegex = /([a-zA-Z_][\w-]*)\s*=\s*("((?:[^"\\]|\\.)*)"|'((?:[^'\\]|\\.)*)')/g;
   let m;
   while ((m = paramRegex.exec(paramStr)) !== null) {
-    params[m[1]] = m[2].replace(/\\"/g, '"').replace(/\\\\/g, '\\');
+    const raw = m[3] !== undefined ? m[3] : m[4];
+    params[m[1]] = String(raw || '').replace(/\\"/g, '"').replace(/\\'/g, "'").replace(/\\\\/g, '\\');
   }
   return params;
 }
@@ -59,12 +60,12 @@ function extractToolCalls(text) {
   }
 
   // Pass 2 — lenient fallback for content-bearing tools the strict regex missed
-  const contentToolRe = /\[TOOL:(ws_write|ws_append)\s+/g;
+  const contentToolRe = /\[TOOL:\s*(ws_write|ws_append)\s+/gi;
   let fb;
   while ((fb = contentToolRe.exec(text)) !== null) {
     if (matchedStarts.has(fb.index)) continue; // already captured
 
-    const command = fb[1];
+    const command = String(fb[1] || '').toLowerCase();
     const afterCmd = fb.index + fb[0].length;
     const rest = text.slice(afterCmd);
 
@@ -73,21 +74,23 @@ function extractToolCalls(text) {
     const region = nextTool !== -1 ? rest.slice(0, nextTool) : rest;
 
     // The tool block closes with "] — find the LAST one in the region
-    const closePos = region.lastIndexOf('"]');
+    const closePos = Math.max(region.lastIndexOf('"]'), region.lastIndexOf("']"));
     if (closePos === -1) continue;
 
     const paramSection = region.slice(0, closePos + 1); // includes closing "
 
     // Extract path (filenames never contain quotes)
     const params = {};
-    const pathM = paramSection.match(/path="([^"]*)"\s*/);
+    const pathM = paramSection.match(/path\s*=\s*(?:"([^"]*)"|'([^']*)')\s*/i);
     if (!pathM) continue;
-    params.path = pathM[1];
+    params.path = pathM[1] !== undefined ? pathM[1] : pathM[2];
 
     // Extract content — everything between content=" and the final "
-    const cIdx = paramSection.indexOf('content="');
+    const cIdx = paramSection.search(/content\s*=\s*["']/i);
     if (cIdx !== -1) {
-      params.content = paramSection.slice(cIdx + 9, closePos)
+      const contentLead = paramSection.slice(cIdx).match(/^content\s*=\s*["']/i);
+      const startOffset = contentLead ? contentLead[0].length : 9;
+      params.content = paramSection.slice(cIdx + startOffset, closePos)
         .replace(/\\"/g, '"').replace(/\\\\/g, '\\');
     }
 
@@ -103,14 +106,14 @@ function stripToolCalls(text) {
   // First strip strict matches
   let cleaned = text.replace(TOOL_REGEX, '');
   // Then strip any lenient content-tool blocks that remain
-  const contentToolRe = /\[TOOL:(ws_write|ws_append)\s+/g;
+  const contentToolRe = /\[TOOL:\s*(ws_write|ws_append)\s+/gi;
   let fb;
   while ((fb = contentToolRe.exec(cleaned)) !== null) {
     const afterCmd = fb.index + fb[0].length;
     const rest = cleaned.slice(afterCmd);
     const nextTool = rest.indexOf('[TOOL:');
     const region = nextTool !== -1 ? rest.slice(0, nextTool) : rest;
-    const closePos = region.lastIndexOf('"]');
+    const closePos = Math.max(region.lastIndexOf('"]'), region.lastIndexOf("']"));
     if (closePos === -1) continue;
     const end = afterCmd + closePos + 2;
     cleaned = cleaned.slice(0, fb.index) + cleaned.slice(end);
@@ -143,9 +146,10 @@ async function executeToolCalls(responseText, options = {}) {
 
   for (let i = 0; i < maxCalls; i++) {
     const call = calls[i];
+    const command = String(call.command || '').toLowerCase().replace(/-/g, '_');
     let result;
     try {
-      switch (call.command) {
+      switch (command) {
         case 'ws_list':
           result = await execWsList(wsRoot, call.params.path || '.');
           break;
@@ -160,6 +164,9 @@ async function executeToolCalls(responseText, options = {}) {
           break;
         case 'ws_delete':
           result = await execWsDelete(wsRoot, call.params.path);
+          break;
+        case 'ws_move':
+          result = await execWsMove(wsRoot, call.params.src, call.params.dst);
           break;
         case 'web_search':
           result = await execWebSearch(webFetch, call.params.query);
@@ -215,7 +222,7 @@ async function executeToolCalls(responseText, options = {}) {
     } catch (err) {
       result = { ok: false, error: err.message };
     }
-    toolResults.push({ command: call.command, params: call.params, result });
+    toolResults.push({ command, params: call.params, result });
   }
 
   const cleanedResponse = stripToolCalls(responseText);
@@ -288,6 +295,40 @@ async function execWsDelete(wsRoot, relPath) {
   if (!fs.existsSync(filep)) return { ok: true, message: 'Already gone' };
   fs.unlinkSync(filep);
   return { ok: true, message: 'Deleted ' + relPath };
+}
+
+async function execWsMove(wsRoot, srcRelPath, dstRelPath) {
+  if (!wsRoot) return { ok: false, error: 'No workspace configured' };
+  if (!srcRelPath) return { ok: false, error: 'No source path specified' };
+  if (!dstRelPath) return { ok: false, error: 'No destination path specified' };
+
+  const srcPath = resolveSafe(wsRoot, srcRelPath);
+  const dstPath = resolveSafe(wsRoot, dstRelPath);
+  if (!srcPath || !dstPath) return { ok: false, error: 'Path outside workspace' };
+  if (!fs.existsSync(srcPath)) return { ok: false, error: 'Source not found: ' + srcRelPath };
+  if (srcPath === dstPath) return { ok: false, error: 'Source and destination are the same path' };
+
+  const dstDir = path.dirname(dstPath);
+  if (!fs.existsSync(dstDir)) fs.mkdirSync(dstDir, { recursive: true });
+
+  try {
+    fs.renameSync(srcPath, dstPath);
+    return { ok: true, message: `Moved ${srcRelPath} -> ${dstRelPath}` };
+  } catch (err) {
+    // Cross-device moves (EXDEV) require copy + remove fallback.
+    if (err && err.code === 'EXDEV') {
+      const srcStat = fs.statSync(srcPath);
+      if (srcStat.isDirectory()) {
+        fs.cpSync(srcPath, dstPath, { recursive: true });
+        fs.rmSync(srcPath, { recursive: true, force: true });
+      } else {
+        fs.copyFileSync(srcPath, dstPath);
+        fs.unlinkSync(srcPath);
+      }
+      return { ok: true, message: `Moved ${srcRelPath} -> ${dstRelPath}` };
+    }
+    return { ok: false, error: 'Move failed: ' + err.message };
+  }
 }
 
 async function execWebSearch(webFetch, query) {

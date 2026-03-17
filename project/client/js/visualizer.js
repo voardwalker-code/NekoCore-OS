@@ -1,11 +1,11 @@
 ﻿// ============================================================
-// REM System â€” Neural Visualizer (standalone page JS)
+// REM System — Neural Visualizer (standalone page JS)
 // Chat display + 3D memory graph + memory browser + diagnostics
 // ============================================================
 (function () {
   'use strict';
 
-  // â”€â”€ State â”€â”€
+  // ── State ──
   let eventSource = null;
   let allNodes = [];
   let allEdges = [];
@@ -21,11 +21,18 @@
   let timelineLiveSse = null;
   let timelineSpeed = 1;
   let selectedEntityId = null;
+
+  function appendEntityId(urlOrPath, entityId) {
+    if (!entityId) return urlOrPath;
+    const url = new URL(urlOrPath, window.location.origin);
+    url.searchParams.set('entityId', entityId);
+    return url.pathname + url.search;
+  }
   // Live mode event queue — events are processed with a delay so animations are watchable
   let _liveQueue = [];
   let _liveQueueRunning = false;
 
-  // â”€â”€ Memory type colors â€” used for chat/memory-browser UI elements only.
+  // ── Memory type colors — used for chat/memory-browser UI elements only.
   // 3D rendering is fully delegated to NeuralViz (neural-viz.js).
   const MEM_COLORS = {
     core_memory:       0xfbbf24,
@@ -45,7 +52,7 @@
   const DEFAULT_COLOR = 0x71717a;
   function getMemColor(type) { return MEM_COLORS[type] || DEFAULT_COLOR; }
 
-  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• INIT â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  // ═══════════════════ INIT ═══════════════════
   document.addEventListener('DOMContentLoaded', () => {
     initEntityPicker();
     initTabs();
@@ -75,6 +82,14 @@
     document.getElementById('btnFullMind').onclick = loadFullMind;
     document.getElementById('btnLoadChatHistory').onclick = loadChatHistory;
     document.getElementById('btnCloseNodeDetail').onclick = () => { document.getElementById('nodeDetail').style.display = 'none'; };
+
+    // Refresh entity list whenever the visualizer page becomes visible again
+    // (e.g. user navigates back to the Visualizer tab in the shell)
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        refreshEntityPickerList();
+      }
+    });
   });
 
   function setEntitySwitchStatus(text, cls) {
@@ -83,6 +98,46 @@
     el.textContent = text || '';
     el.classList.remove('ok', 'err');
     if (cls) el.classList.add(cls);
+  }
+
+  // Refresh the entity picker dropdown options without altering the active selection.
+  // Called when the visualizer page regains visibility so newly created entities appear.
+  async function refreshEntityPickerList() {
+    const picker = document.getElementById('vizEntityPicker');
+    if (!picker || picker.disabled) return;
+    try {
+      const [entitiesResp, currentResp] = await Promise.all([
+        fetch('/api/entities'),
+        fetch('/api/entities/current')
+      ]);
+      const [entitiesData, currentData] = await Promise.all([
+        entitiesResp.json(),
+        currentResp.json()
+      ]);
+      const entities = Array.isArray(entitiesData?.entities) ? entitiesData.entities.slice() : [];
+      const currentEntity = currentData?.entity || null;
+      if (currentEntity && currentEntity.id && !entities.some((e) => String(e?.id || '') === String(currentEntity.id))) {
+        entities.push({ id: currentEntity.id, name: currentEntity.name || currentEntity.id });
+      }
+      if (!entities.some((e) => String(e?.id || '').toLowerCase() === 'nekocore')) {
+        entities.push({ id: 'nekocore', name: 'NekoCore OS' });
+      }
+      const prevValue = picker.value;
+      picker.innerHTML = '';
+      const placeholder = document.createElement('option');
+      placeholder.value = '';
+      placeholder.textContent = 'Select entity';
+      picker.appendChild(placeholder);
+      for (const entity of entities) {
+        if (!entity || !entity.id) continue;
+        const opt = document.createElement('option');
+        opt.value = entity.id;
+        const isSystem = String(entity.id).toLowerCase() === 'nekocore';
+        opt.textContent = isSystem ? (entity.name || entity.id) + ' (System)' : (entity.name || entity.id);
+        picker.appendChild(opt);
+      }
+      picker.value = prevValue || selectedEntityId || '';
+    } catch { /* silent — refresh is best-effort */ }
   }
 
   async function initEntityPicker() {
@@ -102,11 +157,22 @@
       ]);
 
       const entities = Array.isArray(entitiesData?.entities) ? entitiesData.entities.slice() : [];
+      const currentEntity = currentData?.entity || null;
+      if (currentEntity && currentEntity.id && !entities.some((e) => String(e?.id || '') === String(currentEntity.id))) {
+        entities.push({
+          id: currentEntity.id,
+          name: currentEntity.name || currentEntity.id
+        });
+      }
       if (!entities.some((e) => String(e?.id || '').toLowerCase() === 'nekocore')) {
         entities.push({ id: 'nekocore', name: 'NekoCore OS' });
       }
 
       picker.innerHTML = '';
+      const placeholder = document.createElement('option');
+      placeholder.value = '';
+      placeholder.textContent = 'Select entity';
+      picker.appendChild(placeholder);
       for (const entity of entities) {
         if (!entity || !entity.id) continue;
         const opt = document.createElement('option');
@@ -118,10 +184,14 @@
       }
 
       const currentId = currentData?.entity?.id || currentData?.currentEntityId || null;
-      selectedEntityId = currentId || (entities[0] && entities[0].id) || null;
-      if (selectedEntityId) picker.value = selectedEntityId;
+      selectedEntityId = currentId || null;
+      if (selectedEntityId) {
+        picker.value = selectedEntityId;
+      } else {
+        picker.value = '';
+      }
       picker.disabled = false;
-      setEntitySwitchStatus(selectedEntityId ? 'Ready' : 'No entity');
+      setEntitySwitchStatus(selectedEntityId ? 'Ready' : 'Select entity');
 
       picker.onchange = async () => {
         const nextId = picker.value;
@@ -129,6 +199,8 @@
         await switchVisualizerEntity(nextId);
       };
 
+      // Do not auto-load the first entity when no active entity exists.
+      // Auto-switch only when the server already has an active entity.
       if (selectedEntityId) {
         await switchVisualizerEntity(selectedEntityId, { forceReload: true, preservePickerState: true });
       }
@@ -197,7 +269,7 @@
     }
   }
 
-  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• TABS â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  // ═══════════════════ TABS ═══════════════════
   function initTabs() {
     document.querySelectorAll('.viz-tab').forEach(tab => {
       tab.addEventListener('click', () => {
@@ -224,20 +296,22 @@
     };
   }
 
-  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• ENTITY INFO â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  // ═══════════════════ ENTITY INFO ═══════════════════
   async function loadEntityInfo() {
     try {
-      const r = await fetch('/api/entity');
+      const r = await fetch(appendEntityId('/api/entity', selectedEntityId));
       const d = await r.json();
       if (d.ok && d.entity) {
         const name = d.entity.name || 'Entity';
-        const avatar = d.entity.avatar || 'â—‡';
+        const avatar = d.entity.avatar || '◇';
         document.getElementById('entityName').textContent = avatar + ' ' + name;
+      } else if (!selectedEntityId) {
+        document.getElementById('entityName').textContent = '—';
       }
     } catch (e) { /* ignore */ }
   }
 
-  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• SSE EVENT STREAM â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  // ═══════════════════ SSE EVENT STREAM ═══════════════════
   function initSSE() {
     if (eventSource) return;
     const statusEl = document.getElementById('sseStatus');
@@ -338,7 +412,7 @@
     }, { reconnectDelay: 5000 });
   }
 
-  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• CHAT PANEL â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  // ═══════════════════ CHAT PANEL ═══════════════════
   function initChatPanel() {
     // Listen for messages sent from the main UI via BroadcastChannel
     try {
@@ -374,7 +448,7 @@
     fetch('/api/visualizer/chat-history', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ exchange })
+      body: JSON.stringify({ exchange, entityId: selectedEntityId })
     }).catch(() => {});
   }
 
@@ -382,7 +456,7 @@
     const statusEl = document.getElementById('chatHistoryStatus');
     statusEl.textContent = 'Loading...';
     try {
-      const r = await fetch('/api/visualizer/chat-history');
+      const r = await fetch(appendEntityId('/api/visualizer/chat-history', selectedEntityId));
       const d = await r.json();
       if (d.ok && d.history && d.history.length > 0) {
         // Collect existing IDs to avoid duplicates
@@ -413,7 +487,7 @@
     container.innerHTML = '';
 
     if (chatExchanges.length === 0) {
-      container.innerHTML = '<div class="viz-chat-empty">Listening for chat messages...<br><small>Chat in the main UI â€” messages will appear here</small></div>';
+      container.innerHTML = '<div class="viz-chat-empty">Listening for chat messages...<br><small>Chat in the main UI — messages will appear here</small></div>';
       return;
     }
 
@@ -423,99 +497,99 @@
       exDiv.className = 'viz-exchange' + (selectedExchangeId === ex.id ? ' selected' : '');
       exDiv.dataset.exchangeId = ex.id;
 
-      // â”€â”€ Exchange header (click to collapse/expand whole exchange) â”€â”€
+      // ── Exchange header (click to collapse/expand whole exchange) ──
       const header = document.createElement('div');
       header.className = 'viz-exchange-header';
       const timeStr = ex.timestamp ? new Date(ex.timestamp).toLocaleTimeString() : '';
       const preview = (ex.user || '').slice(0, 60) + ((ex.user || '').length > 60 ? '...' : '');
-      header.innerHTML = '<span class="viz-exchange-arrow">â–¾</span>'
+      header.innerHTML = '<span class="viz-exchange-arrow">▾</span>'
         + '<span class="viz-exchange-num">#' + (idx + 1) + '</span>'
         + '<span class="viz-exchange-preview">' + escapeHtml(preview) + '</span>'
         + '<span class="viz-exchange-time">' + escapeHtml(timeStr) + '</span>';
       header.onclick = () => {
         exDiv.classList.toggle('collapsed');
-        header.querySelector('.viz-exchange-arrow').textContent = exDiv.classList.contains('collapsed') ? 'â–¸' : 'â–¾';
+        header.querySelector('.viz-exchange-arrow').textContent = exDiv.classList.contains('collapsed') ? '▸' : '▾';
       };
       exDiv.appendChild(header);
 
-      // â”€â”€ Exchange body (collapsible) â”€â”€
+      // ── Exchange body (collapsible) ──
       const body = document.createElement('div');
       body.className = 'viz-exchange-body';
 
       // User message section
       if (ex.user) {
-        body.appendChild(makeCollapsibleSection('ðŸ‘¤ You', ex.user, 'user', false, () => selectExchange(ex.id)));
+        body.appendChild(makeCollapsibleSection('👤 You', ex.user, 'user', false, () => selectExchange(ex.id)));
       }
 
       // Entity message section
       if (ex.assistant) {
-        body.appendChild(makeCollapsibleSection('ðŸ¤– Entity', ex.assistant, 'assistant', false, () => selectExchange(ex.id)));
+        body.appendChild(makeCollapsibleSection('🤖 Entity', ex.assistant, 'assistant', false, () => selectExchange(ex.id)));
       }
 
-      // â”€â”€ Mind / Pipeline sections â”€â”€
+      // ── Mind / Pipeline sections ──
       if (ex.thinking) {
         const mindHeader = document.createElement('div');
         mindHeader.className = 'viz-mind-divider';
-        mindHeader.textContent = 'â€” Mind Activity â€”';
+        mindHeader.textContent = '— Mind Activity —';
         body.appendChild(mindHeader);
 
         if (ex.thinking.subconscious) {
           const content = typeof ex.thinking.subconscious === 'object'
             ? (ex.thinking.subconscious.reflection || JSON.stringify(ex.thinking.subconscious, null, 2))
             : ex.thinking.subconscious;
-          body.appendChild(makeCollapsibleSection('ðŸ§  Subconscious', content, 'subconscious', true));
+          body.appendChild(makeCollapsibleSection('🧠 Subconscious', content, 'subconscious', true));
         }
 
         if (ex.thinking.compressedContext) {
           const content = typeof ex.thinking.compressedContext === 'object'
             ? JSON.stringify(ex.thinking.compressedContext, null, 2)
             : ex.thinking.compressedContext;
-          body.appendChild(makeCollapsibleSection('ðŸ“‹ Compressed Context', content, 'compress', true));
+          body.appendChild(makeCollapsibleSection('📋 Compressed Context', content, 'compress', true));
         }
 
         if (ex.thinking.dream) {
           const content = typeof ex.thinking.dream === 'object'
             ? JSON.stringify(ex.thinking.dream, null, 2)
             : ex.thinking.dream;
-          body.appendChild(makeCollapsibleSection('ðŸŒ™ Dream', content, 'dream', true));
+          body.appendChild(makeCollapsibleSection('🌙 Dream', content, 'dream', true));
         }
 
         if (ex.thinking.conscious) {
           const content = typeof ex.thinking.conscious === 'object'
             ? JSON.stringify(ex.thinking.conscious, null, 2)
             : ex.thinking.conscious;
-          body.appendChild(makeCollapsibleSection('ðŸ’­ Conscious', content, 'conscious', true));
+          body.appendChild(makeCollapsibleSection('💭 Conscious', content, 'conscious', true));
         }
 
         if (ex.thinking.orchestrator) {
           const content = typeof ex.thinking.orchestrator === 'object'
             ? JSON.stringify(ex.thinking.orchestrator, null, 2)
             : ex.thinking.orchestrator;
-          body.appendChild(makeCollapsibleSection('âš¡ Orchestrator', content, 'orchestrator', true));
+          body.appendChild(makeCollapsibleSection('⚡ Orchestrator', content, 'orchestrator', true));
         }
 
         // Timing summary
         if (ex.thinking.timing) {
           const t = ex.thinking.timing;
           const timingText = 'Total: ' + (t.total_ms || 0) + 'ms'
-            + ' Â· Sub: ' + (t.subconscious_ms || 0) + 'ms'
-            + ' Â· Dream+Compress: ' + (t.dream_compress_ms || 0) + 'ms'
-            + ' Â· Conscious: ' + (t.conscious_ms || 0) + 'ms'
-            + ' Â· Orchestrator: ' + (t.orchestrator_ms || 0) + 'ms';
-          body.appendChild(makeCollapsibleSection('â± Timing', timingText, 'timing', true));
+            + ' · Sub: ' + (t.subconscious_ms || 0) + 'ms'
+            + ' · Dream+Compress: ' + (t.dream_compress_ms || 0) + 'ms'
+            + ' · Conscious: ' + (t.conscious_ms || 0) + 'ms'
+            + ' · Orchestrator: ' + (t.orchestrator_ms || 0) + 'ms';
+          body.appendChild(makeCollapsibleSection('⏱ Timing', timingText, 'timing', true));
         }
 
         // Token usage summary
         if (ex.thinking.tokenUsage) {
           const tu = ex.thinking.tokenUsage;
-          const fmt = (u) => u ? u.prompt_tokens + ' â†’ ' + u.completion_tokens + ' (' + u.total_tokens + ')' : 'â€”';
+          const fmt = (u) => u ? u.prompt_tokens + ' → ' + u.completion_tokens + ' (' + u.total_tokens + ')' : '—';
           const tokenText = 'Subconscious: ' + fmt(tu.subconscious) + '\n'
             + 'Compress: ' + fmt(tu.compress) + '\n'
             + 'Dream: ' + fmt(tu.dream) + '\n'
             + 'Conscious: ' + fmt(tu.conscious) + '\n'
             + 'Orchestrator: ' + fmt(tu.orchestrator) + '\n'
             + 'Total: ' + fmt(tu.total);
-          body.appendChild(makeCollapsibleSection('ðŸ“Š Token Usage', tokenText, 'tokens', true));
+          body.appendChild(makeCollapsibleSection('📊 Token Usage', tokenText, 'tokens', true));
         }
       }
 
@@ -545,7 +619,7 @@
 
     const header = document.createElement('div');
     header.className = 'viz-section-header';
-    header.innerHTML = '<span class="viz-section-arrow">' + (startCollapsed ? 'â–¸' : 'â–¾') + '</span>'
+    header.innerHTML = '<span class="viz-section-arrow">' + (startCollapsed ? '▸' : '▾') + '</span>'
       + '<span class="viz-section-label">' + label + '</span>';
 
     const body = document.createElement('div');
@@ -559,7 +633,7 @@
     header.onclick = (e) => {
       e.stopPropagation();
       section.classList.toggle('collapsed');
-      header.querySelector('.viz-section-arrow').textContent = section.classList.contains('collapsed') ? 'â–¸' : 'â–¾';
+      header.querySelector('.viz-section-arrow').textContent = section.classList.contains('collapsed') ? '▸' : '▾';
       if (onHeaderClick && !section.classList.contains('collapsed')) {
         onHeaderClick();
       }
@@ -575,7 +649,7 @@
     btn.className = 'viz-mem-btn' + (isNew ? ' new-memory' : '') + (selectedMemoryId === mem.id ? ' active' : '');
     const hexColor = '#' + getMemColor(mem.type).toString(16).padStart(6, '0');
     btn.innerHTML = '<span class="mem-type-dot" style="background:' + hexColor + '"></span>' + (mem.id || '').slice(0, 20);
-    btn.title = (isNew ? 'âœ¨ New: ' : '') + (mem.semantic || mem.id || '');
+    btn.title = (isNew ? '✨ New: ' : '') + (mem.semantic || mem.id || '');
     btn.onclick = (e) => {
       e.stopPropagation();
       selectMemory(mem.id);
@@ -655,7 +729,7 @@
     saveChatExchange(latest);
   }
 
-  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• MEMORY BROWSER â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  // ═══════════════════ MEMORY BROWSER ═══════════════════
   function initMemoryBrowser() {
     const searchBtn = document.getElementById('btnSearchMemories');
     const searchInput = document.getElementById('memorySearchInput');
@@ -686,6 +760,7 @@
       if (type) params.set('type', type);
       if (sort) params.set('sort', sort);
       params.set('limit', '200');
+      if (selectedEntityId) params.set('entityId', selectedEntityId);
 
       const r = await fetch('/api/memories/search?' + params);
       const d = await r.json();
@@ -701,7 +776,7 @@
         item.dataset.memId = mem.id;
 
         const hexColor = '#' + getMemColor(mem.type).toString(16).padStart(6, '0');
-        const dateStr = mem.created ? new Date(mem.created).toLocaleDateString() + ' ' + new Date(mem.created).toLocaleTimeString() : 'â€”';
+        const dateStr = mem.created ? new Date(mem.created).toLocaleDateString() + ' ' + new Date(mem.created).toLocaleTimeString() : '—';
 
         let topicsHtml = '';
         if (mem.topics?.length) {
@@ -766,17 +841,19 @@
     detailEl.style.display = 'flex';
 
     try {
-      const r = await fetch('/api/memory/detail?id=' + encodeURIComponent(memId));
+      const params = new URLSearchParams({ id: memId });
+      if (selectedEntityId) params.set('entityId', selectedEntityId);
+      const r = await fetch('/api/memory/detail?' + params.toString());
       const d = await r.json();
       if (!d.ok) { bodyEl.textContent = 'Error loading memory'; return; }
 
       let html = '';
-      html += '<div class="detail-section"><div class="detail-label">Summary</div><div class="detail-value">' + escapeHtml(d.semantic || 'â€”') + '</div></div>';
+      html += '<div class="detail-section"><div class="detail-label">Summary</div><div class="detail-value">' + escapeHtml(d.semantic || '—') + '</div></div>';
 
       if (d.log) {
-        html += '<div class="detail-section"><div class="detail-label">Type</div><div class="detail-value">' + escapeHtml(d.log.type || 'â€”') + '</div></div>';
+        html += '<div class="detail-section"><div class="detail-label">Type</div><div class="detail-value">' + escapeHtml(d.log.type || '—') + '</div></div>';
         html += '<div class="detail-section"><div class="detail-label">Importance / Decay</div><div class="detail-value">' + (d.log.importance || 0).toFixed(3) + ' / ' + (d.log.decay || 0).toFixed(3) + '</div></div>';
-        html += '<div class="detail-section"><div class="detail-label">Created</div><div class="detail-value">' + (d.log.created || 'â€”') + '</div></div>';
+        html += '<div class="detail-section"><div class="detail-label">Created</div><div class="detail-value">' + (d.log.created || '—') + '</div></div>';
         if (d.log.topics?.length) {
           html += '<div class="detail-section"><div class="detail-label">Topics</div><div class="detail-value">' + d.log.topics.map(t => '<span class="viz-topic-tag">' + escapeHtml(t) + '</span> ').join('') + '</div></div>';
         }
@@ -799,10 +876,10 @@
         if (outgoing.length > 0 || incoming.length > 0) {
           html += '<div class="detail-section"><div class="detail-label">Trace Connections</div><div class="detail-related">';
           for (const rel of outgoing) {
-            html += '<button class="viz-mem-btn" onclick="window._vizSelectMemory(\'' + escapeAttr(rel.memory_id) + '\')">' + escapeHtml((rel.memory_id || '').slice(0, 20)) + ' â†’</button>';
+            html += '<button class="viz-mem-btn" onclick="window._vizSelectMemory(\'' + escapeAttr(rel.memory_id) + '\')">' + escapeHtml((rel.memory_id || '').slice(0, 20)) + ' →</button>';
           }
           for (const rel of incoming) {
-            html += '<button class="viz-mem-btn" onclick="window._vizSelectMemory(\'' + escapeAttr(rel.memory_id) + '\')">â† ' + escapeHtml((rel.memory_id || '').slice(0, 20)) + '</button>';
+            html += '<button class="viz-mem-btn" onclick="window._vizSelectMemory(\'' + escapeAttr(rel.memory_id) + '\')">← ' + escapeHtml((rel.memory_id || '').slice(0, 20)) + '</button>';
           }
           html += '</div></div>';
         }
@@ -833,7 +910,7 @@
       const r = await fetch('/api/memories/reconstruct', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ memoryId: memId })
+        body: JSON.stringify({ memoryId: memId, entityId: selectedEntityId })
       });
       const d = await r.json();
       if (d.ok && d.reconstructed) {
@@ -865,7 +942,7 @@
       const r = await fetch('/api/memories/reconstruct', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ memoryId: memId })
+        body: JSON.stringify({ memoryId: memId, entityId: selectedEntityId })
       });
       const d = await r.json();
       if (d.ok && d.reconstructed) {
@@ -1261,7 +1338,7 @@
     if (el) el.textContent = text;
   }
 
-  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• DIAGNOSTICS â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  // ═══════════════════ DIAGNOSTICS ═══════════════════
   function initDiagnostics() {
     loadBrainStatus();
     loadNeurochemistry();
@@ -1296,11 +1373,11 @@
 
   async function loadBrainStatus() {
     try {
-      const r = await fetch('/api/brain/status');
+      const r = await fetch(appendEntityId('/api/brain/status', selectedEntityId));
       const d = await r.json();
       let text = 'Running: ' + (d.running ? 'Yes' : 'No');
       text += '\nCycles: ' + (d.cycleCount || 0);
-      text += '\nSleep: ' + (d.cyclesUntilDeepSleep || 'â€”');
+      text += '\nSleep: ' + (d.cyclesUntilDeepSleep || '—');
       if (d.memoryStats) text += '\nMemories: ' + (d.memoryStats.total || 0);
       updateDiagCard('diagBrainStatus', text);
     } catch (e) { updateDiagCard('diagBrainStatus', 'Error: ' + e.message); }
@@ -1308,7 +1385,7 @@
 
   async function loadNeurochemistry() {
     try {
-      const r = await fetch('/api/neurochemistry');
+      const r = await fetch(appendEntityId('/api/neurochemistry', selectedEntityId));
       const d = await r.json();
       if (d.ok && d.state) {
         const s = d.state;
@@ -1323,7 +1400,7 @@
 
   async function loadGraphStats() {
     try {
-      const r = await fetch('/api/memory-graph/stats');
+      const r = await fetch(appendEntityId('/api/memory-graph/stats', selectedEntityId));
       const d = await r.json();
       let text = 'Nodes: ' + (d.node_count || 0);
       text += '\nConnections: ' + (d.connection_count || 0);
@@ -1352,7 +1429,7 @@
   }
 
   function loadGraphData() {
-    NeuralViz.loadGraphData();
+    NeuralViz.loadGraphData(selectedEntityId);
   }
 
   async function loadFullMind() {
@@ -1360,7 +1437,7 @@
     btn.textContent = '⏳ Loading...';
     btn.disabled = true;
     try {
-      await NeuralViz.loadFromUrl('/api/memory-graph/full-mind');
+      await NeuralViz.loadFromUrl(appendEntityId('/api/memory-graph/full-mind', selectedEntityId), selectedEntityId);
       filteredNodeIds = null;
       document.getElementById('filterIndicator').style.display = 'none';
       diagLog('events', 'ok', '🧠 Full Mind loaded');
@@ -1388,17 +1465,17 @@
     selectedMemoryId = null;
     focusedNodeId = null;
     NeuralViz.clearFilter();
-    NeuralViz.loadGraphData();
+    NeuralViz.loadGraphData(selectedEntityId);
     document.getElementById('filterIndicator').style.display = 'none';
     renderChatExchanges();
   }
 
   function centerCamera() { NeuralViz.resetCamera(); }
 
-  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• NODE DETAIL PANEL â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  // ═══════════════════ NODE DETAIL PANEL ═══════════════════
   function showNodeDetail(memId) { NeuralViz.selectNodeById(memId); }
 
-  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• HELPERS â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  // ═══════════════════ HELPERS ═══════════════════
   function escapeHtml(text) {
     if (!text) return '';
     const div = document.createElement('div');

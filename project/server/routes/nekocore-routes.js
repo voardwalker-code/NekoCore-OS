@@ -7,6 +7,7 @@
 
 'use strict';
 
+const path = require('path');
 const { appendAuditRecord, readAuditRecords } = require('../brain/nekocore/audit');
 const { ROLE_DEFINITIONS }                    = require('../brain/nekocore/model-intelligence');
 const SkillManager                            = require('../brain/skill-manager');
@@ -19,7 +20,9 @@ const {
   writePersonaFiles
 } = require('../brain/nekocore/persona-profile');
 const { resetNekoCoreRuntime } = require('../brain/nekocore/reset-runtime');
+const { ingestArchitectureDocs } = require('../brain/nekocore/doc-ingestion');
 const { ensureSystemEntity } = require('../brain/nekocore/bootstrap');
+const NK_DOCS_DIR = path.join(__dirname, '..', '..', '..', 'Documents', 'current');
 const entityPaths                             = require('../entityPaths');
 
 // ── In-memory recommendation store ───────────────────────────────────────────
@@ -269,6 +272,98 @@ function createNekoCoreRoutes(ctx) {
     }
   }
 
+  // ── POST /api/nekocore/docs-ingest ───────────────────────────────────────
+  // Trigger architecture doc ingestion into NekoCore's semantic memory.
+  // Body: { docsDir? }  — optional override path; defaults to Documents/current
+  async function postDocsIngest(req, res, apiHeaders, readBody) {
+    try {
+      let docsDir = NK_DOCS_DIR;
+      try {
+        const body = JSON.parse(await readBody(req));
+        if (body && body.docsDir && path.isAbsolute(body.docsDir)) {
+          docsDir = body.docsDir;
+        }
+      } catch (_) {}
+
+      if (!require('fs').existsSync(docsDir)) {
+        res.writeHead(404, apiHeaders);
+        res.end(JSON.stringify({ ok: false, error: 'Documents directory not found: ' + docsDir, docsDir }));
+        return;
+      }
+
+      const memRoot = getMemoryRoot('nekocore');
+      ingestArchitectureDocs(memRoot, docsDir);
+
+      appendAuditRecord({
+        event: 'docs_ingest',
+        requestor: req.accountId || 'unknown',
+        targetEntityId: 'nekocore',
+        targetAspect: 'nekocore',
+        decision: 'applied',
+        notes: 'docs-ingest triggered from UI: ' + docsDir
+      });
+
+      res.writeHead(200, apiHeaders);
+      res.end(JSON.stringify({ ok: true, docsDir }));
+    } catch (e) {
+      res.writeHead(500, apiHeaders);
+      res.end(JSON.stringify({ ok: false, error: e.message }));
+    }
+  }
+
+  // ── GET /api/nekocore/memory-stats ─────────────────────────────────────────
+  // Returns total memory count (by type), disk usage, and soft-limit thresholds.
+  // SOFT_LIMIT_COUNT: the point where topic-index precision starts to degrade.
+  // Disk size is informational only — the count wall is always hit first (~7 MB at 2000 memories).
+  const MEMORY_SOFT_LIMIT_COUNT = 2000;
+
+  function _getDirSizeBytes(dir) {
+    let total = 0;
+    try {
+      for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+        const full = path.join(dir, entry.name);
+        if (entry.isDirectory()) { total += _getDirSizeBytes(full); }
+        else { try { total += fs.statSync(full).size; } catch (_) {} }
+      }
+    } catch (_) {}
+    return total;
+  }
+
+  function getMemoryStats(req, res, apiHeaders) {
+    try {
+      const memRoot = getMemoryRoot('nekocore');
+      if (!fs.existsSync(memRoot)) {
+        res.writeHead(200, apiHeaders);
+        res.end(JSON.stringify({ ok: true, totalCount: 0, episodicCount: 0, semanticCount: 0, docCount: 0, diskBytes: 0, diskMB: 0, softLimitCount: MEMORY_SOFT_LIMIT_COUNT }));
+        return;
+      }
+
+      // Read the memory index for counts (no dir scan required for counts)
+      const MemoryIndexCache = require('../brain/memory/memory-index-cache');
+      const cache = new MemoryIndexCache('nekocore');
+      cache.load();
+      const index = cache.memoryIndex || {};
+
+      let episodicCount = 0, semanticCount = 0, docCount = 0;
+      for (const [id, meta] of Object.entries(index)) {
+        if (id.startsWith('nkdoc_')) { docCount++; }
+        else if ((meta.type || '') === 'episodic') { episodicCount++; }
+        else { semanticCount++; }
+      }
+      const totalCount = episodicCount + semanticCount + docCount;
+
+      // Disk size: walk the memories dir
+      const diskBytes = _getDirSizeBytes(memRoot);
+      const diskMB    = diskBytes / (1024 * 1024);
+
+      res.writeHead(200, apiHeaders);
+      res.end(JSON.stringify({ ok: true, totalCount, episodicCount, semanticCount, docCount, diskBytes, diskMB, softLimitCount: MEMORY_SOFT_LIMIT_COUNT }));
+    } catch (e) {
+      res.writeHead(500, apiHeaders);
+      res.end(JSON.stringify({ ok: false, error: e.message }));
+    }
+  }
+
   // ── POST /api/nekocore/reset ──────────────────────────────────────────────
   // Factory reset NekoCore runtime memory while preserving architecture docs.
   async function postRuntimeReset(req, res, apiHeaders) {
@@ -491,7 +586,7 @@ function createNekoCoreRoutes(ctx) {
         Array.isArray(chatHistory) ? chatHistory : []
       );
       res.writeHead(200, apiHeaders);
-      res.end(JSON.stringify({ ok: true, response: result.response }));
+      res.end(JSON.stringify({ ok: true, response: result.finalResponse || '' }));
     } catch (e) {
       res.writeHead(500, apiHeaders);
       res.end(JSON.stringify({ ok: false, error: e.message }));
@@ -511,6 +606,8 @@ function createNekoCoreRoutes(ctx) {
     if (p === '/api/nekocore/persona'         && m === 'GET')  { getPersona(req, res, apiHeaders); return true; }
     if (p === '/api/nekocore/persona'         && m === 'POST') { await postPersona(req, res, apiHeaders, readBody); return true; }
     if (p === '/api/nekocore/persona/reset'   && m === 'POST') { await postPersonaReset(req, res, apiHeaders); return true; }
+    if (p === '/api/nekocore/memory-stats'     && m === 'GET')  { getMemoryStats(req, res, apiHeaders); return true; }
+    if (p === '/api/nekocore/docs-ingest'     && m === 'POST') { await postDocsIngest(req, res, apiHeaders, readBody); return true; }
     if (p === '/api/nekocore/reset'           && m === 'POST') { await postRuntimeReset(req, res, apiHeaders); return true; }
     if (p === '/api/nekocore/pending'         && m === 'GET')  { getPending(req, res, apiHeaders); return true; }
     if (p === '/api/nekocore/model-recommend' && m === 'POST') { await postModelRecommend(req, res, apiHeaders, readBody); return true; }
