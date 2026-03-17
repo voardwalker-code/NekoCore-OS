@@ -135,7 +135,7 @@ function createEntityRoutes(ctx) {
 
   async function getEntity(req, res, apiHeaders) {
     try {
-      const entity = ctx.hatchEntity.loadEntity();
+      const entity = ctx.entityManager.getCurrentEntity();
       if (!entity) { res.writeHead(200, apiHeaders); res.end(JSON.stringify({ ok: false, error: 'Entity not found' })); return; }
       let memCount = entity.memory_count || 0;
       if (ctx.currentEntityId) {
@@ -164,7 +164,7 @@ function createEntityRoutes(ctx) {
       const accountId   = req.accountId || null;
       // Filter: own entities + shared entities + legacy entities (no ownerId)
       const visible = allEntities
-        .filter(e => !e.ownerId || e.ownerId === accountId || e.isPublic)
+        .filter(e => _isSystemEntityId(e.id) || !e.ownerId || e.ownerId === accountId || e.isPublic)
         .map(e => ({
           ...e,
           isOwner: !e.ownerId || e.ownerId === accountId
@@ -1055,7 +1055,7 @@ function createEntityRoutes(ctx) {
         return;
       }
       // If releasing the currently active entity, clear server state
-      if (ctx.currentEntityId === canonicalId) ctx.clearActiveEntity();
+      if (entityPaths.normalizeEntityId(ctx.currentEntityId) === canonicalId) ctx.clearActiveEntity();
       res.writeHead(200, apiHeaders);
       res.end(JSON.stringify({ ok: true, message: `Entity ${canonicalId} released` }));
       console.log(`  ✓ Entity released: ${canonicalId}`);

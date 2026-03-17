@@ -3,12 +3,166 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>REM-System — Chat with Persistent Identity</title>
+  <title>NekoCore OS</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/ui-v2.css">
   <link rel="stylesheet" href="themes/neko-default.css" id="themeOverrideLink">
+  <script>
+  (function(){
+    var lines = [];
+    var q = [];
+    var flushTimer = 0;
+
+    function stamp(){ return new Date().toLocaleTimeString(); }
+
+    function queueServer(level, msg, context){
+      try {
+        q.push({
+          level: String(level || 'info'),
+          message: String(msg || ''),
+          context: context || null,
+          href: location.href,
+          userAgent: navigator.userAgent,
+          tsClient: Date.now()
+        });
+        if (q.length > 200) q.splice(0, q.length - 200);
+        if (!flushTimer) flushTimer = setTimeout(flushQueue, 450);
+      } catch (_) {}
+    }
+
+    function flushQueue(){
+      flushTimer = 0;
+      if (!q.length) return;
+      var batch = q.splice(0, 20);
+      batch.forEach(function(evt){
+        try {
+          fetch('/api/timeline/client-debug', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(evt),
+            keepalive: true
+          }).catch(function(){});
+        } catch (_) {}
+      });
+      if (q.length && !flushTimer) flushTimer = setTimeout(flushQueue, 450);
+    }
+
+    function add(level, message, context){
+      var entry = {
+        k: String(level || 'info'),
+        t: stamp(),
+        ts: Date.now(),
+        m: String(message || ''),
+        c: context || null
+      };
+      lines.push(entry);
+      if (lines.length > 400) lines.splice(0, lines.length - 400);
+      queueServer(entry.k, entry.m, entry.c || { channel: 'client_dbg' });
+      return entry;
+    }
+
+    function dumpState(){
+      try {
+        var wm = window.windowManager;
+        var wmInit = !!(wm && wm.initialized);
+        var wmSize = wm && wm.windows ? wm.windows.size : -1;
+        var wmStage = wm && wm.stage ? wm.stage.id : 'undef';
+        var dsiInit = (typeof window.desktopShellInitialized !== 'undefined') ? window.desktopShellInitialized : 'undef';
+        var bootEl = document.getElementById('bootOverlay');
+        var bootVis = bootEl ? (bootEl.style.display || 'visible') : 'no-el';
+        var authEl = document.getElementById('authOverlay') || document.getElementById('authBody') || document.getElementById('loginOverlay');
+        var authVis = authEl ? (authEl.style.display || 'no-display-set') : 'no-auth-el';
+
+        add('info', 'WM init=' + wmInit + ' windows=' + wmSize + ' stage=' + wmStage, { channel: 'dumpState' });
+        add('info', 'desktopShellInitialized=' + dsiInit + ' bootOverlay=' + bootVis + ' auth=' + authVis, { channel: 'dumpState' });
+
+        var stageEl = document.getElementById('windowStage');
+        add('info', 'windowStage in DOM=' + (stageEl ? 'YES' : 'NO') + ' tabContents=' + (stageEl ? stageEl.querySelectorAll('.tab-content').length : 0), { channel: 'dumpState' });
+
+        if (wm && wm.windows && wm.windows.forEach) {
+          wm.windows.forEach(function(meta, tab){
+            add('info', 'win[' + tab + '] open=' + meta.open + ' display=' + meta.el.style.display, { channel: 'dumpState' });
+          });
+        }
+      } catch (e) {
+        add('err', 'dumpState err: ' + e.message, { channel: 'dumpState' });
+      }
+    }
+
+    function resetWindows(){
+      try { localStorage.removeItem('rem-window-layout-v2'); } catch (_) {}
+      try {
+        if (typeof window.resetWindowLayout === 'function') {
+          window.resetWindowLayout();
+          return;
+        }
+      } catch (_) {}
+      location.reload();
+    }
+
+    window.__coreDebugBridge = {
+      add: add,
+      getLines: function(limit){
+        var n = Math.max(1, Number(limit) || 120);
+        return lines.slice(-n);
+      },
+      clearLines: function(){ lines = []; },
+      flushQueue: flushQueue,
+      dumpState: dumpState,
+      resetWindows: resetWindows,
+      getQueueSize: function(){ return q.length; }
+    };
+
+    window._dbgAdd = function(level, message){
+      return add(level, message, { channel: 'compat' });
+    };
+
+    window.addEventListener('error', function(e){
+      var file = ((e.filename || '').split('/').pop());
+      add('err', '[' + file + ':' + (e.lineno || 0) + '] ' + e.message, {
+        channel: 'window.error',
+        filename: e.filename || '',
+        lineno: e.lineno || 0,
+        colno: e.colno || 0,
+        stack: e.error && e.error.stack ? String(e.error.stack) : null
+      });
+    });
+
+    window.addEventListener('unhandledrejection', function(e){
+      add('err', 'Promise: ' + String(e.reason), {
+        channel: 'window.unhandledrejection',
+        reason: String(e.reason)
+      });
+    });
+
+    var _ce = console.error.bind(console);
+    console.error = function(){
+      _ce.apply(console, arguments);
+      add('err', Array.from(arguments).map(String).join(' '), {
+        channel: 'console.error',
+        args: Array.from(arguments).map(String)
+      });
+    };
+
+    var _cw = console.warn.bind(console);
+    console.warn = function(){
+      _cw.apply(console, arguments);
+      add('warn', Array.from(arguments).map(String).join(' '), {
+        channel: 'console.warn',
+        args: Array.from(arguments).map(String)
+      });
+    };
+
+    document.addEventListener('DOMContentLoaded', function(){
+      setTimeout(dumpState, 500);
+      setTimeout(dumpState, 2000);
+      setInterval(flushQueue, 2000);
+      window.addEventListener('beforeunload', function(){ try { flushQueue(); } catch(_) {} });
+    });
+  })();
+  </script>
 </head>
 <body>
 
@@ -37,11 +191,11 @@
   </div>
 </div>
 
-<div id="loginOverlay" style="display:none;position:fixed;inset:0;z-index:10000;background:var(--bg,#0d0d12);align-items:center;justify-content:center;flex-direction:column;">
-  <div style="background:var(--bg2,#13131a);border:1px solid var(--br,#2a2a3a);border-radius:1rem;padding:2rem;width:min(420px,92vw);box-shadow:0 24px 64px #0009;">
+<div id="loginOverlay" style="display:none;position:fixed;inset:0;z-index:10000;background:#e8e8ec;align-items:center;justify-content:center;flex-direction:column;">
+  <div style="background:#ffffff;border:1px solid #d0d0d8;border-radius:1rem;padding:2rem;width:min(420px,92vw);box-shadow:0 8px 32px rgba(0,0,0,0.12);">
     <div style="text-align:center;margin-bottom:1.5rem;">
-      <div style="font-size:2rem;font-weight:800;letter-spacing:-.04em;color:var(--ac,#7c6aff);">REM</div>
-      <div style="font-size:.8rem;color:var(--tc,#888);margin-top:.25rem;">Recursive Echo Memory System</div>
+      <div style="font-size:1.6rem;font-weight:800;letter-spacing:-.03em;color:#111;">NekoCore OS</div>
+      <div style="font-size:.78rem;color:#555;margin-top:.25rem;">Cognitive WebOS</div>
     </div>
 
     <!-- Tab buttons -->
@@ -53,37 +207,37 @@
     <!-- Sign-in form -->
     <div id="authLoginTab">
       <div style="margin-bottom:.75rem;">
-        <label style="display:block;font-size:.72rem;color:var(--tc,#888);margin-bottom:.3rem;">Username</label>
-        <input id="authLoginUsername" class="inp" type="text" placeholder="your username" autocomplete="username" style="width:100%;">
+        <label style="display:block;font-size:.72rem;color:#444;margin-bottom:.3rem;">Username</label>
+        <input id="authLoginUsername" class="inp" type="text" placeholder="your username" autocomplete="username" style="width:100%;background:#fff;color:#111;border-color:#bbb;">
       </div>
       <div style="margin-bottom:1.25rem;">
-        <label style="display:block;font-size:.72rem;color:var(--tc,#888);margin-bottom:.3rem;">Password</label>
-        <input id="authLoginPassword" class="inp" type="password" placeholder="password" autocomplete="current-password" style="width:100%;">
+        <label style="display:block;font-size:.72rem;color:#444;margin-bottom:.3rem;">Password</label>
+        <input id="authLoginPassword" class="inp" type="password" placeholder="password" autocomplete="current-password" style="width:100%;background:#fff;color:#111;border-color:#bbb;">
       </div>
       <button class="btn bp" style="width:100%;" onclick="handleLogin()">Sign In</button>
-      <div id="authLoginError" style="display:none;color:var(--dn,#ff5f5f);font-size:.73rem;margin-top:.75rem;text-align:center;"></div>
+      <div id="authLoginError" style="display:none;color:#c00;font-size:.73rem;margin-top:.75rem;text-align:center;"></div>
     </div>
 
     <!-- Register form -->
     <div id="authRegisterTab" style="display:none;">
       <div style="margin-bottom:.75rem;">
-        <label style="display:block;font-size:.72rem;color:var(--tc,#888);margin-bottom:.3rem;">What should we call you? <span style="color:var(--dn,#ff5f5f)">*</span></label>
-        <input id="authRegDisplayName" class="inp" type="text" placeholder="Your name or nickname" autocomplete="nickname" style="width:100%;">
+        <label style="display:block;font-size:.72rem;color:#444;margin-bottom:.3rem;">What should we call you? <span style="color:#c00">*</span></label>
+        <input id="authRegDisplayName" class="inp" type="text" placeholder="Your name or nickname" autocomplete="nickname" style="width:100%;background:#fff;color:#111;border-color:#bbb;">
       </div>
       <div style="margin-bottom:.75rem;">
-        <label style="display:block;font-size:.72rem;color:var(--tc,#888);margin-bottom:.3rem;">A little about you <span style="font-style:italic;opacity:.6">(optional)</span></label>
-        <input id="authRegInfo" class="inp" type="text" placeholder="e.g. hobbies, interests, anything..." autocomplete="off" style="width:100%;">
+        <label style="display:block;font-size:.72rem;color:#444;margin-bottom:.3rem;">A little about you <span style="font-style:italic;opacity:.6">(optional)</span></label>
+        <input id="authRegInfo" class="inp" type="text" placeholder="e.g. hobbies, interests, anything..." autocomplete="off" style="width:100%;background:#fff;color:#111;border-color:#bbb;">
       </div>
       <div style="margin-bottom:.75rem;">
-        <label style="display:block;font-size:.72rem;color:var(--tc,#888);margin-bottom:.3rem;">Choose a username</label>
-        <input id="authRegUsername" class="inp" type="text" placeholder="username (letters, numbers, _ - .)" autocomplete="username" style="width:100%;">
+        <label style="display:block;font-size:.72rem;color:#444;margin-bottom:.3rem;">Choose a username</label>
+        <input id="authRegUsername" class="inp" type="text" placeholder="username (letters, numbers, _ - .)" autocomplete="username" style="width:100%;background:#fff;color:#111;border-color:#bbb;">
       </div>
       <div style="margin-bottom:1.25rem;">
-        <label style="display:block;font-size:.72rem;color:var(--tc,#888);margin-bottom:.3rem;">Choose a password</label>
-        <input id="authRegPassword" class="inp" type="password" placeholder="password (min 3 chars)" autocomplete="new-password" style="width:100%;">
+        <label style="display:block;font-size:.72rem;color:#444;margin-bottom:.3rem;">Choose a password</label>
+        <input id="authRegPassword" class="inp" type="password" placeholder="password (min 3 chars)" autocomplete="new-password" style="width:100%;background:#fff;color:#111;border-color:#bbb;">
       </div>
       <button class="btn bp" style="width:100%;" onclick="handleRegister()">Create Account</button>
-      <div id="authRegisterError" style="display:none;color:var(--dn,#ff5f5f);font-size:.73rem;margin-top:.75rem;text-align:center;"></div>
+      <div id="authRegisterError" style="display:none;color:#c00;font-size:.73rem;margin-top:.75rem;text-align:center;"></div>
     </div>
   </div>
 </div>
@@ -259,9 +413,9 @@
 <!-- ===== HEADER ===== -->
 <div class="hdr">
   <div class="hdr-l">
-    <div class="logo">REM</div>
+    <div class="logo">NK</div>
     <div>
-      <div class="hdr-t">REM System <span id="entityName" class="text-info font-semibold"></span><span class="text-tertiary-c" style="font-weight:400"> v0.6.0</span></div>
+      <div class="hdr-t">NekoCore OS <span id="entityName" class="text-info font-semibold"></span><span class="text-tertiary-c" style="font-weight:400"> v0.6.0</span></div>
       <div class="hdr-s" id="entityTraits">No entity loaded</div>
     </div>
   </div>
@@ -289,7 +443,7 @@
 <!-- ===== NAV SIDEBAR ===== -->
 <nav class="nav-sidebar" id="navSidebar">
   <div class="nav-sidebar-header">
-    <span class="nav-brand">REM System</span>
+    <span class="nav-brand">NekoCore OS</span>
     <button class="nav-toggle" onclick="toggleNavSidebar()" title="Collapse sidebar">
       <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
     </button>
@@ -373,6 +527,10 @@
   <button class="nav-item" data-tab="activity" onclick="switchMainTab('activity', this)">
     <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
     <span class="nav-label">Entity Activity</span>
+  </button>
+  <button class="nav-item" data-tab="debugcore" onclick="switchMainTab('debugcore', this)">
+    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 4v4"/><path d="M12 16v4"/><path d="M4 12h4"/><path d="M16 12h4"/><circle cx="12" cy="12" r="3"/></svg>
+    <span class="nav-label">Debug Core</span>
   </button>
 
   <div class="nav-divider"></div>
@@ -687,6 +845,43 @@
             <div class="thought-empty">Waiting for next message...</div>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== DEBUG CORE TAB ===== -->
+  <div class="tab-content" id="tab-debugcore">
+    <div style="padding:var(--space-4);max-width:1080px;margin:0 auto">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:var(--space-3);margin-bottom:var(--space-4);flex-wrap:wrap">
+        <h2 style="font-size:var(--text-lg);margin:0">Debug Core</h2>
+        <div style="display:flex;gap:var(--space-2);flex-wrap:wrap">
+          <button class="btn bg text-xs-c" id="debugCoreRefreshBtn" type="button">Refresh</button>
+          <button class="btn bp text-xs-c" id="debugCoreDumpBtn" type="button">Dump State</button>
+          <button class="btn bg text-xs-c" id="debugCoreResetWindowsBtn" type="button">Reset Windows</button>
+          <button class="btn bg text-xs-c" id="debugCoreClearBtn" type="button">Clear Local Buffer</button>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:var(--space-4)">
+        <section class="settings-section" style="margin:0">
+          <div class="settings-section-header" style="padding-bottom:var(--space-2)">
+            <h2 style="font-size:var(--text-md);margin:0">Timeline Stream</h2>
+            <p id="debugCoreStatus">Idle</p>
+          </div>
+          <div id="debugCoreTimeline" class="file-browser" style="max-height:44vh;overflow:auto;font-family:var(--font-mono);font-size:var(--text-xs)">
+            <div class="placeholder-content">No timeline events loaded yet.</div>
+          </div>
+        </section>
+
+        <section class="settings-section" style="margin:0">
+          <div class="settings-section-header" style="padding-bottom:var(--space-2)">
+            <h2 style="font-size:var(--text-md);margin:0">Client Buffer</h2>
+            <p id="debugCoreBufferStatus">Waiting for client events</p>
+          </div>
+          <div id="debugCoreClientBuffer" class="file-browser" style="max-height:44vh;overflow:auto;font-family:var(--font-mono);font-size:var(--text-xs)">
+            <div class="placeholder-content">No local debug entries yet.</div>
+          </div>
+        </section>
       </div>
     </div>
   </div>
@@ -2055,20 +2250,36 @@
 <!-- App scripts -->
 <script src="js/login.js"></script>
 <script src="js/app.js"></script>
+<script src="js/desktop.js"></script>
+<script src="js/window-manager.js"></script>
+<script src="js/vfs.js"></script>
+<script src="js/context-menu.js"></script>
 <script src="js/auth.js"></script>
 <script src="js/pipeline.js"></script>
-<script src="js/chat.js"></script>
+<script src="js/apps/core/chat.js"></script>
 <script src="js/memory-ui.js"></script>
 <script src="js/sleep.js"></script>
-<script src="js/skills-ui.js"></script>
+<script src="js/apps/optional/physical-ui.js"></script>
+<script src="js/apps/core/users-ui.js"></script>
+<script src="js/apps/core/setup-ui.js"></script>
+<script src="js/apps/core/entity-ui.js"></script>
+<script src="js/apps/core/system-health.js"></script>
+<script src="js/apps/core/config-profiles.js"></script>
+<script src="js/apps/core/simple-provider.js"></script>
+<script src="js/apps/optional/theme-manager.js"></script>
+<script src="js/apps/core/telemetry-ui.js"></script>
+<script src="js/apps/optional/skills-ui.js"></script>
 <!-- Neural viz (split: renderer → data-layer → index) -->
 <script src="js/neural-viz/renderer.js"></script>
 <script src="js/neural-viz/data-layer.js"></script>
 <script src="js/neural-viz/index.js"></script>
-<script src="js/dream-gallery.js"></script>
-<script src="js/diary.js"></script>
-<script src="js/document-digest.js"></script>
-<script src="js/browser-app.js"></script>
+<script src="js/apps/optional/visualizer-ui.js"></script>
+<script src="js/apps/optional/dream-gallery.js"></script>
+<script src="js/apps/optional/diary.js"></script>
+<script src="js/apps/optional/document-digest.js"></script>
+<script src="js/apps/optional/browser-app.js"></script>
+<script src="js/apps/core/debug-core-app.js"></script>
+<script src="js/boot.js"></script>
 
 </body>
 </html>

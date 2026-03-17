@@ -5,12 +5,11 @@
 // Skills use SKILL.md with YAML frontmatter compatible with ClawHub
 // (https://clawhub.ai/) — the standard skill registry for agents.
 //
-// SKILL.md frontmatter supports:
-//   name, description, version, enabled
-//   metadata.openclaw.requires.env[]   — required environment variables
-//   metadata.openclaw.requires.bins[]  — required CLI binaries
-//   metadata.openclaw.primaryEnv       — main credential env var
-//   tools[]                            — tool definitions the skill provides
+// SKILL.md frontmatter supports (OpenClaw/AgentSkills style):
+//   name, description, homepage, user-invocable, disable-model-invocation,
+//   metadata (single-line JSON or multiline JSON object)
+// Legacy keys like `enabled` and `version` are tolerated for migration,
+// but enable state is persisted in `.skill-state.json` instead of SKILL.md.
 //
 // Legacy global skills/ directory is auto-migrated on first entity load.
 // ============================================================
@@ -35,11 +34,68 @@ class SkillManager {
     this.quarantined = new Map();   // name → quarantined skill metadata + scan results
     this.pendingSkills = new Map(); // id → pending skill proposal (awaiting approval)
     this._pendingCounter = 0;
+    this.enabledOverrides = Object.create(null);
 
     if (this.entityId) {
       this.skillsRoot = entityPaths.getSkillsPath(this.entityId);
       this.quarantineRoot = entityPaths.getQuarantinePath(this.entityId);
     }
+  }
+
+  getStateFilePath() {
+    if (!this.skillsRoot) return null;
+    return path.join(this.skillsRoot, '.skill-state.json');
+  }
+
+  loadEnabledOverrides() {
+    this.enabledOverrides = Object.create(null);
+    const stateFile = this.getStateFilePath();
+    if (!stateFile || !fs.existsSync(stateFile)) return;
+    try {
+      const parsed = JSON.parse(fs.readFileSync(stateFile, 'utf-8'));
+      const raw = parsed && typeof parsed === 'object' ? parsed.enabled : null;
+      if (raw && typeof raw === 'object') {
+        for (const [name, value] of Object.entries(raw)) {
+          if (typeof value === 'boolean') this.enabledOverrides[name] = value;
+        }
+      }
+    } catch {
+      this.enabledOverrides = Object.create(null);
+    }
+  }
+
+  saveEnabledOverrides() {
+    const stateFile = this.getStateFilePath();
+    if (!stateFile) return;
+    const payload = { enabled: this.enabledOverrides };
+    fs.writeFileSync(stateFile, JSON.stringify(payload, null, 2), 'utf-8');
+  }
+
+  parseMetadataField(rawMetadata) {
+    if (!rawMetadata) return {};
+    if (typeof rawMetadata === 'object') return rawMetadata;
+    if (typeof rawMetadata !== 'string') return {};
+
+    const text = rawMetadata.trim();
+    if (!text) return {};
+    if (!text.startsWith('{')) return {};
+
+    try {
+      // Accept trailing commas commonly used in skill manifests.
+      const normalized = text.replace(/,(\s*[}\]])/g, '$1');
+      return JSON.parse(normalized);
+    } catch {
+      return {};
+    }
+  }
+
+  resolveSkillEnabled(name, meta) {
+    if (Object.prototype.hasOwnProperty.call(this.enabledOverrides, name)) {
+      return this.enabledOverrides[name];
+    }
+    // Legacy compatibility for old manifests.
+    if (typeof meta.enabled === 'boolean') return meta.enabled;
+    return true;
   }
 
   /** Ensure the entity skills directory exists */
@@ -66,100 +122,40 @@ class SkillManager {
     const raw = match[1];
     const meta = {};
 
-    // Simple YAML parser that handles nested keys and arrays
     const lines = raw.split(/\r?\n/);
-    let nestedObj = null;
-    let nestedKey = null;
-    let arrayKey = null;
-    let arrayItems = [];
+    let i = 0;
+    while (i < lines.length) {
+      const line = lines[i];
+      const topKey = line.match(/^([A-Za-z0-9_-]+):\s*(.*)$/);
+      if (!topKey) { i++; continue; }
 
-    for (const line of lines) {
-      if (!line.trim()) continue;
-      const indent = line.search(/\S/);
+      const key = topKey[1];
+      let value = topKey[2] || '';
 
-      // Top-level key: value
-      if (indent === 0) {
-        // Flush any pending array
-        if (arrayKey && nestedObj) {
-          nestedObj[arrayKey] = arrayItems;
-          arrayKey = null;
-          arrayItems = [];
+      if (!value.trim()) {
+        const nested = [];
+        i++;
+        while (i < lines.length && /^\s+/.test(lines[i])) {
+          nested.push(lines[i].replace(/^\s{2}/, ''));
+          i++;
         }
-        if (nestedKey && nestedObj) {
-          meta[nestedKey] = nestedObj;
-          nestedObj = null;
-          nestedKey = null;
-        }
-
-        const idx = line.indexOf(':');
-        if (idx < 1) continue;
-        const key = line.slice(0, idx).trim();
-        let val = line.slice(idx + 1).trim();
-
-        if (!val) {
-          // Nested object starts
-          nestedKey = key;
-          nestedObj = {};
-          continue;
-        }
-
-        // Strip surrounding quotes
-        if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
-          val = val.slice(1, -1);
-        }
-        if (val === 'true') val = true;
-        else if (val === 'false') val = false;
-        meta[key] = val;
-        continue;
+        value = nested.join('\n').trim();
+      } else {
+        i++;
       }
 
-      // Nested content
-      if (nestedObj) {
-        const trimmed = line.trim();
-
-        // Array item
-        if (trimmed.startsWith('- ')) {
-          const item = trimmed.slice(2).trim();
-          if (arrayKey) {
-            arrayItems.push(item);
-          }
-          continue;
-        }
-
-        // Nested key
-        const idx = trimmed.indexOf(':');
-        if (idx >= 1) {
-          // Flush previous array
-          if (arrayKey) {
-            nestedObj[arrayKey] = arrayItems;
-            arrayKey = null;
-            arrayItems = [];
-          }
-          const key = trimmed.slice(0, idx).trim();
-          let val = trimmed.slice(idx + 1).trim();
-
-          if (!val) {
-            arrayKey = key;
-            arrayItems = [];
-            continue;
-          }
-
-          if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
-            val = val.slice(1, -1);
-          }
-          if (val === 'true') val = true;
-          else if (val === 'false') val = false;
-          nestedObj[key] = val;
-        }
+      const trimmed = String(value).trim();
+      if (trimmed === 'true') {
+        meta[key] = true;
+      } else if (trimmed === 'false') {
+        meta[key] = false;
+      } else if (/^-?\d+(\.\d+)?$/.test(trimmed)) {
+        meta[key] = Number(trimmed);
+      } else if ((trimmed.startsWith('"') && trimmed.endsWith('"')) || (trimmed.startsWith("'") && trimmed.endsWith("'"))) {
+        meta[key] = trimmed.slice(1, -1);
+      } else {
+        meta[key] = trimmed;
       }
-    }
-
-    // Flush trailing state
-    if (arrayKey && nestedObj) {
-      nestedObj[arrayKey] = arrayItems;
-    }
-    if (nestedKey && nestedObj) {
-      meta[nestedKey] = nestedObj;
     }
 
     const body = text.slice(match[0].length).trim();
@@ -267,6 +263,7 @@ class SkillManager {
     if (!this.skillsRoot) return;
     this.ensureSkillsDir();
     this.migrateGlobalSkills();
+    this.loadEnabledOverrides();
     this.skills.clear();
     this.enabledSkills.clear();
 
@@ -292,8 +289,9 @@ class SkillManager {
         const { meta, body } = this.parseFrontmatter(raw);
         const name = meta.name || dir;
 
-        // Extract ClawHub-compatible metadata
-        const openclaw = meta.metadata || meta.openclaw || {};
+        // Extract OpenClaw-compatible metadata block.
+        const metadata = this.parseMetadataField(meta.metadata);
+        const openclaw = metadata.openclaw || this.parseMetadataField(meta.openclaw) || {};
         const requires = openclaw.requires || {};
         if (meta.requires) {
           try { Object.assign(requires, JSON.parse(meta.requires)); } catch { /* ignore */ }
@@ -307,8 +305,11 @@ class SkillManager {
           dir: skillDir,
           description: meta.description || '',
           version: meta.version || '1.0.0',
-          enabled: meta.enabled !== false,
+          enabled: this.resolveSkillEnabled(name, meta),
           trigger: meta.trigger || null,
+          homepage: meta.homepage || openclaw.homepage || '',
+          userInvocable: meta['user-invocable'] !== false,
+          disableModelInvocation: meta['disable-model-invocation'] === true,
           requires,
           primaryEnv: openclaw.primaryEnv || null,
           tools,
@@ -443,18 +444,9 @@ class SkillManager {
       try { fs.unlinkSync(qMeta); } catch { /* ignore */ }
     }
 
-    // Force disabled — user must manually enable after vetting
-    let skillMdPath = path.join(targetDir, 'SKILL.md');
-    if (!fs.existsSync(skillMdPath)) skillMdPath = path.join(targetDir, 'skill.md');
-    if (fs.existsSync(skillMdPath)) {
-      let content = fs.readFileSync(skillMdPath, 'utf-8');
-      if (content.match(/^enabled:\s*true/m)) {
-        content = content.replace(/^enabled:\s*true/m, 'enabled: false');
-      } else if (!content.match(/^enabled:/m)) {
-        content = content.replace(/^(description:.*$)/m, '$1\nenabled: false');
-      }
-      fs.writeFileSync(skillMdPath, content, 'utf-8');
-    }
+    // Force disabled via state override (do not mutate SKILL.md frontmatter).
+    this.enabledOverrides[name] = false;
+    this.saveEnabledOverrides();
 
     // Delete from quarantine
     fs.rmSync(q.dir, { recursive: true, force: true });
@@ -527,17 +519,8 @@ class SkillManager {
   /** Update the enabled field in a skill's SKILL.md */
   _updateSkillEnabled(skill, enabled) {
     try {
-      let skillMdPath = path.join(skill.dir, 'SKILL.md');
-      if (!fs.existsSync(skillMdPath)) skillMdPath = path.join(skill.dir, 'skill.md');
-      if (!fs.existsSync(skillMdPath)) return;
-
-      let content = fs.readFileSync(skillMdPath, 'utf-8');
-      if (content.match(/^enabled:\s*(true|false)/m)) {
-        content = content.replace(/^enabled:\s*(true|false)/m, `enabled: ${enabled}`);
-      } else {
-        content = content.replace(/^(description:.*$)/m, `$1\nenabled: ${enabled}`);
-      }
-      fs.writeFileSync(skillMdPath, content, 'utf-8');
+      this.enabledOverrides[skill.name] = !!enabled;
+      this.saveEnabledOverrides();
     } catch { /* non-critical */ }
   }
 
@@ -548,6 +531,7 @@ class SkillManager {
     for (const name of this.enabledSkills) {
       const skill = this.skills.get(name);
       if (!skill) continue;
+      if (skill.disableModelInvocation) continue;
 
       let toolsAttr = '';
       if (skill.tools.length > 0) {
@@ -574,11 +558,13 @@ class SkillManager {
     const q = String(query || '').trim();
     if (!q) return null;
 
-    // Exact, case-sensitive match on trigger field first, then name
+    // Exact, case-sensitive match on trigger field first, then name.
+    // User-invocable flow should work even when model invocation is disabled.
     let matchedName = null;
     for (const name of this.enabledSkills) {
       const skill = this.skills.get(name);
       if (!skill) continue;
+      if (skill.userInvocable === false) continue;
       const trigger = skill.trigger || skill.name;
       if (trigger === q) { matchedName = name; break; }
     }
@@ -921,7 +907,7 @@ class SkillManager {
       if (!skill) return { ok: false, error: `Skill "${proposal.name}" no longer exists` };
 
       const version = skill.version || '1.0.0';
-      const md = `---\nname: ${proposal.name}\ndescription: ${proposal.description}\nversion: ${version}\nenabled: ${this.enabledSkills.has(proposal.name)}\n---\n\n${proposal.instructions}`;
+      const md = `---\nname: ${proposal.name}\ndescription: ${proposal.description}\n---\n\n${proposal.instructions}`;
       fs.writeFileSync(path.join(skill.dir, 'SKILL.md'), md, 'utf-8');
       this.loadAll();
       console.log(`  ✅ Skill edit "${proposal.name}" approved and applied`);
@@ -958,15 +944,15 @@ class SkillManager {
     fs.mkdirSync(path.join(skillDir, 'workspace'), { recursive: true });
 
     // Build ClawHub-compatible SKILL.md
-    const version = options.version || '1.0.0';
     const trigger = options.trigger ? String(options.trigger).trim() : null;
     const frontmatter = [
       '---',
       `name: ${safeName}`,
-      `description: ${description}`,
-      `version: ${version}`,
-      'enabled: true'
+      `description: ${description}`
     ];
+    if (options.homepage) frontmatter.push(`homepage: ${options.homepage}`);
+    if (options.userInvocable === false) frontmatter.push('user-invocable: false');
+    if (options.disableModelInvocation === true) frontmatter.push('disable-model-invocation: true');
     if (trigger) frontmatter.push(`trigger: ${trigger}`);
 
     // Add metadata.openclaw if requires are specified

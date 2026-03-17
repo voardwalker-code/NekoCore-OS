@@ -1,0 +1,154 @@
+{
+  "_version": "1.0.0",
+  "_lastUpdated": "2026-03-16",
+  "_note": "App ownership manifest — generated for PLAN-APP-FOLDER-MODULARIZATION-v1.md slice A1-1. Source paths reflect current state; update each entry as migration slices B1/C1 complete. Full registry audit in D1-0.",
+  "apps": [
+    {
+      "tabId": "chat",
+      "class": "core",
+      "sourcePath": "js/apps/core/chat.js",
+      "bootstrapCritical": true,
+      "dependencies": ["js/app.js", "shared/api.js", "shared/sse.js"]
+    },
+    {
+      "tabId": "entity",
+      "class": "core",
+      "sourcePath": "js/apps/core/entity-ui.js",
+      "bootstrapCritical": false,
+      "dependencies": ["js/app.js", "shared/entity-select.js"]
+    },
+    {
+      "tabId": "creator",
+      "class": "core",
+      "sourcePath": "create.html",
+      "note": "Iframe-hosted; primaryScript js/create.js loaded within frame",
+      "bootstrapCritical": false,
+      "dependencies": ["js/app.js"]
+    },
+    {
+      "tabId": "users",
+      "class": "core",
+      "sourcePath": "js/apps/core/users-ui.js",
+      "bootstrapCritical": false,
+      "dependencies": ["js/app.js"]
+    },
+    {
+      "tabId": "settings",
+      "class": "core",
+      "sourcePath": "js/apps/core/setup-ui.js",
+      "bootstrapCritical": false,
+      "dependencies": ["js/app.js", "js/apps/core/config-profiles.js", "js/apps/core/simple-provider.js"]
+    },
+    {
+      "tabId": "advanced",
+      "class": "core",
+      "sourcePath": "js/apps/core/setup-ui.js",
+      "note": "Shares source file with settings tab; renders advanced configuration section",
+      "bootstrapCritical": false,
+      "dependencies": ["js/app.js", "js/apps/core/config-profiles.js"]
+    },
+    {
+      "tabId": "activity",
+      "class": "core",
+      "sourcePath": "js/apps/core/system-health.js",
+      "bootstrapCritical": false,
+      "dependencies": ["js/app.js"]
+    },
+    {
+      "tabId": "observability",
+      "class": "core",
+      "sourcePath": "js/apps/core/telemetry-ui.js",
+      "bootstrapCritical": false,
+      "dependencies": ["js/app.js"]
+    },
+    {
+      "tabId": "debugcore",
+      "class": "core",
+      "sourcePath": "js/apps/core/debug-core-app.js",
+      "bootstrapCritical": false,
+      "dependencies": ["js/app.js"]
+    },
+    {
+      "tabId": "nekocore",
+      "class": "core",
+      "sourcePath": "nekocore.html",
+      "note": "Iframe-hosted; primaryScript js/nekocore-app.js loaded within frame; iframe src set by boot.js",
+      "bootstrapCritical": false,
+      "dependencies": ["js/app.js"]
+    },
+    {
+      "tabId": "dreamgallery",
+      "class": "optional",
+      "sourcePath": "js/apps/optional/dream-gallery.js",
+      "bootstrapCritical": false,
+      "dependencies": ["js/neural-viz/index.js"]
+    },
+    {
+      "tabId": "lifediary",
+      "class": "optional",
+      "sourcePath": "js/apps/optional/diary.js",
+      "note": "Shares source file with dreamdiary; loadLifeDiary() is the tab entrypoint",
+      "bootstrapCritical": false,
+      "dependencies": ["js/app.js"]
+    },
+    {
+      "tabId": "dreamdiary",
+      "class": "optional",
+      "sourcePath": "js/apps/optional/diary.js",
+      "note": "Shares source file with lifediary; loadDreamDiary() is the tab entrypoint",
+      "bootstrapCritical": false,
+      "dependencies": ["js/app.js"]
+    },
+    {
+      "tabId": "themes",
+      "class": "optional",
+      "sourcePath": "js/apps/optional/theme-manager.js",
+      "bootstrapCritical": false,
+      "dependencies": ["js/app.js"]
+    },
+    {
+      "tabId": "browser",
+      "class": "optional",
+      "sourcePath": "js/apps/optional/browser-app.js",
+      "bootstrapCritical": false,
+      "dependencies": ["js/app.js"]
+    },
+    {
+      "tabId": "documents",
+      "class": "optional",
+      "sourcePath": "js/apps/optional/document-digest.js",
+      "bootstrapCritical": false,
+      "dependencies": ["js/app.js"]
+    },
+    {
+      "tabId": "workspace",
+      "class": "optional",
+      "sourcePath": "js/vfs.js",
+      "note": "Inline file explorer; VFS is primary backing module",
+      "bootstrapCritical": false,
+      "dependencies": ["js/app.js", "js/desktop.js"]
+    },
+    {
+      "tabId": "skills",
+      "class": "optional",
+      "sourcePath": "js/apps/optional/skills-ui.js",
+      "bootstrapCritical": false,
+      "dependencies": ["js/app.js"]
+    },
+    {
+      "tabId": "visualizer",
+      "class": "optional",
+      "sourcePath": "js/apps/optional/visualizer-ui.js",
+      "note": "Tab renders iframe sourced from /visualizer.html; visualizer-ui.js bridges shell to iframe",
+      "bootstrapCritical": false,
+      "dependencies": ["js/neural-viz/index.js"]
+    },
+    {
+      "tabId": "physical",
+      "class": "optional",
+      "sourcePath": "js/apps/optional/physical-ui.js",
+      "bootstrapCritical": false,
+      "dependencies": ["js/app.js"]
+    }
+  ]
+}

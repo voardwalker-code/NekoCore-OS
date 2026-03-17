@@ -1212,7 +1212,45 @@ function escapeHtml(text) {
   return div.innerHTML;
 }
 
+function hasCheckedOutEntityContext() {
+  return !!(typeof currentEntityId !== 'undefined' && currentEntityId);
+}
+
+function syncContextChatGuard() {
+  const input = document.getElementById('chatInput');
+  const sendBtn = document.getElementById('chatSendBtn');
+  if (!input || !sendBtn) return false;
+
+  const hasEntity = hasCheckedOutEntityContext();
+  if (!hasEntity) {
+    if (document.activeElement === input) input.blur();
+    input.disabled = true;
+    input.placeholder = 'Check out an entity to start context chat...';
+    sendBtn.disabled = true;
+    if (input.value && input.value.trim()) input.value = '';
+    input.style.height = 'auto';
+  } else {
+    input.disabled = false;
+    input.placeholder = 'Chat with the entity...';
+    if (!chatBusy) sendBtn.disabled = false;
+  }
+
+  return hasEntity;
+}
+
+window.syncContextChatGuard = syncContextChatGuard;
+
+document.addEventListener('DOMContentLoaded', () => {
+  setTimeout(() => {
+    syncContextChatGuard();
+  }, 0);
+});
+
 function chatKeyDown(e) {
+  if (!syncContextChatGuard()) {
+    e.preventDefault();
+    return;
+  }
   if (e.key === 'Enter' && !e.shiftKey) {
     e.preventDefault();
     sendChatMessage();
@@ -1227,6 +1265,10 @@ function chatKeyDown(e) {
 async function sendChatMessage() {
   if (chatBusy) return;
   const input = document.getElementById('chatInput');
+  if (!syncContextChatGuard()) {
+    lg('warn', 'No entity checked out. Check out an entity before sending context chat messages.');
+    return;
+  }
   const text = input.value.trim();
   if (!text) return;
 
@@ -1392,7 +1434,7 @@ async function sendChatMessage() {
   } finally {
     activeThinkingEl = null;
     chatBusy = false;
-    document.getElementById('chatSendBtn').disabled = false;
+    syncContextChatGuard();
     scrollChatBottom(true);
     _userScrolledUp = false;
     input.focus();
@@ -1496,5 +1538,99 @@ ${fullText.slice(0, 6000)}`;
     btn.disabled = false;
     btn.innerHTML = '&#128230; Compress &amp; Save';
     scrollChatBottom();
+  }
+}
+
+// ============================================================
+// SYSTEM PROMPT LOADING (moved from app.js — P3-S13)
+// ============================================================
+async function loadSystemPrompt() {
+  try {
+    const resp = await fetch('/api/system-prompt');
+    if (!resp.ok) {
+      lg('warn', 'No system prompt found on server');
+      return;
+    }
+    const data = await resp.json();
+    if (!data.ok || !data.text) { lg('warn', 'System prompt empty'); return; }
+    const text = data.text;
+    if (activeConfig) {
+      chatHistory.push({ role: 'system', content: text });
+      lg('ok', 'Loaded system prompt into chat history');
+    } else {
+      pendingSystemPromptText = text;
+      const el = addChatBubble('system', '\u{1F9E0} Core system prompt loaded from server. Press Enter (when a provider is connected) to send this prompt to the model.\n\n' + text);
+      el.id = 'pendingSysPromptBubble';
+      lg('info', 'System prompt loaded and pending until a provider connects');
+    }
+  } catch (e) {
+    lg('warn', 'Failed to load system prompt: ' + e.message);
+  }
+}
+
+function flushPendingSystemPrompt() {
+  if (!pendingSystemPromptText) return;
+  if (!activeConfig) return;
+  chatHistory.push({ role: 'system', content: pendingSystemPromptText });
+  pendingSystemPromptText = null;
+  const el = document.getElementById('pendingSysPromptBubble'); if (el) el.remove();
+  lg('ok', 'System prompt sent to LLM');
+}
+
+async function runStartupResumeRecap(entityName, memData) {
+  const summary = String(memData?.summary || '').trim();
+  const recentMessages = Array.isArray(memData?.memory?.messages)
+    ? memData.memory.messages.filter(m => m && (m.role === 'user' || m.role === 'assistant')).slice(-6)
+    : [];
+
+  const compactTranscript = recentMessages
+    .map(m => `${m.role === 'user' ? 'User' : (entityName || 'Entity')}: ${String(m.content || '').replace(/\s+/g, ' ').trim().slice(0, 220)}`)
+    .join('\n');
+
+  const resumePrompt = [
+    '[INTERNAL-RESUME]',
+    `Entity ${entityName || 'Entity'} has just been reloaded.`,
+    'Write a natural re-entry message to the user that:',
+    '1) warmly acknowledges they are back,',
+    '2) briefly summarizes what was last being discussed,',
+    '3) invites the user to continue from there.',
+    'Keep it concise: 4-6 sentences unless absolutely necessary to exceed.',
+    '',
+    'Last-memory summary:',
+    summary || '(none)',
+    '',
+    'Recent transcript excerpt:',
+    compactTranscript || '(none)'
+  ].join('\n');
+
+  const typingBubble = addChatBubble('assistant', '');
+  const typingContent = typingBubble.querySelector('.chat-content') || typingBubble;
+  typingContent.innerHTML = '<span class="typing"></span><span class="typing" style="animation-delay:.2s;margin-left:4px"></span><span class="typing" style="animation-delay:.4s;margin-left:4px"></span>';
+
+  try {
+    const resp = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message: resumePrompt,
+        chatHistory: []
+      })
+    });
+
+    if (!resp.ok) {
+      const errText = await resp.text();
+      throw new Error('Resume recap failed: ' + errText.slice(0, 180));
+    }
+
+    const data = await resp.json();
+    const recap = String(data?.response || '').trim();
+    typingContent.textContent = recap || 'You are back. I remember where we left off, and we can continue from there.';
+    if (recap) {
+      chatHistory.push({ role: 'assistant', content: recap });
+    }
+    lg('ok', 'Startup recap generated from last saved memory context');
+  } catch (err) {
+    typingContent.textContent = 'You are back. I remember where we left off, and we can continue from there.';
+    lg('warn', 'Startup recap fallback: ' + err.message);
   }
 }

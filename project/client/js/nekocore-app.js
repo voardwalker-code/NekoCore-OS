@@ -319,6 +319,7 @@ const App = {
       if (toolingData && toolingData.ok) {
         _renderTooling(toolingData);
       }
+      this.loadMemoryStats();
     } catch (e) {
       _toast('Error loading NekoCore status: ' + e.message, 'error');
       const dot = document.getElementById('nkStatusDot');
@@ -370,6 +371,53 @@ const App = {
       _toast('NekoCore voice reset to defaults.', 'info');
     } catch (e) {
       _toast('Persona reset failed: ' + e.message, 'error');
+    }
+  },
+
+  async loadMemoryStats() {
+    try {
+      const data = await fetch('/api/nekocore/memory-stats').then(r => r.json());
+      if (!data.ok) return;
+      const pct  = Math.min(100, Math.round((data.totalCount / data.softLimitCount) * 100));
+      const fill   = document.getElementById('nkMemoryMeterFill');
+      const detail = document.getElementById('nkMemoryMeterDetail');
+      const sub    = document.getElementById('nkMemoryMeterSub');
+      if (fill) {
+        fill.style.width = pct + '%';
+        fill.className = 'nk-memory-meter-fill' + (pct >= 90 ? ' danger' : pct >= 70 ? ' warn' : '');
+      }
+      // Primary: count — this is the actual quality wall
+      const remaining = data.softLimitCount - data.totalCount;
+      const remainingLabel = remaining > 0 ? remaining.toLocaleString() + ' remaining' : 'at limit';
+      if (detail) detail.textContent = data.totalCount.toLocaleString() + ' / ' + data.softLimitCount.toLocaleString() + ' (' + pct + '%)  ·  ' + remainingLabel;
+      // Secondary: breakdown + disk size as context only
+      if (sub) {
+        const mb = (data.diskMB || 0).toFixed(1);
+        sub.textContent = data.episodicCount + ' experiences  ·  ' + data.semanticCount + ' semantic  ·  ' + data.docCount + ' knowledge docs  ·  ' + mb + ' MB on disk';
+      }
+    } catch (_) {}
+  },
+
+  async docsIngest() {
+    const statusEl = document.getElementById('nkDocsIngestStatus');
+    const dirInput = document.getElementById('nkDocsDir');
+    const docsDir = (dirInput?.value || '').trim() || null;
+    if (statusEl) statusEl.textContent = 'Ingesting…';
+    try {
+      const body = docsDir ? { docsDir } : {};
+      const resp = await fetch('/api/nekocore/docs-ingest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      const result = await resp.json().catch(() => ({}));
+      if (!result.ok) throw new Error(result.error || 'Ingest failed');
+      if (statusEl) statusEl.textContent = '✓ Docs ingested from: ' + result.docsDir;
+      _toast('Architecture docs ingested into NekoCore memory.', 'ok');
+      this.loadMemoryStats();
+    } catch (e) {
+      if (statusEl) statusEl.textContent = '✗ ' + e.message;
+      _toast('Doc ingest failed: ' + e.message, 'error');
     }
   },
 
@@ -512,6 +560,8 @@ const Chat = (() => {
     if (factoryBtn) factoryBtn.addEventListener('click', () => App.factoryResetNeko());
     if (approvalToggle) approvalToggle.addEventListener('change', (e) => App.saveToolingApproval(!!e.target.checked));
     if (saveWorkspaceBtn) saveWorkspaceBtn.addEventListener('click', () => App.saveWorkspacePath());
+    const docsIngestBtn = document.getElementById('nkDocsIngestBtn');
+    if (docsIngestBtn) docsIngestBtn.addEventListener('click', () => App.docsIngest());
 
     _setInfoPanelOpen(false);
 

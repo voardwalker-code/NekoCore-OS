@@ -83,7 +83,6 @@ function ensureSystemEntity(overrideEntitiesDir, overrideWorkspaceDesktopDir) {
     name:               'NekoCore',
     gender:             'female',
     isSystemEntity:     true,   // blocks delete / visibility toggle / rename
-    dreamDisabled:      true,   // skips dream pipeline (B-1)
     operationalMemory:  true,   // no TTL eviction (B-2)
     isPublic:           false,
     ownerId:            '__system__',

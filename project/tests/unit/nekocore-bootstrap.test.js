@@ -64,14 +64,14 @@ test('created entity has isSystemEntity: true', () => {
   }
 });
 
-test('created entity has dreamDisabled: true', () => {
+test('created entity does not have dreamDisabled set (dreaming enabled)', () => {
   const tmpDir = makeTmpDir();
   try {
     ensureSystemEntity(tmpDir);
     const entity = JSON.parse(fs.readFileSync(
       path.join(tmpDir, `entity_${SYSTEM_ENTITY_ID}`, 'entity.json'), 'utf8'
     ));
-    assert.equal(entity.dreamDisabled, true);
+    assert.equal(entity.dreamDisabled, undefined);
   } finally {
     fs.rmSync(tmpDir, { recursive: true, force: true });
   }

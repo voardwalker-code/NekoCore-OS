@@ -7,8 +7,38 @@
 function createMemoryRoutes(ctx) {
   const { fs, path, zlib } = ctx;
   const { enforceResponseContract } = require('../contracts/response-contracts');
+  const { getEntityMemoryScanDirs, getEntityMemoryRecordDirs } = require('../services/entity-memory-compat');
   const reconstructCache = ctx.reconstructionCache instanceof Map ? ctx.reconstructionCache : new Map();
   const reconstructCacheTtlMs = Number.isFinite(ctx.reconstructionCacheTtlMs) ? ctx.reconstructionCacheTtlMs : 15 * 60 * 1000;
+
+  function resolveTargetEntityId(rawEntityId) {
+    try {
+      const entityPaths = require('../entityPaths');
+      return rawEntityId ? entityPaths.normalizeEntityId(rawEntityId) : (ctx.currentEntityId ? entityPaths.normalizeEntityId(ctx.currentEntityId) : null);
+    } catch {
+      return rawEntityId || ctx.currentEntityId || null;
+    }
+  }
+
+  function resolveTargetEntityMemoryRoot(rawEntityId) {
+    const entityId = resolveTargetEntityId(rawEntityId);
+    if (!entityId) return null;
+    try {
+      return require('../entityPaths').getMemoryRoot(entityId);
+    } catch {
+      return null;
+    }
+  }
+
+  function resolveTargetEntityPath(rawEntityId) {
+    const entityId = resolveTargetEntityId(rawEntityId);
+    if (!entityId) return null;
+    try {
+      return require('../entityPaths').getEntityRoot(entityId);
+    } catch {
+      return null;
+    }
+  }
 
   function buildReconstructCacheKey(memoryId, text) {
     const raw = String(text || '');
@@ -387,24 +417,19 @@ function createMemoryRoutes(ctx) {
       const sortBy = url.searchParams.get('sort') || 'date';
       const limitParam = parseInt(url.searchParams.get('limit')) || 200;
 
-      if (!ctx.currentEntityId) {
+      const targetEntityId = resolveTargetEntityId(url.searchParams.get('entityId'));
+      if (!targetEntityId) {
         res.writeHead(200, apiHeaders);
         res.end(JSON.stringify({ ok: true, memories: [] }));
         return;
       }
 
-      const entityPathsMod = require('../entityPaths');
-      const memoryRoot = entityPathsMod.getMemoryRoot(ctx.currentEntityId);
+      const memoryRoot = resolveTargetEntityMemoryRoot(targetEntityId);
       const MemoryImages = require('../brain/memory/memory-images');
-      const memoryImages = new MemoryImages({ entityId: ctx.currentEntityId });
+      const memoryImages = new MemoryImages({ entityId: targetEntityId });
       const results = [];
 
-      const searchDirs = [
-        { dir: path.join(memoryRoot, 'episodic'), fallbackType: 'episodic' },
-        { dir: path.join(memoryRoot, 'semantic'), fallbackType: 'semantic' },
-        { dir: path.join(memoryRoot, 'ltm'), fallbackType: 'long_term_memory' },
-        { dir: path.join(memoryRoot, 'dreams'), fallbackType: 'dream_memory' }
-      ];
+      const searchDirs = getEntityMemoryScanDirs(memoryRoot, { includeDreams: true });
 
       for (const { dir, fallbackType } of searchDirs) {
         if (!fs.existsSync(dir)) continue;
@@ -417,7 +442,8 @@ function createMemoryRoutes(ctx) {
           let meta = null, semantic = '';
           const logFile = path.join(memDir, 'log.json');
           const semFile = path.join(memDir, 'semantic.txt');
-          if (fs.existsSync(logFile)) { try { meta = JSON.parse(fs.readFileSync(logFile, 'utf8')); } catch (e) { /* skip */ } }
+          if (!fs.existsSync(logFile)) continue;
+          try { meta = JSON.parse(fs.readFileSync(logFile, 'utf8')); } catch (e) { /* skip */ }
           if (fs.existsSync(semFile)) { try { semantic = fs.readFileSync(semFile, 'utf8').trim(); } catch (e) { /* skip */ } }
 
           const type = meta?.type || fallbackType;
@@ -465,16 +491,16 @@ function createMemoryRoutes(ctx) {
     try {
       const body = JSON.parse(await readBody(req));
       const memId = body.memoryId;
-      if (!memId || !ctx.currentEntityId) {
+      const targetEntityId = resolveTargetEntityId(body.entityId);
+      if (!memId || !targetEntityId) {
         res.writeHead(400, apiHeaders);
         res.end(JSON.stringify({ ok: false, error: 'Missing memoryId or no active entity' }));
         return;
       }
 
-      const entityPathsMod = require('../entityPaths');
       const MemoryImages = require('../brain/memory/memory-images');
-      const memoryImages = new MemoryImages({ entityId: ctx.currentEntityId });
-      const memoryRoot = entityPathsMod.getMemoryRoot(ctx.currentEntityId);
+      const memoryImages = new MemoryImages({ entityId: targetEntityId });
+      const memoryRoot = resolveTargetEntityMemoryRoot(targetEntityId);
       let compressedContent = null;
 
       function extractReconstructableText(rawText) {
@@ -511,8 +537,8 @@ function createMemoryRoutes(ctx) {
         return raw;
       }
 
-      const searchDirs = ['ltm', 'episodic', 'semantic'].map(d => path.join(memoryRoot, d, memId));
-      for (const memDir of searchDirs) {
+      const searchDirs = getEntityMemoryRecordDirs(memoryRoot, memId);
+      for (const { dir: memDir } of searchDirs) {
         if (!fs.existsSync(memDir)) continue;
         const zipFile = path.join(memDir, 'memory.zip');
         if (fs.existsSync(zipFile)) {
@@ -666,20 +692,20 @@ function createMemoryRoutes(ctx) {
   function getMemoryDetail(req, res, apiHeaders, url) {
     try {
       const memId = url.searchParams.get('id');
-      if (!memId || !ctx.currentEntityId) {
+      const targetEntityId = resolveTargetEntityId(url.searchParams.get('entityId'));
+      if (!memId || !targetEntityId) {
         res.writeHead(400, apiHeaders);
         res.end(JSON.stringify({ ok: false, error: 'Missing id or no active entity' }));
         return;
       }
 
-      const entityPathsMod = require('../entityPaths');
       const MemoryImages = require('../brain/memory/memory-images');
-      const memoryImages = new MemoryImages({ entityId: ctx.currentEntityId });
-      const memoryRoot = entityPathsMod.getMemoryRoot(ctx.currentEntityId);
+      const memoryImages = new MemoryImages({ entityId: targetEntityId });
+      const memoryRoot = resolveTargetEntityMemoryRoot(targetEntityId);
       let semantic = null, logData = null, content = null;
 
-      const searchDirs = ['episodic', 'semantic', 'ltm'].map(d => path.join(memoryRoot, d, memId));
-      for (const memDir of searchDirs) {
+      const searchDirs = getEntityMemoryRecordDirs(memoryRoot, memId);
+      for (const { dir: memDir } of searchDirs) {
         if (!fs.existsSync(memDir)) continue;
         const semFile = path.join(memDir, 'semantic.txt');
         const logFile = path.join(memDir, 'log.json');
@@ -715,14 +741,15 @@ function createMemoryRoutes(ctx) {
 
   async function postVisualizerChatHistory(req, res, apiHeaders, readBody) {
     try {
-      if (!ctx.currentEntityPath) {
+      const body = await readBody(req);
+      const data = JSON.parse(body);
+      const targetEntityPath = resolveTargetEntityPath(data.entityId);
+      if (!targetEntityPath) {
         res.writeHead(200, apiHeaders);
         res.end(JSON.stringify({ ok: false, error: 'No entity active' }));
         return;
       }
-      const body = await readBody(req);
-      const data = JSON.parse(body);
-      const historyFile = path.join(ctx.currentEntityPath, 'visualizer-chat-history.json');
+      const historyFile = path.join(targetEntityPath, 'visualizer-chat-history.json');
       let history = [];
       if (fs.existsSync(historyFile)) { try { history = JSON.parse(fs.readFileSync(historyFile, 'utf8')); } catch (_) { history = []; } }
       if (data.exchange) {
@@ -739,12 +766,13 @@ function createMemoryRoutes(ctx) {
 
   function getVisualizerChatHistory(req, res, apiHeaders) {
     try {
-      if (!ctx.currentEntityPath) {
+      const targetEntityPath = resolveTargetEntityPath(req.url && new URL(req.url, 'http://localhost').searchParams.get('entityId'));
+      if (!targetEntityPath) {
         res.writeHead(200, apiHeaders);
         res.end(JSON.stringify({ ok: true, history: [] }));
         return;
       }
-      const historyFile = path.join(ctx.currentEntityPath, 'visualizer-chat-history.json');
+      const historyFile = path.join(targetEntityPath, 'visualizer-chat-history.json');
       let history = [];
       if (fs.existsSync(historyFile)) { try { history = JSON.parse(fs.readFileSync(historyFile, 'utf8')); } catch (_) { history = []; } }
       res.writeHead(200, apiHeaders);

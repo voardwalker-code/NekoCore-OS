@@ -1,5 +1,6 @@
 function createCognitiveRoutes(ctx) {
   const { fs, path } = ctx;
+  const { getEntityMemoryScanDirs, getEntityMemoryRecordDirs } = require('../services/entity-memory-compat');
 
   return {
     // GET /api/cognitive-bus/stats
@@ -74,6 +75,62 @@ function createCognitiveRoutes(ctx) {
       } catch (e) {
         res.writeHead(500, apiHeaders);
         res.end(JSON.stringify({ error: e.message }));
+      }
+    },
+
+    // POST /api/timeline/client-debug
+    postClientDebug: async (req, res, apiHeaders, readBody) => {
+      try {
+        if (!ctx.timelineLogger || typeof ctx.timelineLogger.logEvent !== 'function') {
+          res.writeHead(503, apiHeaders);
+          res.end(JSON.stringify({ ok: false, error: 'timeline logger not available' }));
+          return;
+        }
+
+        const raw = await readBody(req);
+        let body = {};
+        try {
+          body = raw ? JSON.parse(raw) : {};
+        } catch {
+          res.writeHead(400, apiHeaders);
+          res.end(JSON.stringify({ ok: false, error: 'invalid JSON body' }));
+          return;
+        }
+
+        const level = String(body.level || 'info').toLowerCase();
+        const message = String(body.message || '').trim();
+        if (!message) {
+          res.writeHead(400, apiHeaders);
+          res.end(JSON.stringify({ ok: false, error: 'message is required' }));
+          return;
+        }
+
+        const payload = {
+          source: 'client',
+          level,
+          message,
+          location: body.location || null,
+          context: body.context || null,
+          href: body.href || null,
+          userAgent: body.userAgent || null,
+          tsClient: Number(body.tsClient) || null
+        };
+
+        const out = ctx.timelineLogger.logEvent('client.debug', payload, {
+          entityId: body.entityId ? String(body.entityId) : null
+        });
+
+        if (!out || out.ok === false) {
+          res.writeHead(500, apiHeaders);
+          res.end(JSON.stringify({ ok: false, error: out?.error || 'failed to write timeline event' }));
+          return;
+        }
+
+        res.writeHead(200, apiHeaders);
+        res.end(JSON.stringify({ ok: true, seq: out.seq }));
+      } catch (e) {
+        res.writeHead(500, apiHeaders);
+        res.end(JSON.stringify({ ok: false, error: e.message }));
       }
     },
 
@@ -221,13 +278,10 @@ function createCognitiveRoutes(ctx) {
         const entityMemRoot = ctx.currentEntityId
           ? require('../entityPaths').getMemoryRoot(ctx.currentEntityId)
           : null;
-        const searchDirs = [];
-        if (entityMemRoot) {
-          searchDirs.push(path.join(entityMemRoot, 'episodic'));
-          searchDirs.push(path.join(entityMemRoot, 'semantic'));
-        }
-        for (const dir of searchDirs) {
-          const memPath = path.join(dir, memId);
+        const searchDirs = entityMemRoot
+          ? getEntityMemoryRecordDirs(entityMemRoot, memId)
+          : [];
+        for (const { dir: memPath } of searchDirs) {
           if (fs.existsSync(memPath)) {
             const semFile = path.join(memPath, 'semantic.txt');
             const logFile = path.join(memPath, 'log.json');
@@ -261,9 +315,12 @@ function createCognitiveRoutes(ctx) {
         const minStrength = parseFloat(url.searchParams.get('minStrength')) || 0.12;
         const maxEdges = parseInt(url.searchParams.get('maxEdges')) || 800;
         const maxNodes = parseInt(url.searchParams.get('maxNodes')) || 300;
+        const reqEntityId = url.searchParams.get('entityId');
+        const isActiveEntity = !reqEntityId || reqEntityId === ctx.currentEntityId;
         // Types that are always included regardless of importance rank
         const PRIORITY_TYPES = new Set(['chatlog', 'long_term_memory', 'core_memory']);
-        if (ctx.memoryGraph && ctx.memoryGraph.nodes) {
+        if (isActiveEntity && ctx.memoryGraph && ctx.memoryGraph.nodes) {
+          // Active entity — use live in-memory graph (includes activation and connection weights)
           const priorityNodes = [];
           const normalNodes = [];
           for (const [id, node] of ctx.memoryGraph.nodes) {
@@ -293,6 +350,66 @@ function createCognitiveRoutes(ctx) {
           allNodes.push(...priorityNodes, ...normalNodes.slice(0, remaining));
           edges.sort((a, b) => b.strength - a.strength);
           if (edges.length > maxEdges) edges.length = maxEdges;
+        } else if (reqEntityId) {
+          // Non-active entity — scan memory directories from disk
+          const entityPathsMod = require('../entityPaths');
+          const memoryRoot = entityPathsMod.getMemoryRoot(reqEntityId);
+          const priorityNodes = [];
+          const normalNodes = [];
+          const scanDirs = getEntityMemoryScanDirs(memoryRoot, { includeDreams: true }).map((entry) => {
+            return entry.fallbackType === 'long_term_memory'
+              ? { ...entry, fallbackType: 'chatlog', typeOverride: 'chatlog' }
+              : entry;
+          });
+          for (const { dir, fallbackType, typeOverride } of scanDirs) {
+            if (!fs.existsSync(dir)) continue;
+            let entries;
+            try {
+              entries = fs.readdirSync(dir).filter((f) => {
+                try { return fs.statSync(path.join(dir, f)).isDirectory(); } catch { return false; }
+              });
+            } catch { continue; }
+            for (const memId of entries) {
+              const logFile = path.join(dir, memId, 'log.json');
+              if (!fs.existsSync(logFile)) continue;
+              try {
+                const log = JSON.parse(fs.readFileSync(logFile, 'utf8'));
+                const n = {
+                  id: memId,
+                  topics: log.topics || [],
+                  emotion: log.emotion || 0,
+                  importance: log.importance || 0.5,
+                  activation: 0,
+                  access_count: log.access_count || 0,
+                  created_at: log.created || null,
+                  type: typeOverride || log.type || fallbackType
+                };
+                if (PRIORITY_TYPES.has(n.type)) priorityNodes.push(n);
+                else normalNodes.push(n);
+              } catch { /* skip corrupt log */ }
+            }
+          }
+          normalNodes.sort((a, b) => (b.importance + b.access_count * 0.05) - (a.importance + a.access_count * 0.05));
+          const remaining = Math.max(0, maxNodes - priorityNodes.length);
+          allNodes.push(...priorityNodes, ...normalNodes.slice(0, remaining));
+          // Topic co-occurrence edges for disk-sourced nodes (no pre-computed weights)
+          const topicIndex = new Map();
+          for (const n of allNodes) {
+            for (const topic of (n.topics || [])) {
+              if (!topicIndex.has(topic)) topicIndex.set(topic, []);
+              topicIndex.get(topic).push(n.id);
+            }
+          }
+          for (const [, ids] of topicIndex) {
+            if (ids.length < 2 || ids.length > 50) continue;
+            for (let i = 0; i < Math.min(ids.length, 10); i++) {
+              for (let j = i + 1; j < Math.min(ids.length, 10); j++) {
+                if (edges.length < maxEdges) {
+                  edges.push({ source: ids[i], target: ids[j], strength: 0.4 });
+                }
+              }
+            }
+          }
         }
         res.writeHead(200, apiHeaders);
         res.end(JSON.stringify({ ok: true, nodes: allNodes, edges }));
@@ -303,26 +420,28 @@ function createCognitiveRoutes(ctx) {
     },
 
     // GET /api/memory-graph/full-mind
-    getFullMindGraph: async (req, res, apiHeaders) => {
+    getFullMindGraph: async (req, res, apiHeaders, _readBody, url) => {
       try {
-        if (!ctx.currentEntityId) {
+        const reqEntityId = url ? url.searchParams.get('entityId') : null;
+        const targetEntityId = reqEntityId || ctx.currentEntityId;
+        if (!targetEntityId) {
           res.writeHead(200, apiHeaders);
           res.end(JSON.stringify({ ok: true, nodes: [], edges: [] }));
           return;
         }
         const entityPathsMod = require('../entityPaths');
-        const memoryRoot = entityPathsMod.getMemoryRoot(ctx.currentEntityId);
+        const memoryRoot = entityPathsMod.getMemoryRoot(targetEntityId);
         const nodes = [];
         const edges = [];
         const loadedIds = new Set();
         // typeOverride forces the type for a directory (e.g. ltm entries store
         // 'long_term_memory' on disk but display as 'chatlog' in the graph)
-        const scanDirs = [
-          { dir: path.join(memoryRoot, 'episodic'), fallbackType: 'episodic' },
-          { dir: path.join(memoryRoot, 'semantic'), fallbackType: 'semantic' },
-          { dir: path.join(memoryRoot, 'ltm'), fallbackType: 'chatlog', typeOverride: 'chatlog' },
-          { dir: path.join(memoryRoot, 'dreams'), fallbackType: 'dream_memory' }
-        ];
+        const scanDirs = getEntityMemoryScanDirs(memoryRoot, { includeDreams: true }).map((entry) => {
+          if (entry.fallbackType === 'long_term_memory') {
+            return { ...entry, fallbackType: 'chatlog', typeOverride: 'chatlog' };
+          }
+          return entry;
+        });
         for (const { dir, fallbackType, typeOverride } of scanDirs) {
           if (!fs.existsSync(dir)) continue;
           let entries;
@@ -382,10 +501,12 @@ function createCognitiveRoutes(ctx) {
     },
 
     // GET /api/traces
-    getTraces: async (req, res, apiHeaders) => {
+    getTraces: async (req, res, apiHeaders, _readBody, url) => {
       try {
-        const traces = ctx.traceGraph ? ctx.traceGraph.analyzeTraces() : {};
-        const connectionGraph = ctx.traceGraph ? ctx.traceGraph.buildConnectionGraph(200) : {};
+        const reqEntityId = url ? url.searchParams.get('entityId') : null;
+        const isActiveEntity = !reqEntityId || reqEntityId === ctx.currentEntityId;
+        const traces = (isActiveEntity && ctx.traceGraph) ? ctx.traceGraph.analyzeTraces() : {};
+        const connectionGraph = (isActiveEntity && ctx.traceGraph) ? ctx.traceGraph.buildConnectionGraph(200) : {};
         res.writeHead(200, apiHeaders);
         res.end(JSON.stringify({ ok: true, analysis: traces, graph: connectionGraph }));
       } catch (e) {
@@ -397,7 +518,9 @@ function createCognitiveRoutes(ctx) {
     // GET /api/belief-graph/nodes
     getBeliefGraphNodes: async (req, res, apiHeaders, _readBody, url) => {
       try {
-        if (!ctx.beliefGraph) {
+        const reqEntityId = url ? url.searchParams.get('entityId') : null;
+        const isActiveEntity = !reqEntityId || reqEntityId === ctx.currentEntityId;
+        if (!isActiveEntity || !ctx.beliefGraph) {
           res.writeHead(200, apiHeaders);
           res.end(JSON.stringify({ ok: true, beliefs: [], edges: [], stats: {} }));
           return;
@@ -467,6 +590,7 @@ function createCognitiveRoutes(ctx) {
       if (p === '/api/cognitive-bus/stats' && m === 'GET') { await this.getCognitiveBusStats(req, res, apiHeaders); return true; }
       if (p === '/api/cognitive-bus/thoughts' && m === 'GET') { await this.getCognitiveBusThoughts(req, res, apiHeaders, readBody, url); return true; }
       if (p === '/api/timeline' && m === 'GET') { await this.getTimeline(req, res, apiHeaders, readBody, url); return true; }
+      if (p === '/api/timeline/client-debug' && m === 'POST') { await this.postClientDebug(req, res, apiHeaders, readBody); return true; }
       if (p === '/api/timeline/stream' && m === 'GET') { await this.streamTimeline(req, res, apiHeaders, readBody, url); return true; }
       if (p === '/api/attention/focus' && m === 'GET') { await this.getAttentionFocus(req, res, apiHeaders); return true; }
       if (p === '/api/memory-graph/stats' && m === 'GET') { await this.getMemoryGraphStats(req, res, apiHeaders); return true; }

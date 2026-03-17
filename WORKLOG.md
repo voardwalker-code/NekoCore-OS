@@ -1,7 +1,7 @@
 # WORKLOG
 
 Status: active architecture refactor tracking.
-Last updated: 2026-03-15
+Last updated: 2026-03-16
 
 Repository packaging note:
 1. The runnable source tree now lives under `project/`.
@@ -10,12 +10,23 @@ Repository packaging note:
 
 ---
 
-## ⚠️ ACTIVE MANDATE — Bug Fix → Cleanup → Modularization (Precedence Order)
+## ✅ PHASE 4 GATE — OPEN (2026-03-16)
 
-**Effective: 2026-03-15. This mandate overrides all other planned work.**
+Phases 1 (Bug Fixes), 2 (Refactor/Cleanup), and 3 (Modularization) are all confirmed complete.
+App Folder Modularization plan is complete (866 pass, 0 fail).
+Feature work is now authorized. Active mandate below is satisfied.
 
-No new features are to be started until the following three phases are complete.
-The only exception is a newly discovered bug of critical severity (data loss, security, or total system failure).
+**Active Phase 4.5 plan:** `Documents/current/PLAN-IME-v1.md` — Intelligent Memory Expansion
+**Active Phase 5 plan:** `Documents/current/PLAN-PREDICTIVE-MEMORY-v1.md` — Predictive Memory Topology (blocked on Phase 4.5 exit)
+
+---
+
+## ⚠️ PRIOR MANDATE — Bug Fix → Cleanup → Modularization (Precedence Order) ✅ SATISFIED
+
+**Effective: 2026-03-15. Satisfied: 2026-03-16.**
+
+No new features were to be started until the following three phases were complete.
+The only exception was a newly discovered bug of critical severity (data loss, security, or total system failure).
 
 Emergency exception log:
 1. 2026-03-15: Reserved system-identity namespace protection added for entity creation (blocked names: NekoCore, Neko, Echo, AgentEcho). Classified as security/QoL hardening tied to active entity-state bugfix stream. Formal plan: `Documents/current/PLAN-NEKOCORE-SYSTEM-ENTITY-v1.md`
@@ -29,6 +40,28 @@ Emergency exception log:
 3. MODULARIZATION   — all apps/features decoupled into independent modules
 4. NEW FEATURES     — only after all three above are done
 ```
+
+---
+
+## Stop/Resume Snapshot — 2026-03-16 (Phase 4.5 IME — Ready to Start)
+
+- **Current phase:** `Phase 4.5 — Intelligent Memory Expansion`
+- **Current slice:** `I1-0 — not started`
+- **Last completed work:** `App Folder Modularization PLAN COMPLETE (866 pass, 0 fail); Phase 4 gate opened`
+- **In-progress item:** `none`
+- **Blocking issue:** `none`
+- **Next action on resume:** `Begin PLAN-IME-v1.md I1-0: create server/brain/utils/rake.js, replace extractSubconsciousTopics() tokenizer in memory-retrieval.js, add guard tests`
+- **Phase 5 plan:** `PLAN-PREDICTIVE-MEMORY-v1.md — blocked on Phase 4.5 exit audit`
+
+---
+
+## Session Ledger — 2026-03-16 (Phase 4 Gate Review)
+
+Status: `Complete`
+
+- Phase 4 gate opened — all of Phases 1, 2, 3 confirmed complete
+- `PLAN-IME-v1.md` created — Intelligent Memory Expansion (Phase 4.5): BM25 + RAKE + TextRank + three-tier archive + `search_archive` tool. 4 phases (I1–I4), 11 slices, ~970 lines pure JS, zero new dependencies
+- `PLAN-PREDICTIVE-MEMORY-v1.md` created — Predictive Memory Topology (Phase 5): brain loop node prediction, dual-path signal, reconsolidation pass, emotional delta. 4 phases (P1–P4), 10 slices. Blocked on Phase 4.5 exit.
 
 ---
 
@@ -157,25 +190,213 @@ Candidate features (not yet scheduled, not yet started):
 - Multi-entity conversation mode
 - Plugin/extension API for external contributors
 - Mobile-responsive shell layout
+- **Vector embedding retrieval (Phase 5+ candidate)** — Replace `topicIndex.json` keyword lookup with embedding-based nearest-neighbor search (Ollama `nomic-embed-text` + `sqlite-vec`). Eliminates the 2,000-memory quality wall. See `Documents/current/VISION-AND-ROADMAP.md` “Proposed Architecture Change” section for full design.
 
 ---
 
 Next action:
-1. Phase 1 bug-fix queue complete. Begin Phase 2 — Refactor and Cleanup.
+1. Repo governance prerequisite — move to private-source/public-mirror git topology before further staging iteration, so `staging` and in-progress branches stop being publicly exposed.
+2. After remote split is in place, begin Phase 2 — Refactor and Cleanup.
 
-### Stop/Resume Snapshot (2026-03-15)
+### P2-S5 — CSS Consolidation (2026-03-15)
 
-- Current phase: `Phase 2 — Refactor and Cleanup`
-- Current slice: `Phase 2 not yet started — post-bugfix cleanup queued`
-- Last completed slice: `Critical bug fix — NekoCore memory healing + multi-layer chat encoding`
+Completed:
+- Inlined `icons.css` (132 lines) and `ui-enhance.css` (1,063 lines) as labeled sections inside `ui-v2.css`; removed their `@import` lines from the top of `ui-v2.css`. `ui-v2.css` is now a single self-contained main stylesheet (7,687 lines).
+- Inlined `visualizer-enhance.css` (39 lines) as a labeled section inside `visualizer.css`; removed its `@import` line. `visualizer.css` is now a single self-contained visualizer stylesheet (1,014 lines).
+- Deleted dead/inlined files: `ui.css` (446 lines, zero references), `icons.css`, `ui-enhance.css`, `visualizer-enhance.css`.
+- Updated branding header in `ui-v2.css`, `theme.css`, `visualizer.css` from "REM System v0.6.0" → "NekoCore OS".
+- `theme.css` retained as a standalone file (required by visualizer.html which loads it directly via `<link>`).
+- 447 tests pass, 0 fail.
+
+- Critical bug fix completed (2026-03-16, post-reset) — `reset-all.js` double-log fixed: `ensureSystemEntity()` was being called directly in `reset-all.js` AND internally by `resetNekoCoreRuntime`, causing immediate "already present" log after "provisioning". Removed the redundant direct call and its stale `require('./server/brain/nekocore/bootstrap')` import. `[BOUNDARY_OK]`
+- Critical bug fix completed (2026-03-16, post-reset) — Login card updated to NekoCore OS branding. Card background hardened to `#ffffff`, labels to `#111`, inputs to light-theme styles in HTML; `#loginOverlay .inp`, `#loginOverlay .inp:focus`, and `#loginOverlay .inp::placeholder` scoped CSS rules added with `!important` to override the `.inp` dark-theme `!important` defaults. Window title, header logo/title, and sidebar brand all updated from "REM System" to "NekoCore OS". `[BOUNDARY_OK]`
+- Critical bug fix completed (2026-03-16, post-reset) — NekoCore architecture doc ingestion restored. `NK_DOCS_DIR` in `server.js` was resolving to `project/Documents/current` (one level too shallow — does not exist); fixed to `path.join(__dirname, '..', '..', 'Documents', 'current')`. Same off-by-one in `reset-runtime.js` default `docsDir` (3 `..` → 4 `..`). Ingestion on startup now correctly reads from `NekoCore-OS-main/Documents/current`. `[BOUNDARY_OK]`
+- Feature-completeness fix completed (2026-03-16, post-reset) — `POST /api/nekocore/docs-ingest` added to `nekocore-routes.js` (accepts optional `docsDir` body param; validates absolute path; calls `ingestArchitectureDocs`; appends audit record). NekoCore OS panel now includes a "Knowledge Docs" section with a path input and "Ingest Docs" button wired to `App.docsIngest()` in `nekocore-app.js`, so users can trigger ingestion on demand without restarting the server. `[BOUNDARY_OK] [CONTRACT_ENFORCED]`
+- BUG-21 logged (2026-03-16) — Visualizer memory panel gaps and NekoCore knowledge doc ingestion path bug tracked as a single compound entry covering all root causes and applied fixes. See BUGS.md BUG-21 for full detail.
+- Phase 3 slice P3-S8 completed (2026-03-16) — `config-profiles.js`: 23 functions + 4 consts (loadSavedConfig, getMainConfigFromProfile, hydrateMainProviderInputs, persistConfig, gatherProfile, autoSaveConfig, refreshSavedConfig, saveCurrentProfile, loadProfile, deleteProfile, renderProfileChips, OPENROUTER_ROLE_MODELS, getOpenRouterRolePreset, RECOMMENDED_MODEL_STACKS, OLLAMA_RECOMMENDED_STACKS, RECOMMENDED_PANEL_COPY, refreshRecommendedPanelCopy, showRecommendedPresetProvider, showRecommendedSetupTab, applyRecommendedPresetInputs, applyRecommendedSetupTab, applySettingsOpenRouterSuggestions, initSettingsModelSuggestions) extracted from app.js lines 830–1413. `index.html` updated: `config-profiles.js` loads after `setup-ui.js`. 43 guard tests added; suite: 597 pass, 0 fail. `[BOUNDARY_OK] [CONTRACT_ENFORCED]`
+
+- Phase 3 slice P3-S9 completed (2026-03-16) — `simple-provider.js`: 7 functions/vars (simpleActiveProvider, initSimpleProviderUI, simplePickProvider, simpleApplyPreset, simpleFetchOllamaModels, simpleSaveConfig, simpleShowStatus) extracted from app.js. `index.html` updated: `simple-provider.js` loads after `config-profiles.js`. `[BOUNDARY_OK]`
+
+- Phase 3 slice P3-S10 completed (2026-03-16) — `theme-manager.js`: 2 consts + 1 var + 5 functions (THEME_STORAGE_KEY, SHELL_THEMES, systemThemeMediaQuery, getStoredThemeId, updateShellThemeSummary, syncThemeSelectorUI, renderThemeGallery, applyTheme) extracted from app.js. `index.html` updated: `theme-manager.js` loads after `simple-provider.js`. `[BOUNDARY_OK]`
+
+- Phase 3 slice P3-S11 completed (2026-03-16) — `telemetry-ui.js`: `runtimeTelemetry` const + 14 functions (formatTelemetryModel, pushTelemetryEvent, normalizePercent, getFocusedWindowTab, getOrCreateAppStats, pushSeriesPoint, estimateHeapPercent, updateAppStatsSeries, sparklinePath, renderAppMetrics, reportPipelinePhase, reportOrchestrationMetrics, updateTaskManagerView) extracted from app.js. `window.reportPipelinePhase` and `window.reportOrchestrationMetrics` global hooks preserved in new module. `index.html` updated: `telemetry-ui.js` loads after `theme-manager.js`. 27 guard tests added; suite: 624 pass, 0 fail. `[BOUNDARY_OK]` `[JS_OFFLOAD]`
+- Phase 3 slice P3-S13 completed (2026-03-16) — chat extraction completion: `loadSystemPrompt`, `flushPendingSystemPrompt`, `runStartupResumeRecap` moved from app.js into chat.js. `resetChatForEntitySwitch`, `saveMemoryToServer`, `saveSessionMetaToServer` confirmed to stay in app.js (bridge + shared utilities). chat-extraction-guards.test.js updated: 3 stale P3-S12 negative assertions removed, 3 P3-S13 dual-side owned/not-owned assertions added. Suite: 665 pass, 0 fail. `[BOUNDARY_OK]` `[JS_OFFLOAD]`
+
+- Phase 3 slice P3-S14 completed (2026-07-15) — entity UI extraction: `deriveEntityAvatar`, `setEntityDisplay`, `buildEntityChip`, `renderEntityBrowser`, `ensureEntityWindowContent`, `refreshSidebarEntities`, `sidebarSelectEntity`, `checkoutEntity`, `toggleEntityInfoPanel`, `_eipRelMap`, `renderEntityInfoPanel`, `_toggleRelDetail`, `releaseActiveEntity`, `sidebarDeleteEntity`, `loadEntityList`, `selectEntity`, `updateEntityDisplay` (17 items) moved from app.js into new `client/js/entity-ui.js`. `index.html` updated: `entity-ui.js` loads after `setup-ui.js`. `syncNavSidebarEntities`, `syncNavSidebarProfiles`, `resetChatForEntitySwitch`, `switchMainTab` confirmed to stay in app.js. `entity-ui-extraction-guards.test.js` added (34 tests). Existing `entity-release-visibility-regression.test.js` and `context-chat-entity-guard.test.js` and `chat-extraction-guards.test.js` updated to point refreshSidebarEntities / syncContextChatGuard guards at entity-ui.js. Suite: 695 pass, 0 fail. `[BOUNDARY_OK]` `[JS_OFFLOAD]`
+
+- Phase 3 slice P3-S15 completed (2026-03-16) — system health extraction: `repairMemoryLogs`, `showMemoryStats`, `rebuildTraceGraph`, `runSystemBackup`, `runSystemRestore`, `formatBytes` (6 items) moved from app.js into new `client/js/system-health.js`. `index.html` updated: `system-health.js` loads after `entity-ui.js`. `system-health-extraction-guards.test.js` added (14 tests). Suite: 709 pass, 0 fail. `[BOUNDARY_OK]` `[JS_OFFLOAD]`
+
+- Phase 3 slice P3-S16 completed (2026-03-16) — shell-core minimization and Phase 3 exit audit: app.js reduced to 896 lines (48 functions — all shell-core: boot, logging, clock, provider UI, tab switching, nav sidebar, mini viz, LLM config save, brain poll, entity/chat bridge). All cross-module calls verified to use `typeof` guards (`flushPendingSystemPrompt`, `clearChat`, `updateDeepSleepBadge`). `login.js` confirmed to guard `refreshSidebarEntities`. All 6 extracted modules confirmed in `index.html` script load order. Exit audit guard test added: `phase3-exit-audit.test.js` (17 tests). Suite: 726 pass, 0 fail. **PHASE 3 COMPLETE.** `[BOUNDARY_OK]` `[JS_OFFLOAD]` `[CONTRACT_ENFORCED]`
+
+### ✅ PHASE 3 COMPLETE (2026-03-16)
+
+All slices P3-S1 through P3-S16 complete. Full extraction guard suite green. Graceful degradation confirmed. app.js is shell-core only.
+
+### Stop/Resume Snapshot (2026-03-16 — PLAN-APP-FOLDER-MODULARIZATION-v1.md COMPLETE)
+
+- Current phase: `App Folder Modularization — PLAN COMPLETE ✅`
+- Last completed slice: `E1-2 — Changelog + handoff snapshot`
 - In-progress item: `none`
-- Next action on resume: `Begin Phase 2 — Refactor and Cleanup`
+- Next action on resume: `Phase 4 gate review — confirm Phases 1–3 + modularization prerequisites signed off, then open first Phase 4 feature plan`
+
+### App Folder Modularization — Phase A1 (2026-03-16)
+
+Plan: `Documents/current/PLAN-APP-FOLDER-MODULARIZATION-v1.md`
+
+**Phase A1: Baseline Contracts And Guard Foundations — COMPLETE ✅**
+
+Phase A1 checklist:
+- [x] A1-0: Optional-app absent-path guard baseline — extended to cover `diary.js` (lifediary + dreamdiary entrypoints), `document-digest.js` (documents tab), and `browser-app.js` (browser tab). 8 new guard tests in `optional-app-degradation-guards.test.js`.
+- [x] A1-1: App inventory manifest file — `project/client/js/apps/app-manifest.json` created covering all 20 WINDOW_APPS tabs with class, sourcePath, bootstrapCritical, and dependencies fields. Manifest consistency guard test suite created (`app-manifest-guards.test.js`, 9 tests).
+- [x] A1-2: Script-order baseline assertions — `script-load-order-guards.test.js` created (9 tests) locking critical load ordering: `shared/sse.js` → `shared/api.js` → `js/app.js` → `js/chat.js`, `js/neural-viz/index.js` → `js/visualizer-ui.js` → `js/apps/optional/dream-gallery.js` → `js/boot.js` (last local script).
+
+Markers: `[BOUNDARY_OK]` `[JS_OFFLOAD]` `[CONTRACT_ENFORCED]`
+
+Slice ledger entry (2026-03-16):
+- App Folder Modularization Phase A1 completed — optional-app guard baseline extended to cover 3 optional modules (diary, document-digest, browser-app); app-manifest.json created and consistency-guarded (20 tabs, 10 core, 10 optional); script-load-order guard test suite added locking 9 critical ordering relationships. Full suite: **756 pass, 0 fail**. `[BOUNDARY_OK]` `[JS_OFFLOAD]` `[CONTRACT_ENFORCED]`
+
+---
+
+### App Folder Modularization — Phase E1 (2026-03-16)
+
+Plan: `Documents/current/PLAN-APP-FOLDER-MODULARIZATION-v1.md`
+
+**Phase E1: Exit Audit And Closure — COMPLETE ✅**
+
+Phase E1 checklist:
+- [x] E1-0: Full suite exit audit — **866 pass, 0 fail**. All five guard suites pass: `registry-path-audit-guards`, `optional-failure-simulation`, `optional-app-migration-guards`, `core-app-migration-guards`, `app-manifest-guards`. All optional module typeof-guard simulations pass.
+- [x] E1-1: WORKLOG closure update — Phase E1 block added; stop/resume snapshot updated to Plan Complete; next action points to Phase 4 gate review.
+- [x] E1-2: Changelog + handoff snapshot — `Documents/current/CHANGELOG.md` updated; `PLAN-APP-FOLDER-MODULARIZATION-v1.md` status set to `Complete ✅`; stop/resume updated; completion ledger finalized.
+
+Markers: `[BOUNDARY_OK]` `[CONTRACT_ENFORCED]`
+
+Slice ledger entry (2026-03-16):
+- App Folder Modularization **PLAN COMPLETE** — Full exit audit green (866 pass, 0 fail); all 5 guard suites passing; 17 modules migrated to `apps/core/` and `apps/optional/`; contributor doc published; WORKLOG and changelog updated. Handoff: **Phase 4 gate review**. `[BOUNDARY_OK]` `[CONTRACT_ENFORCED]`
+
+---
+
+### App Folder Modularization — Phase D1 (2026-03-16)
+
+Plan: `Documents/current/PLAN-APP-FOLDER-MODULARIZATION-v1.md`
+
+**Phase D1: Registry, Loader, And Documentation Stabilization — COMPLETE ✅**
+
+Phase D1 checklist:
+- [x] D1-0: Registry-path consistency audit — `registry-path-audit-guards.test.js` created (~20 tests): folder ownership assertions (core modules → `js/apps/core/`, optional → `js/apps/optional/`), flat-path regression guards for all 17 migrated module filenames, manifest-to-html completeness check, on-disk existence, no duplicate script srcs, workspace/vfs.js flat exception asserted.
+- [x] D1-1: Optional failure simulation runbook — `optional-failure-simulation.test.js` created (14 tests): per-optional-module typeof-guard evidence for all 8 optional modules and all shell-core callers (`window-manager.js`, `boot.js`, `desktop.js`, `app.js`). Multi-line guard detection handles both inline (`typeof fn === 'function') fn()`) and block (`{ fn() }` inside typeof-guarded if) patterns.
+- [x] D1-2: Contributor docs update — `Documents/current/APP-FOLDER-OWNERSHIP.md` created: folder structure map, Core vs Optional classification criteria, step-by-step new-app and migration guides, documented exceptions table (workspace/vfs.js, creator/nekocore iframes), ownership verification test file index.
+
+Markers: `[BOUNDARY_OK]` `[CONTRACT_ENFORCED]`
+
+Slice ledger entry (2026-03-16):
+- App Folder Modularization Phase D1 completed — `registry-path-audit-guards.test.js` (~20 tests) + `optional-failure-simulation.test.js` (14 tests) added; `Documents/current/APP-FOLDER-OWNERSHIP.md` contributor guide created; multi-line typeof-guard detection pattern confirmed working. Full suite: **866 pass, 0 fail**. `[BOUNDARY_OK]` `[CONTRACT_ENFORCED]`
+
+---
+
+### App Folder Modularization — Phase C1 (2026-03-16)
+
+Plan: `Documents/current/PLAN-APP-FOLDER-MODULARIZATION-v1.md`
+
+**Phase C1: Optional App Path Migration — COMPLETE ✅**
+
+Phase C1 checklist:
+- [x] C1-0: Optional migration guard expansion — `optional-app-migration-guards.test.js` (42 tests) created; targets all 7 optional-module new paths, vfs.js stay-flat assertion, dream-gallery confirmation. Pre-migration baseline: 37 expected failures.
+- [x] C1-1: Batch 1 migration (diary) — `diary.js` moved to `js/apps/optional/`; `index.html`, `app-manifest.json` (lifediary + dreamdiary sourcePaths), and `optional-app-degradation-guards.test.js` updated.
+- [x] C1-2: typeof guard patches + Batch 2 migration (themes, physical, visualizer) — 4 shell-core typeof guards added (`initPhysicalTab` in `window-manager.js`, `initChatPhysical` in `boot.js`, `applyTheme`/`getStoredThemeId` in `desktop.js`, `showMiniMemoryDetail` in `app.js`); `theme-manager.js`, `physical-ui.js`, `visualizer-ui.js` moved to `js/apps/optional/`; `index.html` and `app-manifest.json` updated; 7 cascading extraction guard test files updated.
+- [x] C1-3: Batch 3 migration (browser, documents, skills) — `browser-app.js`, `document-digest.js`, `skills-ui.js` moved to `js/apps/optional/`; `index.html` and `app-manifest.json` updated; 3 cascading extraction guard test files updated.
+
+Markers: `[BOUNDARY_OK]` `[JS_OFFLOAD]` `[CONTRACT_ENFORCED]`
+
+Slice ledger entry (2026-03-16):
+- App Folder Modularization Phase C1 completed — 7 optional app scripts migrated from flat `js/` to `js/apps/optional/` (diary, theme-manager, physical-ui, visualizer-ui, browser-app, document-digest, skills-ui); vfs.js explicitly kept flat (shell-critical: DOMContentLoaded → vfs.renderDesktop()); 4 typeof guards added to shell-core callers; C1-0 guard file added (42 tests); `app-manifest.json` (9 sourcePath updates) and 10 cascading extraction guard test files updated for path constant and inline ordering assertion string changes. Full suite: **842 pass, 0 fail**. `[BOUNDARY_OK]` `[JS_OFFLOAD]` `[CONTRACT_ENFORCED]`
+
+---
+
+### App Folder Modularization — Phase B1 (2026-03-16)
+
+Plan: `Documents/current/PLAN-APP-FOLDER-MODULARIZATION-v1.md`
+
+**Phase B1: Core App Path Migration — COMPLETE ✅**
+
+Phase B1 checklist:
+- [x] B1-0: Core migration guard expansion — `core-app-migration-guards.test.js` (34 tests) created, targeting new `js/apps/core/` paths and asserting old flat paths are absent from index.html.
+- [x] B1-1: Batch 1 migration (chat, entity-ui, users-ui) — files moved to `js/apps/core/`; `index.html` script src paths updated.
+- [x] B1-2: Batch 2 migration (setup-ui, config-profiles, simple-provider, system-health) — files moved to `js/apps/core/`; `index.html` updated.
+- [x] B1-3: Batch 3 migration (telemetry-ui, debug-core-app) — files moved to `js/apps/core/`; `index.html` updated. `app-manifest.json` sourcePaths and dependency refs updated for all 8 migrated core modules. All cascading extraction guard path constants and inline ordering assertion strings updated across 12 test files.
+
+Markers: `[BOUNDARY_OK]` `[JS_OFFLOAD]` `[CONTRACT_ENFORCED]`
+
+Slice ledger entry (2026-03-16):
+- App Folder Modularization Phase B1 completed — 9 core app scripts migrated from flat `js/` to `js/apps/core/` (chat, entity-ui, users-ui, setup-ui, config-profiles, simple-provider, system-health, telemetry-ui, debug-core-app); `index.html` and `app-manifest.json` updated; B1-0 guard file (34 tests) added; 12 extraction guard test files updated for cascading path constant and inline ordering assertion string changes. Full suite: **800 pass, 0 fail**. `[BOUNDARY_OK]` `[JS_OFFLOAD]` `[CONTRACT_ENFORCED]`
+
+---
+
+### Pre-Phase-4 Cleanup Gate — P4-G0 App Structure Cleanup (2026-03-16)
+
+Purpose:
+1. Introduce explicit app folder taxonomy for modular ownership.
+2. Separate shell-critical Core apps from removable Optional apps.
+3. Validate removable architecture with one low-risk pilot migration before Phase 4 features.
+
+Gate checklist:
+- [x] P4-G0.1 Define app classification contract (Core vs Optional)
+- [x] P4-G0.2 Add scaffold folders under `project/client/js/apps/core` and `project/client/js/apps/optional`
+- [x] P4-G0.3 Produce app inventory/classification manifest
+- [x] P4-G0.4 Migrate one pilot optional app with no behavior regression (`dream-gallery.js`)
+- [x] P4-G0.5 Add/extend boot degradation guards (optional app absent path)
+- [x] P4-G0.6 Full suite green and Stop/Resume updated (suite: 730 pass, 0 fail)
+
+Markers: `[BOUNDARY_OK]` `[JS_OFFLOAD]`
+
+Exit condition:
+- Shell boot and primary navigation remain functional when the pilot optional app module is absent from load order.
+
+Initial app inventory/classification manifest:
+- Core (shell-critical): `chat`, `entity`, `creator`, `users`, `settings`, `advanced`, `activity`, `observability`, `debugcore`, `nekocore`
+- Optional (removable candidate): `dreamgallery` (pilot moved), `lifediary`, `dreamdiary`, `themes`, `browser`, `documents`, `workspace`, `skills`, `visualizer`, `physical`
+
+Slice ledger update (2026-03-16):
+- Pre-Phase-4 cleanup gate `P4-G0` completed — app folder taxonomy introduced (`project/client/js/apps/core`, `project/client/js/apps/optional`), pilot optional module migration completed (`dream-gallery.js`), optional-app degradation guard test added (`project/tests/unit/optional-app-degradation-guards.test.js`), and full suite validated (`730 pass, 0 fail`). `[BOUNDARY_OK]` `[JS_OFFLOAD]`
+
+Planning note:
+- `Documents/current/PLAN-PHASE3-MODULARIZATION-COMPLETION-v1.md` is the active Phase 3 execution plan and closure gate for remaining slices (`P3-S9` through `P3-S16`).
+- `Documents/current/PLAN-MODULAR-FEATURES-v1.md` captures candidate platform services requested for future modularization work. It is reference material for Phase 3/4 planning and does not open feature implementation by itself.
+- Pre-Phase-4 cleanup gate work is tracked as `P4-G0` and must complete before new Phase 4 feature implementation.
 
 Implementation note (ad-hoc bugfix):
 - Visualizer now has an entity picker that can switch active entity context (including `nekocore`) so graph/memory search/chat-history views load from the selected entity's memory set. `[BOUNDARY_OK]`
 - Taskbar shell regression fix — taskbar row layout repaired so the quick bar stays in-line, default sizing reduced, right-clicking the taskbar exposes `Edit Taskbar`, and edit mode now supports drag-to-move (left/center/right) plus true width/height drag resizing with persistent layout storage. `[BOUNDARY_OK]`
+- Entity release visibility regression fix — release now clears active entity state using canonical-id comparison, and sidebar entity filtering now normalizes IDs so released entities remain visible and can be checked out again immediately. Added guard tests in `project/tests/unit/entity-release-visibility-regression.test.js`. `[BOUNDARY_OK]`
+- Entity release follow-up fix — `clearActiveEntity()` now also clears EntityManager current state so `/api/entities/current` no longer reports stale `loaded:true` after release, and sidebar rendering now falls back to full visible entities when stale active-id filtering yields no matches. Regression guards extended for both behaviors. `[BOUNDARY_OK]`
+- Entity checkout contention fix — Visualizer no longer auto-loads/checks out the first listed entity when no active entity exists, preventing background `/api/entities/load` calls from re-checking out entities after release. Added guard test in `project/tests/unit/visualizer-entity-autoload-guard.test.js`. `[BOUNDARY_OK]`
+- Entity list visibility fix — `/api/entities` now always includes system entities (NekoCore) even when owner/public filters would normally hide them, so NekoCore appears in the entity browser list for checkout/release flows. Guard test added in `project/tests/unit/nekocore-protection.test.js`. `[BOUNDARY_OK]`
+- Context chat guard fix — context chat input/send is now disabled whenever no entity is checked out, `sendChatMessage()` hard-blocks no-entity sends, and sidebar refresh syncs the guard state after checkout/release changes. Guard tests added in `project/tests/unit/context-chat-entity-guard.test.js`. `[BOUNDARY_OK]`
+- NekoCore OS settings config fix — NekoCore model settings now hydrate saved endpoint/model on load and allow model-only saves to reuse the stored API key when the key input is left blank, preventing false `API key is required` errors during model updates. `[BOUNDARY_OK]`
+- Critical bug fix completed — NekoCore Visualizer memory rendering restored by correcting direct-chat memory writes back to entity-scoped storage (`episodic`/`semantic`) and adding route-level compatibility for legacy entity `Memory2` records in memory search/detail/full-mind graph endpoints. Regression tests added in `project/tests/unit/nekocore-visualizer-memory-regression.test.js`. `[BOUNDARY_OK] [JS_OFFLOAD]`
+- Debug observability hardening completed — client-side DBG/error streams are now forwarded into the server timeline pipeline via `POST /api/timeline/client-debug` and stored alongside server timeline events under `client.debug`, providing a single searchable/streamable source for cross-layer bug triage (`/api/timeline`, `/api/timeline/stream`). `[BOUNDARY_OK] [JS_OFFLOAD]`
+- Debug controls modularization completed — the floating DBG/Reset overlay was removed from shell bootstrap and rehomed into a dedicated `debugcore` core app module with tab registry wiring, timeline/client-buffer rendering, and resilient bridge-based actions (`dumpState`, queue flush, window reset) so shell boot continues even when debug UI fails to load. `[BOUNDARY_OK] [JS_OFFLOAD]`
+
+Slice ledger update (2026-03-16):
+- Ad-hoc modular debugcore app integration completed — `debugcore` was added to app registry/category maps, window activation now calls `initCoreDebugApp()`, a dedicated `tab-debugcore` panel was added, and new module `project/client/js/debug-core-app.js` now owns debug rendering/actions. The old floating DBG/RESET bootstrap controls were removed; client debug forwarding remains active through `window.__coreDebugBridge`. Validation: full suite `npm.cmd test` (527 pass, 0 fail). `[BOUNDARY_OK] [JS_OFFLOAD]`
 
 Slice ledger update (2026-03-15):
+- Repo workflow safeguard queued — before additional staging work, move to a private primary repository with the current public repository retained as a release mirror so in-progress staging branches are no longer public. `[BOUNDARY_OK]`
+- Critical bug fix completed — entity release now normalizes `ctx.currentEntityId` before active-state clear, preventing stale active entity state after release; sidebar list filtering now compares normalized IDs so release no longer hides entities from the browser list or blocks immediate re-checkout UX. Regression guards added for both server release handler and sidebar filtering logic. `[BOUNDARY_OK]`
+- Critical bug fix completed — release flow now clears both global and EntityManager active state, preventing stale `/api/entities/current` responses that forced sidebar active-only filtering into blank state. Sidebar entity list now self-heals stale active-id filters by clearing local active state and rendering all visible entities when no active match exists. `[BOUNDARY_OK]`
+- Critical bug fix completed — Visualizer entity picker bootstrap no longer auto-checkouts the first entity when there is no active entity, eliminating hidden load/check-in contention between auxiliary views and primary chat release flow. `[BOUNDARY_OK]`
+- Critical bug fix completed — system entity visibility filter now whitelists NekoCore in `/api/entities`, fixing missing NekoCore entries in the entity list when account ownership/public filters excluded `ownerId: __system__`. `[BOUNDARY_OK]`
+- Critical bug fix completed — context chat text input is now explicitly guarded when no entity is checked out; no-entity send attempts are blocked with guidance and chat controls auto-resync after sidebar entity-state refresh. `[BOUNDARY_OK]`
+- Critical bug fix completed — NekoCore OS settings now load saved NekoCore endpoint/model values on panel open and permit model-only saves by reusing the stored NekoCore API key when the key input is blank. `[BOUNDARY_OK]`
+- Critical bug fix completed — `ws_move` skill definitions were normalized in both shared and system-entity skill roots with schema-compliant frontmatter and synced tool guidance/examples, eliminating copy drift and invalid manifest warnings. `[BOUNDARY_OK]`
+- Critical bug fix completed — `tutorial-notes` skill manifests were simplified into deterministic tool-usage rules and cleaned to schema-supported frontmatter in both shared and system-entity roots, reducing ambiguous skill behavior during note tasks. `[BOUNDARY_OK]`
+- Critical bug fix completed — skill runtime reliability hardened: tool-call parsing now accepts flexible `[TOOL:]` syntax variants (spacing/casing/quotes), pending approval drafts now strip embedded `[TASK_PLAN]` blocks before user display, and one-step task plans now execute instead of being ignored. Regression tests added in `project/tests/unit/workspace-tools-parser.test.js`. `[BOUNDARY_OK] [JS_OFFLOAD]`
+- Critical bug fix completed — dedicated NekoCore chat (`/api/nekocore/chat`) now runs the same tool/task execution safety pipeline as main chat: inline tool execution + follow-up synthesis, one-step-or-more task-plan execution, and final stripping of residual `[TOOL:]` / `[TASK_PLAN]` directives before UI response. `[BOUNDARY_OK] [JS_OFFLOAD]`
+- Planning slice completed — added `Documents/current/PLAN-MODULAR-FEATURES-v1.md` to capture candidate modular platform features requested for Phase 3+: plug-in registration hub, feature flags, lazy-load loading, shared state store, theming engine, automated testing scaffold, and documentation generator. This is planning only, not implementation authorization. `[BOUNDARY_OK]`
+- Critical bug fix completed — skill-manager compatibility aligned to OpenClaw/AgentSkills expectations: frontmatter parser now accepts OpenClaw-style metadata blocks, model-invocation gating honors `disable-model-invocation`, and skill enabled/disabled state is persisted in `.skill-state.json` instead of writing unsupported `enabled` keys into `SKILL.md`. Added guards in `project/tests/unit/skill-manager-openclaw-compat.test.js`. `[BOUNDARY_OK] [JS_OFFLOAD]`
+- Phase 2 slice P2-S2 completed — EntityRuntime service wired into `server.js`: `setActiveEntity` (~80 lines of inline brain-module construction) now delegates to `entityRuntime.activate(entityId)`; `clearActiveEntity` delegates to `entityRuntime.deactivate()`. `entity-runtime.js` extended with `ConsciousMemory` construction and `somaticAwareness.emitSomaticState()` to match removed inline behavior exactly. Module-level vars still synced for ctx compatibility. Guard tests added (6 new, 24 total guards). Suite: 429 pass, 0 fail. `[BOUNDARY_OK]`
+- Phase 2 slice P2-S4 completed — `context-menu.js` (ctxMenu IIFE + `contextmenu` event handler, ~190 lines) and `vfs.js` (VFS IIFE + `DOMContentLoaded` desktop init, ~440 lines) extracted from `app.js`. `app.js` reduced from 6,660 → 6,030 lines (−630). `index.html` updated to load `vfs.js` then `context-menu.js` after `app.js`. Guard tests added (6 new, 36 total guards). Suite: 447 pass, 0 fail. `[BOUNDARY_OK]`
+- Phase 2 slice P2-S3 completed — Startup preflight service extracted to `server/services/startup-preflight.js`: `backupCorruptFile`, `ensureDirectory`, `ensureJsonFile`, `ensureTextFile`, `buildDefaultEntityPersona`, `buildDefaultEntityPrompt`, `ensureEntityRuntimeState`, and `runStartupPreflight` (~130 lines) removed from `server.js`. Service exposes `createRunStartupPreflight` factory; `server.js` wires it with `SERVER_DATA_DIR`, `MEM_DIR`, `loadConfig`, `ensureMemoryDir` (all hoisted). Guard tests added (6 new, 30 total guards). Suite: 435 pass, 0 fail. `[BOUNDARY_OK]`
+- Phase 2 slice P2-S1 completed — duplicate config management code removed from `server.js`: `makeDefaultGlobalConfig`, `normalizeGlobalConfigShape`, `ensureGlobalConfigFile`, `ensureGlobalConfigDir`, `migrateLegacyGlobalConfigIfNeeded`, and the large inline `TOKEN_LIMIT_DEFAULTS` object all replaced with delegation to the `configService` singleton from `services/config-service.js`. `loadConfig`/`saveConfig`/`getTokenLimit`/`refreshMaxTokensCache`/`refreshTokenLimitsCache` kept as thin wrappers for route compatibility. Fixed `orchestratorFinal` token limit value drift (1200→1600). Guard tests added in `boundary-cleanup-guards.test.js` (18 pass). Suite: 423 pass, 0 fail. `[BOUNDARY_OK]`
 - Critical bug fix completed — NekoCore subconscious retrieval now includes a bounded recent-conversation recall block from her latest episodic chat memories, so continuity survives wording shifts between turns and prior-conversation context is available even on weak topic overlap. `[BOUNDARY_OK] [JS_OFFLOAD]`
 - Critical bug fix completed — NekoCore direct chat now keeps its raw conversation snapshot but also runs the shared post-response memory encoder so each turn can produce `core_memory` and `semantic_knowledge` layers. Shared `MemoryStorage` now prunes stale index entries when backing folders are missing, stopping repeated `Memory not found` loops after index/file drift. `[BOUNDARY_OK] [JS_OFFLOAD]`
 - Ad-hoc bug fix completed — NekoCore OS panel now exposes system-entity tool settings, including per-skill enable/disable toggles, skill approval-mode control, and editable workspace-root path. System bootstrap now preserves an explicit NekoCore workspace path instead of overwriting it on every start. `[BOUNDARY_OK]`
@@ -189,6 +410,19 @@ Slice ledger update (2026-03-15):
 - `BUG-01` completed — account/setup wizard branding updated from REM System to NekoCore OS. `[BOUNDARY_OK]`
 - `BUG-03` completed — OpenRouter setup now includes sign-up links and visible BYOK disclosure (any OpenAI-compatible endpoint/key/model is supported). `[BOUNDARY_OK]`
 - Ad-hoc regression fix completed — taskbar now defaults to a more compact footprint, persists its size/alignment in localStorage, and exposes a taskbar context-menu edit mode with move/resize controls so the shell dock remains usable after the taskbar redesign. `[BOUNDARY_OK]`
+- Phase 2 slice P2-S6 completed — `processChatMessage` (~550 lines), `processNekoCoreChatMessage` (~200 lines), `processPendingSkillApproval`, and startup IIFE extracted from `server.js` into `server/services/chat-pipeline.js`, `server/services/nekocore-pipeline.js`, and `server/services/boot.js`. `server.js` reduced from 2103 → 882 lines (−1221 lines). All entity-scoped shadow vars removed; ctx/lifecycle getters delegate to `entityRuntime`. All 43 guard tests pass. Suite: 454 pass, 0 fail. Phase 2 complete. `[BOUNDARY_OK] [JS_OFFLOAD]`
+- Phase 3 slice P3-S1 completed — `window-manager.js` (29 functions, ~780 lines) extracted from `app.js`. Covers: getStageRect, scheduleLayoutResizeSignal, clampWindowRect, setWindowRect, captureWindowRect, rememberWindowRestoreRect, clearWindowDockState, restoreWindowForDrag, focusWindow, applyWindowActivationEffects, openNekoCoreWithMessage, openWindow, closeWindow, toggleMaximizeWindow, snapWindow, showSnapDock, hideSnapDock, updateSnapDockPointer, resolveEdgeSnap, startDrag, startResize, popOutWindow, createWindowShell, buildLauncherMenu, serializeWindow, saveWindowLayout, restoreWindowLayout, resetWindowLayout, initWindowManager. `app.js` reduced from 6,036 → 5,260 lines (−776). `index.html` updated to load `window-manager.js` between `app.js` and `vfs.js`. Guard tests added in `window-manager-extraction-guards.test.js` (10 guards). Suite: 466 pass, 0 fail. `[BOUNDARY_OK]`
+- Phase 3 slice P3-S2 completed — `desktop.js` extracted from `app.js`. Covers: start menu open/close flow, start power menu, start category switching, taskbar layout persistence/edit mode, pinned-app loading/reordering/rendering, taskbar overflow controls, `initDesktopShell`, web UI presence heartbeat, and `getWindowApp`. `app.js` reduced further by moving the desktop-shell block behind a redirect comment, and `index.html` now loads `desktop.js` after `app.js` and before `window-manager.js`. Guard tests added in `desktop-extraction-guards.test.js` (10 guards). Suite: 476 pass, 0 fail. `[BOUNDARY_OK]`
+- Phase 3 slice P3-S3 completed — `boot.js` extracted the main app `DOMContentLoaded` boot path from `app.js`. Covers: desktop shell boot, settings model suggestions bootstrapping, thoughts toggle sync, saved-config hydration, `_startApp()`, `startBrainPoll()`, and `initChatPhysical()`. `index.html` now loads `boot.js` after `browser-app.js`, keeping boot registration late while still before DOM ready. Guard tests added in `boot-extraction-guards.test.js`. Suite: 484 pass, 0 fail. `[BOUNDARY_OK]`
+- Phase 3 slice P3-S4 completed — `visualizer-ui.js` extracted the visualizer detail/search/bootstrap helpers from `app.js`. Covers: `showMemoryDetail`, `showMiniMemoryDetail`, activity feed helpers, HTML-escaping helpers, search/select helpers, context search wiring, and the visualizer-specific `DOMContentLoaded` handler that wires `window.onNeuralNodeSelected`. `index.html` now loads `visualizer-ui.js` after `js/neural-viz/index.js`. Guard tests added in `visualizer-ui-extraction-guards.test.js`. Suite: 492 pass, 0 fail. `[BOUNDARY_OK]`
+- Phase 3 slice P3-S5 completed — `physical-ui.js` extracted Physical Body + deep-sleep UI ownership from `app.js`. Covers: `initPhysicalTab`, physical/neuro fetch/update helpers, chat physical widget mirror (`initChatPhysical`), somatic toggle mutation, SSE wiring, and deep-sleep interval slider helpers. `index.html` now loads `physical-ui.js` after `sleep.js`. Guard tests added in `physical-ui-extraction-guards.test.js`; related extraction guards (boot/window manager) all pass. Suite: 26 extraction-guard tests pass, 0 fail. `[BOUNDARY_OK]`
+- Phase 3 slice P3-S6 completed — `users-ui.js` extracted User Switcher + Users app ownership from `app.js`. Covers: user panel open/close/render/switch flows, user add/clear flows, users-app list/create/set-active/delete handlers, and user-switcher bootstrap/reset wiring. `index.html` now loads `users-ui.js` after `physical-ui.js`. Guard tests added in `users-ui-extraction-guards.test.js`; extraction guard set passes and full suite is green (510 pass, 0 fail). `[BOUNDARY_OK]`
+- Phase 3 slice P3-S7 completed — `setup-ui.js` extracted setup enforcement (`isApiConfigured`, setup-required modal helpers, guardEntityOperation), setup wizard ownership (`SETUP_STEPS`, `LLM_ROLES`, setup state helpers, wizard connect/test/finish flow), and user-name modal helpers from `app.js`. `index.html` now loads `setup-ui.js` after `users-ui.js` and before `skills-ui.js`. Guard tests added in `setup-ui-extraction-guards.test.js`; targeted extraction guards pass and full suite is green (527 pass, 0 fail). `[BOUNDARY_OK]`
+- Critical bug fix completed — NekoCore system entity pipeline parity restored: NekoCore now uses persistent `nekoSystemRuntime` (EntityRuntime instance) instead of creating local throwaway brain modules per-call, giving her full architectural parity with user entities. NekoCore can now dream (DreamEngine), evolve emotionally (Neurochemistry), track goals (GoalsManager), express curiosity (CuriosityEngine), and consolidate memories through the same episodic/semantic pipeline as all other entities. This was blocking Phase 3 modularization because Visualizer memory types showed NekoCore as missing entity-level subsystems. Added guard tests in `project/tests/unit/nekocore-parity-guards.test.js` covering 12 core subsystems. `server.js` (lines 327-348) initializes `nekoSystemRuntime` on startup; `nekocore-pipeline.js` now requires and delegates to this runtime; `ctx` exposes NekoCore subsystems via getters. Suite: 527 pass, 0 fail. `[BOUNDARY_OK] [JS_OFFLOAD]`
+- Critical bug fix completed — Visualizer entity context now stays aligned with actual active/selected entity state after NekoCore parity work. `project/server/services/entity-runtime.js` now guards shared mutable-global updates behind `shareMutableGlobals`; `project/server/server.js` creates `nekoSystemRuntime` with `shareMutableGlobals: false`; `project/server/routes/entity-routes.js` now reads current entity from `entityManager` instead of `hatchEntity` shared state; `project/server/routes/memory-routes.js` resolves selected entity context explicitly for memory search/detail/reconstruct and visualizer chat-history routes; `project/client/js/visualizer.js` preserves a real blank placeholder, merges the current entity into the picker when `/api/entities` omits it, and passes selected entity id through graph/memory/diagnostic/chat-history requests; `project/client/js/neural-viz/renderer.js` appends optional entity context to graph/trace/belief requests. Added/updated guards in `project/tests/unit/visualizer-entity-context-regression.test.js`, `project/tests/unit/nekocore-visualizer-memory-regression.test.js`, and `project/tests/unit/nekocore-parity-guards.test.js`. Validation: full suite `npm.cmd test` green at 554 pass, 0 fail. `[BOUNDARY_OK] [JS_OFFLOAD]`
+- Critical bug fix completed — Three Visualizer + NekoCore regressions fixed: (1) NekoCore dreaming re-enabled: removed `dreamDisabled: true` from `entity_nekocore/entity.json` and `bootstrap.js` so `phase-dreams.js` no longer skips the dream pipeline; bootstrap guard test updated to assert `dreamDisabled` is absent. (2) Memory graph endpoints now entity-aware: `getMemoryGraphNodes` uses active entity's in-memory graph when `entityId` param matches active entity, otherwise scans disk using `getEntityMemoryScanDirs` with topic co-occurrence edges; `getFullMindGraph` reads `entityId` URL param and uses it as target; `getTraces` and `getBeliefGraphNodes` return empty data for non-active entities (in-memory only subsystems). (3) Visualizer entity picker now refreshes on `visibilitychange` via new `refreshEntityPickerList()` so newly created/loaded entities (including Rebecca) appear without a full page reload; `clearFilter()` now passes `selectedEntityId` to `NeuralViz.loadGraphData()`. Suite: 554 pass, 0 fail. `[BOUNDARY_OK] [JS_OFFLOAD]`
+- Critical bug fix completed (2026-03-16, post-reset) — Three root-cause memory pipeline bugs fixed after factory reset confirmed they were code issues, not data corruption: (1) `getMemoriesSearch` in `memory-routes.js` now skips directories that have no `log.json` (structural subdirs like `traces/`, `dreams/core/` were previously returned as fake memory records); (2) `getEntityMemoryScanDirs` in `entity-memory-compat.js` now recurses into `dreams/episodic`, `dreams/semantic`, and `dreams/core` instead of scanning the flat `dreams/` root (fixes visualizer dream memory count + memory graph builder false-positive "4 dream memories" log); (3) `encodeNekoConversationMemory` call in `nekocore-pipeline.js` now passes `memoryAspectConfigs: { subconscious: ... }` (plural) and `effectiveUserMessage:` instead of `aspectConfig:` (singular) + `userMessage:` — the wrong key names were causing a silent early exit in `runPostResponseMemoryEncoding` so LLM-enhanced topic extraction and richer memory encoding never ran. Suite: 554 pass, 0 fail. `[BOUNDARY_OK]`
+- Critical bug fix completed (2026-03-16, post-reset) — Setup wizard no longer requires manual discovery after first run. `_onAuthSuccess` in `login.js` now checks if any saved profile has a valid main LLM config via `getMainConfigFromProfile`; if none exists, `showSetupWizard()` auto-launches 350ms after the login overlay closes. Covers both fresh registration and re-login on an unconfigured machine. The auto-launch path was lost during P3-S7 extraction (setup-ui.js) — the trigger was never moved to the new module. Suite: 554 pass, 0 fail. `[BOUNDARY_OK]`
 
 ---
 

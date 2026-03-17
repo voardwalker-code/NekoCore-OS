@@ -2,7 +2,6 @@
 // reset-all.js — Factory reset: clear persisted runtime state for a true first run
 const fs = require('fs');
 const path = require('path');
-const { ensureSystemEntity } = require('./server/brain/nekocore/bootstrap');
 const { resetNekoCoreRuntime } = require('./server/brain/nekocore/reset-runtime');
 
 const root = path.join(__dirname);
@@ -70,7 +69,6 @@ for (const item of filesToRewrite) {
 
 // Recreate NekoCore system entity and retain system-doc knowledge baseline
 try {
-  ensureSystemEntity();
   resetNekoCoreRuntime({ docsDir: path.join(root, 'Documents', 'current') });
   console.log('Reset', path.join(root, 'entities', 'entity_nekocore'));
 } catch (e) {

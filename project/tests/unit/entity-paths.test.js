@@ -6,7 +6,13 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const path = require('path');
-const { normalizeEntityId, getEntityRoot, getMemoryRoot, getNeurochemistryPath } = require('../../server/entityPaths');
+const {
+  normalizeEntityId,
+  getEntityRoot,
+  getMemoryRoot,
+  getNeurochemistryPath,
+  getEntityFile
+} = require('../../server/entityPaths');
 
 // Use a dedicated test entity id to avoid polluting real entity dirs
 const TEST_ENTITY = '_unit-test-paths-abc';
@@ -60,6 +66,13 @@ test('getNeurochemistryPath returns a .json file path', () => {
   const p = getNeurochemistryPath(TEST_ENTITY);
   assert.ok(p.endsWith('.json'), `expected .json, got: ${p}`);
   assert.ok(p.includes('neurochemistry'), `expected 'neurochemistry' in path, got: ${p}`);
+});
+
+test('getEntityFile returns entity.json inside entity root', () => {
+  const entityRoot = getEntityRoot(TEST_ENTITY);
+  const entityFile = getEntityFile(TEST_ENTITY);
+  assert.ok(entityFile.startsWith(entityRoot), `entityFile ${entityFile} not inside entityRoot ${entityRoot}`);
+  assert.equal(path.basename(entityFile), 'entity.json');
 });
 
 test('getEntityRoot with entity_ prefixed id produces same dir as without', () => {

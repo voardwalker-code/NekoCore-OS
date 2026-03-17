@@ -153,6 +153,10 @@ function getDreamDiaryPath(entityId) {
   return path.join(getMemoryRoot(entityId), 'dream-diary.md');
 }
 
+function getEntityFile(entityId) {
+  return path.join(getEntityRoot(entityId), 'entity.json');
+}
+
 // ── Media directories ───────────────────────────────────────
 
 function getPixelArtPath(entityId) {
@@ -192,6 +196,7 @@ module.exports = {
   getNeurochemistryPath,
   getLifeDiaryPath,
   getDreamDiaryPath,
+  getEntityFile,
 
   getPixelArtPath,
   getMemoryImagesPath,
