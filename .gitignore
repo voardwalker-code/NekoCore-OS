@@ -4,9 +4,6 @@ node_modules/
 .DS_Store
 Thumbs.db
 
-# Local architecture and planning docs — gitignored, never commit
-/Documents/
-
 # API keys and runtime config — copy Config/ma-config.example.json and fill in yours
 project/Config/ma-config.json
 
