@@ -54,3 +54,9 @@ project/skills/*/workspace/*
 # Internal process and planning docs — not for public repo
 WORKLOG.md
 Documents/
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
+!.env.example
