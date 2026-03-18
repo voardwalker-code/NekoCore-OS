@@ -308,7 +308,7 @@ function createConfigRoutes(ctx) {
     const normalizedProvider = normalizeAspectProvider(provider);
     const globalCfg = ctx.loadConfig();
     const entityProfileRef = readEntityProfileRef(entityId);
-    const profileRef = globalCfg?.lastActive;
+    const profileRef = entityProfileRef || globalCfg?.lastActive || null;
     const profile = globalCfg?.profiles?.[profileRef] || null;
 
     if (normalizedProvider === 'profile-ref') {

@@ -359,6 +359,35 @@ function createMemoryRetrieval({
       }
     }
 
+    // E-2: Echo Past — merge archive-tier results into the connections pool.
+    // echoPast probes the archive directory (topic-ranked bucket search) and
+    // returns memories not held in the hot STM/LTM window.  Non-fatal: a miss
+    // or error simply means no archive results are added this turn.
+    if (currentEntityId && topics.length > 0) {
+      try {
+        const { echoPast } = require('../brain/agent-echo');
+        const archiveHits = echoPast(currentEntityId, topics, { limit: 8 });
+        const existingIds = new Set(connections.map(c => c.id));
+        for (const hit of archiveHits) {
+          if (existingIds.has(hit.id)) continue;
+          existingIds.add(hit.id);
+          connections.push({
+            id: hit.id,
+            relevanceScore: Number(hit._archiveScore || 0.25),
+            topics: hit.topics || [],
+            importance: Number(hit.importance || 0.5),
+            decay: Number(hit.decay || 1.0),
+            type: hit.type || 'episodic',
+            semantic: (hit.summary || '').slice(0, 280),
+            userId: hit.userId || null,
+            userName: hit.userName || null,
+          });
+        }
+      } catch (_err) {
+        // non-fatal — echo past is always additive, never blocking
+      }
+    }
+
     const topConnections = connections
       .sort((a, b) => b.relevanceScore - a.relevanceScore)
       // Deduplicate: keep highest-scoring entry per memory ID

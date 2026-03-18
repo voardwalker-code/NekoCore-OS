@@ -30,6 +30,35 @@ function _ensureArchiveDir(entityId) {
   fs.mkdirSync(getArchiveRoot(entityId), { recursive: true });
 }
 
+function _sleepMs(ms) {
+  const end = Date.now() + ms;
+  while (Date.now() < end) {
+    // Intentional tiny sync wait for retry-based atomic rename on Windows.
+  }
+}
+
+function _writeJsonAtomic(filePath, value) {
+  const tmpPath = `${filePath}.tmp-${process.pid}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  fs.writeFileSync(tmpPath, JSON.stringify(value, null, 2), 'utf8');
+
+  let lastError = null;
+  for (let attempt = 0; attempt < 6; attempt++) {
+    try {
+      fs.renameSync(tmpPath, filePath);
+      return;
+    } catch (error) {
+      lastError = error;
+      if (!['EPERM', 'EBUSY', 'ENOTEMPTY'].includes(error.code) || attempt === 5) {
+        break;
+      }
+      _sleepMs(25 * (attempt + 1));
+    }
+  }
+
+  try { fs.rmSync(tmpPath, { force: true }); } catch (_) {}
+  throw lastError;
+}
+
 // ── Public API ────────────────────────────────────────────────────────────────
 
 /**
@@ -85,9 +114,7 @@ function updateRouter(entityId, slug, bucketFilename) {
   const routerPath = getArchiveRouterPath(entityId);
   const router = readRouter(entityId);
   router[slug] = bucketFilename;
-  const tmpPath = routerPath + '.tmp';
-  fs.writeFileSync(tmpPath, JSON.stringify(router, null, 2), 'utf8');
-  fs.renameSync(tmpPath, routerPath);
+  _writeJsonAtomic(routerPath, router);
 }
 
 /**

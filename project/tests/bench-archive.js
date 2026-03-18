@@ -96,7 +96,7 @@ function benchQuerySim() {
   console.log('\n=== Full Query Simulation (RAKE → BM25 score all → sort → top 20) ===');
   console.log(`  Query topics: [${queryTopics.join(', ')}]`);
 
-  const sizes = [100, 500, 1000, 2500, 5000, 10000, 25000, 50000, 100000];
+  const sizes = [100, 500, 1000, 2500, 5000, 8000, 10000, 12000, 16000, 25000, 50000, 100000];
 
   for (const size of sizes) {
     const entries = generateEntries(size);
@@ -179,7 +179,7 @@ function benchEndToEnd() {
   console.log('\n=== End-to-End: RAKE + Query (no disk I/O) ===');
   console.log(`  Query: "${query}"`);
 
-  const sizes = [500, 1000, 5000, 10000, 25000, 50000];
+  const sizes = [500, 1000, 5000, 8000, 10000, 12000, 16000, 25000, 50000];
 
   for (const size of sizes) {
     const entries = generateEntries(size);

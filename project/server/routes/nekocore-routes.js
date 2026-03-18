@@ -22,7 +22,7 @@ const {
 const { resetNekoCoreRuntime } = require('../brain/nekocore/reset-runtime');
 const { ingestArchitectureDocs } = require('../brain/nekocore/doc-ingestion');
 const { ensureSystemEntity } = require('../brain/nekocore/bootstrap');
-const NK_DOCS_DIR = path.join(__dirname, '..', '..', '..', 'Documents', 'current');
+const NK_DOCS_DIR = path.join(__dirname, '..', '..', '..', 'docs');
 const entityPaths                             = require('../entityPaths');
 
 // ── In-memory recommendation store ───────────────────────────────────────────
@@ -184,11 +184,12 @@ function createNekoCoreRoutes(ctx) {
       let workspacePath = String(body.workspacePath || '').trim();
 
       if (!workspacePath && wantsAutoDefault) {
-        // Default to the repository workspace folder on first-time setup.
+        // Default to project root on first-time setup so the workspace UI can
+        // expose a virtual C: view without extra user configuration.
         if (entity.workspacePath && String(entity.workspacePath).trim()) {
           workspacePath = String(entity.workspacePath).trim();
         } else {
-          workspacePath = path.join(__dirname, '..', '..', 'workspace');
+          workspacePath = path.join(__dirname, '..', '..');
         }
       }
 
@@ -303,7 +304,7 @@ function createNekoCoreRoutes(ctx) {
 
   // ── POST /api/nekocore/docs-ingest ───────────────────────────────────────
   // Trigger architecture doc ingestion into NekoCore's semantic memory.
-  // Body: { docsDir? }  — optional override path; defaults to Documents/current
+  // Body: { docsDir? }  — optional override path; defaults to docs/
   async function postDocsIngest(req, res, apiHeaders, readBody) {
     try {
       let docsDir = NK_DOCS_DIR;
@@ -316,7 +317,7 @@ function createNekoCoreRoutes(ctx) {
 
       if (!require('fs').existsSync(docsDir)) {
         res.writeHead(404, apiHeaders);
-        res.end(JSON.stringify({ ok: false, error: 'Documents directory not found: ' + docsDir, docsDir }));
+        res.end(JSON.stringify({ ok: false, error: 'Docs directory not found: ' + docsDir, docsDir }));
         return;
       }
 

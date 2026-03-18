@@ -5,6 +5,182 @@ Built with MA (Memory Architect v1).
 
 ## [Unreleased]
 
+### Planned
+- **Phase 4.9 — Modular Task Orchestration Architecture (MTOA):** Plan locked and architecture finalized. **Entity Networking & Collaborative Planning added (2026-03-18).** NekoCore OS gains a full task orchestration engine alongside the companion pipeline. Tri-stage pipeline (Classify → Contextualize → Execute). NekoCore acts as the Frontman — workers execute silently; she translates step completions into milestone messages in her own voice, handles stall detection and user prompting, and routes mid-task messages to steer or redirect workers. Task Archive & Project Store: workers write to durable per-task archives at each step using existing `archive-manager.js` infrastructure — no LLM calls. Each project accumulates a complete story (brief, steps, sources, drafts, final output) that survives context overflow and serves as the data foundation for Phase 5 Predictive Memory. **Entity Networking (NEW):** Static LAN-based entity discovery (fixed config). Multi-entity planning task type: user poses a complex question, NekoCore launches a collaborative planning chat, adds relevant entities (research, analysis, synthesis specialists), moderates rounds of debate, and synthesizes a final plan with full reasoning archive (why we chose this, rebuttals, trade-offs). This is the high-rigor foundation for AI capability research. New subsystems: Task Module Registry, Intent Classifier, Task Context Gatherer, Task Executor + Event Bus, Task Session Manager, Task Archive Writer/Reader, Task Project Store, Entity Network Registry, Entity Chat Manager, Planning Orchestrator, Frontman Bridge, Task Routes API, Entity Chat Endpoints, Client Task UI. Non-breaking — companion pipeline unchanged. See `Documents/current/PLAN-MTOA-v1.md`.
+
+### Added
+- **Phase 4.9 — Modular Task Orchestration Architecture (MTOA) T-7: Client Task UI + SSE Task Panel (complete)**
+  - Added `client/js/apps/optional/task-ui.js` (optional app, 280 lines): `window.handleTaskSSEEvent` delegation hook entry point, `_taskUI` state manager, `_taskUIRenderBadge`, `openTaskHistory` (fetches `/api/task/history/:entityId`), `openTaskSessionDetail` (fetches `/api/task/session/:id`), `cancelActiveTask` (calls `POST /api/task/cancel/:id`), `_taskUIPushTelemetry` (bridges task SSE events to tmEventFeed)
+  - Added task SSE event delegates in `chat.js` `initBrainSSE()`: `task_milestone`, `task_needs_input`, `task_complete`, `task_error`, `task_steering_injected` — all delegate to `window.handleTaskSSEEvent`; chat.js owns SSE connection, task-ui.js owns state
+  - Added `runtimeTelemetry.taskState` field to `telemetry-ui.js`; updated `updateTaskManagerView` to render `#tmActiveTaskSection` with live task type/step/status
+  - Added to `index.html`: task status badge in chat-bar-r, task history panel, task detail panel, tmActiveTaskSection in Task Manager, `<script>` tag for task-ui.js before boot.js
+  - Added task badge/panel/step/history/detail styles to `ui-v2.css`
+  - Added `task-ui-guards.test.js` (25 tests); validation: **25 pass, 0 fail** (guards); **89 pass, 0 fail** (T-3→T-7 stack)
+  - `[BOUNDARY_OK]` `[CONTRACT_ENFORCED]`
+- **Phase 4.9 — Modular Task Orchestration Architecture (MTOA) T-6: Task Pipeline Integration + Frontman Bridge (complete)**
+  - Added `server/brain/tasks/task-frontman.js` to consume task event-bus lifecycle events and synthesize user-facing milestone/status updates in NekoCore voice (workers remain silent)
+  - Added `server/brain/tasks/task-pipeline-bridge.js` with `detectAndDispatchTask(...)` for pre-orchestrator task intent fork, confidence gating, planning-mode collaborative routing, and non-task fallback
+  - Integrated task fork into `server/services/chat-pipeline.js` before companion orchestration path so task-intent turns dispatch to task execution/planning when confidence threshold is met
+  - Added `buildTaskFrontmanPrompt` to `server/brain/generation/aspect-prompts.js` and exported it for Frontman synthesis wiring
+  - Added guard tests: `task-frontman.test.js`, `task-pipeline-bridge.test.js`
+  - Validation runs: focused T-6 batch + task route/chat route checks -> **15 passed, 0 failed**; consolidated T-3→T-6 task stack -> **80 passed, 0 failed**
+  - `[BOUNDARY_OK]` `[CONTRACT_ENFORCED]` — pipeline fork remains server-side orchestration only; route/server bootstrap boundaries preserved
+- **Phase 4.9 — Modular Task Orchestration Architecture (MTOA) T-5: Task Routes + Entity Chat Endpoints (complete)**
+  - Added `server/routes/task-routes.js` with task operations API: `POST /api/task/run`, `GET /api/task/session/:id`, `POST /api/task/cancel/:id`, `GET /api/task/modules`, `GET /api/task/history/:entityId`
+  - Added `server/brain/tasks/entity-chat-manager.js` (chat session orchestration: create/get/add/remove/route/close)
+  - Added `server/routes/entity-chat-routes.js` with entity chat API: `POST /api/entity/chat/create`, `POST /api/entity/chat/message`, `POST /api/entity/chat/add/:sessionId/:entityId`, `POST /api/entity/chat/remove/:sessionId/:entityId`, `GET /api/entity/chat/:sessionId`, `POST /api/entity/chat/:sessionId/close`
+  - Wired task and entity-chat routes into `server/server.js` route bootstrap + dispatcher chain (composition only)
+  - Added guard tests: `task-routes.test.js`, `entity-chat-routes.test.js`
+  - Updated `task-executor.test.js` for Node test runner compatibility (`node:test` imports and cleanup assertions)
+  - Validation run: task orchestration stack tests (T-3/T-4/T-5) -> **71 passed, 0 failed**
+  - `[BOUNDARY_OK]` `[CONTRACT_ENFORCED]` — route handlers remain thin; orchestration/state logic is delegated to task modules/managers
+- **Phase 4.9 — Modular Task Orchestration Architecture (MTOA) T-4/T-4b: Session Manager + Task Archive/Project Store (complete)**
+  - `task-session.js` — persisted session lifecycle in `server/data/task-sessions.json` with atomic writes: `createSession`, `getSession`, `updateSession`, `appendStep`, `setStall`, `clearStall`, `appendSteering`, `closeSession`, `pruneOldSessions`
+  - `task-project-store.js` — project container persistence under `entities/entity_{id}/memories/projects/`: `createProject`, `getProject`, `listProjects`, `addTaskToProject`, `resolveOrCreateProject` (keyword-overlap continuation heuristic)
+  - `task-archive-writer.js` — durable per-task archive writes in `projects/{projectId}/tasks/{taskId}/`: `createTaskArchive`, `appendStep`, `appendSource`, `saveDraft`, `finalize`; non-existent archive operations fail safely
+  - `task-archive-reader.js` — archive read-side API: `getTaskSummary`, `getStepHistory`, `getSources`, `getLatestDraft`; supports missing/partial archives without throw
+  - Guard tests added (Node test runner): `task-session.test.js`, `task-project-store.test.js`, `task-archive-writer.test.js`, `task-archive-reader.test.js`
+  - Validation: targeted suite `node --test` for all four files -> **22 passed, 0 failed**
+  - `[BOUNDARY_OK]` `[CONTRACT_ENFORCED]` — task state persistence isolated to server task modules; no UI/route business logic leakage
+- **Phase 4.9 — Modular Task Orchestration Architecture (MTOA) T-3: Task Executor + Milestone Events (complete)**
+  - `task-event-bus.js` — per-session EventEmitter singleton; `emit(sessionId, event)`, `subscribe/unsubscribe`, `drain()` (clears queue), `peek()` (read-only), `cleanup()`, `hasEvents()`
+  - `task-executor.js` — `executeTask(config)` orchestrates module-aware prompt assembly, tool filtering, and step execution; emits `milestone` (per step), `needs_input` (stall), `task_complete`, `task_error` events; non-blocking archive writes via `setImmediate`; `resumeWithInput(sessionId, answer)` unblocks stalled executor; `buildTaskSystemPrompt()`, `filterTools()`, `extractSources()`, `isStalled()`
+  - `task-runner.js` — added `detectNeedsInput(text)`, `runTask(config)` entry point (plan generation → `executeTaskPlan` pipeline), `onStep`/`onNeedsInput` callbacks wired into step loop; new exports alongside existing API (no breaking changes)
+  - `task-executor.test.js` — 53 guard tests: event bus (emit/subscribe/drain/peek/cleanup/hasEvents), system prompt assembly, tool filtering, source extraction, milestone events per step, task_complete shape, task_error + rethrow, needs_input suspend + resume, entity bridge, `runTask`/`detectNeedsInput` guard tests
+  - Also fixed wrong require paths in T-1 (`intent-classifier.test.js`) and T-2 (`task-context-gatherer.test.js`) test files
+  - `[BOUNDARY_OK]` `[CONTRACT_ENFORCED]` — executor emits events for Frontman consumption; workers are silent; no UI rendering in server modules
+- **Phase 4.9 — Modular Task Orchestration Architecture (MTOA) T-2: Task Context Gatherer (complete)**
+  - Per-task-type source-of-truth retrieval: archive (BM25 entity memory search), workspace_files (scan src/docs for relevant files), web_seed (curated URLs per task type), custom (extensible placeholder)
+  - Strategy dispatch: module registry determines which strategy per task type
+  - Main API: `gatherContext(taskType, message, entity, options)` → { snippets[], strategy, taskType, retrievedAt, elapsedMs }
+  - Batch retrieval: `gatherContextBatch()` for parallel context gathering across multiple task types
+  - `task-context-strategies.js` — 260 lines, 4 retrieval strategies with graceful error handling
+  - `task-context-gatherer.js` — 140 lines, strategy dispatch and context orchestration
+  - `task-context-gatherer.test.js` — 43 guard tests: all strategies, null entity, invalid inputs, snippet format, all 6 task types, batch gathering, performance, edge cases
+  - `[BOUNDARY_OK]` `[CONTRACT_ENFORCED]` — gathers context before task execution without modifying task state
+
+### Changed
+- Installer readiness proof run (pre-cleanup bounded override):
+  - Added exact installer marker slots in `client/js/app.js` (window registry and app-category map) and `client/js/apps/non-core-html-loader.js` (non-core app manifest extension point).
+  - Added non-core Hello World payload `client/apps/non-core/core/tab-hello-world.html` with a minimal canvas pong loop and keyboard controls.
+  - Added concrete contract `server/contracts/installer-hello-world.contract.example.json` with three install actions (`hello-loader-001`, `hello-window-001`, `hello-category-001`) under strict marker-boundary semantics.
+  - Verified strict transactional behavior: initial install attempt failed on exact marker boundary mismatch and auto-rolled back batch writes; after marker normalization, install succeeded with 3 per-entry logs (`entryId`, `writtenBlock`, `closeMarker`).
+  - Focused validation pack after successful install: **32 pass, 0 fail** across `installer-marker-engine`, `installer-cli`, `installer-vfs-phase-ab`, `app-manifest-guards`, `desktop-extraction-guards`.
+
+- Installer marker engine repeat-install fix (2026-03-18):
+  - Fixed safe-slot consumption bug in `server/tools/installer-marker-engine.js` where first install could consume the only exact insertion boundary.
+  - Engine now preserves a new exact marker boundary immediately after each inserted block, enabling subsequent app installs without manual marker recreation.
+  - Updated guard tests in `tests/unit/installer-marker-engine.test.js` to lock next-slot preservation and single-boundary multi-entry behavior.
+  - Restored fresh empty exact slots after current Hello World inserts in `client/js/app.js` and `client/js/apps/non-core-html-loader.js`.
+  - Verified with installer dry-run using `server/contracts/installer-hello-world.contract.example.json`: `ok: true`, `rollback: false`, `appliedFiles: 2`.
+
+- Installer wrapper metadata enhancement (2026-03-18):
+  - Installer-inserted blocks now include visible entry-id metadata line: `//JsonEntryId: "<entryId>"` to support safe uninstall targeting by exact string.
+  - Marker engine still preserves a fresh exact next boundary after each insertion (`//Open Next json entry id` + blank line + `//Close "`).
+  - Backfilled current Hello World wrapper blocks in `client/js/app.js` and `client/js/apps/non-core-html-loader.js` with `hello-window-001`, `hello-category-001`, `hello-loader-001`.
+  - Updated focused tests in `tests/unit/installer-marker-engine.test.js` and `tests/unit/installer-cli.test.js`; validation: **9 pass, 0 fail**.
+
+- Installer package guideline baseline finalized pre-cleanup (2026-03-18):
+  - Added canonical app-package authoring contract to `docs/CONTRACTS-AND-SCHEMAS.md` with required artifacts, install/uninstall action fields, wrapper format, and transaction/logging rules.
+  - Hardened contract schema and examples with required `loggingPolicy.logJsonEntryId=true`:
+    - `server/contracts/installer-uninstaller-contract.schema.json`
+    - `server/contracts/installer-uninstaller.contract.example.json`
+    - `server/contracts/installer-hello-world.contract.example.json`
+  - Extended A/B contract guards in `tests/unit/installer-vfs-phase-ab.test.js` to lock `logJsonEntryId` policy.
+  - Focused validation run: **14 pass, 0 fail** (`installer-marker-engine`, `installer-cli`, `installer-vfs-phase-ab`).
+
+- Installer app-package checklist completion (2026-03-18):
+  - Expanded `docs/CONTRACTS-AND-SCHEMAS.md` installer section with explicit app-author conventions for icon usage, nav target/category mapping, contract template baseline, and package validation checklist.
+  - This closes the remaining "partially complete" gap and sets a single canonical packaging guideline before HTML cleanup.
+
+- Installer uninstall cycle support and end-to-end validation (2026-03-18):
+  - Added remove-by-entry support to `server/tools/installer-marker-engine.js` using wrapper metadata line `//JsonEntryId: "<entryId>"`.
+  - Added `uninstall` command support to `server/tools/installer-cli.js` (transactional grouped remove actions from contract `uninstallActions`).
+  - Added npm helper script `installer:remove` in `project/package.json`.
+  - Added uninstall-focused guard coverage in:
+    - `tests/unit/installer-marker-engine.test.js`
+    - `tests/unit/installer-cli.test.js`
+  - Executed real Hello World cycle:
+    - uninstall apply succeeded (`ok: true`, `rollback: false`, `appliedFiles: 2`)
+    - reinstall apply succeeded (`ok: true`, `rollback: false`, `appliedFiles: 2`)
+  - Full regression run after cycle: **1364 pass, 0 fail**.
+
+- Added complete app-author transition guide:
+  - `docs/HOW-TO-CREATE-AN-APP.md` now documents package structure, wrapper contract model, install/uninstall commands, validation checklist, and reference workflow.
+
+- Installer marker duplication/order regression fix (2026-03-18):
+  - Fixed in-file multi-action install ordering in `server/tools/installer-marker-engine.js` by applying entries against original boundary order before considering newly-created next slots.
+  - Fixed uninstall normalization to consume optional trailing empty slot and collapse adjacent duplicate empty marker boundaries to one safe slot.
+  - Added focused regression guards in `tests/unit/installer-marker-engine.test.js` and `tests/unit/installer-cli.test.js`.
+  - Ran uninstall+reinstall heal cycle for Hello World and validated focused installer pack: **20 pass, 0 fail**.
+
+- Cleanup prompt hardening for installer markers (2026-03-18):
+  - Updated Gemini cleanup prompt pack and source plan with mandatory marker-preservation rules for installer-managed regions:
+    - `Documents/current/PROMPTS-APP-MANIFEST-SHADOW-REFACTOR-v1.md`
+    - `Documents/current/PLAN-APP-MANIFEST-SHADOW-REFACTOR-v1.md`
+  - Added executable cleanup guard test in `tests/unit/installer-vfs-phase-ab.test.js` to fail if installer open/close markers or empty safe slots are removed from protected shell registration files.
+  - Updated `docs/HOW-TO-CREATE-AN-APP.md` with current HTML-scope clarification (registration wiring is installer-managed; payload HTML remains package-authored) and added App Creator Engine plan section.
+  - Validation: `node --test tests/unit/installer-vfs-phase-ab.test.js` -> **6 pass, 0 fail**.
+
+- Installer payload lifecycle support before cleanup (2026-03-18):
+  - Extended installer contract/action runtime to support file lifecycle actions:
+    - `create-file` on install
+    - `delete-file` on uninstall
+  - Updated runtime and contracts:
+    - `server/tools/installer-cli.js`
+    - `server/contracts/installer-uninstaller-contract.schema.json`
+    - `server/contracts/installer-hello-world.contract.example.json`
+    - `server/contracts/payloads/tab-hello-world.template.html`
+  - Added focused guard coverage for new action types and behavior:
+    - `tests/unit/installer-cli.test.js`
+    - `tests/unit/installer-vfs-phase-ab.test.js`
+  - Updated `docs/HOW-TO-CREATE-AN-APP.md` to reflect installer-managed payload create/delete flow.
+  - Real-cycle validation: Hello World uninstall removed `client/apps/non-core/core/tab-hello-world.html`; reinstall recreated it successfully.
+  - Focused installer pack: **23 pass, 0 fail**. Full regression rerun (`npm.cmd test`): **1369 pass, 0 fail**.
+
+- Installer/VFS Phase A/B kickoff completed:
+  - `/api/nekocore/tooling/workspace` auto-default now targets project root on first-time setup (preserves existing configured workspace path).
+  - Workspace tab root breadcrumb now renders as `C:` in the non-core workspace tab surface and explorer breadcrumb renderer.
+  - Added focused A/B guard suite `tests/unit/installer-vfs-phase-ab.test.js` to lock workspace manifest presence, root breadcrumb contract, auto-default behavior, and contract artifact presence.
+
+- Added Installer/VFS contract draft artifacts for Phase A:
+  - `server/contracts/installer-uninstaller-contract.schema.json`
+  - `server/contracts/installer-uninstaller.contract.example.json`
+  - `server/contracts/vfs-drive-mapping.contract.schema.json`
+  - `server/contracts/vfs-drive-mapping.contract.example.json`
+
+- Installer/uninstaller contract semantics tightened to match script-diary boundary model:
+  - Exact marker-boundary contract added (`//Open Next json entry id` + blank line + `//Close "`) for installer-accessible regions.
+  - Transaction policy now encodes `auto-rollback-error` when any required marker boundary is missing in batch changes.
+  - Logging policy now requires entry-level logging of entryId, written block payload, and close marker.
+  - Guard coverage extended in `tests/unit/installer-vfs-phase-ab.test.js` to lock marker boundary, rollback policy, and logging policy fields.
+
+- Bounded pre-cleanup installer implementation slice added:
+  - New utility `server/tools/installer-marker-engine.js` implements exact-boundary insertion with transactional rollback semantics.
+  - Engine enforces exact `open + blank + close` boundary matching only; no partial writes on batch boundary miss.
+  - Engine returns per-entry write logs (`entryId`, `writtenBlock`, `closeMarker`) for installer traceability.
+  - New focused tests in `tests/unit/installer-marker-engine.test.js` validate insertion, multi-entry batch behavior, rollback-on-missing-boundary, strict blank-line matching, and logging fields.
+
+- Thin installer command path added for pre-cleanup structure visibility:
+  - New CLI `server/tools/installer-cli.js` with bounded install flow: `install --contract <path> [--root <dir>] [--dry] [--log <path>]`.
+  - CLI stages all file updates and writes only when all marker-boundary insertions succeed (transactional all-or-nothing).
+  - Added npm script `installer:apply` for terminal usage.
+  - New focused tests `tests/unit/installer-cli.test.js` validate real file apply, dry-run no-write behavior, and cross-file rollback on missing marker boundary.
+
+- **Phase 4.9 — T-8 Exit Audit (complete):** Updated architecture docs to reflect live MTOA behavior and boundaries; completed full-suite stabilization.
+  - `docs/PIPELINE-AND-ORCHESTRATION.md` now documents the pre-orchestrator task fork, frontman SSE lifecycle event surface, and client task-event delegation boundary (`chat.js` -> `task-ui.js`).
+  - `docs/ARCHITECTURE-OVERVIEW.md` now includes Phase 4.9 status in the direction snapshot, MTOA subsystem map entries, task UI subsystem, and route map entries for `task-routes.js` and `entity-chat-routes.js`.
+  - Full-suite audit rerun via Node test runner: **1346 total**, **1346 pass**, **0 fail**.
+  - Test stabilization fixes: `classifySync` now returns a true synchronous rule-based object shape, classifier keyword matching is boundary-aware (prevents substring false positives), task classification rules were tuned for analysis/memory-query disambiguation, and task module registry registration now normalizes required defaults (including `sourceOfTruth`) for custom module entries.
+- Test runner compatibility hardening: added `tests/unit/test-compat.js` shim and wired mixed-style unit tests (`entity-network-registry.test.js`, `intent-classifier.test.js`, `task-context-gatherer.test.js`, `task-module-registry.test.js`) to the Node test runtime globals (`describe`/`it`/`test`/`expect`).
+- Chat now exposes live per-session memory `Recall` and `Save` toggles for single-LLM entities, routes those flags through `/api/chat`, and skips the client-side subconscious pre-call when the single-LLM mode is active.
+- Repo tracking audit sync: `BUGS.md` and `WORKLOG.md` now reflect the completed bug-fix state instead of the stale open-bug ledger.
+- Entity/context chat now recovers its main provider runtime from the checked-out entity profile or saved last-active profile before blocking sends, preventing false `No provider connected` failures after checkout or reload.
+- `/api/chat` now omits `innerDialog` when the single-LLM path has no orchestration object to return, keeping the response contract valid for bare single-LLM entities.
+- `/api/chat` now validates payloads before writing `200` headers and guards the error path against duplicate writes, preventing `ERR_HTTP_HEADERS_SENT` when contract enforcement fails.
+- Single-LLM chat no longer throws a client-side `subconTurn is not defined` error after a valid reply; the chat send flow now keeps that variable defined across both full-pipeline and single-LLM modes.
+- Repo doc-path audit repaired stale references to moved source-of-truth docs, and NekoCore architecture-doc ingestion now defaults to `docs/` instead of the obsolete `Documents/current/` path.
+
 ---
 
 ## [0.8.0] - 2026-03-17
@@ -88,9 +264,9 @@ Built with MA (Memory Architect v1).
 - Roadmap draft for real browser strategy and compliance-first rollout (`NEKOCORE-BROWSER-ROADMAP.md`)
 
 ### Changed
-- Documentation sync pass for source-of-truth docs (`Documents/current/ARCHITECTURE-OVERVIEW.md`, `PIPELINE-AND-ORCHESTRATION.md`, `MEMORY-SYSTEM.md`, `CONTRACTS-AND-SCHEMAS.md`, `OPEN-ITEMS-AUDIT.md`) to reflect v0.6.0 runtime behavior
+- Documentation sync pass for source-of-truth docs (`docs/ARCHITECTURE-OVERVIEW.md`, `docs/PIPELINE-AND-ORCHESTRATION.md`, `docs/MEMORY-SYSTEM.md`, `docs/CONTRACTS-AND-SCHEMAS.md`, `Documents/current/OPEN-ITEMS-AUDIT.md`) to reflect v0.6.0 runtime behavior
 - Updated architecture deck `Documents/REM-Architecture-v0.6.0.html` to match current orchestration flow (1A+1D parallel, 1C after both, 2B inlined), route/module counts, and schema wording
-- Updated README docs-governance wording to reflect tracked source-of-truth docs in `Documents/current/`
+- Updated README docs-governance wording to reflect tracked source-of-truth docs in `docs/` and planning docs in `Documents/current/`
 - Entity creation flow moved from inline modal to dedicated Creator app window; legacy `showNewEntityDialog()` entry points now route to Creator
 - Entity app browser no longer exposes `+ New` creation controls; creation is owned by Creator app
 - Creator app layout tightened for shell parity and made scrollable in embedded mode to prevent form clipping

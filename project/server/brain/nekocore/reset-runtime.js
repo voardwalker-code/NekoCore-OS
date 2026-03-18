@@ -41,7 +41,7 @@ function _resetSemanticToSystemDocs(semanticDir) {
 }
 
 function resetNekoCoreRuntime(options = {}) {
-  const docsDir = options.docsDir || path.join(__dirname, '..', '..', '..', '..', 'Documents', 'current');
+  const docsDir = options.docsDir || path.join(__dirname, '..', '..', '..', '..', 'docs');
 
   ensureSystemEntity();
 

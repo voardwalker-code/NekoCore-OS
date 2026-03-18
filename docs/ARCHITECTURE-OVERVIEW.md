@@ -1,7 +1,7 @@
 # REM System — Architecture Overview
 
 Version: 0.8.0
-Last updated: 2026-03-17
+Last updated: 2026-03-18
 
 ---
 
@@ -13,14 +13,16 @@ Core design conviction: an entity should be shaped by what it has experienced, n
 
 ---
 
-## Current Direction Snapshot (2026-03-17)
+## Current Direction Snapshot (2026-03-18)
 
-Phases 1–3 (bug fixes, refactor, modularization) are complete (963 passing tests). Feature work is authorized.
+Phases 1–3 (bug fixes, refactor, modularization) are complete. Feature work is authorized.
 
 - **Phase 4.5 — Intelligent Memory Expansion (IME):** ✅ COMPLETE — dual-path post-turn encoding now produces both episodic (`createCoreMemory`) and semantic knowledge (`createSemanticKnowledge`) records per exchange.
-- **Phase 4.6 — Sharded Topic Archive:** ✅ COMPLETE — RAKE extraction + BM25 scoring over NDJSON topic-keyed shards (`archive-index.js`, `archive-router.js`). Benchmark ceiling: 25K records sub-100ms.
-- **Phase 4.7 — Agent Echo: Multi-Index Archive + Retrieval Pipeline:** gate OPEN — Echo Now (conscious hot window), Echo Past (index-narrowed archive + async round-2). First slice E-0-0 not yet started.
-- **Phase 5 — Predictive Memory Topology:** blocked on Phase 4.7.
+- **Phase 4.6 — Sharded Topic Archive:** ✅ COMPLETE — RAKE extraction + BM25 scoring over NDJSON topic-keyed shards (`archive-index.js`, `archive-router.js`).
+- **Phase 4.7 — Agent Echo: Multi-Index Archive + Retrieval Pipeline:** ✅ COMPLETE — Echo Now + Echo Past retrieval behavior integrated.
+- **Phase 4.8 — Pipeline Hardening + Modularization Completion:** ✅ COMPLETE.
+- **Phase 4.9 — Modular Task Orchestration Architecture (MTOA):** in progress at exit-audit stage — task intent fork, context gatherer, executor/event bus, sessions/archive/project store, frontman bridge, task routes, entity-chat planning, and client task UI are implemented.
+- **Phase 5 — Predictive Memory Topology:** next after Phase 4.9 close.
 
 Desktop shell, browser, and runtime stability work continues in parallel with Phase 4.x feature slices.
 
@@ -31,6 +33,7 @@ Desktop shell, browser, and runtime stability work continues in parallel with Ph
 | Subsystem | Key Files | What It Does |
 |-----------|-----------|--------------|
 | **Cognitive Pipeline** | server/brain/core/orchestrator.js | Runs 1A + 1D in parallel, then 1C, then Final orchestrator pass (2B inlined) |
+| **Task Orchestration (MTOA)** | server/brain/tasks/, server/services/chat-pipeline.js | Pre-orchestrator task fork: classify -> contextualize -> execute; frontman event synthesis and session lifecycle |
 | **Orchestration Policy** | server/brain/core/orchestration-policy.js | Budget guard, latency guard, O2 escalation decision |
 | **Worker Subsystem** | server/brain/core/worker-registry.js, worker-dispatcher.js | Plugin-style worker slots that override contributor phases |
 | **Memory Retrieval** | server/services/memory-retrieval.js | Subconscious context block assembly, chatlog recall, doc_* filtering |
@@ -58,6 +61,7 @@ Desktop shell, browser, and runtime stability work continues in parallel with Ph
 | **Topic Archive** | server/brain/utils/archive-index.js, archive-router.js | RAKE+BM25 sharded topic archive — NDJSON bucket files keyed by topic slug |
 | **Skills** | skills/ | Pluggable tools (web search, file ops, memory tools) |
 | **SSE / Diagnostics** | server/routes/sse-routes.js | Real-time streaming diagnostics and cognitive bus events |
+| **Task UI (Client)** | client/js/apps/optional/task-ui.js, client/js/apps/core/chat.js, client/js/apps/core/telemetry-ui.js | Task badge/status in chat, task history/detail panel, Task Manager active-task telemetry |
 
 ---
 
@@ -88,6 +92,8 @@ Entity state is disk-persisted. Every conversation is encoded into memory. Sleep
 server/routes/
   auth-routes.js         — login, logout, session check
   chat-routes.js         — main conversation endpoint
+  task-routes.js         — task run/session/cancel/modules/history API
+  entity-chat-routes.js  — planning/multi-entity chat session API
   entity-routes.js       — entity CRUD, user profiles, relationships, guided/character creation
   memory-routes.js       — memory read/write/search
   brain-routes.js        — brain loop control

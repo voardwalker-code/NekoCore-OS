@@ -279,16 +279,20 @@ function createEntityRoutes(ctx) {
   async function postEntitiesCreate(req, res, apiHeaders, readBody) {
     try {
       const body = JSON.parse(await readBody(req));
-      const { entityId, name, gender, traits, introduction } = body;
+      const { entityId, name, gender, traits, introduction, entityMode } = body;
+      const isSingleLlm = entityMode === 'single-llm';
       const entityPaths = require('../entityPaths');
       const canonicalId = entityPaths.normalizeEntityId(entityId);
-      if (!canonicalId || !name || !traits) throw new Error('Missing required fields: entityId, name, or traits');
+      // traits are required for full-personality mode; optional for single-llm
+      if (!canonicalId || !name) throw new Error('Missing required fields: entityId or name');
+      if (!isSingleLlm && !traits) throw new Error('Missing required field: traits (required for full personality mode)');
       _assertEntityNameAllowed(name);
 
       ctx.entityManager.createEntityFolder(canonicalId);
       const traitsArr = Array.isArray(traits) ? traits : [];
       const entity = {
         id: canonicalId, name, gender: gender || 'neutral',
+        entityMode: isSingleLlm ? 'single-llm' : 'full',
         ownerId:  req.accountId || null,
         isPublic: false,
         skillApprovalRequired: true,

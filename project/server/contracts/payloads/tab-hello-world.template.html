@@ -1,0 +1,180 @@
+<div class="tab-content" id="tab-helloworld">
+  <section class="card" style="height:100%;display:flex;flex-direction:column;gap:12px;">
+    <div class="card-hd" style="display:flex;justify-content:space-between;align-items:center;">
+      <h3 style="margin:0;">Hello World</h3>
+      <div class="text-xs-c text-tertiary-c">Barebones Pong Test</div>
+    </div>
+
+    <div class="text-sm-c text-tertiary-c" style="margin-top:-4px;">
+      Controls: <strong>W/S</strong> = left paddle, <strong>Arrow Up/Down</strong> = right paddle, <strong>R</strong> = reset.
+    </div>
+
+    <div style="flex:1;min-height:360px;border:1px solid rgba(255,255,255,.14);border-radius:12px;overflow:hidden;background:#0b111f;">
+      <canvas id="helloWorldPongCanvas" width="900" height="500" style="width:100%;height:100%;display:block;"></canvas>
+    </div>
+
+    <div class="text-xs-c text-tertiary-c">
+      Window controls (close, maximize, popout) are provided by the shell titlebar for this app window.
+    </div>
+
+    <div class="text-xs-c text-tertiary-c" style="opacity:.85;">
+      Credits: Mini Pong for NekoCore OS. Signed by voardwalker-code + GitHub Copilot (GPT-5.3-Codex).
+    </div>
+  </section>
+</div>
+
+<script>
+(function () {
+  var canvas = document.getElementById('helloWorldPongCanvas');
+  if (!canvas) return;
+  var ctx = canvas.getContext('2d');
+  if (!ctx) return;
+
+  if (window.__helloWorldPongState && typeof window.__helloWorldPongState.dispose === 'function') {
+    window.__helloWorldPongState.dispose();
+  }
+
+  var w = canvas.width;
+  var h = canvas.height;
+  var paddleH = 90;
+  var paddleW = 10;
+  var leftY = (h - paddleH) / 2;
+  var rightY = (h - paddleH) / 2;
+  var leftScore = 0;
+  var rightScore = 0;
+  var speed = 5;
+
+  var ball = { x: w / 2, y: h / 2, vx: 5, vy: 3, r: 8 };
+  var keys = Object.create(null);
+  var rafId = null;
+  var disposed = false;
+
+  function clamp(v, min, max) {
+    return Math.max(min, Math.min(max, v));
+  }
+
+  function resetBall(dir) {
+    ball.x = w / 2;
+    ball.y = h / 2;
+    ball.vx = (dir || 1) * 5;
+    ball.vy = (Math.random() > 0.5 ? 1 : -1) * (2 + Math.random() * 2);
+  }
+
+  function resetGame() {
+    leftScore = 0;
+    rightScore = 0;
+    leftY = (h - paddleH) / 2;
+    rightY = (h - paddleH) / 2;
+    resetBall(Math.random() > 0.5 ? 1 : -1);
+  }
+
+  function update() {
+    if (keys.KeyW) leftY -= speed;
+    if (keys.KeyS) leftY += speed;
+    if (keys.ArrowUp) rightY -= speed;
+    if (keys.ArrowDown) rightY += speed;
+
+    leftY = clamp(leftY, 0, h - paddleH);
+    rightY = clamp(rightY, 0, h - paddleH);
+
+    ball.x += ball.vx;
+    ball.y += ball.vy;
+
+    if (ball.y - ball.r <= 0 || ball.y + ball.r >= h) {
+      ball.vy *= -1;
+    }
+
+    if (ball.x - ball.r <= 20 + paddleW && ball.y >= leftY && ball.y <= leftY + paddleH) {
+      ball.vx = Math.abs(ball.vx) + 0.1;
+      var hitPosL = (ball.y - (leftY + paddleH / 2)) / (paddleH / 2);
+      ball.vy += hitPosL * 0.8;
+    }
+
+    if (ball.x + ball.r >= w - 20 - paddleW && ball.y >= rightY && ball.y <= rightY + paddleH) {
+      ball.vx = -Math.abs(ball.vx) - 0.1;
+      var hitPosR = (ball.y - (rightY + paddleH / 2)) / (paddleH / 2);
+      ball.vy += hitPosR * 0.8;
+    }
+
+    if (ball.x < 0) {
+      rightScore++;
+      resetBall(1);
+    } else if (ball.x > w) {
+      leftScore++;
+      resetBall(-1);
+    }
+  }
+
+  function drawNet() {
+    ctx.fillStyle = 'rgba(255,255,255,0.2)';
+    for (var y = 0; y < h; y += 26) {
+      ctx.fillRect((w / 2) - 2, y, 4, 14);
+    }
+  }
+
+  function draw() {
+    ctx.fillStyle = '#0b111f';
+    ctx.fillRect(0, 0, w, h);
+
+    drawNet();
+
+    ctx.fillStyle = '#9be7ff';
+    ctx.fillRect(20, leftY, paddleW, paddleH);
+
+    ctx.fillStyle = '#ffd38f';
+    ctx.fillRect(w - 20 - paddleW, rightY, paddleW, paddleH);
+
+    ctx.beginPath();
+    ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI * 2);
+    ctx.fillStyle = '#f3f5f7';
+    ctx.fill();
+
+    ctx.fillStyle = 'rgba(255,255,255,0.9)';
+    ctx.font = '28px JetBrains Mono, monospace';
+    ctx.fillText(String(leftScore), w / 2 - 60, 40);
+    ctx.fillText(String(rightScore), w / 2 + 40, 40);
+  }
+
+  function tick() {
+    if (disposed || !canvas.isConnected) {
+      dispose();
+      return;
+    }
+    update();
+    draw();
+    rafId = requestAnimationFrame(tick);
+  }
+
+  function onKeyDown(e) {
+    keys[e.code] = true;
+    if (e.code === 'KeyR') resetGame();
+  }
+
+  function onKeyUp(e) {
+    keys[e.code] = false;
+  }
+
+  function dispose() {
+    if (disposed) return;
+    disposed = true;
+    document.removeEventListener('keydown', onKeyDown);
+    document.removeEventListener('keyup', onKeyUp);
+    if (rafId !== null) {
+      cancelAnimationFrame(rafId);
+      rafId = null;
+    }
+  }
+
+  document.addEventListener('keydown', onKeyDown);
+  document.addEventListener('keyup', onKeyUp);
+
+  window.__helloWorldPongState = {
+    canvas: canvas,
+    dispose: dispose
+  };
+
+  resetGame();
+  draw();
+  tick();
+})();
+</script>

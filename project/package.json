@@ -6,6 +6,8 @@
   "scripts": {
     "start": "node server/server.js",
     "reset": "node reset-all.js",
+    "installer:apply": "node server/tools/installer-cli.js install",
+    "installer:remove": "node server/tools/installer-cli.js uninstall",
     "audit:memory-schema": "node server/tools/audit-legacy-memory-records.js",
     "backfill:memory-schema": "node server/tools/audit-legacy-memory-records.js --apply",
     "audit:document-backfill": "node server/tools/backfill-legacy-document-chunks.js",

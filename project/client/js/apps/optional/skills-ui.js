@@ -1143,7 +1143,7 @@ function feUpdateBreadcrumb() {
   const crumb = document.getElementById('feBreadcrumb');
   if (!crumb) return;
   const parts = feCurrentPath.replace(/^\//, '').split('/').filter(Boolean);
-  let html = '<span class="fe-crumb" onclick="feNavigate(\'/\')">workspace</span>';
+  let html = '<span class="fe-crumb" onclick="feNavigate(\'/\')">C:</span>';
   for (let i = 0; i < parts.length; i++) {
     const targetPath = '/' + parts.slice(0, i + 1).join('/');
     html += '<span class="fe-crumb-sep">›</span><span class="fe-crumb" onclick="feNavigate(\'' +

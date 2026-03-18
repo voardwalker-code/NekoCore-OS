@@ -16,9 +16,20 @@ const fs = require('fs');
 const path = require('path');
 
 const PLAN_REGEX = /\[TASK_PLAN\]([\s\S]*?)\[\/TASK_PLAN\]/;
+const NEEDS_INPUT_REGEX = /\[NEEDS_INPUT:\s*([^\]]+)\]/;
 const PLAN_FILENAME = '_taskplan.md';
 const MAX_STEPS = 6;
 const MAX_LLM_CALLS = 20;
+
+/**
+ * Detect a [NEEDS_INPUT: question] tag in worker output.
+ * Returns the question string or null.
+ */
+function detectNeedsInput(text) {
+  if (!text) return null;
+  const match = NEEDS_INPUT_REGEX.exec(text);
+  return match ? match[1].trim() : null;
+}
 
 /**
  * Parse a [TASK_PLAN] block from entity output.
@@ -272,8 +283,27 @@ CRITICAL RULES:
       }
     }
 
+    // Check for [NEEDS_INPUT: question] tag — suspend loop if onNeedsInput provided
+    const needsInputQuestion = detectNeedsInput(finalStepOutput);
+    if (needsInputQuestion && options.onNeedsInput) {
+      const answer = await options.onNeedsInput(needsInputQuestion);
+      // Inject the user's answer into the step output and continue
+      finalStepOutput = finalStepOutput.replace(NEEDS_INPUT_REGEX, `[USER_ANSWER: ${answer}]`);
+    }
+
     stepOutputs.push({ step: i + 1, description: step.description, output: finalStepOutput });
     step.done = true;
+
+    // Fire onStep callback for milestone events (non-blocking in caller)
+    if (options.onStep) {
+      await options.onStep({
+        stepIndex: i,
+        stepTotal: plan.steps.length,
+        description: step.description,
+        output: finalStepOutput,
+        toolCalls: allToolResults.slice()
+      });
+    }
 
     // Update _taskplan.md after each step completes
     writePlanFile(workspacePath, plan, userMessage, stepOutputs);
@@ -321,4 +351,103 @@ CRITICAL RULES:
   };
 }
 
-module.exports = { parsePlan, stripPlanBlock, executeTaskPlan };
+/**
+ * runTask — module-aware entry point for the Task Executor.
+ * Accepts an assembled system prompt and step/needs-input hooks.
+ * Calls the LLM to generate a plan, then hands off to executeTaskPlan.
+ *
+ * @param {Object} config
+ *   - taskType {string}
+ *   - userMessage {string}
+ *   - systemPrompt {string} — assembled by task-executor
+ *   - callLLM {Function} — async (runtime, messages, opts) => string
+ *   - runtime {Object}
+ *   - tools {Object} — already filtered by executor
+ *   - entityName {string}
+ *   - workspacePath {string}
+ *   - onStep {Function?} — async ({ stepIndex, stepTotal, description, output, toolCalls }) => void
+ *   - onNeedsInput {Function?} — async (question) => string (answer)
+ * @returns {Promise<Object>} { finalResponse, stepOutputs, allToolResults, plan, llmCalls }
+ */
+async function runTask(config) {
+  const {
+    taskType = 'task',
+    userMessage,
+    systemPrompt = '',
+    callLLM,
+    runtime,
+    tools = {},
+    entityName = 'Entity',
+    workspacePath = '',
+    onStep,
+    onNeedsInput
+  } = config;
+
+  if (!callLLM || typeof callLLM !== 'function') {
+    throw new Error('runTask: callLLM must be a function');
+  }
+  if (!userMessage) {
+    throw new Error('runTask: userMessage is required');
+  }
+
+  // Step 1: Call LLM to generate a plan
+  const planMessages = [
+    {
+      role: 'system',
+      content: systemPrompt ||
+        `You are ${entityName}. Create a step-by-step task plan using [TASK_PLAN]...[/TASK_PLAN] blocks.`
+    },
+    {
+      role: 'user',
+      content: `${userMessage}\n\nCreate a concise task plan to complete this request.`
+    }
+  ];
+
+  let planResponse;
+  try {
+    planResponse = await callLLM(runtime, planMessages, { temperature: 0.7 });
+  } catch (err) {
+    throw new Error(`runTask: plan generation failed: ${err.message}`);
+  }
+
+  // Step 2: Parse the plan
+  const plan = parsePlan(planResponse);
+
+  if (!plan) {
+    // No [TASK_PLAN] block found — treat as a single-step direct response
+    const singleStep = { step: 1, description: 'Execute task', output: planResponse };
+    if (onStep) {
+      await onStep({
+        stepIndex: 0,
+        stepTotal: 1,
+        description: singleStep.description,
+        output: singleStep.output,
+        toolCalls: []
+      });
+    }
+    return {
+      finalResponse: planResponse,
+      stepOutputs: [singleStep],
+      allToolResults: [],
+      plan: null,
+      llmCalls: 1
+    };
+  }
+
+  // Step 3: Execute the plan with hooks
+  return executeTaskPlan(plan, userMessage, {
+    entityName,
+    systemPrompt,
+    callLLM,
+    runtime,
+    workspacePath,
+    workspaceTools: tools.workspaceTools || null,
+    webFetch: tools.webFetch || null,
+    memorySearch: tools.memorySearch || null,
+    memoryCreate: tools.memoryCreate || null,
+    onStep,
+    onNeedsInput
+  });
+}
+
+module.exports = { parsePlan, stripPlanBlock, executeTaskPlan, runTask, detectNeedsInput };

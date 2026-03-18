@@ -42,6 +42,13 @@ project/server/data/nekocore-audit.ndjson
 
 # Workspace runtime data
 /project/workspace/**
+!/project/workspace/nekocore-os-blueprints/
+!/project/workspace/nekocore-os-blueprints/.gitkeep
+!/project/workspace/nekocore-os-blueprints/README.md
+!/project/workspace/nekocore-os-blueprints/01-phase-plan-blueprint.md
+!/project/workspace/nekocore-os-blueprints/02-validation-checklist-blueprint.md
+!/project/workspace/nekocore-os-blueprints/03-prompt-creation-guide.md
+!/project/workspace/nekocore-os-blueprints/04-manual-generation-prompt.md
 
 # Skill workspace runtime dirs
 project/skills/*/workspace/*
@@ -54,3 +61,8 @@ project/skills/*/workspace/*
 # Internal process and planning docs — not for public repo
 WORKLOG.md
 Documents/
+
+# Explicit archive index docs inside ignored planning tree
+Documents/current/completed-phase-plans/INDEX.md
+Documents/current/completed-paper-work/INDEX.md
+Documents/current/support-docs/INDEX.md

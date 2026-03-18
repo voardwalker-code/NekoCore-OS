@@ -11,6 +11,9 @@ const path         = require('path');
 const fs           = require('fs');
 const entityPaths  = require('../entityPaths');
 const Orchestrator = require('../brain/orchestrator');
+const { createTaskFrontman } = require('../brain/tasks/task-frontman');
+const { createTaskPipelineBridge } = require('../brain/tasks/task-pipeline-bridge');
+const { resumeWithInput } = require('../brain/tasks/task-executor');
 const { stripInternalResumeTag, runtimeLabel } = require('./llm-runtime-utils');
 const { runPostResponseMemoryEncoding } = require('./post-response-memory');
 const { postProcessResponse }           = require('./response-postprocess');
@@ -99,6 +102,22 @@ function createChatPipeline(deps) {
     setLastAspectConfigs,
     getBrainLoop,
   } = deps;
+
+  // ── Task pipeline fork (T-6) ─────────────────────────────────────────────
+  const taskFrontman = createTaskFrontman({
+    callLLMWithRuntime,
+    broadcastSSE,
+    logTimeline,
+    resumeWithInput
+  });
+  const taskPipelineBridge = createTaskPipelineBridge({
+    callLLMWithRuntime,
+    frontman: taskFrontman,
+    getSubconsciousMemoryContext,
+    webFetch,
+    workspaceTools,
+    logTimeline
+  });
 
   // ── Build shared callback sets (used by both processChatMessage and processPendingSkillApproval) ──
 
@@ -364,6 +383,47 @@ function createChatPipeline(deps) {
       } catch (_) {}
     }
 
+    // T-6: Task dispatch fork before companion pipeline.
+    // High-confidence tasks route to Frontman + task executor/planning orchestrator.
+    try {
+      const taskDispatch = await taskPipelineBridge.detectAndDispatchTask(effectiveUserMessage, {
+        id: brain.entityId,
+        name: entity?.name || 'Entity',
+        personality_traits: entity?.personality_traits || [],
+        persona: entity?.persona || null,
+        mood: entity?.persona?.mood || null,
+        relationship: entity?.persona?.userIdentity || null,
+        workspacePath: entity?.workspacePath || '',
+        systemPromptText: entity?.systemPromptText || ''
+      }, {
+        isInternalResume,
+        aspectConfigs
+      });
+
+      if (taskDispatch && taskDispatch.handled) {
+        logTimeline('chat.task_fork.dispatched', {
+          mode: taskDispatch.mode,
+          taskType: taskDispatch.classification?.taskType || null,
+          confidence: taskDispatch.classification?.confidence || null,
+          taskSessionId: taskDispatch.taskSessionId || null,
+          planningSessionId: taskDispatch.planningSessionId || null
+        });
+
+        return {
+          finalResponse: taskDispatch.response,
+          innerDialog: null,
+          memoryConnections: [],
+          taskMode: taskDispatch.mode,
+          taskSessionId: taskDispatch.taskSessionId || null,
+          planningSessionId: taskDispatch.planningSessionId || null,
+          classification: taskDispatch.classification || null
+        };
+      }
+    } catch (taskForkErr) {
+      // Never break companion chat on task-fork failures.
+      console.warn('  ⚠ Task dispatch fork failed, continuing with companion pipeline:', taskForkErr.message);
+    }
+
     // Run orchestrator
     const orchestrator = new Orchestrator({
       entity,
@@ -616,6 +676,25 @@ function createChatPipeline(deps) {
       });
     }
 
+    // ── Echo Past round-2 (async enrichment — fires during humanizer window) ──
+    if (!isInternalResume && memoryEntityId) {
+      setImmediate(() => {
+        try {
+          const { extractPhrases }  = require('../brain/utils/rake');
+          const { echoPast, promoteToStm } = require('../brain/agent-echo');
+          const r2Topics = extractPhrases(String(effectiveUserMessage || ''));
+          if (r2Topics.length > 0) {
+            const r2Hits = echoPast(memoryEntityId, r2Topics, { round: 2 });
+            if (r2Hits.length > 0) {
+              promoteToStm(memoryEntityId, r2Hits);
+            }
+          }
+        } catch (_e) {
+          // round-2 is always additive — never block the response
+        }
+      });
+    }
+
     // ── Post-process (humanize + chunk) ──────────────────────────────────────
     const postProcessed = await postProcessResponse({
       finalResponse: result.finalResponse,
@@ -641,7 +720,132 @@ function createChatPipeline(deps) {
     return result;
   }
 
-  return { processChatMessage, processPendingSkillApproval };
+  // ── processSingleLlmChatMessage ───────────────────────────────────────────
+  // Simplified pipeline for single-llm mode entities. No orchestrator, no
+  // dream/conscious phases. One model, one system prompt, optional memory.
+  //
+  // @param {string}  userMessage
+  // @param {Array}   chatHistory
+  // @param {Object}  opts
+  // @param {boolean} opts.memoryRecall  — inject subconscious memory context before LLM call
+  // @param {boolean} opts.memorySave    — store conversation exchange after response
+
+  async function processSingleLlmChatMessage(userMessage, chatHistory = [], { memoryRecall = false, memorySave = false } = {}) {
+    logTimeline('chat.single_llm.user_message', {
+      userMessage: String(userMessage || '').slice(0, 1200),
+      memoryRecall,
+      memorySave
+    });
+
+    // memorySave gates runPostResponseMemoryEncoding after the LLM response.
+
+    // ── Load entity ──────────────────────────────────────────────────────────
+    let entity = null;
+    try { entity = hatchEntity.loadEntity(); } catch (_) {}
+    if (!entity) throw new Error('No entity loaded for single-llm chat.');
+
+    // ── Load aspect configs (main only) ──────────────────────────────────────
+    let aspectConfigs = {};
+    const globalConfig = loadConfig();
+    const profileRef = globalConfig?.lastActive;
+    if (globalConfig && globalConfig.profiles && profileRef) {
+      const profile = globalConfig.profiles[profileRef];
+      const resolved = resolveProfileAspectConfigs(profile);
+      if (resolved.main) aspectConfigs.main = resolved.main;
+      if (resolved.subconscious) aspectConfigs.subconscious = resolved.subconscious;
+    }
+    if (!aspectConfigs.main || !aspectConfigs.main.type) {
+      throw new Error('No LLM configuration available. Please complete setup.');
+    }
+
+    // ── Enrich entity with system prompt + persona ───────────────────────────
+    if (brain.entityId) {
+      try {
+        const entityMemRoot = entityPaths.getMemoryRoot(brain.entityId);
+        const sysPromptPath = path.join(entityMemRoot, 'system-prompt.txt');
+        if (fs.existsSync(sysPromptPath)) {
+          entity.systemPromptText = fs.readFileSync(sysPromptPath, 'utf8');
+        }
+        const personaPath = path.join(entityMemRoot, 'persona.json');
+        if (fs.existsSync(personaPath)) {
+          entity.persona = JSON.parse(fs.readFileSync(personaPath, 'utf8'));
+        }
+        try {
+          const userProfiles = require('./user-profiles');
+          const activeUser = userProfiles.getActiveUser(brain.entityId, entityPaths);
+          if (activeUser) {
+            if (!entity.persona) entity.persona = {};
+            entity.persona.userName = activeUser.name;
+            entity.persona.userIdentity = activeUser.info || '';
+            entity.persona.activeUserId = activeUser.id;
+          }
+        } catch (_) {}
+      } catch (_) {}
+    }
+
+    // ── Build messages ───────────────────────────────────────────────────────
+    const messages = [];
+    const systemPrompt = entity.systemPromptText || `You are ${entity.name || 'an assistant'}.`;
+    messages.push({ role: 'system', content: systemPrompt });
+
+    // Optionally inject memory context (recall ON)
+    if (memoryRecall && aspectConfigs.subconscious) {
+      try {
+        const memCtx = await getSubconsciousMemoryContext(String(userMessage || ''), 20);
+        if (memCtx && memCtx.contextBlock) {
+          messages.push({ role: 'system', content: memCtx.contextBlock });
+        }
+      } catch (_) { /* recall failure is non-fatal */ }
+    }
+
+    const trimmedHistory = Array.isArray(chatHistory) ? chatHistory.slice(-10) : [];
+    for (const turn of trimmedHistory) {
+      if (turn && (turn.role === 'user' || turn.role === 'assistant')) {
+        messages.push({ role: turn.role, content: String(turn.content || '') });
+      }
+    }
+    messages.push({ role: 'user', content: String(userMessage || '') });
+
+    // ── Call LLM ─────────────────────────────────────────────────────────────
+    console.log(`  ℹ Single-LLM chat: model=${runtimeLabel(aspectConfigs.main)}, recall=${memoryRecall}, save=${memorySave}`);
+    const response = await callLLMWithRuntime(aspectConfigs.main, messages, { temperature: 0.7 });
+    const finalResponse = String(response || '');
+
+    // Optionally save memory (save ON)
+    if (memorySave && aspectConfigs.subconscious && brain.entityId) {
+      const memoryEntityId = brain.entityId;
+      const memoryAspectConfigs = { ...aspectConfigs };
+      setImmediate(async () => {
+        try {
+          await runPostResponseMemoryEncoding({
+            effectiveUserMessage: String(userMessage || ''),
+            finalResponse,
+            innerDialog: null,
+            memoryEntityId,
+            memoryAspectConfigs,
+            callLLMWithRuntime,
+            getTokenLimit,
+            createCoreMemory,
+            createSemanticKnowledge,
+            broadcastSSE,
+            traceGraph: brain.traceGraph,
+            memoryGraph: brain.memoryGraph,
+            logTimeline,
+            memoryStorage: brain.memoryStorage,
+            entityName: entity?.name || null,
+            userName: entity?.persona?.userName || null,
+            activeUserId: entity?.persona?.activeUserId || null,
+            entityPersona: entity?.persona || null
+          });
+        } catch (_) { /* memory save failure is non-fatal */ }
+      });
+    }
+
+    logTimeline('chat.single_llm.response', { responseLength: finalResponse.length });
+    return { finalResponse, innerDialog: null, memoryConnections: [] };
+  }
+
+  return { processChatMessage, processSingleLlmChatMessage, processPendingSkillApproval };
 }
 
 module.exports = createChatPipeline;

@@ -97,6 +97,23 @@ async function deepSleepPhase(loop) {
     } catch (err) {
       console.error('  ⚠ Conscious LTM promotion error:', err.message);
     }
+
+    // ── STM consolidation pass (triggered when STM_MAX_ENTRIES ceiling hit) ──
+    // Evicts the weakest entries so the hot window stays below the cap.
+    if (loop.consciousMemory.shouldConsolidate()) {
+      try {
+        const before = loop.consciousMemory.stmSize();
+        const evicted = loop.consciousMemory.evictWeakStm();
+        loop.consciousMemory.clearConsolidationFlag();
+        loop._emit('stm_consolidation_complete', { before, evicted, after: loop.consciousMemory.stmSize() });
+        if (evicted > 0) {
+          console.log(`  ✓ STM consolidation: evicted ${evicted} weak entries (${before} → ${loop.consciousMemory.stmSize()})`);
+        }
+      } catch (err) {
+        console.error('  ⚠ STM consolidation error:', err.message);
+        loop.consciousMemory.clearConsolidationFlag();
+      }
+    }
   }
 
   loop._emit('phase', { name: 'deep_sleep', status: 'done' });

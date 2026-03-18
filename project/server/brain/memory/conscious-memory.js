@@ -20,6 +20,7 @@ const { MEMORY_SCHEMA_VERSION } = require('../../contracts/memory-schema');
 const LTM_THRESHOLD    = 3;    // recall_weight needed to trigger LTM promotion
 const STM_DECAY_AMOUNT = 0.15; // subtracted from recall_weight each cycle
 const STM_MAX_AGE      = 20;   // hard eviction after this many cycles without reinforcement
+const STM_MAX_ENTRIES  = 8000; // hot-window ceiling; triggers consolidation pass in deep-sleep phase
 
 // Score how well an entry's topics overlap with a query topic array.
 // Returns a value in [0, 1].
@@ -47,6 +48,9 @@ class ConsciousMemory {
 
     // Entries whose recall_weight has reached LTM_THRESHOLD
     this._promotionQueue = [];
+
+    // Set to true when STM reaches STM_MAX_ENTRIES; cleared by deep-sleep after consolidation.
+    this._needsConsolidation = false;
 
     this._stmFile = null;
     this._ltmDir  = null;
@@ -84,8 +88,60 @@ class ConsciousMemory {
       source:           entry.source || 'conscious_observation'
     };
     this._stm.set(id, stored);
+    if (this._stm.size >= STM_MAX_ENTRIES) {
+      this._needsConsolidation = true;
+    }
     this._saveStm();
     return stored;
+  }
+
+  /**
+   * Returns true when STM has hit the STM_MAX_ENTRIES ceiling and a
+   * consolidation pass (promote eligible, evict weak) should be triggered
+   * by the deep-sleep phase.
+   * @returns {boolean}
+   */
+  shouldConsolidate() {
+    return this._needsConsolidation;
+  }
+
+  /**
+   * Reset the consolidation flag after the deep-sleep phase has run.
+   */
+  clearConsolidationFlag() {
+    this._needsConsolidation = false;
+  }
+
+  /**
+   * Returns the current number of entries in STM.
+   * @returns {number}
+   */
+  stmSize() {
+    return this._stm.size;
+  }
+
+  /**
+   * Evict the weakest STM entries until the map is under STM_MAX_ENTRIES.
+   * Entries are scored by recall_weight (primary) then age_cycles (secondary —
+   * higher age = weaker). Returns the count of evicted entries.
+   * @returns {number} Number of entries evicted.
+   */
+  evictWeakStm() {
+    if (this._stm.size < STM_MAX_ENTRIES) return 0;
+    const target = Math.floor(STM_MAX_ENTRIES * 0.9); // shrink to 90% cap after eviction
+    const entries = [...this._stm.values()];
+    // Sort weakest first: lowest recall_weight, then highest age_cycles
+    entries.sort((a, b) => {
+      if (a.recall_weight !== b.recall_weight) return a.recall_weight - b.recall_weight;
+      return b.age_cycles - a.age_cycles;
+    });
+    const toEvict = entries.slice(0, this._stm.size - target);
+    for (const entry of toEvict) {
+      this._stm.delete(entry.id);
+      this._promotionQueue = this._promotionQueue.filter(e => e.id !== entry.id);
+    }
+    if (toEvict.length > 0) this._saveStm();
+    return toEvict.length;
   }
 
   /**
@@ -302,5 +358,8 @@ class ConsciousMemory {
     }
   }
 }
+
+// Expose the cap constant so callers (agent-echo, tests) can reference it.
+ConsciousMemory.STM_MAX_ENTRIES = STM_MAX_ENTRIES;
 
 module.exports = ConsciousMemory;

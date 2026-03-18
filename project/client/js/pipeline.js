@@ -4,6 +4,14 @@
 // ============================================================
 
 // ============================================================
+// MEMORY TOGGLE STATE — controlled by chat UI buttons
+// ============================================================
+let _memoryRecall = false;
+let _memorySave   = false;
+function setMemoryRecall(v) { _memoryRecall = !!v; }
+function setMemorySave(v)   { _memorySave   = !!v; }
+
+// ============================================================
 // PROXY FETCH — route external API calls through /api/proxy
 // ============================================================
 async function proxyFetch(targetUrl, options = {}) {
@@ -191,7 +199,9 @@ async function callChatLLM() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         message: messages[messages.length - 1]?.content || '',
-        chatHistory: messages.slice(0, -1) // Exclude the current user message (already in body)
+        chatHistory: messages.slice(0, -1), // Exclude the current user message (already in body)
+        memoryRecall: _memoryRecall,
+        memorySave:   _memorySave
       })
     });
     

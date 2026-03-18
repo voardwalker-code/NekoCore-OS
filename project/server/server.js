@@ -220,8 +220,8 @@ let entityRuntime;
 
 // Provision NekoCore system entity if not already present (idempotent)
 ensureSystemEntity();
-// Ingest architecture docs into NekoCore's semantic memory (runs on every start; skips unchanged docs)
-const NK_DOCS_DIR = path.join(__dirname, '..', '..', 'Documents', 'current');
+// Ingest public architecture docs into NekoCore's semantic memory (runs on every start; skips unchanged docs)
+const NK_DOCS_DIR = path.join(__dirname, '..', '..', 'docs');
 try {
   const { getMemoryRoot } = require('./entityPaths');
   ingestArchitectureDocs(getMemoryRoot('nekocore'), NK_DOCS_DIR);
@@ -680,9 +680,11 @@ const ctx = {
   createCoreMemory, createSemanticKnowledge, getSemanticPreview, getChatlogContent,
   getSubconsciousMemoryContext, extractSubconsciousTopics, normalizeTopics,
   setActiveEntity, clearActiveEntity,
-  processChatMessage:          (...a) => chatPipeline.processChatMessage(...a),
-  processPendingSkillApproval: (...a) => chatPipeline.processPendingSkillApproval(...a),
-  processNekoCoreChatMessage:  (...a) => nekoCoreChat.processNekoCoreChatMessage(...a),
+  processChatMessage:               (...a) => chatPipeline.processChatMessage(...a),
+  processSingleLlmChatMessage:       (...a) => chatPipeline.processSingleLlmChatMessage(...a),
+  processPendingSkillApproval:       (...a) => chatPipeline.processPendingSkillApproval(...a),
+  processNekoCoreChatMessage:        (...a) => nekoCoreChat.processNekoCoreChatMessage(...a),
+  getActiveEntityId: () => entityRuntime?.entityId || null,
   startTelegramBot() { return startTelegramBot(); },
   gracefulShutdown(src) { return gracefulShutdown(src); },
   webFetch,
@@ -732,6 +734,8 @@ const createBrowserRoutes  = require('./routes/browser-routes');
 const createVfsRoutes      = require('./routes/vfs-routes');
 const createNekoCoreRoutes = require('./routes/nekocore-routes');
 const createArchiveRoutes  = require('./routes/archive-routes');
+const createTaskRoutes     = require('./routes/task-routes');
+const createEntityChatRoutes = require('./routes/entity-chat-routes');
 
 const sseRoutes      = createSSERoutes(ctx);
 const configRoutes   = createConfigRoutes(ctx);
@@ -747,8 +751,10 @@ const browserRoutes   = createBrowserRoutes(ctx);
 const vfsRoutes       = createVfsRoutes(ctx);
 const nekocoreRoutes  = createNekoCoreRoutes(ctx);
 const archiveRoutes   = createArchiveRoutes(ctx);
+const taskRoutes      = createTaskRoutes(ctx);
+const entityChatRoutes = createEntityChatRoutes(ctx);
 
-const _routeDispatchers = [authRoutes, sseRoutes, configRoutes, memoryRoutes, chatRoutes, entityRoutes, brainRoutes, skillsRoutes, cogRoutes, documentRoutes, browserRoutes, vfsRoutes, nekocoreRoutes, archiveRoutes];
+const _routeDispatchers = [authRoutes, sseRoutes, configRoutes, memoryRoutes, chatRoutes, entityRoutes, taskRoutes, entityChatRoutes, brainRoutes, skillsRoutes, cogRoutes, documentRoutes, browserRoutes, vfsRoutes, nekocoreRoutes, archiveRoutes];
 
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://localhost:${PORT}`);

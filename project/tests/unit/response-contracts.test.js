@@ -12,6 +12,11 @@ test('validateChatResponse returns no errors for valid payload', () => {
   assert.deepEqual(errs, []);
 });
 
+test('validateChatResponse allows omitting innerDialog', () => {
+  const errs = validateChatResponse({ ok: true, response: 'hello' });
+  assert.deepEqual(errs, []);
+});
+
 test('validateMemoriesReconstructResponse requires reconstructed string', () => {
   const errs = validateMemoriesReconstructResponse({ ok: true, reconstructed: 10 });
   assert.ok(errs.length > 0);

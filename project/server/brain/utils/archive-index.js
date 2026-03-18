@@ -43,6 +43,35 @@ const {
 } = require('../../entityPaths');
 const { topicToSlug, updateRouter, resolveQueryBuckets } = require('./archive-router');
 
+function _sleepMs(ms) {
+  const end = Date.now() + ms;
+  while (Date.now() < end) {
+    // Intentional tiny sync wait for retry-based atomic rename on Windows.
+  }
+}
+
+function _replaceFileAtomic(filePath, content) {
+  const tmpPath = `${filePath}.tmp-${process.pid}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  fs.writeFileSync(tmpPath, content, 'utf8');
+
+  let lastError = null;
+  for (let attempt = 0; attempt < 6; attempt++) {
+    try {
+      fs.renameSync(tmpPath, filePath);
+      return;
+    } catch (error) {
+      lastError = error;
+      if (!['EPERM', 'EBUSY', 'ENOTEMPTY'].includes(error.code) || attempt === 5) {
+        break;
+      }
+      _sleepMs(25 * (attempt + 1));
+    }
+  }
+
+  try { fs.rmSync(tmpPath, { force: true }); } catch (_) {}
+  throw lastError;
+}
+
 // ── Bucket I/O helpers ────────────────────────────────────────────────────────
 
 /**
@@ -76,9 +105,7 @@ function _removeBucketLine(entityId, filename, memId) {
     .filter(l => {
       try { return JSON.parse(l).memId !== memId; } catch { return true; }
     });
-  const tmp = bucketPath + '.tmp';
-  fs.writeFileSync(tmp, lines.join('\n') + (lines.length ? '\n' : ''), 'utf8');
-  fs.renameSync(tmp, bucketPath);
+  _replaceFileAtomic(bucketPath, lines.join('\n') + (lines.length ? '\n' : ''));
 }
 
 /**
@@ -146,10 +173,8 @@ function readArchiveIndex(entityId) {
  */
 function _writeArchiveIndex(entityId, index) {
   const indexPath = getArchiveIndexPath(entityId);
-  const tmp = indexPath + '.tmp';
   fs.mkdirSync(path.dirname(indexPath), { recursive: true });
-  fs.writeFileSync(tmp, JSON.stringify(index, null, 2), 'utf8');
-  fs.renameSync(tmp, indexPath);
+  _replaceFileAtomic(indexPath, JSON.stringify(index, null, 2));
 }
 
 /**
@@ -246,10 +271,14 @@ function removeArchiveEntry(entityId, memId) {
  * @param {number}    [limit=20]      - Max results to return
  * @param {{ start?: string, end?: string }} [yearRange]
  *   Optional ISO date range filter: only entries with `created` within range included.
+ * @param {string[]|null} [types]     - Optional type filter ('episodic', 'doc', etc.)
+ * @param {Set<string>|null} [narrowSet]
+ *   When provided (non-null), only entries whose memId is in the Set are scored.
+ *   An empty Set returns []. Pass null/undefined to disable (zero-cost).
  * @returns {{ memId: string, score: number, meta: object }[]}
  *   Sorted by BM25 score descending.
  */
-function queryArchive(entityId, topics, limit = 20, yearRange = {}, types = null) {
+function queryArchive(entityId, topics, limit = 20, yearRange = {}, types = null, narrowSet = null) {
   if (!topics || topics.length === 0) return [];
 
   const typeSet = (types && types.length > 0) ? new Set(types) : null;
@@ -268,6 +297,8 @@ function queryArchive(entityId, topics, limit = 20, yearRange = {}, types = null
 
     const results = [];
     for (const [memId, entry] of byMemId) {
+      // narrowSet: null = no filter; empty Set = exclude all; Set with ids = allow list
+      if (narrowSet != null && !narrowSet.has(memId)) continue;
       const { memId: _id, ...meta } = entry;
       if (!typeOk(meta)) continue;
       if (yearRange.start && meta.created < yearRange.start) continue;
@@ -286,6 +317,8 @@ function queryArchive(entityId, topics, limit = 20, yearRange = {}, types = null
 
   const results = [];
   for (const [memId, meta] of entries) {
+    // narrowSet: null = no filter; empty Set = exclude all; Set with ids = allow list
+    if (narrowSet != null && !narrowSet.has(memId)) continue;
     if (!typeOk(meta)) continue;
     if (yearRange.start && meta.created < yearRange.start) continue;
     if (yearRange.end   && meta.created > yearRange.end)   continue;

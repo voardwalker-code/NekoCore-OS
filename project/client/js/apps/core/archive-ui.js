@@ -38,6 +38,8 @@
     const startEl    = byId('archiveYearStart');
     const endEl      = byId('archiveYearEnd');
     const typesEl    = byId('archiveSearchTypes');
+    const monthEl    = byId('archiveSearchMonth');
+    const subjectEl  = byId('archiveSearchSubject');
     const resultsEl  = byId('archiveSearchResults');
     const statusEl   = byId('archiveSearchStatus');
 
@@ -52,6 +54,8 @@
     if (endEl   && endEl.value)   body.yearRange = { ...(body.yearRange || {}), end:   endEl.value   + 'T23:59:59.999Z' };
     const typesVal = typesEl ? typesEl.value : 'all';
     if (typesVal && typesVal !== 'all') body.types = [typesVal];
+    if (monthEl && monthEl.value) body.month = monthEl.value;
+    if (subjectEl && subjectEl.value.trim()) body.subject = subjectEl.value.trim();
 
     try {
       const data = await RemAPI.post('/api/archive/search', body);

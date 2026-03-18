@@ -1,0 +1,104 @@
+{
+  "contractVersion": "v0",
+  "appId": "helloworld",
+  "installActions": [
+    {
+      "type": "create-file",
+      "filePath": "client/apps/non-core/core/tab-hello-world.html",
+      "anchorId": "hello-world-payload-file",
+      "entryId": "hello-file-001",
+      "templatePath": "server/contracts/payloads/tab-hello-world.template.html"
+    },
+    {
+      "type": "insert",
+      "filePath": "client/js/apps/non-core-html-loader.js",
+      "anchorId": "noncore-loader-manifest-augment",
+      "entryId": "hello-loader-001",
+      "payload": "    manifest.nonCoreApps.push({ tabId: 'helloworld', enabled: true, path: 'apps/non-core/core/tab-hello-world.html', label: 'Hello World', icon: '🏓', navTarget: '#navOptionalAppsHost' });"
+    },
+    {
+      "type": "insert",
+      "filePath": "client/js/app.js",
+      "anchorId": "window-apps-registry",
+      "entryId": "hello-window-001",
+      "payload": "  { tab: 'helloworld', label: 'Hello World', icon: '<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"M8 14c1.5 1.5 6.5 1.5 8 0\"/><circle cx=\"9\" cy=\"10\" r=\"1\"/><circle cx=\"15\" cy=\"10\" r=\"1\"/></svg>', accent: 'orange', w: 980, h: 680 },"
+    },
+    {
+      "type": "insert",
+      "filePath": "client/js/app.js",
+      "anchorId": "window-app-category-map",
+      "entryId": "hello-category-001",
+      "payload": "  helloworld: 'tools',"
+    }
+  ],
+  "uninstallActions": [
+    {
+      "type": "remove",
+      "filePath": "client/js/app.js",
+      "anchorId": "window-apps-registry",
+      "entryId": "hello-window-001",
+      "expectedFingerprint": "sha256:example"
+    },
+    {
+      "type": "remove",
+      "filePath": "client/js/app.js",
+      "anchorId": "window-app-category-map",
+      "entryId": "hello-category-001",
+      "expectedFingerprint": "sha256:example"
+    },
+    {
+      "type": "remove",
+      "filePath": "client/js/apps/non-core-html-loader.js",
+      "anchorId": "noncore-loader-manifest-augment",
+      "entryId": "hello-loader-001",
+      "expectedFingerprint": "sha256:example"
+    },
+    {
+      "type": "delete-file",
+      "filePath": "client/apps/non-core/core/tab-hello-world.html",
+      "anchorId": "hello-world-payload-file",
+      "entryId": "hello-file-001",
+      "expectedFingerprint": "sha256:example"
+    }
+  ],
+  "anchors": [
+    {
+      "id": "window-apps-registry",
+      "filePath": "client/js/app.js",
+      "selector": "WINDOW_APPS-installer-slot"
+    },
+    {
+      "id": "window-app-category-map",
+      "filePath": "client/js/app.js",
+      "selector": "APP_CATEGORY_BY_TAB-installer-slot"
+    },
+    {
+      "id": "noncore-loader-manifest-augment",
+      "filePath": "client/js/apps/non-core-html-loader.js",
+      "selector": "loadNonCoreAppHtml-installer-slot"
+    }
+  ],
+  "markerBoundary": {
+    "openMarker": "//Open Next json entry id",
+    "closeMarker": "//Close \"",
+    "requireBlankLineBetween": true,
+    "matchPolicy": "exact"
+  },
+  "fingerprint": {
+    "algorithm": "sha256",
+    "canonicalization": "trim-trailing-whitespace+lf"
+  },
+  "mismatchPolicy": {
+    "onMismatch": "hard-stop-no-delete"
+  },
+  "transactionPolicy": {
+    "onMissingMarkerBoundary": "auto-rollback-error",
+    "mode": "all-or-nothing"
+  },
+  "loggingPolicy": {
+    "logEntryId": true,
+    "logWrittenBlock": true,
+    "logCloseMarker": true,
+    "logJsonEntryId": true
+  }
+}

@@ -43,7 +43,7 @@ function createChatRoutes(ctx) {
   async function chat(req, res, apiHeaders, readBody) {
     try {
       const body = JSON.parse(await readBody(req));
-      const { message: userMessage, chatHistory } = body;
+      const { message: userMessage, chatHistory, memoryRecall, memorySave } = body;
 
       logTimeline('api.chat.request', {
         userMessage: String(userMessage || '').slice(0, 1200),
@@ -57,15 +57,39 @@ function createChatRoutes(ctx) {
         return;
       }
 
-      const result = await ctx.processChatMessage(userMessage, chatHistory || []);
+      // Route single-llm entities to the simplified pipeline
+      let result;
+      let isSingleLlm = false;
+      try {
+        const path = require('path');
+        const fs   = require('fs');
+        const entityPaths = require('../entityPaths');
+        if (ctx.getActiveEntityId && ctx.getActiveEntityId()) {
+          const entityFile = path.join(entityPaths.getEntityRoot(ctx.getActiveEntityId()), 'entity.json');
+          if (fs.existsSync(entityFile)) {
+            const entityData = JSON.parse(fs.readFileSync(entityFile, 'utf8'));
+            if (entityData.entityMode === 'single-llm') isSingleLlm = true;
+          }
+        }
+      } catch (_) {}
 
-      res.writeHead(200, apiHeaders);
+      if (isSingleLlm && ctx.processSingleLlmChatMessage) {
+        result = await ctx.processSingleLlmChatMessage(userMessage, chatHistory || [], {
+          memoryRecall: memoryRecall === true,
+          memorySave:   memorySave === true
+        });
+      } else {
+        result = await ctx.processChatMessage(userMessage, chatHistory || []);
+      }
+
       const chatResponse = {
         ok: true,
         response: result.finalResponse,
-        chunks: result.chunks || null,
-        innerDialog: result.innerDialog
+        chunks: result.chunks || null
       };
+      if (result.innerDialog && typeof result.innerDialog === 'object' && !Array.isArray(result.innerDialog)) {
+        chatResponse.innerDialog = result.innerDialog;
+      }
       if (result.innerDialog?.subconscious?.memoryContext?.connections) {
         chatResponse.memoryConnections = result.innerDialog.subconscious.memoryContext.connections.map(c => ({
           id: c.id,
@@ -99,7 +123,9 @@ function createChatRoutes(ctx) {
       if (result.pendingSkillApproval) {
         chatResponse.pendingSkillApproval = result.pendingSkillApproval;
       }
-      res.end(JSON.stringify(enforceResponseContract('/api/chat', chatResponse)));
+      const validatedChatResponse = enforceResponseContract('/api/chat', chatResponse);
+      res.writeHead(200, apiHeaders);
+      res.end(JSON.stringify(validatedChatResponse));
       logTimeline('api.chat.response', {
         ok: true,
         responseLength: String(result.finalResponse || '').length,
@@ -127,8 +153,10 @@ function createChatRoutes(ctx) {
       }
     } catch (e) {
       console.error('  ⚠ Chat orchestration error:', e.message);
-      res.writeHead(500, apiHeaders);
-      res.end(JSON.stringify({ error: e.message }));
+      if (!res.headersSent) {
+        res.writeHead(500, apiHeaders);
+        res.end(JSON.stringify({ error: e.message }));
+      }
       logTimeline('api.chat.error', { error: e.message });
     }
   }

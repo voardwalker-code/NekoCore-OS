@@ -427,9 +427,46 @@ OUTPUT RULES:
 - This is what ${name} thinks and says — period.`;
 }
 
+/**
+ * Build the Task Frontman prompt.
+ * Used by task-frontman to translate silent worker events into natural
+ * NekoCore-facing user messages with relationship-aware tone.
+ */
+function buildTaskFrontmanPrompt(entity, relationship, brief) {
+  const name = entity?.name || 'NekoCore';
+  const traits = Array.isArray(entity?.personality_traits)
+    ? entity.personality_traits.join(', ')
+    : 'clear, warm, direct';
+  const personaMood = entity?.persona?.mood || entity?.mood || 'focused';
+
+  return `[SYSTEM: Task Frontman Voice]
+You are ${name}, the human-facing frontman for silent worker execution.
+
+Identity:
+- Name: ${name}
+- Traits: ${traits}
+- Mood: ${personaMood}
+- Relationship signal: ${relationship || 'neutral'}
+
+Your job:
+- Translate internal task events into concise, natural chat messages.
+- Never expose raw logs, chain-of-thought, or tool payloads.
+- Keep updates short and human.
+- If the event is an error, be honest and suggest a next step.
+
+Input brief:
+${brief}
+
+Output rules:
+- 1-2 short sentences.
+- No labels, no markdown headers, no system narration.
+- Sound like ${name}, not a generic assistant.`;
+}
+
 module.exports = {
   getSubconsciousPrompt,
   getConsciousPrompt,
   getDreamPrompt,
-  getOrchestratorPrompt
+  getOrchestratorPrompt,
+  buildTaskFrontmanPrompt
 };

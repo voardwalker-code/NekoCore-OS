@@ -1,0 +1,52 @@
+{
+  "contractVersion": "v0",
+  "appId": "workspace",
+  "installActions": [
+    {
+      "type": "insert",
+      "filePath": "client/js/apps/optional/skills-ui.js",
+      "anchorId": "workspace-breadcrumb-root",
+      "entryId": "entry-workspace-root-001",
+      "payload": "      crumbs.push(`<span onclick=\"feNavigate('/')\">C:</span>`);"
+    }
+  ],
+  "uninstallActions": [
+    {
+      "type": "remove",
+      "filePath": "client/js/apps/optional/skills-ui.js",
+      "anchorId": "workspace-breadcrumb-root",
+      "entryId": "entry-workspace-root-001",
+      "expectedFingerprint": "sha256:example"
+    }
+  ],
+  "anchors": [
+    {
+      "id": "workspace-breadcrumb-root",
+      "filePath": "client/js/apps/optional/skills-ui.js",
+      "selector": "feUpdateBreadcrumb-root"
+    }
+  ],
+  "markerBoundary": {
+    "openMarker": "//Open Next json entry id",
+    "closeMarker": "//Close \"",
+    "requireBlankLineBetween": true,
+    "matchPolicy": "exact"
+  },
+  "fingerprint": {
+    "algorithm": "sha256",
+    "canonicalization": "trim-trailing-whitespace+lf"
+  },
+  "mismatchPolicy": {
+    "onMismatch": "hard-stop-no-delete"
+  },
+  "transactionPolicy": {
+    "onMissingMarkerBoundary": "auto-rollback-error",
+    "mode": "all-or-nothing"
+  },
+  "loggingPolicy": {
+    "logEntryId": true,
+    "logWrittenBlock": true,
+    "logCloseMarker": true,
+    "logJsonEntryId": true
+  }
+}

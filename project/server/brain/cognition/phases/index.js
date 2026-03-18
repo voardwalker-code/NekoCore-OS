@@ -4,6 +4,7 @@
 
 module.exports = [
   ['archive',          require('./phase-archive')],
+  ['archive_index',    require('./phase-archive-index')],
   ['decay',            require('./phase-decay')],
   ['goals',            require('./phase-goals')],
   ['dreams',           require('./phase-dreams')],

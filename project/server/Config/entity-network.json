@@ -1,0 +1,25 @@
+{
+  "entities": [
+    {
+      "id": "entity_research",
+      "name": "Research",
+      "host": "localhost",
+      "port": 3001,
+      "capabilities": ["web_search", "source_synthesis", "mem_search"]
+    },
+    {
+      "id": "entity_analysis",
+      "name": "Analysis",
+      "host": "localhost",
+      "port": 3002,
+      "capabilities": ["data_analysis", "critique", "pattern_detection"]
+    },
+    {
+      "id": "entity_synthesis",
+      "name": "Synthesis",
+      "host": "localhost",
+      "port": 3003,
+      "capabilities": ["writing", "consensus_building", "decision_synthesis"]
+    }
+  ]
+}

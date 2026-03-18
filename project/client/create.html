@@ -302,6 +302,14 @@
             </div>
           </div>
           <div class="form-group">
+            <label>Mode</label>
+            <select id="emptyEntityMode" onchange="updateEmptyEntityModeForm()">
+              <option value="full">Full Personality</option>
+              <option value="single-llm">Single LLM</option>
+            </select>
+            <p class="text-xs-c text-secondary-c mt-1">Single LLM skips the personality pipeline and relies on the memory toggles during chat.</p>
+          </div>
+          <div class="form-group" id="emptyEntityTraitsGroup">
             <label>Personality Traits <span class="text-accent">*</span></label>
             <input type="text" id="emptyEntityTraits" list="entityTraitSuggestions" placeholder="e.g., curious, adventurous, creative (comma-separated)">
             <div class="mt-2" style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center">

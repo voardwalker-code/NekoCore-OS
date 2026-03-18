@@ -1,0 +1,195 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "nekocore/contracts/installer-uninstaller",
+  "title": "Installer/Uninstaller Contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contractVersion",
+    "appId",
+    "installActions",
+    "uninstallActions",
+    "anchors",
+    "markerBoundary",
+    "fingerprint",
+    "mismatchPolicy",
+    "transactionPolicy",
+    "loggingPolicy"
+  ],
+  "properties": {
+    "contractVersion": {
+      "type": "string",
+      "minLength": 1
+    },
+    "appId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "installActions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/action"
+      }
+    },
+    "uninstallActions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/action"
+      }
+    },
+    "anchors": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/anchor"
+      }
+    },
+    "markerBoundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "openMarker",
+        "closeMarker",
+        "requireBlankLineBetween",
+        "matchPolicy"
+      ],
+      "properties": {
+        "openMarker": {
+          "type": "string",
+          "const": "//Open Next json entry id"
+        },
+        "closeMarker": {
+          "type": "string",
+          "const": "//Close \""
+        },
+        "requireBlankLineBetween": {
+          "type": "boolean",
+          "const": true
+        },
+        "matchPolicy": {
+          "type": "string",
+          "enum": ["exact"]
+        }
+      }
+    },
+    "fingerprint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["algorithm", "canonicalization"],
+      "properties": {
+        "algorithm": {
+          "type": "string",
+          "enum": ["sha256"]
+        },
+        "canonicalization": {
+          "type": "string",
+          "enum": ["trim-trailing-whitespace+lf"]
+        }
+      }
+    },
+    "mismatchPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["onMismatch"],
+      "properties": {
+        "onMismatch": {
+          "type": "string",
+          "enum": ["hard-stop-no-delete"]
+        }
+      }
+    },
+    "transactionPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["onMissingMarkerBoundary", "mode"],
+      "properties": {
+        "onMissingMarkerBoundary": {
+          "type": "string",
+          "enum": ["auto-rollback-error"]
+        },
+        "mode": {
+          "type": "string",
+          "enum": ["all-or-nothing"]
+        }
+      }
+    },
+    "loggingPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["logEntryId", "logWrittenBlock", "logCloseMarker", "logJsonEntryId"],
+      "properties": {
+        "logEntryId": {
+          "type": "boolean",
+          "const": true
+        },
+        "logWrittenBlock": {
+          "type": "boolean",
+          "const": true
+        },
+        "logCloseMarker": {
+          "type": "boolean",
+          "const": true
+        },
+        "logJsonEntryId": {
+          "type": "boolean",
+          "const": true
+        }
+      }
+    }
+  },
+  "$defs": {
+    "action": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "filePath", "entryId"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["insert", "replace", "remove", "restore", "create-file", "delete-file"]
+        },
+        "filePath": {
+          "type": "string",
+          "minLength": 1
+        },
+        "anchorId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "entryId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "payload": {
+          "type": "string"
+        },
+        "templatePath": {
+          "type": "string"
+        },
+        "overwrite": {
+          "type": "boolean"
+        },
+        "expectedFingerprint": {
+          "type": "string"
+        }
+      }
+    },
+    "anchor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "filePath", "selector"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "filePath": {
+          "type": "string",
+          "minLength": 1
+        },
+        "selector": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

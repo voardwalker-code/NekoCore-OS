@@ -10,7 +10,7 @@ These instructions apply to every conversation in this workspace. Follow them wi
 ## Priority Order
 
 1. Direct user request
-2. `WORKLOG.md` policy and active mandate
+2. `WORKLOG.md` active mandate, current status, and stop/resume state
 3. Repository instruction files (`.github/copilot-instructions.md`, `AGENTS.md`)
 4. Implementation details and preferences
 
@@ -27,6 +27,13 @@ Before edits, confirm all three checks are done:
 
 Before writing any code or making any plan, read `WORKLOG.md` (root of workspace).
 
+Use `WORKLOG.md` for:
+- active mandate and current status
+- stop/resume state
+- implementation ledger and dated history
+
+Do not treat `WORKLOG.md` as the primary home for reusable planning rules or architecture documentation.
+
 Check:
 - What is the current phase and slice status?
 - Is the cleanup gate open? If so, no new feature expansion may begin.
@@ -39,7 +46,7 @@ If the user's request conflicts with the current WORKLOG state (e.g. they ask fo
 
 ## 2. Follow the Architecture Boundary Policy
 
-These rules are non-negotiable and defined in full in `WORKLOG.md`:
+These rules are non-negotiable for this repo. `WORKLOG.md` tracks active mandate/gates; this file and the source-of-truth docs define where the rules live.
 
 - `client/**` — no backend orchestration, filesystem logic, or server policy logic
 - `server/**` — no DOM or UI rendering concerns
@@ -68,10 +75,12 @@ Any multi-step work must follow the structure in `Documents/current/PHASE-PLAN-T
 | What you need | Where to look |
 |---------------|--------------|
 | What to do next (active work) | `WORKLOG.md` (tracked in repo) |
-| How the system works | `Documents/current/` (local workspace only — gitignored) |
-| What each server file owns | `Documents/current/SERVER-MODULE-MAP.md` |
-| Memory/entity/pipeline architecture | `Documents/current/ARCHITECTURE-OVERVIEW.md` |
-| Data shapes and contracts | `Documents/current/CONTRACTS-AND-SCHEMAS.md` |
+| How planning is structured | `Documents/current/PHASE-PLANNING-SOURCE-OF-TRUTH.md` |
+| Blueprint for new multi-slice plans | `Documents/current/PHASE-PLAN-TEMPLATE.md` |
+| Completed internal plan archive | `Documents/current/completed-phase-plans/INDEX.md` |
+| Internal support-doc archive | `Documents/current/support-docs/INDEX.md` |
+| Public architecture and system docs | `docs/ARCHITECTURE-OVERVIEW.md`, `docs/PIPELINE-AND-ORCHESTRATION.md`, `docs/MEMORY-SYSTEM.md`, `docs/ENTITY-AND-IDENTITY.md` |
+| Data shapes and contracts | `docs/CONTRACTS-AND-SCHEMAS.md` |
 | Implementation/behaviour truth | `server/**` and `tests/**` |
 
 If a doc disagrees with the code, the code wins — and the doc needs updating.
@@ -96,7 +105,7 @@ If any of these appear in `git status` as untracked or modified, do NOT stage or
 1. Update the checkbox in `WORKLOG.md`
 2. Add a ledger entry (date, slice ID, outcome, brief note)
 3. Update the Stop/Resume Snapshot
-4. Update `Documents/current/CHANGELOG.md` under `[Unreleased]`
+4. Update `CHANGELOG.md` under `[Unreleased]`
 
 ---
 

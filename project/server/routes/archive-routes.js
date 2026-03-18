@@ -14,6 +14,7 @@ const path         = require('path');
 const fs           = require('fs');
 const { extractPhrases }   = require('../brain/utils/rake');
 const { queryArchive }     = require('../brain/utils/archive-index');
+const { intersectIndexes } = require('../brain/utils/archive-indexes');
 const { ingestCorpus }     = require('../brain/utils/bulk-ingest');
 const {
   normalizeEntityId,
@@ -95,7 +96,41 @@ function createArchiveRoutes(ctx) {
       const types = Array.isArray(rawTypes)
         ? rawTypes.filter(t => typeof t === 'string').slice(0, 5)
         : null;
-      const hits   = queryArchive(entityId, topics, limit, yearRange, types);
+
+      // ── Index narrowing (E-6-1) ─────────────────────────────────────────
+      // Accepts body.month (string | string[]) of YYYY-MM values and
+      // body.subject (string). Each non-empty value maps to an index lookup;
+      // intersectIndexes returns the Set<memId> present in ALL lookups.
+      // narrowSet is null when no filters are provided — zero-cost path.
+      let narrowSet = null;
+      const narrowFilters = [];
+
+      const rawMonths = body.month;
+      if (rawMonths) {
+        const months = Array.isArray(rawMonths)
+          ? rawMonths.filter(m => typeof m === 'string' && /^\d{4}-\d{2}$/.test(m)).slice(0, 12)
+          : (typeof rawMonths === 'string' && /^\d{4}-\d{2}$/.test(rawMonths.trim()) ? [rawMonths.trim()] : []);
+        for (const m of months) {
+          narrowFilters.push({ axis: 'temporal', key: m });
+        }
+      }
+
+      const rawSubject = body.subject;
+      if (typeof rawSubject === 'string' && rawSubject.trim()) {
+        narrowFilters.push({ axis: 'subject', key: rawSubject.trim().slice(0, 80) });
+      }
+
+      if (narrowFilters.length > 0) {
+        narrowSet = intersectIndexes(entityId, narrowFilters);
+        // If intersection is empty and filters were provided, no results possible.
+        if (narrowSet.size === 0) {
+          res.writeHead(200, apiHeaders);
+          res.end(JSON.stringify({ ok: true, results: [], total: 0 }));
+          return;
+        }
+      }
+
+      const hits = queryArchive(entityId, topics, limit, yearRange, types, narrowSet);
 
       const results = hits.map(h => ({
         id:         h.memId,

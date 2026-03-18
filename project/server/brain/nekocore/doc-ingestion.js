@@ -2,7 +2,7 @@
 // ============================================================
 // NekoCore — Architecture Document Ingestion
 //
-// Reads markdown docs from Documents/current/, splits them into
+// Reads markdown docs from docs/, splits them into
 // section chunks, and writes each chunk as a semantic memory in
 // NekoCore's memories/semantic/ directory.
 //
@@ -169,7 +169,7 @@ function removeOldChunks(archiveDocsDir, oldChunkIds, legacySemanticDir) {
 // IME I3-2: chunks go to memories/archive/docs/ not memories/semantic/
 function ingestArchitectureDocs(memRoot, docsDir) {
   if (!fs.existsSync(docsDir)) {
-    console.log('  ℹ NekoCore doc ingestion: Documents/current not found, skipping.');
+    console.log('  ℹ NekoCore doc ingestion: docs/ not found, skipping.');
     return;
   }
 

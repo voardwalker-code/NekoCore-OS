@@ -1,0 +1,30 @@
+{
+  "contractVersion": "v0",
+  "defaultDrive": "C:",
+  "roots": [
+    {
+      "name": "ProjectRoot",
+      "mount": "C:/",
+      "absolutePath": "${PROJECT_ROOT}"
+    },
+    {
+      "name": "Workspace",
+      "mount": "C:/Workspace",
+      "absolutePath": "${PROJECT_ROOT}/workspace"
+    },
+    {
+      "name": "ProgramFilesCore",
+      "mount": "C:/Program Files/Core",
+      "absolutePath": "${PROJECT_ROOT}/client/apps/core"
+    },
+    {
+      "name": "ProgramFilesOptional",
+      "mount": "C:/Program Files/Optional",
+      "absolutePath": "${PROJECT_ROOT}/client/apps/non-core"
+    }
+  ],
+  "resolverPolicy": {
+    "missingPathBehavior": "return-not-found",
+    "pathTraversalProtection": "deny-outside-root"
+  }
+}

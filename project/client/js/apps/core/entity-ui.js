@@ -212,6 +212,7 @@ async function refreshSidebarEntities() {
   const releaseBtns = ['navReleaseEntityBtn', 'shellReleaseEntityBtn', 'chatReleaseEntityBtn']
     .map((id) => document.getElementById(id))
     .filter(Boolean);
+  let activeEntityState = null;
 
   try {
     const normalizeEntityId = (value) => String(value || '').replace(/^entity_+/, '');
@@ -224,8 +225,12 @@ async function refreshSidebarEntities() {
       if (stateResp.ok) {
         const stateData = await stateResp.json();
         if (stateData?.loaded && stateData?.entity?.id) {
+          activeEntityState = stateData.entity;
           activeEntityId = normalizeEntityId(stateData.entity.id);
           currentEntityId = activeEntityId;
+          if (typeof setChatEntityMode === 'function') {
+            setChatEntityMode(stateData.entity.entityMode || null);
+          }
           // Load voice profile if not yet cached
           if (!currentEntityVoice) {
             try {
@@ -261,16 +266,20 @@ async function refreshSidebarEntities() {
     }
 
     // If an entity is active, only show that one. If no visible match exists,
-    // treat local active state as stale and show all visible entities.
+    // prefer the server's current entity state rather than clearing chat.
     let entitiesToShow = activeEntityId
       ? data.entities.filter(e => normalizeEntityId(e.id) === activeEntityId)
       : data.entities;
 
     if (activeEntityId && entitiesToShow.length === 0) {
-      activeEntityId = '';
-      currentEntityId = null;
-      currentEntityVoice = null;
-      entitiesToShow = data.entities;
+      if (activeEntityState && normalizeEntityId(activeEntityState.id) === activeEntityId) {
+        entitiesToShow = [activeEntityState];
+      } else {
+        activeEntityId = '';
+        currentEntityId = null;
+        currentEntityVoice = null;
+        entitiesToShow = data.entities;
+      }
     }
 
     listEls.forEach((listEl) => {
@@ -330,6 +339,9 @@ async function checkoutEntity(entityId) {
     document.getElementById('entityTraits').textContent = (data.entity.personality_traits || []).join(', ');
     currentEntityId = entityId;
     currentEntityVoice = data.entity.voice || null;
+    if (typeof setChatEntityMode === 'function') {
+      setChatEntityMode(data.entity.entityMode || null);
+    }
     setEntityDisplay(data.entity.name, data.entity.gender, data.entity.personality_traits);
     resetChatForEntitySwitch(data.entity.name, data.entity.introduction, data.entity.memory_count);
     if (typeof initUserSwitcher === 'function') initUserSwitcher();
@@ -589,6 +601,9 @@ async function releaseActiveEntity() {
     currentEntityName = null;
     currentEntityVoice = null;
     currentEntityAvatar = '\U0001F916';
+    if (typeof setChatEntityMode === 'function') {
+      setChatEntityMode(null);
+    }
     document.getElementById('entityName').textContent = '';
     document.getElementById('entityTraits').textContent = 'No entity loaded';
     const display = document.getElementById('entityDisplay');

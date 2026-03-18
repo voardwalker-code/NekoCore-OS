@@ -264,8 +264,23 @@ Archive search uses RAKE keyword extraction on the query string, then BM25 scori
 
 The 25K ceiling defines the practical operating range. Sharding by topic keeps individual bucket sizes manageable at scale.
 
-### Agent Echo (Phase 4.7)
-The Sharded Topic Archive is the data layer for the upcoming Agent Echo retrieval pipeline. Echo Past (subconscious mode) will use index-narrowed archive queries + an async round-2 pass to surface relevant long-term memories without inline pipeline latency.
+### Agent Echo (Phase 4.7 — Live)
+
+Agent Echo is the live retrieval pipeline implemented in `server/brain/agent-echo.js`. It exposes three functions:
+
+- **`echoNow(entityId, query)`** — Searches ConsciousMemory STM (hot ≈8K window). Zero-latency; no disk access.
+- **`echoPast(entityId, topics, options)`** — Hierarchical archive search. Round 1 (synchronous): scans `archive_directory.json` to rank archives by topic overlap, then BM25-queries the top 1–3 archive buckets (worst case ~68ms). Round 2 (async, fires in `setImmediate` during humanizer typing window): probes up to 10 additional un-tried archives and promotes strong hits into ConsciousMemory STM via `promoteToStm()`, making them available to Echo Now on the next turn.
+- **`echoFuture(entityId)`** — Stub, returns `null`. Phase 5 implements memory shape classification (narrative, reflective, factual, emotional, anticipatory).
+
+Multi-axis indexes are maintained by `archive-indexes.js` and rebuilt on a 10-cycle cadence by `phase-archive-index.js`:
+
+| Axis | Key format | Purpose |
+|------|-----------|--------|
+| `temporal` | `YYYY-MM` | Narrow search to specific calendar months |
+| `subject` | slug string | Narrow search by emergent topic cluster |
+| `shape` | shape label | (Phase 5) Narrow by memory arc type |
+
+Query narrowing is exposed through `POST /api/archive/search` (`body.month`, `body.subject`) and through the Archive UI Month/Subject controls. `intersectIndexes()` builds a `narrowSet` (Set<memId>) that is passed as the 6th argument to `queryArchive()`. An empty intersection short-circuits with no results before BM25 fires.
 
 ---
 
@@ -294,4 +309,8 @@ If detected, the memory write is skipped with a warning. This prevents the syste
 | server/contracts/memory-schema.js | Canonical schema + normalizeMemoryRecord |
 | server/services/post-response-memory.js | Post-turn memory encoding (dual-path IME) |
 | server/brain/utils/archive-index.js | NDJSON bucket read/write/remove for topic archive |
-| server/brain/utils/archive-router.js | router.json maintenance; bucket path resolution |
+| server/brain/utils/archive-indexes.js | Multi-axis index CRUD (temporal, subject, shape stub) + rebuild phases |
+| server/brain/utils/archive-directory.js | Archive directory CRUD + topic-overlap ranked scanDirectory |
+| server/brain/agent-echo.js | Agent Echo coordinator: echoNow, echoPast (round-1 + round-2), promoteToStm, echoFuture stub |
+| server/brain/cognition/phases/phase-archive-index.js | Brain loop phase (every 10 cycles): rebuildTemporalIndexes + rebuildSubjectIndexes + rebuildShapeIndexes stub |
+| server/routes/archive-routes.js | POST /api/archive/search with month/subject narrowing via intersectIndexes |

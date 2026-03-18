@@ -1,6 +1,6 @@
 # REM System — Contracts and Schemas
 
-Last updated: 2026-03-17
+Last updated: 2026-03-18
 
 Covers: memory schema governance, contributor contracts, worker output contract, turn signals, and how contracts enforce boundaries.
 
@@ -14,6 +14,79 @@ REM System is a multi-LLM pipeline with many independently-running modules writi
 - Memory records written in one format can't be read back correctly after a schema change
 
 Contracts enforce shapes at boundaries and let refactors happen safely inside a module as long as the boundary shape is preserved.
+
+---
+
+## Installer App Package Contract (Pre-cleanup baseline)
+
+This contract defines the required package shape for non-core app installability before HTML cleanup/refactor.
+
+Required package artifacts:
+1. App payload HTML file under `project/client/apps/non-core/core/` with naming `tab-<appId>.html`.
+2. Installer contract JSON under `project/server/contracts/` with naming `installer-<appId>.contract.example.json`.
+3. Install actions for all runtime registration points needed by the app (at minimum: non-core loader registration, window app registry entry, app category map entry when the app appears in shell launch surfaces).
+4. Uninstall actions that mirror each install action by `entryId` and include `expectedFingerprint`.
+
+Authoring conventions (required):
+1. `appId` must match all registration surfaces exactly (tab id, contract appId, install action payload tab value).
+2. Use lowercase kebab or lowercase alnum id form only (example: `helloworld`, `note-pad`).
+3. Non-core manifest registration must include: `tabId`, `enabled`, `path`, `label`, `icon`, `navTarget`.
+4. Window app registration must include: `tab`, `label`, `icon`, `accent`, `w`, `h`.
+5. Category map registration must include an allowed category key (`core`, `browse`, `tools`, `mind`, `journal`, `appearance`, `system`).
+
+Icon and nav conventions:
+1. Non-core loader icon uses short display token (emoji or short text-safe glyph) for nav list readability.
+2. Window app icon uses inline SVG string so shell/taskbar rendering is deterministic.
+3. `navTarget` for optional/non-core apps must be `#navOptionalAppsHost` unless a documented custom-host route is required.
+4. Labels should be human-readable title case and stable across installer reruns.
+
+Required install action fields:
+1. `type`: `insert` (bounded pre-cleanup installer path)
+2. `filePath`
+3. `anchorId`
+4. `entryId` (stable string key used for uninstall targeting)
+5. `payload`
+
+Required wrapper model in target source files:
+1. Open marker line: `//Open Next json entry id`
+2. Inserted entry ID metadata line: `//JsonEntryId: "<entryId>"`
+3. Inserted payload line(s)
+4. Close marker line: `//Close "`
+5. Fresh next safe slot immediately after close:
+  - `//Open Next json entry id`
+  - blank line
+  - `//Close "`
+
+Transactional guarantees:
+1. Marker matching is exact (`open + blank + close`) before insertion.
+2. Missing exact boundary anywhere in batch triggers `auto-rollback-error`.
+3. No partial writes are allowed (`all-or-nothing`).
+
+Logging guarantees:
+1. Every insertion log entry must include `entryId`.
+2. Every insertion log entry must include `writtenBlock`.
+3. Every insertion log entry must include `closeMarker`.
+4. Wrapper output must include visible JSON entry ID metadata (`JsonEntryId` line).
+
+Contract template baseline:
+1. `installActions`: one entry per insertion target, each with stable `entryId`.
+2. `uninstallActions`: one matching remove action per install action using same `entryId`.
+3. `anchors`: one anchor per touched file region with stable `selector` label.
+4. `markerBoundary`, `fingerprint`, `mismatchPolicy`, `transactionPolicy`, `loggingPolicy` must be present and exact-match policy compliant.
+
+Validation checklist (must pass before app package is considered ready):
+1. Installer dry-run succeeds with `ok: true` and `rollback: false`.
+2. Marker boundaries remain reusable after insertion (next empty slot preserved).
+3. Wrapper includes `//JsonEntryId: "<entryId>"` above each inserted payload.
+4. Contract examples validate against schema-required fields, including `loggingPolicy.logJsonEntryId=true`.
+5. Focused installer tests pass (`installer-marker-engine`, `installer-cli`, `installer-vfs-phase-ab`).
+
+Reference implementation and examples:
+1. Engine: `project/server/tools/installer-marker-engine.js`
+2. CLI: `project/server/tools/installer-cli.js`
+3. Example package contract: `project/server/contracts/installer-hello-world.contract.example.json`
+4. Contract schema: `project/server/contracts/installer-uninstaller-contract.schema.json`
+5. Full author workflow guide: `docs/HOW-TO-CREATE-AN-APP.md`
 
 ---
 
@@ -273,6 +346,61 @@ Turn signals are passed to Dream-Intuition (1D) for abstract association generat
   timedOut   true
   maxMs      number
 }
+```
+
+---
+
+## Archive Index Schema (Phase 4.7)
+
+### Index files
+
+Multi-axis index files live at:
+```
+entities/entity_<id>/memories/archive/indexes/<axis>/<key>.idx.json
+```
+
+Each index file is a plain JSON array of `memId` strings:
+```json
+["mem_abc123", "mem_def456", ...]
+```
+
+| Axis | Key format | Example file | Populated by |
+|------|-----------|--------------|-------------|
+| `temporal` | `YYYY-MM` | `temporal/2025-06.idx.json` | `rebuildTemporalIndexes()` |
+| `subject` | slug string | `subject/identity.idx.json` | `rebuildSubjectIndexes()` |
+| `shape` | shape label | `shape/narrative.idx.json` | Phase 5 `rebuildShapeIndexes()` |
+
+Files are written atomically via a `.tmp` swap pattern. All CRUD goes through `archive-indexes.js`; files must never be written directly.
+
+### `POST /api/archive/search` — Narrowing Contract
+
+Request body (all fields optional except `query`):
+```
+{
+  query         string          — free-text query (RAKE-extracted topics for BM25)
+  limit         number          — max results (1–20, default 5)
+  yearRange     { start?, end? } — ISO date range filter (pre-BM25)
+  types         string[]        — type filter: episodic | doc | semantic_knowledge
+  month         string | string[] — YYYY-MM value(s); builds temporal narrowSet
+  subject       string          — subject slug; builds subject narrowSet
+  entityId      string          — target entity (defaults to currently loaded entity)
+}
+```
+
+Narrowing logic: non-empty `month` and/or `subject` values are resolved to index lookups via `intersectIndexes()`. The resulting `Set<memId>` is passed to `queryArchive()` as the `narrowSet` parameter. When the intersection is empty, the route short-circuits with `{ ok: true, results: [], total: 0 }` before BM25 fires.
+
+Response shape:
+```
+{
+  ok       true
+  results  [ { id, score, summary, archivedAt, topics, type } ]
+  total    number
+}
+```
+
+Error envelope:
+```
+{ ok: false, error: string }
 ```
 
 ---

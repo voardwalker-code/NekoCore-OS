@@ -169,6 +169,16 @@ function backToModeSelection() {
   lg('info', 'Pick a creation mode below.');
 }
 
+function updateEmptyEntityModeForm() {
+  const modeEl = document.getElementById('emptyEntityMode');
+  const traitsGroup = document.getElementById('emptyEntityTraitsGroup');
+  if (!modeEl || !traitsGroup) return;
+  const isSingleLlm = modeEl.value === 'single-llm';
+  traitsGroup.style.display = isSingleLlm ? 'none' : 'block';
+}
+
+window.updateEmptyEntityModeForm = updateEmptyEntityModeForm;
+
 function resetCreatorFlow(options = {}) {
   const skipWelcome = !!options.skipWelcome;
   entityCreationMode = null;
@@ -203,11 +213,13 @@ function resetCreatorFlow(options = {}) {
       if (el) el.value = '';
     });
 
-  ['emptyEntityGender', 'randomEntityGender', 'guidedEntityGender', 'guidedEntityIntent', 'guidedEntityInteractionStyle']
+  ['emptyEntityGender', 'emptyEntityMode', 'randomEntityGender', 'guidedEntityGender', 'guidedEntityIntent', 'guidedEntityInteractionStyle']
     .forEach((id) => {
       const el = document.getElementById(id);
       if (el && el.options.length) el.selectedIndex = 0;
     });
+
+  updateEmptyEntityModeForm();
 
   const unbreakable = document.getElementById('guidedEntityUnbreakable');
   if (unbreakable) unbreakable.checked = false;
@@ -459,15 +471,17 @@ async function createEmptyEntity() {
   const name      = document.getElementById('emptyEntityName').value.trim();
   const gender    = document.getElementById('emptyEntityGender').value;
   const age       = document.getElementById('emptyEntityAge').value.trim();
+  const entityMode = document.getElementById('emptyEntityMode')?.value || 'full';
   const traitsStr = document.getElementById('emptyEntityTraits').value.trim();
   const intro     = document.getElementById('emptyEntityIntro').value.trim();
+  const isSingleLlm = entityMode === 'single-llm';
 
   if (!name)       { lg('err', 'Entity name is required.'); document.getElementById('createEntityBtn').disabled = false; return; }
   if (isReservedEntityName(name)) { lg('err', 'That name is reserved by NekoCore. Please choose another entity name.'); document.getElementById('createEntityBtn').disabled = false; return; }
-  if (!traitsStr)  { lg('err', 'At least 3 personality traits are required.'); document.getElementById('createEntityBtn').disabled = false; return; }
+  if (!isSingleLlm && !traitsStr)  { lg('err', 'At least 3 personality traits are required.'); document.getElementById('createEntityBtn').disabled = false; return; }
 
   const traits = traitsStr.split(',').map(t => t.trim()).filter(Boolean);
-  if (traits.length < 3) { lg('err', 'Please provide at least 3 personality traits.'); document.getElementById('createEntityBtn').disabled = false; return; }
+  if (!isSingleLlm && traits.length < 3) { lg('err', 'Please provide at least 3 personality traits.'); document.getElementById('createEntityBtn').disabled = false; return; }
 
   lg('info', 'Creating ' + name + '…');
 
@@ -475,7 +489,7 @@ async function createEmptyEntity() {
   const resp = await fetch('/api/entities/create', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ entityId, name, gender, traits, introduction: intro || 'Hello, I\'m ' + name + '.', age })
+    body: JSON.stringify({ entityId, name, gender, traits, introduction: intro || 'Hello, I\'m ' + name + '.', age, entityMode })
   });
 
   if (!resp.ok) {
@@ -674,6 +688,7 @@ function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 document.addEventListener('DOMContentLoaded', () => {
   window.resetCreatorFlow = resetCreatorFlow;
   initTraitAssist();
+  updateEmptyEntityModeForm();
   updateGuidedBackstoryDepth(document.getElementById('guidedBackstoryDepth')?.value || '3');
   updateRandomBackstoryDepth(document.getElementById('randomBackstoryDepth')?.value || '3');
   const mode = PAGE_PARAMS.get('mode');

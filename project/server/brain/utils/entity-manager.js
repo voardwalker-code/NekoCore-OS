@@ -302,6 +302,7 @@ class EntityManager {
         id: this.currentEntity.id,
         name: this.currentEntity.name,
         gender: this.currentEntity.gender,
+        entityMode: this.currentEntity.entityMode || 'full',
         traits: this.currentEntity.personality_traits,
         emotionalBaseline: this.currentEntity.emotional_baseline,
         introduction: this.currentEntity.introduction,

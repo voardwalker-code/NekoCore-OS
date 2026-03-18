@@ -26,6 +26,33 @@ function getCurrentAccount() {
   };
 }
 
+function isDesktopBypassEnabled() {
+  try {
+    if (window.__desktopTestBypass === true) return true;
+    const qp = new URLSearchParams(window.location.search || '');
+    const queryFlag = String(qp.get('desktopBypass') || '').toLowerCase();
+    if (queryFlag === '1' || queryFlag === 'true' || queryFlag === 'yes' || queryFlag === 'on') {
+      return true;
+    }
+    const stored = String(localStorage.getItem('NEKO_DESKTOP_BYPASS') || '').toLowerCase();
+    return stored === '1' || stored === 'true' || stored === 'yes' || stored === 'on';
+  } catch (_) {
+    return false;
+  }
+}
+
+function applyDesktopBypassAccount() {
+  const account = {
+    id: 'desktop-bypass',
+    username: 'desktop-bypass',
+    displayName: 'Desktop Bypass',
+    info: 'local-dev-bypass'
+  };
+  window.__desktopTestBypass = true;
+  _onAuthSuccess(account);
+  return account;
+}
+
 function resolveAuthWaiters(account) {
   const waiters = _authWaiters;
   _authWaiters = [];
@@ -217,6 +244,12 @@ async function handleLogout() {
 // ── Init: check for existing session on page load ────────────────────────────
 async function initLogin(options = {}) {
   const { showOverlayOnFail = true } = options;
+
+  if (isDesktopBypassEnabled()) {
+    const account = applyDesktopBypassAccount();
+    return { authenticated: true, account, bypass: true };
+  }
+
   try {
     const resp = await fetch('/api/auth/me');
     if (resp.ok) {

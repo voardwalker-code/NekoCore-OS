@@ -114,15 +114,73 @@
     navTarget.appendChild(button);
   }
 
+  function runMountedScripts(root, htmlSource) {
+    var scripts = [];
+    var seen = Object.create(null);
+
+    function collectScript(scriptNode) {
+      if (!scriptNode) return;
+      var key = scriptNode.src ? ('src:' + scriptNode.src) : ('inline:' + (scriptNode.textContent || ''));
+      if (seen[key]) return;
+      seen[key] = true;
+      scripts.push(scriptNode);
+    }
+
+    if (root) {
+      Array.from(root.querySelectorAll('script')).forEach(collectScript);
+    }
+
+    if (htmlSource) {
+      var probe = document.createElement('div');
+      probe.innerHTML = htmlSource;
+      Array.from(probe.querySelectorAll('script')).forEach(collectScript);
+    }
+
+    scripts.forEach(function (oldScript) {
+      try {
+        if (oldScript.src) {
+          var newScript = document.createElement('script');
+          Array.prototype.forEach.call(oldScript.attributes, function (attr) {
+            newScript.setAttribute(attr.name, attr.value);
+          });
+          oldScript.parentNode.replaceChild(newScript, oldScript);
+          return;
+        }
+
+        // Inert inline scripts from dynamic HTML do not always execute after outerHTML;
+        // run their code explicitly in global scope.
+        var code = oldScript.textContent || '';
+        if (code.trim()) {
+          (0, eval)(code);
+        }
+      } catch (err) {
+        if (typeof lg === 'function') {
+          lg('warn', 'Mounted tab script failed: ' + (err && err.message ? err.message : String(err)));
+        }
+        if (typeof console !== 'undefined' && console.warn) {
+          console.warn('Mounted tab script failed:', err);
+        }
+      } finally {
+        if (oldScript.parentNode) oldScript.parentNode.removeChild(oldScript);
+      }
+    });
+  }
+
+  function getMountedTabRoot(tabId) {
+    return document.getElementById('tab-' + tabId);
+  }
+
   function mountTabHtml(tabId, html) {
     var slot = document.getElementById('optional-tab-slot-' + tabId);
     if (slot) {
       slot.outerHTML = html;
+      runMountedScripts(getMountedTabRoot(tabId), html);
       return true;
     }
     var existing = document.getElementById('tab-' + tabId);
     if (existing) {
       existing.outerHTML = html;
+      runMountedScripts(getMountedTabRoot(tabId), html);
       return true;
     }
 
@@ -133,6 +191,7 @@
         wrapped = '<div class="tab-content" id="tab-' + tabId + '">' + html + '</div>';
       }
       customSlot.insertAdjacentHTML('beforebegin', wrapped);
+      runMountedScripts(getMountedTabRoot(tabId), html);
       return true;
     }
 
@@ -143,6 +202,7 @@
         finalHtml = '<div class="tab-content" id="tab-' + tabId + '">' + html + '</div>';
       }
       stage.insertAdjacentHTML('beforeend', finalHtml);
+      runMountedScripts(getMountedTabRoot(tabId), html);
       return true;
     }
     return false;
@@ -207,6 +267,13 @@
 
   function loadNonCoreAppHtml() {
     var manifest = resolveManifest();
+//Open Next json entry id
+//JsonEntryId: "hello-loader-001"
+    manifest.nonCoreApps.push({ tabId: 'helloworld', enabled: true, path: 'apps/non-core/core/tab-hello-world.html', label: 'Hello World', icon: '🏓', navTarget: '#navOptionalAppsHost' });
+//Close "
+//Open Next json entry id
+
+//Close "
     var enabledTabs = new Set();
     var managedTabs = new Set(Object.keys(DEFAULT_NON_CORE_BY_TAB));
 

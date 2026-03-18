@@ -25,7 +25,15 @@ const runtimeTelemetry = {
   },
   appStats: {},
   activeWindowTab: 'chat',
-  lastRequestByTab: {}
+  lastRequestByTab: {},
+  // T-7: active task state (updated by task-ui.js via handleTaskSSEEvent)
+  taskState: {
+    activeSessionId: null,
+    activeTaskType: null,
+    stepCount: 0,
+    stalled: false,
+    complete: false
+  }
 };
 
 function formatTelemetryModel(model) {
@@ -211,6 +219,27 @@ function updateTaskManagerView() {
   setModel('tmModelDream', models.dream);
   setModel('tmModelConscious', models.conscious);
   setModel('tmModelOrchestrator', models.orchestrator);
+
+  // T-7: Active task section in Task Manager
+  const tmTaskSection = document.getElementById('tmActiveTaskSection');
+  if (tmTaskSection) {
+    const ts = runtimeTelemetry.taskState;
+    if (ts && ts.activeSessionId) {
+      const taskType = ts.activeTaskType ? ts.activeTaskType.replace(/_/g, ' ') : 'Task';
+      let statusText = 'Step ' + (ts.stepCount || 0);
+      let statusClass = 'tm-task-active';
+      if (ts.complete) { statusText = 'Complete'; statusClass = 'tm-task-done'; }
+      else if (ts.stalled) { statusText = 'Error'; statusClass = 'tm-task-error'; }
+      tmTaskSection.innerHTML =
+        '<div class="tm-task-row ' + statusClass + '">' +
+          '<span class="tm-task-type">' + taskType + '</span>' +
+          '<span class="tm-task-status">' + statusText + '</span>' +
+          '<span class="tm-task-id">' + ts.activeSessionId.slice(-8) + '</span>' +
+        '</div>';
+    } else {
+      tmTaskSection.innerHTML = '<div class="tm-task-empty">No active task.</div>';
+    }
+  }
 
   const feedEl = document.getElementById('tmEventFeed');
   if (feedEl) {

@@ -1,14 +1,45 @@
 # REM System — Cognitive Pipeline and Orchestration
 
-Last updated: 2026-03-17
+Last updated: 2026-03-18
 
 ---
 
 ## Overview
 
-The live-chat pipeline runs Subconscious (1A) and Dream-Intuition (1D) in parallel. Once both complete, Conscious (1C) runs with full access to 1A's memory context AND 1D's creative associations — it reasons with everything. The Orchestrator then acts as a reviewer and voicer: it receives a full copy of what Conscious had plus the Conscious draft, reviews for fit, and delivers the response in the entity's authentic voice. Post-turn side effects (memory encoding, relationship update) run asynchronously after the response is sent.
+The live-chat pipeline has a task-first fork and a companion pipeline path. Incoming user turns are first classified for task intent. If confidence is high, the turn dispatches into Task Orchestration (MTOA) and progress is surfaced through Frontman milestone events. If confidence is low or unsupported, execution falls back to the companion pipeline where Subconscious (1A) and Dream-Intuition (1D) run in parallel. Once both complete, Conscious (1C) runs with full access to 1A's memory context AND 1D's creative associations — it reasons with everything. The Orchestrator then acts as a reviewer and voicer: it receives a full copy of what Conscious had plus the Conscious draft, reviews for fit, and delivers the response in the entity's authentic voice. Post-turn side effects (memory encoding, relationship update) run asynchronously after the response is sent.
 
-This architecture replaced an older serial pipeline (Subconscious → Compress → Conscious) as of v0.5.2-prealpha.
+This architecture replaced an older serial pipeline (Subconscious → Compress → Conscious) as of v0.5.2-prealpha, and was expanded with MTOA task dispatch in Phase 4.9.
+
+---
+
+## Task Orchestration Fork (MTOA)
+
+The task fork executes before companion orchestration in `chat-pipeline.js`.
+
+1. `detectAndDispatchTask(...)` classifies the turn.
+2. If task confidence passes threshold:
+  - Create/resume task session.
+  - Gather task context by task type.
+  - Execute specialized task module steps.
+  - Frontman emits task lifecycle updates.
+3. If not a task, continue normal companion orchestration path.
+
+### Frontman Event Surface
+
+Task lifecycle events are emitted server-side and broadcast over SSE (`/api/brain/events`) as:
+- `task_milestone`
+- `task_needs_input`
+- `task_complete`
+- `task_error`
+- `task_steering_injected`
+- plus translated natural-language `chat_follow_up` updates
+
+### Client Integration (T-7)
+
+Client task UI consumes raw task SSE events through a delegation boundary:
+- `chat.js` owns SSE connection and delegates task events to `window.handleTaskSSEEvent(...)`
+- `task-ui.js` owns task badge state, history/session panels, and cancel action
+- `telemetry-ui.js` renders Task Manager active-task status via `runtimeTelemetry.taskState`
 
 ---
 
@@ -189,6 +220,14 @@ Both of these run after the response is sent — they do not block the user.
 | File | Role |
 |------|------|
 | server/brain/core/orchestrator.js | Pipeline runner, all stages |
+| server/services/chat-pipeline.js | Chat entry pipeline; pre-orchestrator task fork |
+| server/brain/tasks/task-pipeline-bridge.js | Task intent dispatch bridge (`detectAndDispatchTask`) |
+| server/brain/tasks/task-frontman.js | Frontman milestone synthesis and SSE-aligned updates |
+| server/brain/tasks/task-event-bus.js | Task lifecycle event bus |
+| server/routes/task-routes.js | Task run/session/cancel/modules/history API |
+| client/js/apps/core/chat.js | SSE connection and task event delegation hook |
+| client/js/apps/optional/task-ui.js | Task badge, history/detail panels, cancel control |
+| client/js/apps/core/telemetry-ui.js | Task Manager active task section + runtime telemetry |
 | server/brain/core/orchestration-policy.js | Escalation, budget, latency guards |
 | server/brain/core/worker-registry.js | Worker binding registry |
 | server/brain/core/worker-dispatcher.js | Worker invocation with failsafe |

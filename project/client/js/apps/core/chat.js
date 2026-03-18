@@ -47,6 +47,61 @@ let brainEventSource = null;
 let activeThinkingEl = null; // The current thinking dropdown element being populated
 let lastOrchestratorModel = ''; // Model used for the last orchestrator response
 let showThoughtsInChat = localStorage.getItem('showThoughtsInChat') !== 'false'; // default on
+let memoryRecallEnabled = false;
+let memorySaveEnabled = false;
+window._currentEntityMode = window._currentEntityMode || null;
+
+function isSingleLlmEntityMode() {
+  return window._currentEntityMode === 'single-llm';
+}
+
+function updateMemoryToggleButtons() {
+  const recallBtn = document.getElementById('memoryRecallBtn');
+  const saveBtn = document.getElementById('memorySaveBtn');
+  if (recallBtn) {
+    recallBtn.textContent = memoryRecallEnabled ? '\uD83D\uDCBE Recall ON' : '\uD83D\uDCBE Recall OFF';
+    recallBtn.classList.toggle('active', memoryRecallEnabled);
+  }
+  if (saveBtn) {
+    saveBtn.textContent = memorySaveEnabled ? '\uD83D\uDCE5 Save ON' : '\uD83D\uDCE5 Save OFF';
+    saveBtn.classList.toggle('active', memorySaveEnabled);
+  }
+}
+
+function updateMemoryToggleVisibility() {
+  const row = document.getElementById('memoryToggleRow');
+  if (!row) return;
+  const showRow = hasCheckedOutEntityContext() && isSingleLlmEntityMode();
+  row.style.display = showRow ? 'flex' : 'none';
+  updateMemoryToggleButtons();
+}
+
+function toggleMemoryRecall() {
+  memoryRecallEnabled = !memoryRecallEnabled;
+  if (typeof setMemoryRecall === 'function') setMemoryRecall(memoryRecallEnabled);
+  updateMemoryToggleButtons();
+}
+
+function toggleMemorySave() {
+  memorySaveEnabled = !memorySaveEnabled;
+  if (typeof setMemorySave === 'function') setMemorySave(memorySaveEnabled);
+  updateMemoryToggleButtons();
+}
+
+function setChatEntityMode(entityMode) {
+  window._currentEntityMode = entityMode === 'single-llm' ? 'single-llm' : null;
+  if (!isSingleLlmEntityMode()) {
+    memoryRecallEnabled = false;
+    memorySaveEnabled = false;
+    if (typeof setMemoryRecall === 'function') setMemoryRecall(false);
+    if (typeof setMemorySave === 'function') setMemorySave(false);
+  }
+  updateMemoryToggleVisibility();
+}
+
+window.toggleMemoryRecall = toggleMemoryRecall;
+window.toggleMemorySave = toggleMemorySave;
+window.setChatEntityMode = setChatEntityMode;
 
 function initBrainSSE() {
   if (brainEventSource) return;
@@ -196,6 +251,18 @@ function initBrainSSE() {
           scrollChatBottom();
         });
       } catch (_) {}
+    });
+
+    // ─── Task events — delegated to task-ui.js via window hook ───
+    // task-frontman.js broadcasts these for UI panels (task badge, history, telemetry feed).
+    // NL-translated messages already arrive via chat_follow_up above — these are raw events.
+    ['task_milestone', 'task_needs_input', 'task_complete', 'task_error', 'task_steering_injected'].forEach((evtName) => {
+      brainEventSource.addEventListener(evtName, (e) => {
+        try {
+          const d = JSON.parse(e.data);
+          if (typeof window.handleTaskSSEEvent === 'function') window.handleTaskSSEEvent(evtName, d);
+        } catch (_) {}
+      });
     });
 
     brainEventSource.onerror = () => {
@@ -642,6 +709,77 @@ async function loadEntityProviderConfig(provider) {
   } catch (e) {
     return null;
   }
+}
+
+function normalizeChatRuntimeConfig(rawConfig) {
+  if (!rawConfig || typeof rawConfig !== 'object') return null;
+
+  const type = String(rawConfig.type || '').toLowerCase().trim();
+  if (type === 'openrouter') {
+    const endpoint = String(rawConfig.endpoint || rawConfig.ep || '').trim();
+    const apiKey = String(rawConfig.apiKey || rawConfig.key || '').trim();
+    const model = String(rawConfig.model || '').trim();
+    if (endpoint && apiKey && model) {
+      return { type: 'openrouter', endpoint, apiKey, model };
+    }
+  }
+
+  if (type === 'ollama') {
+    const endpoint = String(rawConfig.endpoint || rawConfig.url || rawConfig.ollamaUrl || '').trim();
+    const model = String(rawConfig.model || rawConfig.ollamaModel || '').trim();
+    if (endpoint && model) {
+      return { type: 'ollama', endpoint, model };
+    }
+  }
+
+  return null;
+}
+
+function applyRecoveredChatConfig(config, sourceLabel) {
+  if (!config) return null;
+  activeConfig = config;
+
+  if (typeof updateProviderUI === 'function') {
+    const providerLabel = config.type === 'ollama'
+      ? 'Ollama (' + (config.model || 'connected') + ')'
+      : 'OpenRouter (' + (config.model || 'connected') + ')';
+    updateProviderUI(config.type, true, providerLabel);
+  }
+
+  if (typeof hydrateMainProviderInputs === 'function') {
+    hydrateMainProviderInputs(config);
+  }
+  if (typeof hideSetupRequired === 'function') {
+    hideSetupRequired();
+  }
+  if (typeof lg === 'function') {
+    lg('info', 'Recovered chat provider from ' + sourceLabel + ': ' + (config.model || config.type));
+  }
+  return activeConfig;
+}
+
+async function ensureActiveChatConfig() {
+  if (activeConfig) return activeConfig;
+
+  const entityConfig = normalizeChatRuntimeConfig(await loadEntityProviderConfig('main'));
+  if (entityConfig) {
+    return applyRecoveredChatConfig(entityConfig, 'entity profile');
+  }
+
+  if ((!savedConfig?.profiles || !Object.keys(savedConfig.profiles).length) && typeof loadSavedConfig === 'function') {
+    await loadSavedConfig();
+  }
+
+  const lastActiveName = savedConfig?.lastActive;
+  const profile = lastActiveName ? savedConfig?.profiles?.[lastActiveName] : null;
+  const profileConfig = typeof getMainConfigFromProfile === 'function'
+    ? getMainConfigFromProfile(profile)
+    : null;
+  if (profileConfig) {
+    return applyRecoveredChatConfig(profileConfig, 'saved profile');
+  }
+
+  return null;
 }
 
 function normalizeSubconsciousConfig(rawConfig) {
@@ -1241,6 +1379,12 @@ function syncContextChatGuard() {
     if (!chatBusy) sendBtn.disabled = false;
   }
 
+  if (!hasEntity) {
+    setChatEntityMode(null);
+  } else {
+    updateMemoryToggleVisibility();
+  }
+
   return hasEntity;
 }
 
@@ -1249,6 +1393,7 @@ window.syncContextChatGuard = syncContextChatGuard;
 document.addEventListener('DOMContentLoaded', () => {
   setTimeout(() => {
     syncContextChatGuard();
+    updateMemoryToggleVisibility();
   }, 0);
 });
 
@@ -1283,6 +1428,9 @@ async function sendChatMessage() {
     return;
   }
 
+  if (!activeConfig) {
+    await ensureActiveChatConfig();
+  }
   if (!activeConfig) { lg('err', 'No provider connected'); return; }
 
   // ── LOCK IMMEDIATELY: prevent duplicate sends ──
@@ -1333,26 +1481,31 @@ async function sendChatMessage() {
   _userScrolledUp = false;
 
   let oneTimeIntroInstruction = '';
-  try {
-    const bootstrap = await runSubconsciousBootstrap();
-    if (bootstrap.ran && bootstrap.awakeningText) {
-      chatHistory.push({ role: 'system', content: 'Subconscious handoff before user interaction:\n' + bootstrap.awakeningText });
+  if (!isSingleLlmEntityMode()) {
+    try {
+      const bootstrap = await runSubconsciousBootstrap();
+      if (bootstrap.ran && bootstrap.awakeningText) {
+        chatHistory.push({ role: 'system', content: 'Subconscious handoff before user interaction:\n' + bootstrap.awakeningText });
 
-      oneTimeIntroInstruction = 'One-time instruction for your next response only: give a brief summary (2-4 sentences) of what we were talking about and where we left off, based on your recalled memories and context. Then answer the user request normally.';
-      chatHistory.push({ role: 'system', content: oneTimeIntroInstruction });
-      lg('ok', 'Subconscious bootstrap completed before main response');
+        oneTimeIntroInstruction = 'One-time instruction for your next response only: give a brief summary (2-4 sentences) of what we were talking about and where we left off, based on your recalled memories and context. Then answer the user request normally.';
+        chatHistory.push({ role: 'system', content: oneTimeIntroInstruction });
+        lg('ok', 'Subconscious bootstrap completed before main response');
+      }
+    } catch (err) {
+      lg('warn', 'Subconscious bootstrap failed: ' + err.message);
     }
-  } catch (err) {
-    lg('warn', 'Subconscious bootstrap failed: ' + err.message);
   }
 
   let oneTurnSubconContext = '';
-  const subconTurn = await runSubconsciousTurn(text);
-  if (subconTurn && subconTurn.contextBlock) {
-    oneTurnSubconContext = 'Subconscious turn context for this user message only:\n' + subconTurn.contextBlock;
-    chatHistory.push({ role: 'system', content: oneTurnSubconContext });
-    if (activeThinkingEl) {
-      appendThinkingLine(activeThinkingEl, 'subconscious', '🧠 Subconscious found ' + (subconTurn.connections?.length || 0) + ' memory connection(s)');
+  let subconTurn = null;
+  if (!isSingleLlmEntityMode()) {
+    subconTurn = await runSubconsciousTurn(text);
+    if (subconTurn && subconTurn.contextBlock) {
+      oneTurnSubconContext = 'Subconscious turn context for this user message only:\n' + subconTurn.contextBlock;
+      chatHistory.push({ role: 'system', content: oneTurnSubconContext });
+      if (activeThinkingEl) {
+        appendThinkingLine(activeThinkingEl, 'subconscious', '🧠 Subconscious found ' + (subconTurn.connections?.length || 0) + ' memory connection(s)');
+      }
     }
   }
 

@@ -197,6 +197,10 @@ function getArchiveMigrationMarkerPath(entityId) {
   return path.join(getArchiveRoot(entityId), 'migration_complete.json');
 }
 
+function getArchiveIndexDir(entityId) {
+  return path.join(getArchiveRoot(entityId), 'indexes');
+}
+
 // ── Exports ─────────────────────────────────────────────────
 
 module.exports = {
@@ -238,4 +242,5 @@ module.exports = {
   getArchiveRouterPath,
   getArchiveBucketPath,
   getArchiveMigrationMarkerPath,
+  getArchiveIndexDir,
 };
