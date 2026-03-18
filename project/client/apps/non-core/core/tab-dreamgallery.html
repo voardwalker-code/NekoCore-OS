@@ -1,0 +1,118 @@
+﻿  <div class="tab-content" id="tab-dreamgallery">
+    <div class="settings-section" style="margin:0;border:none;background:transparent;padding:var(--space-4)">
+      <div class="settings-section-header" style="margin-bottom:var(--space-4);border-bottom:1px solid var(--border-default);padding-bottom:var(--space-3)">
+        <div class="flex items-center gap-3">
+          <h2 style="font-size:var(--text-base)">&#127912; Dream Gallery</h2>
+          <button class="btn bg text-xs-c" onclick="loadDreamGallery()" title="Refresh gallery">Refresh</button>
+          <button class="btn bp text-xs-c" onclick="generateMemoryArt()" title="Generate pixel art from a memory">&#10024; Generate Art</button>
+          <button class="btn bg text-xs-c" onclick="toggleImageGenSettings()" title="Image generation settings">&#9881; Settings</button>
+        </div>
+        <p>Pixel art visualizations generated from dreams and memories &mdash; 64x64 abstract impressions</p>
+      </div>
+
+      <!-- Image Generation Settings Panel -->
+      <div id="imageGenSettingsPanel" style="display:none;margin-bottom:var(--space-4)">
+        <div class="config-card">
+          <div class="config-card-title" style="color:var(--info)">&#127912; Image Generation Settings</div>
+          <div class="fl mb-3">
+            <label>Generation Mode</label>
+            <select id="imageGenMode" class="w-full" onchange="onImageGenModeChange()">
+              <option value="off">Disabled — No Image Generation</option>
+              <option value="pixel">Built-in Pixel Art (Neko-Pixel-Pro)</option>
+              <option value="api">External Image API (DALL-E, etc.)</option>
+            </select>
+            <span class="text-xs-c text-tertiary-c" id="imageGenModeHint">No images will be generated during sleep cycles or manual generation.</span>
+          </div>
+
+          <!-- Dependency install prompt (shown when pixel mode selected without deps) -->
+          <div id="pixelDepInstallPrompt" style="display:none; background:var(--bg-card); border:1px solid var(--warning); border-radius:var(--radius-md); padding:var(--space-3); margin-bottom:var(--space-3)">
+            <div style="color:var(--warning); font-weight:600; margin-bottom:var(--space-1)">&#9888; Optional Dependencies Required</div>
+            <p class="text-sm-c text-secondary-c" style="margin:0 0 var(--space-2)">
+              Built-in pixel art requires <code>@napi-rs/canvas</code> and <code>gif-encoder-2</code>. Run this in your terminal:
+            </p>
+            <pre style="background:var(--bg-primary);padding:var(--space-2);border-radius:var(--radius-sm);font-size:var(--text-xs);margin:0 0 var(--space-2);user-select:all">npm install @napi-rs/canvas gif-encoder-2</pre>
+            <p class="text-xs-c text-tertiary-c" style="margin:0">After installing, restart the server and select Built-in Pixel Art again.</p>
+          </div>
+
+          <!-- API Config (shown only when mode = api) -->
+          <div id="imageApiConfigSection" style="display:none">
+            <div class="fl mb-2">
+              <label>Image API Endpoint</label>
+              <input type="text" id="imageApiEndpoint" class="w-full" placeholder="https://api.openai.com/v1/images/generations" autocomplete="off">
+              <span class="text-xs-c text-tertiary-c">OpenAI-compatible image generation endpoint (DALL-E, etc.)</span>
+            </div>
+            <div class="grid grid-2" style="gap:var(--space-2)">
+              <div class="fl">
+                <label>API Key</label>
+                <input type="password" id="imageApiKey" class="w-full" placeholder="sk-..." autocomplete="off">
+              </div>
+              <div class="fl">
+                <label>Model (optional)</label>
+                <input type="text" id="imageApiModel" class="w-full" placeholder="dall-e-2" autocomplete="off">
+              </div>
+            </div>
+          </div>
+
+          <div class="flex gap-2 mt-3">
+            <button class="btn bp" onclick="saveImageGenSettings()">Save Settings</button>
+            <button class="btn bg" onclick="toggleImageGenSettings()">Close</button>
+          </div>
+          <div id="imageGenSaveStatus" class="text-xs-c text-tertiary-c mt-2" style="display:none"></div>
+        </div>
+      </div>
+
+      <!-- Generate Art Panel -->
+      <div id="generateArtPanel" style="display:none;margin-bottom:var(--space-4)">
+        <div class="config-card">
+          <div class="config-card-title" style="color:var(--info)">Generate Pixel Art from Text</div>
+          <div class="fl mb-2">
+            <label>Narrative / Memory Text</label>
+            <textarea id="artNarrativeInput" rows="3" class="w-full" placeholder="Describe a scene, paste a memory, or enter dream text..."></textarea>
+          </div>
+          <div class="grid grid-2" style="gap:var(--space-2)">
+            <div class="fl">
+              <label>Emotion</label>
+              <select id="artEmotionSelect" class="w-full">
+                <option value="neutral">Neutral</option>
+                <option value="joy">Joy</option>
+                <option value="wonder">Wonder</option>
+                <option value="peace">Peace</option>
+                <option value="curiosity">Curiosity</option>
+                <option value="longing">Longing</option>
+                <option value="dread">Dread</option>
+                <option value="confusion">Confusion</option>
+              </select>
+            </div>
+            <div class="fl">
+              <label>Style</label>
+              <select id="artGenreSelect" class="w-full">
+                <option value="abstract_vision">Abstract Vision</option>
+                <option value="surreal_narrative">Surreal</option>
+                <option value="emotional_echo">Emotional Echo</option>
+                <option value="memory_remix">Memory Remix</option>
+                <option value="prophetic_fable">Prophetic</option>
+                <option value="lucid_adventure">Lucid Adventure</option>
+                <option value="free_imagination">Free Imagination</option>
+              </select>
+            </div>
+          </div>
+          <div class="flex gap-2 mt-3">
+            <button class="btn bp" onclick="submitGenerateArt()">&#10024; Generate</button>
+            <button class="btn bg" onclick="document.getElementById('generateArtPanel').style.display='none'">Cancel</button>
+          </div>
+          <div id="artGenerateStatus" class="text-xs-c text-tertiary-c mt-2" style="display:none"></div>
+        </div>
+      </div>
+
+      <!-- Gallery Grid -->
+      <div id="dreamGalleryGrid" class="grid" style="grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));gap:var(--space-4)">
+        <div class="text-tertiary-c text-center" style="grid-column:1/-1;padding:var(--space-8)">
+          <div style="font-size:3rem;opacity:0.3;margin-bottom:var(--space-3)">&#127912;</div>
+          <p>No dream visualizations yet.</p>
+          <p class="text-xs-c mt-2">Dream art is generated automatically during sleep cycles,<br>or you can generate art manually using the button above.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== LIFE DIARY TAB ===== -->

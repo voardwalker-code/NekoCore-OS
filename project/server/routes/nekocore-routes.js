@@ -179,14 +179,38 @@ function createNekoCoreRoutes(ctx) {
   async function postToolingWorkspace(req, res, apiHeaders, readBody) {
     try {
       const body = JSON.parse(await readBody(req));
-      const workspacePath = String(body.workspacePath || '').trim();
+      const entity = readNekoEntity();
+      const wantsAutoDefault = body && body.autoDefault === true;
+      let workspacePath = String(body.workspacePath || '').trim();
+
+      if (!workspacePath && wantsAutoDefault) {
+        // Default to the repository workspace folder on first-time setup.
+        if (entity.workspacePath && String(entity.workspacePath).trim()) {
+          workspacePath = String(entity.workspacePath).trim();
+        } else {
+          workspacePath = path.join(__dirname, '..', '..', 'workspace');
+        }
+      }
+
       if (!workspacePath) throw new Error('workspacePath is required');
       if (!path.isAbsolute(workspacePath)) throw new Error('workspacePath must be absolute');
 
-      const entity = readNekoEntity();
+      if (!fs.existsSync(workspacePath)) {
+        fs.mkdirSync(workspacePath, { recursive: true });
+      }
+
       entity.workspacePath = workspacePath;
       entity.workspaceScope = 'workspace-root';
       writeNekoEntity(entity);
+
+      // Keep the global workspace config aligned for workspace APIs used by the UI.
+      if (ctx.loadConfig && ctx.saveConfig) {
+        const cfg = ctx.loadConfig() || {};
+        if (!cfg.workspacePath || wantsAutoDefault) {
+          cfg.workspacePath = workspacePath;
+          ctx.saveConfig(cfg);
+        }
+      }
 
       appendAuditRecord({
         event: 'tooling_workspace_update',
@@ -198,7 +222,12 @@ function createNekoCoreRoutes(ctx) {
       });
 
       res.writeHead(200, apiHeaders);
-      res.end(JSON.stringify({ ok: true, workspacePath, workspaceScope: 'workspace-root' }));
+      res.end(JSON.stringify({
+        ok: true,
+        workspacePath,
+        workspaceScope: 'workspace-root',
+        autoConfigured: wantsAutoDefault
+      }));
     } catch (e) {
       res.writeHead(400, apiHeaders);
       res.end(JSON.stringify({ ok: false, error: e.message }));

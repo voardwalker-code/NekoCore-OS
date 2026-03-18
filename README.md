@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <strong>v0.6.0</strong> &nbsp;·&nbsp; MIT License
+  <strong>v0.8.0</strong> &nbsp;·&nbsp; MIT License
 </p>
 
 <p align="center">
@@ -17,7 +17,7 @@
   <img src="https://img.shields.io/badge/node-%3E%3D18-brightgreen?style=flat-square&logo=node.js" alt="Node 18+"/>
   <img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"/>
   <img src="https://img.shields.io/badge/dependencies-0-brightgreen?style=flat-square" alt="zero deps"/>
-  <img src="https://img.shields.io/badge/tests-403%20passing-brightgreen?style=flat-square" alt="403 tests"/>
+  <img src="https://img.shields.io/badge/tests-866%20passing-brightgreen?style=flat-square" alt="866 tests"/>
 </p>
 
 ---
@@ -40,7 +40,7 @@ Each entity operates in full isolation — separate memory stores, personality t
 
 ---
 
-## Release Snapshot — v0.6.0
+## Release Snapshot — v0.8.0
 
 - Full cognitive pipeline: subconscious (1A), dream-intuition (1D), conscious (1C), final orchestrator — 1A + 1D in parallel
 - Episodic, semantic, and long-term memory with decay, reinforcement, and divergence repair
@@ -49,17 +49,21 @@ Each entity operates in full isolation — separate memory stores, personality t
 - Live dream-intuition layer active during conversation (phase 1D)
 - Per-user relationship tracking — feeling, trust, rapport, per-entity beliefs about each user
 - Neurochemical simulation — dopamine, cortisol, serotonin, oxytocin modulate tone in real time
+- Per-entity voice profiles — typing speed, rhythm, error rate, filler phrases all generated from personality traits
 - Entity hatching — structured multi-phase birth: name → traits → life history → core memories → goals
 - Unbreakable Mode — opt-in locked origin for NPCs and fixed characters that must never drift
 - Multi-entity runtime — isolated entity instances, each with their own memory and state
 - Multi-LLM routing — assign different models to different pipeline phases
 - Ollama + OpenRouter support (any OpenAI-compatible endpoint)
 - Skills — pluggable tools: web search, memory tools, file ops, extensible
-- Browser UI — entity select, chat, sleep controls, memory viewer, belief viewer, dream gallery, diary
+- Intelligent Memory Expansion — dual-path post-response encoder producing core memories and semantic knowledge
+- Sharded topic archive — topic-keyed NDJSON shards with RAKE extraction and BM25 scoring
+- Browser app — multi-tab browser with history, bookmarks, LLM mode (summarize, ask-page, structured extraction), research sessions
+- Desktop shell — window manager, app launcher, taskbar, theme engine, settings, creator, users
 - 3D Neural Visualizer — Three.js WebGL real-time cognitive state display
 - SSE diagnostic bus — live streaming of pipeline events to browser
 - Post-response memory encoding — async write after each turn, no latency impact
-- 403 passing tests (unit + integration)
+- 866 passing tests (unit + integration)
 - Zero external runtime dependencies — pure Node.js, file-system JSON persistence
 
 ---
@@ -85,8 +89,8 @@ Each entity operates in full isolation — separate memory stores, personality t
 ## Known Limitations
 
 - Single-process server — no clustering or horizontal scaling
-- Memory divergence repair runs on read; very large entity histories (10k+ echoes) may see noticeable latency
-- Beliefgraph edges are heuristic — not a formal knowledge graph engine
+- Memory divergence repair runs on read; very large entity histories may see noticeable latency at the flat-scan ceiling (~25K matched entries)
+- Belief graph `routeAttention()` exists but is not yet wired into the live retrieval path — beliefs influence dream processing but do not yet boost memory retrieval scores
 - Dream output quality is model-dependent; weaker models produce thin abstractions
 - No built-in vector database — retrieval is scored similarity over flat JSON
 - Telegram and web UI share the same session model; Telegram does not yet support full skill output rendering
@@ -149,6 +153,10 @@ Each entity operates in full isolation — separate memory stores, personality t
 ## Architecture
 
 See [project/NekoCore.html](project/NekoCore.html) for the full interactive architecture deck or visit [neko-core.com](https://neko-core.com).
+
+**Documentation:**
+- [docs/NEKOCORE-OS-WHITE-PAPER-v2.md](docs/NEKOCORE-OS-WHITE-PAPER-v2.md) — Technical white paper: identity model, cognitive pipeline, memory architecture, scaling roadmap
+- [docs/NEKOCORE-OS-ARCHITECTURE-v1.md](docs/NEKOCORE-OS-ARCHITECTURE-v1.md) — Full architecture reference: all subsystems, contracts, file map, ADR
 
 ### Cognitive Pipeline
 
@@ -345,6 +353,17 @@ Any OpenAI-compatible model works. For fully local (free): set all phases to an 
 
 
 
+Start from repository root (easy mode):
+
+```bash
+node booter.js
+```
+
+Windows double-click starter (no terminal needed):
+
+- Double-click `Start-NekoCore-Server.bat` in the repository root.
+- If Node.js is missing, it offers a one-click `winget` install for Node.js LTS.
+
 ```bash
 npm start
 ```
@@ -362,15 +381,14 @@ Then open `http://localhost:3000` in your browser.
 
 ## Current Direction (March 2026)
 
-Current product direction is UI and UX first.
+Phases 1–3 (bug fixes, refactor/cleanup, full app modularization) are complete. Active work is Phase 4.7 — Agent Echo: Multi-Index Archive + Retrieval Pipeline.
 
-1. Make the desktop shell intuitive for first-time users.
-2. Group actions into clear app surfaces instead of hidden controls.
-3. Keep core actions fast to find: Apps, Users, Power, Browser, Creator, Settings.
-4. Keep power and shutdown behavior predictable and safe.
-5. Keep browser capabilities practical today while planning a real embedded-browser path.
+**Agent Echo** is a staged retrieval architecture mirroring the entity's three-part cognitive structure:
+- **Echo Now** — hot ~2K memory window, instant recall
+- **Echo Past** — index-narrowed archive search with async round-2 during humanizer typing
+- **Echo Future** — Phase 5 stub for predictive memory topology
 
-The near-term effort is focused on interface clarity and ease of use before deeper feature expansion.
+Phase 5 (Predictive Memory Topology) is gated on Phase 4.7 completion.
 
 ---
 
@@ -469,22 +487,25 @@ rm -rf NekoCore
 ## Project Structure
 
 ```
-NekoCore/
+NekoCore-OS/
 ├── README.md                  # Visitor-first overview at repo root
 ├── WORKLOG.md                 # Active process and phase ledger
 ├── BUGS.md                    # Bug queue and status tracking
 ├── CHANGELOG.md               # Repo-level release notes
+├── docs/                      # Public documentation
+│   ├── NEKOCORE-OS-WHITE-PAPER-v2.md   # Technical white paper
+│   └── NEKOCORE-OS-ARCHITECTURE-v1.md  # Architecture reference paper
 └── project/
-  ├── client/                # Browser frontend
-  ├── server/                # Backend server
-  ├── browser-host/          # Browser host modules
-  ├── skills/                # Pluggable skill plugins
-  ├── tests/                 # Unit + integration tests
-  ├── Config/                # Runtime config template/example
-  ├── entities/              # Runtime entity data (gitignored)
-  ├── memories/              # System memory (gitignored)
-  ├── NekoCore.html          # Interactive architecture deck
-  └── package.json
+    ├── client/                # Browser frontend (desktop shell + apps)
+    ├── server/                # Backend server
+    ├── browser-host/          # Browser host modules
+    ├── skills/                # Pluggable skill plugins
+    ├── tests/                 # Unit + integration tests (866 passing)
+    ├── Config/                # Runtime config template/example
+    ├── entities/              # Runtime entity data (gitignored)
+    ├── memories/              # System memory (gitignored)
+    ├── NekoCore.html          # Interactive architecture deck
+    └── package.json
 ```
 
 ---

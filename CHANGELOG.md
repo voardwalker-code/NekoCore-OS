@@ -5,6 +5,10 @@ Built with MA (Memory Architect v1).
 
 ## [Unreleased]
 
+---
+
+## [0.8.0] - 2026-03-17
+
 ### Changed
 - Repository packaging wrapper: moved the runnable codebase, assets, tests, browser host, and runtime folders under `project/` so the repository root stays documentation-first for visitors. Updated root README instructions and root ignore rules to match the new source location.
 - NekoCore OS panel now exposes its own Tools and Workspace settings: per-skill enable/disable controls, approval-mode toggle, and editable workspace root path for the system entity.

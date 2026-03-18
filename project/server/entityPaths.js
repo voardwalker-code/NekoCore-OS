@@ -71,7 +71,7 @@ function normalizeEntityId(entityId) {
 function getEntityRoot(entityId) {
   const id = normalizeEntityId(entityId);
   if (!id) throw new Error(`Invalid entityId: ${JSON.stringify(entityId)}`);
-  return path.join(ENTITIES_DIR, `entity_${id}`);
+  return path.join(module.exports.ENTITIES_DIR, `entity_${id}`);
 }
 
 /**
@@ -167,6 +167,36 @@ function getMemoryImagesPath(entityId) {
   return path.join(getMemoryRoot(entityId), 'images');
 }
 
+// ── Archive directories (IME I3-0) ─────────────────────────
+
+function getArchiveRoot(entityId) {
+  return path.join(getMemoryRoot(entityId), 'archive');
+}
+
+function getArchiveEpisodicPath(entityId) {
+  return path.join(getArchiveRoot(entityId), 'episodic');
+}
+
+function getArchiveDocsPath(entityId) {
+  return path.join(getArchiveRoot(entityId), 'docs');
+}
+
+function getArchiveIndexPath(entityId) {
+  return path.join(getArchiveRoot(entityId), 'archiveIndex.json');
+}
+
+function getArchiveRouterPath(entityId) {
+  return path.join(getArchiveRoot(entityId), 'router.json');
+}
+
+function getArchiveBucketPath(entityId, filename) {
+  return path.join(getArchiveRoot(entityId), filename);
+}
+
+function getArchiveMigrationMarkerPath(entityId) {
+  return path.join(getArchiveRoot(entityId), 'migration_complete.json');
+}
+
 // ── Exports ─────────────────────────────────────────────────
 
 module.exports = {
@@ -200,4 +230,12 @@ module.exports = {
 
   getPixelArtPath,
   getMemoryImagesPath,
+
+  getArchiveRoot,
+  getArchiveEpisodicPath,
+  getArchiveDocsPath,
+  getArchiveIndexPath,
+  getArchiveRouterPath,
+  getArchiveBucketPath,
+  getArchiveMigrationMarkerPath,
 };

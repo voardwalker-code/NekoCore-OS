@@ -1,0 +1,957 @@
+﻿{
+    "version":  1,
+    "basePath":  "assets/icons",
+    "generatedAt":  "2026-03-17T11:08:42.3612706-05:00",
+    "icons":  {
+                  "brand.favicon":  {
+                                        "category":  "branding",
+                                        "type":  "asset_svg",
+                                        "current":  "NekoCat.svg",
+                                        "meaning":  "Browser/tab/taskbar identity icon",
+                                        "source":  "client/assets/NekoCat.svg",
+                                        "file":  "brand-favicon.svg",
+                                        "path":  "assets/icons/brand-favicon.svg",
+                                        "status":  "planned"
+                                    },
+                  "brand.webmanifest":  {
+                                            "category":  "branding",
+                                            "type":  "asset_svg",
+                                            "current":  "NekoCat.svg",
+                                            "meaning":  "PWA install icon",
+                                            "source":  "client/manifest.webmanifest:11",
+                                            "file":  "brand-pwa-512.png",
+                                            "path":  "assets/icons/brand-pwa-512.png",
+                                            "status":  "planned"
+                                        },
+                  "app.chat":  {
+                                   "category":  "shell_app",
+                                   "type":  "inline_svg",
+                                   "current":  "chat-bubble",
+                                   "meaning":  "Chat app icon",
+                                   "source":  "client/js/app.js:57",
+                                   "file":  "app-chat.svg",
+                                   "path":  "assets/icons/app-chat.svg",
+                                   "status":  "planned"
+                               },
+                  "app.entity":  {
+                                     "category":  "shell_app",
+                                     "type":  "inline_svg",
+                                     "current":  "question-circle",
+                                     "meaning":  "Entity app icon",
+                                     "source":  "client/js/app.js:58",
+                                     "file":  "app-entity.svg",
+                                     "path":  "assets/icons/app-entity.svg",
+                                     "status":  "planned"
+                                 },
+                  "app.creator":  {
+                                      "category":  "shell_app",
+                                      "type":  "inline_svg",
+                                      "current":  "star",
+                                      "meaning":  "Creator app icon",
+                                      "source":  "client/js/app.js:59",
+                                      "file":  "app-creator.svg",
+                                      "path":  "assets/icons/app-creator.svg",
+                                      "status":  "planned"
+                                  },
+                  "app.users":  {
+                                    "category":  "shell_app",
+                                    "type":  "inline_svg",
+                                    "current":  "users",
+                                    "meaning":  "Users app icon",
+                                    "source":  "client/js/app.js:60",
+                                    "file":  "app-users.svg",
+                                    "path":  "assets/icons/app-users.svg",
+                                    "status":  "planned"
+                                },
+                  "app.browser":  {
+                                      "category":  "shell_app",
+                                      "type":  "inline_svg",
+                                      "current":  "globe",
+                                      "meaning":  "NekoCore Browser app icon",
+                                      "source":  "client/js/app.js:61",
+                                      "file":  "app-browser.svg",
+                                      "path":  "assets/icons/app-browser.svg",
+                                      "status":  "planned"
+                                  },
+                  "app.skills":  {
+                                     "category":  "shell_app",
+                                     "type":  "inline_svg",
+                                     "current":  "panel",
+                                     "meaning":  "Skills app icon",
+                                     "source":  "client/js/app.js:62",
+                                     "file":  "app-skills.svg",
+                                     "path":  "assets/icons/app-skills.svg",
+                                     "status":  "planned"
+                                 },
+                  "app.workspace":  {
+                                        "category":  "shell_app",
+                                        "type":  "inline_svg",
+                                        "current":  "folder",
+                                        "meaning":  "Workspace app icon",
+                                        "source":  "client/js/app.js:63",
+                                        "file":  "app-workspace.svg",
+                                        "path":  "assets/icons/app-workspace.svg",
+                                        "status":  "planned"
+                                    },
+                  "app.popouts":  {
+                                      "category":  "shell_app",
+                                      "type":  "inline_svg",
+                                      "current":  "external-link",
+                                      "meaning":  "Popouts app icon",
+                                      "source":  "client/js/app.js:64",
+                                      "file":  "app-popouts.svg",
+                                      "path":  "assets/icons/app-popouts.svg",
+                                      "status":  "planned"
+                                  },
+                  "app.documents":  {
+                                        "category":  "shell_app",
+                                        "type":  "inline_svg",
+                                        "current":  "file",
+                                        "meaning":  "Documents app icon",
+                                        "source":  "client/js/app.js:65",
+                                        "file":  "app-documents.svg",
+                                        "path":  "assets/icons/app-documents.svg",
+                                        "status":  "planned"
+                                    },
+                  "app.visualizer":  {
+                                         "category":  "shell_app",
+                                         "type":  "inline_svg",
+                                         "current":  "eye",
+                                         "meaning":  "Visualizer app icon",
+                                         "source":  "client/js/app.js:66",
+                                         "file":  "app-visualizer.svg",
+                                         "path":  "assets/icons/app-visualizer.svg",
+                                         "status":  "planned"
+                                     },
+                  "app.physical":  {
+                                       "category":  "shell_app",
+                                       "type":  "inline_svg",
+                                       "current":  "heart",
+                                       "meaning":  "Physical Body app icon",
+                                       "source":  "client/js/app.js:67",
+                                       "file":  "app-physical.svg",
+                                       "path":  "assets/icons/app-physical.svg",
+                                       "status":  "planned"
+                                   },
+                  "app.dreamgallery":  {
+                                           "category":  "shell_app",
+                                           "type":  "inline_svg",
+                                           "current":  "moon",
+                                           "meaning":  "Dream Gallery app icon",
+                                           "source":  "client/js/app.js:68",
+                                           "file":  "app-dreamgallery.svg",
+                                           "path":  "assets/icons/app-dreamgallery.svg",
+                                           "status":  "planned"
+                                       },
+                  "app.lifediary":  {
+                                        "category":  "shell_app",
+                                        "type":  "inline_svg",
+                                        "current":  "book",
+                                        "meaning":  "Life Diary app icon",
+                                        "source":  "client/js/app.js:69",
+                                        "file":  "app-lifediary.svg",
+                                        "path":  "assets/icons/app-lifediary.svg",
+                                        "status":  "planned"
+                                    },
+                  "app.dreamdiary":  {
+                                         "category":  "shell_app",
+                                         "type":  "inline_svg",
+                                         "current":  "open-book",
+                                         "meaning":  "Dream Diary app icon",
+                                         "source":  "client/js/app.js:70",
+                                         "file":  "app-dreamdiary.svg",
+                                         "path":  "assets/icons/app-dreamdiary.svg",
+                                         "status":  "planned"
+                                     },
+                  "app.themes":  {
+                                     "category":  "shell_app",
+                                     "type":  "inline_svg",
+                                     "current":  "palette",
+                                     "meaning":  "Themes app icon",
+                                     "source":  "client/js/app.js:71",
+                                     "file":  "app-themes.svg",
+                                     "path":  "assets/icons/app-themes.svg",
+                                     "status":  "planned"
+                                 },
+                  "app.settings":  {
+                                       "category":  "shell_app",
+                                       "type":  "inline_svg",
+                                       "current":  "gear",
+                                       "meaning":  "Settings app icon",
+                                       "source":  "client/js/app.js:72",
+                                       "file":  "app-settings.svg",
+                                       "path":  "assets/icons/app-settings.svg",
+                                       "status":  "planned"
+                                   },
+                  "app.advanced":  {
+                                       "category":  "shell_app",
+                                       "type":  "inline_svg",
+                                       "current":  "wrench",
+                                       "meaning":  "Advanced app icon",
+                                       "source":  "client/js/app.js:73",
+                                       "file":  "app-advanced.svg",
+                                       "path":  "assets/icons/app-advanced.svg",
+                                       "status":  "planned"
+                                   },
+                  "app.activity":  {
+                                       "category":  "shell_app",
+                                       "type":  "inline_svg",
+                                       "current":  "monitor",
+                                       "meaning":  "Task Manager app icon",
+                                       "source":  "client/js/app.js:74",
+                                       "file":  "app-activity.svg",
+                                       "path":  "assets/icons/app-activity.svg",
+                                       "status":  "planned"
+                                   },
+                  "app.observability":  {
+                                            "category":  "shell_app",
+                                            "type":  "inline_svg",
+                                            "current":  "pulse",
+                                            "meaning":  "Observability app icon",
+                                            "source":  "client/js/app.js:75",
+                                            "file":  "app-observability.svg",
+                                            "path":  "assets/icons/app-observability.svg",
+                                            "status":  "planned"
+                                        },
+                  "app.debugcore":  {
+                                        "category":  "shell_app",
+                                        "type":  "inline_svg",
+                                        "current":  "info-circle",
+                                        "meaning":  "Core Debug app icon",
+                                        "source":  "client/js/app.js:76",
+                                        "file":  "app-debugcore.svg",
+                                        "path":  "assets/icons/app-debugcore.svg",
+                                        "status":  "planned"
+                                    },
+                  "app.archive":  {
+                                      "category":  "shell_app",
+                                      "type":  "inline_svg",
+                                      "current":  "archive-box",
+                                      "meaning":  "Archive app icon",
+                                      "source":  "client/js/app.js:77",
+                                      "file":  "app-archive.svg",
+                                      "path":  "assets/icons/app-archive.svg",
+                                      "status":  "planned"
+                                  },
+                  "app.nekocore":  {
+                                       "category":  "shell_app",
+                                       "type":  "inline_svg",
+                                       "current":  "cpu-chip",
+                                       "meaning":  "NekoCore OS app icon",
+                                       "source":  "client/js/app.js:78",
+                                       "file":  "app-nekocore.svg",
+                                       "path":  "assets/icons/app-nekocore.svg",
+                                       "status":  "planned"
+                                   },
+                  "start.control_panel":  {
+                                              "category":  "start_menu",
+                                              "type":  "inline_svg",
+                                              "current":  "download-tray",
+                                              "meaning":  "Control Panel special item",
+                                              "source":  "client/js/app.js:122",
+                                              "file":  "start-control-panel.svg",
+                                              "path":  "assets/icons/start-control-panel.svg",
+                                              "status":  "planned"
+                                          },
+                  "start.save_layout":  {
+                                            "category":  "start_menu",
+                                            "type":  "inline_svg",
+                                            "current":  "save-floppy",
+                                            "meaning":  "Save layout special item",
+                                            "source":  "client/js/app.js:132",
+                                            "file":  "start-save-layout.svg",
+                                            "path":  "assets/icons/start-save-layout.svg",
+                                            "status":  "planned"
+                                        },
+                  "start.restore_layout":  {
+                                               "category":  "start_menu",
+                                               "type":  "inline_svg",
+                                               "current":  "grid-restore",
+                                               "meaning":  "Restore layout special item",
+                                               "source":  "client/js/app.js:142",
+                                               "file":  "start-restore-layout.svg",
+                                               "path":  "assets/icons/start-restore-layout.svg",
+                                               "status":  "planned"
+                                           },
+                  "start.reset_layout":  {
+                                             "category":  "start_menu",
+                                             "type":  "inline_svg",
+                                             "current":  "refresh-arrow",
+                                             "meaning":  "Reset layout special item",
+                                             "source":  "client/js/app.js:152",
+                                             "file":  "start-reset-layout.svg",
+                                             "path":  "assets/icons/start-reset-layout.svg",
+                                             "status":  "planned"
+                                         },
+                  "nav.workspace":  {
+                                        "category":  "optional_nav",
+                                        "type":  "emoji",
+                                        "current":  "📁",
+                                        "meaning":  "Optional nav icon Workspace",
+                                        "source":  "client/js/apps/non-core-html-loader.js:9",
+                                        "file":  "nav-workspace.svg",
+                                        "path":  "assets/icons/nav-workspace.svg",
+                                        "status":  "planned"
+                                    },
+                  "nav.skills":  {
+                                     "category":  "optional_nav",
+                                     "type":  "emoji",
+                                     "current":  "🧩",
+                                     "meaning":  "Optional nav icon Skills",
+                                     "source":  "client/js/apps/non-core-html-loader.js:10",
+                                     "file":  "nav-skills.svg",
+                                     "path":  "assets/icons/nav-skills.svg",
+                                     "status":  "planned"
+                                 },
+                  "nav.popouts":  {
+                                      "category":  "optional_nav",
+                                      "type":  "emoji",
+                                      "current":  "↗",
+                                      "meaning":  "Optional nav icon Popouts",
+                                      "source":  "client/js/apps/non-core-html-loader.js:11",
+                                      "file":  "nav-popouts.svg",
+                                      "path":  "assets/icons/nav-popouts.svg",
+                                      "status":  "planned"
+                                  },
+                  "nav.themes":  {
+                                     "category":  "optional_nav",
+                                     "type":  "emoji",
+                                     "current":  "🎨",
+                                     "meaning":  "Optional nav icon Themes",
+                                     "source":  "client/js/apps/non-core-html-loader.js:12",
+                                     "file":  "nav-themes.svg",
+                                     "path":  "assets/icons/nav-themes.svg",
+                                     "status":  "planned"
+                                 },
+                  "nav.visualizer":  {
+                                         "category":  "optional_nav",
+                                         "type":  "emoji",
+                                         "current":  "🕸️",
+                                         "meaning":  "Optional nav icon Visualizer",
+                                         "source":  "client/js/apps/non-core-html-loader.js:13",
+                                         "file":  "nav-visualizer.svg",
+                                         "path":  "assets/icons/nav-visualizer.svg",
+                                         "status":  "planned"
+                                     },
+                  "nav.physical":  {
+                                       "category":  "optional_nav",
+                                       "type":  "emoji",
+                                       "current":  "❤️",
+                                       "meaning":  "Optional nav icon Physical",
+                                       "source":  "client/js/apps/non-core-html-loader.js:14",
+                                       "file":  "nav-physical.svg",
+                                       "path":  "assets/icons/nav-physical.svg",
+                                       "status":  "planned"
+                                   },
+                  "nav.dreamgallery":  {
+                                           "category":  "optional_nav",
+                                           "type":  "emoji",
+                                           "current":  "🖼️",
+                                           "meaning":  "Optional nav icon Dreams",
+                                           "source":  "client/js/apps/non-core-html-loader.js:15",
+                                           "file":  "nav-dreamgallery.svg",
+                                           "path":  "assets/icons/nav-dreamgallery.svg",
+                                           "status":  "planned"
+                                       },
+                  "nav.lifediary":  {
+                                        "category":  "optional_nav",
+                                        "type":  "emoji",
+                                        "current":  "📖",
+                                        "meaning":  "Optional nav icon Life Diary",
+                                        "source":  "client/js/apps/non-core-html-loader.js:16",
+                                        "file":  "nav-lifediary.svg",
+                                        "path":  "assets/icons/nav-lifediary.svg",
+                                        "status":  "planned"
+                                    },
+                  "nav.dreamdiary":  {
+                                         "category":  "optional_nav",
+                                         "type":  "emoji",
+                                         "current":  "🌙",
+                                         "meaning":  "Optional nav icon Dream Diary",
+                                         "source":  "client/js/apps/non-core-html-loader.js:17",
+                                         "file":  "nav-dreamdiary.svg",
+                                         "path":  "assets/icons/nav-dreamdiary.svg",
+                                         "status":  "planned"
+                                     },
+                  "nav.documents":  {
+                                        "category":  "optional_nav",
+                                        "type":  "emoji",
+                                        "current":  "📄",
+                                        "meaning":  "Optional nav icon Documents",
+                                        "source":  "client/js/apps/non-core-html-loader.js:18",
+                                        "file":  "nav-documents.svg",
+                                        "path":  "assets/icons/nav-documents.svg",
+                                        "status":  "planned"
+                                    },
+                  "nav.browser":  {
+                                      "category":  "optional_nav",
+                                      "type":  "emoji",
+                                      "current":  "🌐",
+                                      "meaning":  "Optional nav icon Browser",
+                                      "source":  "client/js/apps/non-core-html-loader.js:19",
+                                      "file":  "nav-browser.svg",
+                                      "path":  "assets/icons/nav-browser.svg",
+                                      "status":  "planned"
+                                  },
+                  "nav.fallback":  {
+                                       "category":  "optional_nav",
+                                       "type":  "emoji",
+                                       "current":  "🧩",
+                                       "meaning":  "Fallback icon when missing",
+                                       "source":  "client/js/apps/non-core-html-loader.js:109",
+                                       "file":  "nav-fallback.svg",
+                                       "path":  "assets/icons/nav-fallback.svg",
+                                       "status":  "planned"
+                                   },
+                  "ctx.popout":  {
+                                     "category":  "context_menu",
+                                     "type":  "emoji",
+                                     "current":  "↗",
+                                     "meaning":  "Pop out/focus detached",
+                                     "source":  "client/js/context-menu.js:70",
+                                     "file":  "ctx-popout.svg",
+                                     "path":  "assets/icons/ctx-popout.svg",
+                                     "status":  "planned"
+                                 },
+                  "ctx.close_detached":  {
+                                             "category":  "context_menu",
+                                             "type":  "emoji",
+                                             "current":  "✕",
+                                             "meaning":  "Close detached window",
+                                             "source":  "client/js/context-menu.js:80",
+                                             "file":  "ctx-close.svg",
+                                             "path":  "assets/icons/ctx-close.svg",
+                                             "status":  "planned"
+                                         },
+                  "ctx.pin":  {
+                                  "category":  "context_menu",
+                                  "type":  "emoji",
+                                  "current":  "📌",
+                                  "meaning":  "Pin or unpin actions",
+                                  "source":  "client/js/context-menu.js:106",
+                                  "file":  "ctx-pin.svg",
+                                  "path":  "assets/icons/ctx-pin.svg",
+                                  "status":  "planned"
+                              },
+                  "ctx.shortcut":  {
+                                       "category":  "context_menu",
+                                       "type":  "emoji",
+                                       "current":  "📄",
+                                       "meaning":  "Create desktop shortcut",
+                                       "source":  "client/js/context-menu.js:110",
+                                       "file":  "ctx-shortcut.svg",
+                                       "path":  "assets/icons/ctx-shortcut.svg",
+                                       "status":  "planned"
+                                   },
+                  "ctx.open":  {
+                                   "category":  "context_menu",
+                                   "type":  "emoji",
+                                   "current":  "🚀",
+                                   "meaning":  "Open action",
+                                   "source":  "client/js/context-menu.js:138",
+                                   "file":  "ctx-open.svg",
+                                   "path":  "assets/icons/ctx-open.svg",
+                                   "status":  "planned"
+                               },
+                  "ctx.folder":  {
+                                     "category":  "context_menu",
+                                     "type":  "emoji",
+                                     "current":  "📂",
+                                     "meaning":  "Open folder action",
+                                     "source":  "client/js/context-menu.js:153",
+                                     "file":  "ctx-folder.svg",
+                                     "path":  "assets/icons/ctx-folder.svg",
+                                     "status":  "planned"
+                                 },
+                  "ctx.rename":  {
+                                     "category":  "context_menu",
+                                     "type":  "emoji",
+                                     "current":  "✏️",
+                                     "meaning":  "Rename action",
+                                     "source":  "client/js/context-menu.js:160",
+                                     "file":  "ctx-rename.svg",
+                                     "path":  "assets/icons/ctx-rename.svg",
+                                     "status":  "planned"
+                                 },
+                  "ctx.delete":  {
+                                     "category":  "context_menu",
+                                     "type":  "emoji",
+                                     "current":  "🗑️",
+                                     "meaning":  "Delete action",
+                                     "source":  "client/js/context-menu.js:161",
+                                     "file":  "ctx-delete.svg",
+                                     "path":  "assets/icons/ctx-delete.svg",
+                                     "status":  "planned"
+                                 },
+                  "ctx.new_folder":  {
+                                         "category":  "context_menu",
+                                         "type":  "emoji",
+                                         "current":  "📁",
+                                         "meaning":  "New folder action",
+                                         "source":  "client/js/context-menu.js:171",
+                                         "file":  "ctx-new-folder.svg",
+                                         "path":  "assets/icons/ctx-new-folder.svg",
+                                         "status":  "planned"
+                                     },
+                  "ctx.new_note":  {
+                                       "category":  "context_menu",
+                                       "type":  "emoji",
+                                       "current":  "📝",
+                                       "meaning":  "New note action",
+                                       "source":  "client/js/context-menu.js:172",
+                                       "file":  "ctx-new-note.svg",
+                                       "path":  "assets/icons/ctx-new-note.svg",
+                                       "status":  "planned"
+                                   },
+                  "ctx.refresh":  {
+                                      "category":  "context_menu",
+                                      "type":  "emoji",
+                                      "current":  "🔄",
+                                      "meaning":  "Refresh action",
+                                      "source":  "client/js/context-menu.js:174",
+                                      "file":  "ctx-refresh.svg",
+                                      "path":  "assets/icons/ctx-refresh.svg",
+                                      "status":  "planned"
+                                  },
+                  "wm.pin":  {
+                                 "category":  "window_controls",
+                                 "type":  "html_entity",
+                                 "current":  "\u0026#9733;",
+                                 "meaning":  "Pin button titlebar",
+                                 "source":  "client/js/window-manager.js:453",
+                                 "file":  "wm-pin.svg",
+                                 "path":  "assets/icons/wm-pin.svg",
+                                 "status":  "planned"
+                             },
+                  "wm.snap_left":  {
+                                       "category":  "window_controls",
+                                       "type":  "html_entity",
+                                       "current":  "\u0026#9698;",
+                                       "meaning":  "Snap left titlebar",
+                                       "source":  "client/js/window-manager.js:454",
+                                       "file":  "wm-snap-left.svg",
+                                       "path":  "assets/icons/wm-snap-left.svg",
+                                       "status":  "planned"
+                                   },
+                  "wm.snap_right":  {
+                                        "category":  "window_controls",
+                                        "type":  "html_entity",
+                                        "current":  "\u0026#9701;",
+                                        "meaning":  "Snap right titlebar",
+                                        "source":  "client/js/window-manager.js:455",
+                                        "file":  "wm-snap-right.svg",
+                                        "path":  "assets/icons/wm-snap-right.svg",
+                                        "status":  "planned"
+                                    },
+                  "wm.popout":  {
+                                    "category":  "window_controls",
+                                    "type":  "html_entity",
+                                    "current":  "\u0026#8599;",
+                                    "meaning":  "Pop out titlebar",
+                                    "source":  "client/js/window-manager.js:456",
+                                    "file":  "wm-popout.svg",
+                                    "path":  "assets/icons/wm-popout.svg",
+                                    "status":  "planned"
+                                },
+                  "wm.maximize":  {
+                                      "category":  "window_controls",
+                                      "type":  "html_entity",
+                                      "current":  "\u0026#9723;",
+                                      "meaning":  "Maximize titlebar",
+                                      "source":  "client/js/window-manager.js:457",
+                                      "file":  "wm-maximize.svg",
+                                      "path":  "assets/icons/wm-maximize.svg",
+                                      "status":  "planned"
+                                  },
+                  "wm.close":  {
+                                   "category":  "window_controls",
+                                   "type":  "html_entity",
+                                   "current":  "\u0026#10005;",
+                                   "meaning":  "Close titlebar",
+                                   "source":  "client/js/window-manager.js:458",
+                                   "file":  "wm-close.svg",
+                                   "path":  "assets/icons/wm-close.svg",
+                                   "status":  "planned"
+                               },
+                  "index.setup":  {
+                                      "category":  "index_ui",
+                                      "type":  "emoji",
+                                      "current":  "⚙️",
+                                      "meaning":  "Setup Required heading",
+                                      "source":  "client/index.html:254",
+                                      "file":  "ui-setup.svg",
+                                      "path":  "assets/icons/ui-setup.svg",
+                                      "status":  "planned"
+                                  },
+                  "index.provider_openrouter":  {
+                                                    "category":  "index_ui",
+                                                    "type":  "emoji",
+                                                    "current":  "🌐",
+                                                    "meaning":  "Set Up OpenRouter button",
+                                                    "source":  "client/index.html:265",
+                                                    "file":  "ui-openrouter.svg",
+                                                    "path":  "assets/icons/ui-openrouter.svg",
+                                                    "status":  "planned"
+                                                },
+                  "index.start_close":  {
+                                            "category":  "index_ui",
+                                            "type":  "emoji",
+                                            "current":  "✕",
+                                            "meaning":  "Close start menu button",
+                                            "source":  "client/index.html:363",
+                                            "file":  "ui-close.svg",
+                                            "path":  "assets/icons/ui-close.svg",
+                                            "status":  "planned"
+                                        },
+                  "index.brain":  {
+                                      "category":  "index_ui",
+                                      "type":  "html_entity",
+                                      "current":  "\u0026#129504;",
+                                      "meaning":  "Brain indicator icon",
+                                      "source":  "client/index.html:432",
+                                      "file":  "ui-brain.svg",
+                                      "path":  "assets/icons/ui-brain.svg",
+                                      "status":  "planned"
+                                  },
+                  "index.subbrain":  {
+                                         "category":  "index_ui",
+                                         "type":  "html_entity",
+                                         "current":  "\u0026#129504;",
+                                         "meaning":  "Sub-brain status icon",
+                                         "source":  "client/index.html:625",
+                                         "file":  "ui-brain-sub.svg",
+                                         "path":  "assets/icons/ui-brain-sub.svg",
+                                         "status":  "planned"
+                                     },
+                  "index.sleep":  {
+                                      "category":  "index_ui",
+                                      "type":  "html_entity",
+                                      "current":  "\u0026#127769;",
+                                      "meaning":  "Sleep button and moon icon",
+                                      "source":  "client/index.html:649",
+                                      "file":  "ui-sleep.svg",
+                                      "path":  "assets/icons/ui-sleep.svg",
+                                      "status":  "planned"
+                                  },
+                  "index.compress":  {
+                                         "category":  "index_ui",
+                                         "type":  "html_entity",
+                                         "current":  "\u0026#128230;",
+                                         "meaning":  "Compress and drop overlays",
+                                         "source":  "client/index.html:650",
+                                         "file":  "ui-compress.svg",
+                                         "path":  "assets/icons/ui-compress.svg",
+                                         "status":  "planned"
+                                     },
+                  "index.clear":  {
+                                      "category":  "index_ui",
+                                      "type":  "html_entity",
+                                      "current":  "\u0026#128465;",
+                                      "meaning":  "Clear button",
+                                      "source":  "client/index.html:652",
+                                      "file":  "ui-clear.svg",
+                                      "path":  "assets/icons/ui-clear.svg",
+                                      "status":  "planned"
+                                  },
+                  "index.chat_empty":  {
+                                           "category":  "index_ui",
+                                           "type":  "html_entity",
+                                           "current":  "\u0026#128172;",
+                                           "meaning":  "Chat empty state icon",
+                                           "source":  "client/index.html:674",
+                                           "file":  "ui-chat-empty.svg",
+                                           "path":  "assets/icons/ui-chat-empty.svg",
+                                           "status":  "planned"
+                                       },
+                  "index.provider_ollama":  {
+                                                "category":  "index_ui",
+                                                "type":  "emoji",
+                                                "current":  "🐋",
+                                                "meaning":  "Setup provider icon",
+                                                "source":  "client/index.html:1471",
+                                                "file":  "ui-provider-ollama.svg",
+                                                "path":  "assets/icons/ui-provider-ollama.svg",
+                                                "status":  "planned"
+                                            },
+                  "creator.brand":  {
+                                        "category":  "creator_ui",
+                                        "type":  "emoji",
+                                        "current":  "🧬",
+                                        "meaning":  "Entity Creator brand",
+                                        "source":  "client/create.html:219",
+                                        "file":  "creator-brand.svg",
+                                        "path":  "assets/icons/creator-brand.svg",
+                                        "status":  "planned"
+                                    },
+                  "creator.mode_random":  {
+                                              "category":  "creator_ui",
+                                              "type":  "emoji",
+                                              "current":  "🎲",
+                                              "meaning":  "Mode card random",
+                                              "source":  "client/create.html:258",
+                                              "file":  "creator-mode-random.svg",
+                                              "path":  "assets/icons/creator-mode-random.svg",
+                                              "status":  "planned"
+                                          },
+                  "creator.mode_guided":  {
+                                              "category":  "creator_ui",
+                                              "type":  "emoji",
+                                              "current":  "✏️",
+                                              "meaning":  "Mode card guided",
+                                              "source":  "client/create.html:263",
+                                              "file":  "creator-mode-guided.svg",
+                                              "path":  "assets/icons/creator-mode-guided.svg",
+                                              "status":  "planned"
+                                          },
+                  "creator.mode_character":  {
+                                                 "category":  "creator_ui",
+                                                 "type":  "emoji",
+                                                 "current":  "🎨",
+                                                 "meaning":  "Mode card character",
+                                                 "source":  "client/create.html:268",
+                                                 "file":  "creator-mode-character.svg",
+                                                 "path":  "assets/icons/creator-mode-character.svg",
+                                                 "status":  "planned"
+                                             },
+                  "creator.mode_import":  {
+                                              "category":  "creator_ui",
+                                              "type":  "emoji",
+                                              "current":  "📚",
+                                              "meaning":  "Mode card import",
+                                              "source":  "client/create.html:273",
+                                              "file":  "creator-mode-import.svg",
+                                              "path":  "assets/icons/creator-mode-import.svg",
+                                              "status":  "planned"
+                                          },
+                  "creator.step_pending":  {
+                                               "category":  "creator_ui",
+                                               "type":  "emoji",
+                                               "current":  "⏳",
+                                               "meaning":  "Hatching step pending",
+                                               "source":  "client/create.html:540",
+                                               "file":  "creator-step-pending.svg",
+                                               "path":  "assets/icons/creator-step-pending.svg",
+                                               "status":  "planned"
+                                           },
+                  "creator.step_done":  {
+                                            "category":  "creator_ui",
+                                            "type":  "emoji",
+                                            "current":  "✓",
+                                            "meaning":  "Hatching step complete",
+                                            "source":  "client/js/create.js:315",
+                                            "file":  "creator-step-done.svg",
+                                            "path":  "assets/icons/creator-step-done.svg",
+                                            "status":  "planned"
+                                        },
+                  "nekocore.brand":  {
+                                         "category":  "nekocore_ui",
+                                         "type":  "emoji",
+                                         "current":  "⬡",
+                                         "meaning":  "NekoCore page brand symbol",
+                                         "source":  "client/nekocore.html:22",
+                                         "file":  "nekocore-brand.svg",
+                                         "path":  "assets/icons/nekocore-brand.svg",
+                                         "status":  "planned"
+                                     },
+                  "viz.full_mind":  {
+                                        "category":  "visualizer_ui",
+                                        "type":  "emoji",
+                                        "current":  "🧠",
+                                        "meaning":  "Full Mind button",
+                                        "source":  "client/visualizer.html:37",
+                                        "file":  "viz-full-mind.svg",
+                                        "path":  "assets/icons/viz-full-mind.svg",
+                                        "status":  "planned"
+                                    },
+                  "viz.load_history":  {
+                                           "category":  "visualizer_ui",
+                                           "type":  "emoji",
+                                           "current":  "📂",
+                                           "meaning":  "Load history button",
+                                           "source":  "client/visualizer.html:57",
+                                           "file":  "viz-history.svg",
+                                           "path":  "assets/icons/viz-history.svg",
+                                           "status":  "planned"
+                                       },
+                  "viz.close":  {
+                                    "category":  "visualizer_ui",
+                                    "type":  "emoji",
+                                    "current":  "✕",
+                                    "meaning":  "Close/clear buttons",
+                                    "source":  "client/visualizer.html:97",
+                                    "file":  "viz-close.svg",
+                                    "path":  "assets/icons/viz-close.svg",
+                                    "status":  "planned"
+                                },
+                  "browser.llm_mode":  {
+                                           "category":  "browser_ui",
+                                           "type":  "emoji",
+                                           "current":  "🧠",
+                                           "meaning":  "Browser LLM mode button",
+                                           "source":  "client/apps/non-core/core/tab-browser.html:26",
+                                           "file":  "browser-llm.svg",
+                                           "path":  "assets/icons/browser-llm.svg",
+                                           "status":  "planned"
+                                       },
+                  "browser.home_logo":  {
+                                            "category":  "browser_ui",
+                                            "type":  "emoji",
+                                            "current":  "🌐",
+                                            "meaning":  "Browser home logo",
+                                            "source":  "client/apps/non-core/core/tab-browser.html:35",
+                                            "file":  "browser-home.svg",
+                                            "path":  "assets/icons/browser-home.svg",
+                                            "status":  "planned"
+                                        },
+                  "browser.session":  {
+                                          "category":  "browser_ui",
+                                          "type":  "emoji",
+                                          "current":  "📂",
+                                          "meaning":  "Browser session button/label",
+                                          "source":  "client/apps/non-core/core/tab-browser.html:132",
+                                          "file":  "browser-session.svg",
+                                          "path":  "assets/icons/browser-session.svg",
+                                          "status":  "planned"
+                                      },
+                  "browser.summarize":  {
+                                            "category":  "browser_ui",
+                                            "type":  "emoji",
+                                            "current":  "📝",
+                                            "meaning":  "Summarize button",
+                                            "source":  "client/apps/non-core/core/tab-browser.html:148",
+                                            "file":  "browser-summarize.svg",
+                                            "path":  "assets/icons/browser-summarize.svg",
+                                            "status":  "planned"
+                                        },
+                  "browser.extract":  {
+                                          "category":  "browser_ui",
+                                          "type":  "emoji",
+                                          "current":  "🔄",
+                                          "meaning":  "Extract button",
+                                          "source":  "client/apps/non-core/core/tab-browser.html:143",
+                                          "file":  "browser-extract.svg",
+                                          "path":  "assets/icons/browser-extract.svg",
+                                          "status":  "planned"
+                                      },
+                  "browser.external":  {
+                                           "category":  "browser_ui",
+                                           "type":  "emoji",
+                                           "current":  "↗",
+                                           "meaning":  "Open in system browser hint",
+                                           "source":  "client/apps/non-core/core/tab-browser.html:205",
+                                           "file":  "browser-external.svg",
+                                           "path":  "assets/icons/browser-external.svg",
+                                           "status":  "planned"
+                                       },
+                  "vfs.folder":  {
+                                     "category":  "vfs_ui",
+                                     "type":  "emoji",
+                                     "current":  "📁",
+                                     "meaning":  "Folder type icon",
+                                     "source":  "client/js/vfs.js:125",
+                                     "file":  "vfs-folder.svg",
+                                     "path":  "assets/icons/vfs-folder.svg",
+                                     "status":  "planned"
+                                 },
+                  "vfs.note":  {
+                                   "category":  "vfs_ui",
+                                   "type":  "emoji",
+                                   "current":  "📝",
+                                   "meaning":  "Note file type icon",
+                                   "source":  "client/js/vfs.js:126",
+                                   "file":  "vfs-note.svg",
+                                   "path":  "assets/icons/vfs-note.svg",
+                                   "status":  "planned"
+                               },
+                  "vfs.file":  {
+                                   "category":  "vfs_ui",
+                                   "type":  "emoji",
+                                   "current":  "📄",
+                                   "meaning":  "Generic file type icon",
+                                   "source":  "client/js/vfs.js:127",
+                                   "file":  "vfs-file.svg",
+                                   "path":  "assets/icons/vfs-file.svg",
+                                   "status":  "planned"
+                               },
+                  "chat.phase_subconscious":  {
+                                                  "category":  "chat_pipeline",
+                                                  "type":  "emoji",
+                                                  "current":  "🧠",
+                                                  "meaning":  "Pipeline phase label",
+                                                  "source":  "client/js/apps/core/chat.js:93",
+                                                  "file":  "chat-phase-subconscious.svg",
+                                                  "path":  "assets/icons/chat-phase-subconscious.svg",
+                                                  "status":  "planned"
+                                              },
+                  "chat.phase_dream":  {
+                                           "category":  "chat_pipeline",
+                                           "type":  "emoji",
+                                           "current":  "🌙",
+                                           "meaning":  "Pipeline phase label",
+                                           "source":  "client/js/apps/core/chat.js:93",
+                                           "file":  "chat-phase-dream.svg",
+                                           "path":  "assets/icons/chat-phase-dream.svg",
+                                           "status":  "planned"
+                                       },
+                  "chat.phase_orchestrator":  {
+                                                  "category":  "chat_pipeline",
+                                                  "type":  "emoji",
+                                                  "current":  "⚡",
+                                                  "meaning":  "Pipeline phase label",
+                                                  "source":  "client/js/apps/core/chat.js:93",
+                                                  "file":  "chat-phase-orchestrator.svg",
+                                                  "path":  "assets/icons/chat-phase-orchestrator.svg",
+                                                  "status":  "planned"
+                                              },
+                  "chat.phase_loading":  {
+                                             "category":  "chat_pipeline",
+                                             "type":  "emoji",
+                                             "current":  "⏳",
+                                             "meaning":  "Pipeline starting state",
+                                             "source":  "client/js/apps/core/chat.js:352",
+                                             "file":  "chat-phase-loading.svg",
+                                             "path":  "assets/icons/chat-phase-loading.svg",
+                                             "status":  "planned"
+                                         },
+                  "neural.core_memory":  {
+                                             "category":  "neural_viz",
+                                             "type":  "symbol",
+                                             "current":  "★",
+                                             "meaning":  "Node type core_memory",
+                                             "source":  "client/js/neural-viz.js:2111",
+                                             "file":  "neural-core-memory.svg",
+                                             "path":  "assets/icons/neural-core-memory.svg",
+                                             "status":  "planned"
+                                         },
+                  "neural.episodic":  {
+                                          "category":  "neural_viz",
+                                          "type":  "symbol",
+                                          "current":  "●",
+                                          "meaning":  "Node type episodic",
+                                          "source":  "client/js/neural-viz.js:2111",
+                                          "file":  "neural-episodic.svg",
+                                          "path":  "assets/icons/neural-episodic.svg",
+                                          "status":  "planned"
+                                      },
+                  "neural.semantic":  {
+                                          "category":  "neural_viz",
+                                          "type":  "symbol",
+                                          "current":  "⬠",
+                                          "meaning":  "Node type semantic_knowledge",
+                                          "source":  "client/js/neural-viz.js:2111",
+                                          "file":  "neural-semantic.svg",
+                                          "path":  "assets/icons/neural-semantic.svg",
+                                          "status":  "planned"
+                                      },
+                  "neural.long_term":  {
+                                           "category":  "neural_viz",
+                                           "type":  "symbol",
+                                           "current":  "⬡",
+                                           "meaning":  "Node type long_term_memory",
+                                           "source":  "client/js/neural-viz.js:2111",
+                                           "file":  "neural-long-term.svg",
+                                           "path":  "assets/icons/neural-long-term.svg",
+                                           "status":  "planned"
+                                       }
+              }
+}

@@ -3,6 +3,10 @@
 /* eslint-disable no-undef */
 
 document.addEventListener('DOMContentLoaded', async function() {
+  if (window.__nonCoreHtmlReady && typeof window.__nonCoreHtmlReady.then === 'function') {
+    try { await window.__nonCoreHtmlReady; } catch (_) {}
+  }
+
   const forceHideTimer = setTimeout(() => {
     // Safety net: never leave the shell blocked by the boot overlay.
     hideBootOverlay();

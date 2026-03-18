@@ -101,6 +101,7 @@ function hydrateMainProviderInputs(config) {
     inheritMainConfigToAspect('subconscious');
     inheritMainConfigToAspect('dreams');
     inheritMainConfigToAspect('orchestrator');
+    inheritMainConfigToAspect('nekocore');
   }
 }
 
@@ -146,10 +147,13 @@ async function autoSaveConfig() {
   let name = savedConfig.lastActive || 'default-multi-llm';
   const existing = savedConfig.profiles[name] || {};
 
-  // Merge gathered main fields into the existing profile
+  // Merge gathered main fields into the existing profile.
+  // Only write legacy apikey/_activeType for profiles that have not yet migrated to multi-aspect format.
   if (profile.ollama) existing.ollama = profile.ollama;
-  if (profile.apikey)  existing.apikey  = profile.apikey;
-  existing._activeType = activeConfig?.type || existing._activeType || null;
+  if (!existing.main) {
+    if (profile.apikey) existing.apikey = profile.apikey;
+    existing._activeType = activeConfig?.type || existing._activeType || null;
+  }
 
   // Update the main aspect config from activeConfig (keeps sub/dream/orchestrator intact)
   if (activeConfig) {

@@ -1,0 +1,213 @@
+﻿  <div class="tab-content" id="tab-skills">
+    <div class="settings-container">
+
+      <!-- ── Web Search & Browse ── -->
+      <div class="settings-section">
+        <div class="settings-section-header">
+          <h2>🌐 Web Search &amp; Browse</h2>
+          <p>Search the web and fetch pages — results can be saved to any skill workspace</p>
+        </div>
+
+        <!-- Search -->
+        <div class="flex gap-2 mb-4">
+          <input type="text" id="webSearchQuery" placeholder="Search the web..." class="flex-1" style="padding:var(--space-3);background:var(--surface-2);border:1px solid var(--border-default);border-radius:var(--radius-md);color:var(--text-primary);font-size:var(--text-base);outline:none;font-family:inherit" onkeydown="if(event.key==='Enter')executeWebSearch()">
+          <button class="btn bp" onclick="executeWebSearch()">Search</button>
+          <button class="btn bg" onclick="document.getElementById('webSearchResults').classList.add('hidden');document.getElementById('webSearchResults').innerHTML='<div class=\'placeholder-content\'>No results yet</div>';document.getElementById('webSearchQuery').value=''">Clear</button>
+        </div>
+        <div id="webSearchResults" class="hidden file-browser mb-4" style="max-height:350px;overflow-y:auto">
+          <div class="placeholder-content">No results yet</div>
+        </div>
+
+        <!-- Fetch URL -->
+        <div class="flex gap-2 mb-2">
+          <input type="text" id="webFetchUrl" placeholder="Enter a URL to fetch &amp; read..." class="flex-1" style="padding:var(--space-3);background:var(--surface-2);border:1px solid var(--border-default);border-radius:var(--radius-md);color:var(--text-primary);font-size:var(--text-base);outline:none;font-family:inherit" onkeydown="if(event.key==='Enter')executeWebFetch()">
+          <button class="btn bg" onclick="executeWebFetch()">Fetch</button>
+          <button class="btn bg" onclick="document.getElementById('webFetchResult').classList.add('hidden');document.getElementById('webFetchResult').textContent='';document.getElementById('webFetchUrl').value=''">Clear</button>
+        </div>
+        <div id="webFetchResult" class="hidden file-browser p-4" style="max-height:400px;overflow-y:auto;font-size:var(--text-sm);white-space:pre-wrap;color:var(--text-secondary);line-height:var(--leading-relaxed)"></div>
+      </div>
+
+      <!-- ── Entity Workspace ── -->
+      <div class="settings-section">
+        <div class="settings-section-header">
+          <h2>📁 Entity Workspace</h2>
+          <p>A shared file workspace the entity can read, write, and edit</p>
+        </div>
+        <div class="flex gap-3 mb-4 items-center flex-wrap">
+          <div class="fl flex-1" style="min-width:200px;margin:0">
+            <label>Workspace Directory</label>
+            <div class="flex gap-2">
+              <input type="text" id="entityWorkspacePath" placeholder="e.g., C:\Users\you\projects\my-workspace" style="flex:1">
+              <button class="btn bp text-xs-c" onclick="saveEntityWorkspacePath()">Save</button>
+            </div>
+          </div>
+        </div>
+        <div id="entityWorkspaceStatus" class="hidden mb-3 text-sm-c" style="padding:var(--space-2) var(--space-3);border-radius:var(--radius-md)"></div>
+        <div class="flex justify-between items-center mb-3">
+          <span class="text-sm-c text-info font-mono" id="entityWsPathDisplay">/</span>
+          <div class="flex gap-2">
+            <button class="btn bg text-xs-c" onclick="refreshEntityWorkspace()">Refresh</button>
+            <button class="btn bg text-xs-c" onclick="showEntityWsNewFile()">+ New File</button>
+          </div>
+        </div>
+        <div id="entityWorkspaceBrowser" class="file-browser">
+          <div class="placeholder-content">Set a workspace path above to browse files</div>
+        </div>
+
+        <!-- Entity Workspace File Editor -->
+        <div id="entityWsFileEditor" class="file-editor">
+          <div class="flex justify-between items-center mb-2">
+            <div class="text-sm-c text-info font-mono" id="entityWsEditorFileName">file.txt</div>
+            <div class="flex gap-2">
+              <button class="btn bp text-xs-c" onclick="saveEntityWsFile()">Save</button>
+              <button class="btn bg text-xs-c" onclick="document.getElementById('entityWsFileEditor').style.display='none'">Close</button>
+            </div>
+          </div>
+          <textarea id="entityWsFileContent" class="file-editor textarea" style="width:100%;min-height:250px;background:var(--surface-0);border:1px solid var(--border-default);border-radius:var(--radius-md);color:var(--text-primary);font-family:var(--font-mono);font-size:var(--text-sm);padding:var(--space-3);resize:vertical;outline:none" spellcheck="false"></textarea>
+        </div>
+      </div>
+
+      <!-- ── Skills Overview ── -->
+      <div class="settings-section">
+        <div class="settings-section-header">
+          <h2>🛠 Skills</h2>
+          <p>Per-entity capabilities — each entity has its own skills, workspace, and tools. Compatible with <a href="https://clawhub.ai/" target="_blank" style="color:var(--accent)">ClawHub</a>.</p>
+        </div>
+        <div id="skillsEntityHeader" style="font-size:.75rem;margin-bottom:.75rem;font-weight:600"></div>
+        <div id="skillsApprovalGate" style="margin-bottom:1rem"></div>
+        <div id="pendingSkillsContainer" style="margin-bottom:1rem"></div>
+        <div id="quarantineContainer" style="margin-bottom:1rem"></div>
+        <div class="flex gap-3 mb-5 flex-wrap">
+          <button class="btn bp" onclick="loadSkillsList()">Refresh</button>
+          <button class="btn bg" onclick="showCreateSkillDialog()">+ New Skill</button>
+        </div>
+        <div id="skillsList" class="grid" style="gap:var(--space-3)">
+          <div class="placeholder-content">Loading skills...</div>
+        </div>
+      </div>
+
+      <!-- Skill Detail Panel (hidden until a skill is selected) -->
+      <div class="settings-section" id="skillDetailPanel" class="hidden">
+        <div class="settings-section-header flex justify-between items-start">
+          <div>
+            <h2 id="skillDetailName">Skill Name</h2>
+            <p id="skillDetailDesc">Description</p>
+          </div>
+          <button class="btn bg flex-shrink-0" onclick="closeSkillDetail()">Close</button>
+        </div>
+
+        <!-- Skill metadata -->
+        <div class="flex gap-4 mb-5 flex-wrap">
+          <div class="status-badge">
+            <span>Status: </span>
+            <span id="skillDetailStatus">Enabled</span>
+          </div>
+          <div class="status-badge">
+            <span>Version: </span>
+            <span id="skillDetailVersion" class="text-primary-c">1.0.0</span>
+          </div>
+          <div class="status-badge">
+            <span>Invoke: </span>
+            <code id="skillDetailTrigger" style="font-family:var(--font-mono);background:var(--surface-3);padding:.1rem .4rem;border-radius:4px;font-size:.75rem;color:var(--em)"></code>
+          </div>
+        </div>
+
+        <!-- Tools provided by this skill -->
+        <div id="skillDetailTools" style="display:none;margin-bottom:1rem"></div>
+
+        <!-- Requirements -->
+        <div id="skillDetailRequires" style="display:none;margin-bottom:1rem"></div>
+
+        <!-- Security Scan Results -->
+        <div id="skillDetailSecurity" style="display:none;margin-bottom:1rem"></div>
+
+        <!-- Skill Workspace File Browser -->
+        <div class="mt-4">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="text-md-c text-info">Skill Workspace</h3>
+            <div class="flex gap-2">
+              <button class="btn bg text-xs-c" onclick="refreshWorkspaceFiles()">Refresh</button>
+              <button class="btn bg text-xs-c" onclick="showWorkspaceNewFile()">+ New File</button>
+            </div>
+          </div>
+          <div id="workspaceFileBrowser" class="file-browser">
+            <div class="placeholder-content">No workspace files</div>
+          </div>
+        </div>
+
+        <!-- File Editor (hidden until a file is opened) -->
+        <div id="workspaceFileEditor" class="file-editor">
+          <div class="flex justify-between items-center mb-2">
+            <div class="text-sm-c text-info font-mono" id="editorFileName">file.txt</div>
+            <div class="flex gap-2">
+              <button class="btn bp text-xs-c" onclick="saveWorkspaceFile()">Save</button>
+              <button class="btn bg text-xs-c" onclick="closeFileEditor()">Close</button>
+            </div>
+          </div>
+          <textarea id="workspaceFileContent" class="file-editor textarea" style="width:100%;min-height:250px;background:var(--surface-0);border:1px solid var(--border-default);border-radius:var(--radius-md);color:var(--text-primary);font-family:var(--font-mono);font-size:var(--text-sm);padding:var(--space-3);resize:vertical;outline:none" spellcheck="false"></textarea>
+        </div>
+      </div>
+
+      <!-- Create Skill Modal -->
+      <div class="modal" id="createSkillModal" style="display:none">
+        <div class="modal-content" style="width:90%;max-width:600px">
+          <div class="modal-header">
+            <h3>Create New Skill</h3>
+            <button class="modal-close" onclick="closeCreateSkillDialog()">&times;</button>
+          </div>
+          <div class="modal-body">
+
+            <!-- How-to guide -->
+            <div style="background:var(--surface-2);border:1px solid var(--border-default);border-radius:var(--radius-md);padding:var(--space-3);margin-bottom:var(--space-4);font-size:var(--text-sm);line-height:1.6">
+              <div style="font-weight:600;margin-bottom:var(--space-2);color:var(--accent)">📖 How Skills Work</div>
+              <p style="margin:0 0 var(--space-2);color:var(--text-secondary)">
+                A skill teaches the entity <strong>what it can do</strong> and <strong>how to do it</strong>. Skills are only loaded into the prompt <strong>when explicitly invoked</strong> — they are never injected by default.
+              </p>
+              <p style="margin:0 0 var(--space-2);color:var(--text-secondary)">
+                <strong>Invoking a skill in chat:</strong> type <code style="background:var(--surface-3);padding:.1rem .35rem;border-radius:3px">/skill &lt;trigger&gt; your request here</code>. The trigger is the exact text set in the <strong>Trigger</strong> field below — it is <strong>case-sensitive and exact</strong>. Only a perfect match activates the skill. For example: <code style="background:var(--surface-3);padding:.1rem .35rem;border-radius:3px">/skill web-search find me articles on memory consolidation</code>
+              </p>
+              <p style="margin:0 0 var(--space-2);color:var(--text-secondary)">
+                <strong>Workspace tools</strong> (<code>ws_read</code>, <code>ws_write</code>, etc.) are loaded separately with <code style="background:var(--surface-3);padding:.1rem .35rem;border-radius:3px">/tool</code> anywhere in your message.
+              </p>
+              <p style="margin:0 0 var(--space-2);color:var(--text-secondary)">
+                <strong>Tools</strong> inside a skill are defined as <code>### tool_name</code> headings under a <code>## Tools</code> section. The entity calls them using <code>[TOOL:tool_name param="value"]</code> syntax.
+              </p>
+              <p style="margin:0;color:var(--text-secondary)">
+                Browse community skills at <a href="https://clawhub.ai/" target="_blank" style="color:var(--accent);font-weight:600">ClawHub.ai</a> — download SKILL.md files and install them via the quarantine system.
+              </p>
+            </div>
+
+            <div class="form-group">
+              <label>Skill Name <span style="color:var(--text-tertiary);font-weight:400">(slug — lowercase, hyphens)</span></label>
+              <input type="text" id="newSkillName" placeholder="e.g., research-assistant">
+            </div>
+            <div class="form-group">
+              <label>Description</label>
+              <input type="text" id="newSkillDesc" placeholder="One-line summary of what the skill enables">
+            </div>
+            <div class="form-group">
+              <label>Trigger <span style="color:var(--text-tertiary);font-weight:400">(exact, case-sensitive — what the user types after <code>/skill</code> to invoke this skill)</span></label>
+              <input type="text" id="newSkillTrigger" placeholder="e.g., web-search" style="font-family:var(--font-mono)">
+              <div style="font-size:var(--text-xs);color:var(--text-tertiary);margin-top:4px">If left blank, the skill name is used as the trigger. Avoid spaces — use hyphens. <strong>The match is exact and case-sensitive.</strong></div>
+            </div>
+            <div class="form-group">
+              <label>Version</label>
+              <input type="text" id="newSkillVersion" placeholder="1.0.0" value="1.0.0">
+            </div>
+            <div class="form-group">
+              <label>Instructions (SKILL.md body) <button class="btn bg text-xs-c" style="margin-left:var(--space-2);padding:2px 8px" onclick="fillSkillTemplate()">Load Template</button></label>
+              <textarea id="newSkillInstructions" placeholder="Write the Markdown instructions that will be injected into the entity's prompt when this skill is active.&#10;&#10;Click 'Load Template' above for a starter template." rows="12" style="font-family:var(--font-mono);font-size:var(--text-sm)"></textarea>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn bg" onclick="closeCreateSkillDialog()">Cancel</button>
+            <button class="btn bp" onclick="executeCreateSkill()">Create Skill</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+  <!-- END SKILLS TAB -->
+
+  <!-- ===== SETTINGS TAB ===== -->

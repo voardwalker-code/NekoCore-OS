@@ -172,7 +172,7 @@ async function simpleSaveConfig() {
   try {
     const cfg = isOllama
       ? { type: 'ollama', endpoint: mainEndpoint, model: mainModel }
-      : { type: 'openrouter', endpoint: mainEndpoint, key: mainKey, model: mainModel };
+      : { type: 'openrouter', endpoint: mainEndpoint, apiKey: mainKey, model: mainModel };
     const resp = await fetch('/api/entity-config', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -190,6 +190,31 @@ async function simpleSaveConfig() {
 
     // Sync savedConfig from server
     await refreshSavedConfig();
+
+    // On first setup, seed any unconfigured aspects with role-appropriate default models
+    if (!isOllama && mainKey) {
+      const profile = (savedConfig?.profiles?.[savedConfig?.lastActive]) || {};
+      const aspectDefaults = [
+        ['subconscious', OPENROUTER_ROLE_MODELS.subconscious.def],
+        ['dream',        OPENROUTER_ROLE_MODELS.dream.def],
+        ['orchestrator', OPENROUTER_ROLE_MODELS.orchestrator.def],
+      ];
+      let seeded = false;
+      for (const [aspect, defaultModel] of aspectDefaults) {
+        if (!profile[aspect]) {
+          await fetch('/api/entity-config', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              provider: aspect,
+              config: { type: 'openrouter', endpoint: mainEndpoint, apiKey: mainKey, model: defaultModel }
+            })
+          }).catch(() => {});
+          seeded = true;
+        }
+      }
+      if (seeded) await refreshSavedConfig();
+    }
 
     // Update provider UI
     const label = (isOllama ? 'Ollama' : 'OpenRouter') + ' (' + mainModel.split('/').pop() + ')';

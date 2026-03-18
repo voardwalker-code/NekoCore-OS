@@ -188,6 +188,17 @@ async function executeToolCalls(responseText, options = {}) {
             result = { ok: false, error: 'Memory creation not available' };
           }
           break;
+        case 'search_archive':
+          if (options.archiveSearch) {
+            result = await options.archiveSearch(
+              call.params.query || '',
+              call.params.yearRange || null,
+              parseInt(call.params.limit, 10) || 5
+            );
+          } else {
+            result = { ok: false, error: 'Archive search not available' };
+          }
+          break;
         case 'skill_create':
           if (options.skillCreate) {
             result = await options.skillCreate(call.params);

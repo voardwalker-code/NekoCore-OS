@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NekoCore Sprite Preview</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --panel: #161b22;
+      --border: #2a3240;
+      --text: #e6edf3;
+      --muted: #9aa6b2;
+      --accent: #3ea6ff;
+      --warn: #ffb86b;
+      --bad: #ff6b6b;
+      --good: #7ee787;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 16px;
+      font: 13px/1.35 "Outfit", "Segoe UI", sans-serif;
+      color: var(--text);
+      background: radial-gradient(circle at 20% 0%, #132034 0%, var(--bg) 45%);
+    }
+
+    .wrap {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: grid;
+      gap: 14px;
+    }
+
+    .panel {
+      background: color-mix(in srgb, var(--panel) 90%, #000 10%);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 18px;
+      letter-spacing: 0.02em;
+    }
+
+    .muted { color: var(--muted); }
+
+    .toolbar {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-top: 10px;
+    }
+
+    .toolbar label {
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      color: var(--muted);
+    }
+
+    .toolbar input,
+    .toolbar select {
+      background: #0b1320;
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 8px;
+      padding: 6px 8px;
+      min-width: 120px;
+    }
+
+    .status {
+      margin-top: 8px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      background: #0b1320;
+      border: 1px solid var(--border);
+      color: var(--muted);
+    }
+
+    .status.ok { border-color: color-mix(in srgb, var(--good) 45%, var(--border)); color: var(--good); }
+    .status.warn { border-color: color-mix(in srgb, var(--warn) 50%, var(--border)); color: var(--warn); }
+    .status.bad { border-color: color-mix(in srgb, var(--bad) 55%, var(--border)); color: var(--bad); }
+
+    .sheet-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+      gap: 12px;
+    }
+
+    .sheet-card {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      background: #0a0f18;
+    }
+
+    .sheet-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .sheet-canvas-wrap {
+      max-height: 340px;
+      overflow: auto;
+      background: #05080e;
+      padding: 8px;
+    }
+
+    .sheet-canvas {
+      display: block;
+      image-rendering: pixelated;
+      max-width: 100%;
+      border: 1px solid #263141;
+      background-image:
+        linear-gradient(45deg, #101828 25%, transparent 25%),
+        linear-gradient(-45deg, #101828 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #101828 75%),
+        linear-gradient(-45deg, transparent 75%, #101828 75%);
+      background-size: 16px 16px;
+      background-position: 0 0, 0 8px, 8px -8px, -8px 0;
+    }
+
+    .icons-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 10px;
+    }
+
+    .icon-card {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px;
+      background: #0b1220;
+      display: grid;
+      gap: 8px;
+    }
+
+    .icon-card.missing { border-color: color-mix(in srgb, var(--warn) 55%, var(--border)); }
+
+    .icon-preview {
+      width: 64px;
+      height: 64px;
+      border: 1px solid #2a3850;
+      border-radius: 8px;
+      background-image:
+        linear-gradient(45deg, #0f1725 25%, transparent 25%),
+        linear-gradient(-45deg, #0f1725 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #0f1725 75%),
+        linear-gradient(-45deg, transparent 75%, #0f1725 75%);
+      background-size: 12px 12px;
+      background-position: 0 0, 0 6px, 6px -6px, -6px 0;
+      image-rendering: pixelated;
+    }
+
+    .icon-id {
+      font-weight: 600;
+      letter-spacing: 0.01em;
+      word-break: break-word;
+    }
+
+    .meta {
+      color: var(--muted);
+      font-size: 12px;
+      word-break: break-word;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="panel">
+      <h1>NekoCore Sprite Preview Utility</h1>
+      <div class="muted">Reads <strong>icon-sprite-sheet.config.json</strong> and <strong>icon-sprite-map.csv</strong>, draws sprite crops, and overlays regions on source sheets.</div>
+      <div class="toolbar">
+        <label>Sheet
+          <select id="sheetFilter"><option value="all">All</option></select>
+        </label>
+        <label>Preview Size
+          <input id="previewSize" type="number" min="16" max="256" value="64">
+        </label>
+        <label>Search
+          <input id="search" type="text" placeholder="icon id...">
+        </label>
+      </div>
+      <div id="status" class="status">Loading...</div>
+    </section>
+
+    <section class="panel">
+      <div class="sheet-grid" id="sheetGrid"></div>
+    </section>
+
+    <section class="panel">
+      <div class="icons-grid" id="iconsGrid"></div>
+    </section>
+  </div>
+
+  <script>
+    (function () {
+      var CONFIG_PATH = './icon-sprite-sheet.config.json';
+      var DEFAULT_CSV_PATH = './icon-sprite-map.csv';
+
+      var state = {
+        config: null,
+        rows: [],
+        sheetImages: new Map(),
+        filterSheet: 'all',
+        search: '',
+        previewSize: 64
+      };
+
+      var statusEl = document.getElementById('status');
+      var sheetGridEl = document.getElementById('sheetGrid');
+      var iconsGridEl = document.getElementById('iconsGrid');
+      var sheetFilterEl = document.getElementById('sheetFilter');
+      var searchEl = document.getElementById('search');
+      var previewSizeEl = document.getElementById('previewSize');
+
+      function setStatus(message, kind) {
+        statusEl.textContent = message;
+        statusEl.className = 'status' + (kind ? ' ' + kind : '');
+      }
+
+      function parseCsv(text) {
+        var rows = [];
+        var row = [];
+        var field = '';
+        var inQuotes = false;
+
+        for (var i = 0; i < text.length; i++) {
+          var ch = text[i];
+          var next = text[i + 1];
+
+          if (ch === '"') {
+            if (inQuotes && next === '"') {
+              field += '"';
+              i++;
+            } else {
+              inQuotes = !inQuotes;
+            }
+          } else if (ch === ',' && !inQuotes) {
+            row.push(field);
+            field = '';
+          } else if ((ch === '\n' || ch === '\r') && !inQuotes) {
+            if (ch === '\r' && next === '\n') i++;
+            row.push(field);
+            field = '';
+            if (row.length > 1 || (row.length === 1 && row[0] !== '')) rows.push(row);
+            row = [];
+          } else {
+            field += ch;
+          }
+        }
+
+        if (field.length || row.length) {
+          row.push(field);
+          rows.push(row);
+        }
+
+        if (!rows.length) return [];
+        var headers = rows[0];
+        return rows.slice(1).map(function (cols) {
+          var obj = {};
+          headers.forEach(function (h, idx) { obj[h] = cols[idx] || ''; });
+          return obj;
+        });
+      }
+
+      function toNum(v) {
+        var n = Number(v);
+        return Number.isFinite(n) ? n : null;
+      }
+
+      function hasCoords(row) {
+        return toNum(row.x) !== null && toNum(row.y) !== null && toNum(row.width) !== null && toNum(row.height) !== null;
+      }
+
+      function resolveAssetPath(path) {
+        var p = String(path || '').trim();
+        if (!p) return '';
+        if (/^(https?:|data:|blob:|\/)/i.test(p)) return p;
+        if (p.indexOf('assets/icons/') === 0) return './' + p.substring('assets/icons/'.length);
+        if (p.indexOf('assets/') === 0) return '../../' + p.substring('assets/'.length);
+        return './' + p;
+      }
+
+      function loadImage(url) {
+        return new Promise(function (resolve, reject) {
+          var img = new Image();
+          img.onload = function () { resolve(img); };
+          img.onerror = function () { reject(new Error('Failed image load: ' + url)); };
+          img.src = url;
+        });
+      }
+
+      async function init() {
+        try {
+          var configResp = await fetch(CONFIG_PATH, { cache: 'no-store' });
+          if (!configResp.ok) throw new Error('Config not found: ' + CONFIG_PATH);
+          state.config = await configResp.json();
+
+          var csvPath = resolveAssetPath(state.config.mapCsv || DEFAULT_CSV_PATH);
+          var csvResp = await fetch(csvPath, { cache: 'no-store' });
+          if (!csvResp.ok) throw new Error('CSV not found: ' + csvPath);
+          var csvText = await csvResp.text();
+          state.rows = parseCsv(csvText);
+
+          var sheets = Array.isArray(state.config.sheets) ? state.config.sheets : [];
+          for (var i = 0; i < sheets.length; i++) {
+            var sheet = sheets[i];
+            var url = resolveAssetPath(sheet.file);
+            try {
+              var img = await loadImage(url);
+              state.sheetImages.set(sheet.id, { img: img, url: url });
+            } catch (e) {
+              state.sheetImages.set(sheet.id, { img: null, url: url, error: e.message });
+            }
+          }
+
+          bindUi();
+          render();
+
+          var readyCount = state.rows.length;
+          var withCoords = state.rows.filter(hasCoords).length;
+          setStatus('Loaded ' + readyCount + ' icon rows. ' + withCoords + ' have coordinates.', withCoords ? 'ok' : 'warn');
+        } catch (err) {
+          setStatus(err.message, 'bad');
+          console.error(err);
+        }
+      }
+
+      function bindUi() {
+        var sheets = Array.isArray(state.config.sheets) ? state.config.sheets : [];
+        sheets.forEach(function (s) {
+          var opt = document.createElement('option');
+          opt.value = s.id;
+          opt.textContent = s.id;
+          sheetFilterEl.appendChild(opt);
+        });
+
+        sheetFilterEl.addEventListener('change', function () {
+          state.filterSheet = sheetFilterEl.value;
+          render();
+        });
+
+        searchEl.addEventListener('input', function () {
+          state.search = searchEl.value.trim().toLowerCase();
+          render();
+        });
+
+        previewSizeEl.addEventListener('input', function () {
+          var n = Number(previewSizeEl.value);
+          state.previewSize = Number.isFinite(n) ? Math.max(16, Math.min(256, n)) : 64;
+          renderIcons();
+        });
+      }
+
+      function filteredRows() {
+        return state.rows.filter(function (r) {
+          if (state.filterSheet !== 'all' && r.sheet_id !== state.filterSheet) return false;
+          if (state.search && String(r.icon_id || '').toLowerCase().indexOf(state.search) === -1) return false;
+          return true;
+        });
+      }
+
+      function render() {
+        renderSheets();
+        renderIcons();
+      }
+
+      function renderSheets() {
+        sheetGridEl.innerHTML = '';
+        var rows = filteredRows();
+        var grouped = {};
+        rows.forEach(function (r) {
+          var key = r.sheet_id || 'unknown';
+          if (!grouped[key]) grouped[key] = [];
+          grouped[key].push(r);
+        });
+
+        Object.keys(grouped).forEach(function (sheetId) {
+          var rec = state.sheetImages.get(sheetId) || null;
+          var card = document.createElement('div');
+          card.className = 'sheet-card';
+
+          var head = document.createElement('div');
+          head.className = 'sheet-head';
+          head.innerHTML = '<span>' + sheetId + '</span><span>' + grouped[sheetId].length + ' rows</span>';
+          card.appendChild(head);
+
+          var wrap = document.createElement('div');
+          wrap.className = 'sheet-canvas-wrap';
+          card.appendChild(wrap);
+
+          var canvas = document.createElement('canvas');
+          canvas.className = 'sheet-canvas';
+          wrap.appendChild(canvas);
+
+          if (!rec || !rec.img) {
+            var msg = document.createElement('div');
+            msg.className = 'meta';
+            msg.style.padding = '8px';
+            msg.textContent = (rec && rec.error) ? rec.error : 'No image loaded for this sheet id.';
+            wrap.appendChild(msg);
+            sheetGridEl.appendChild(card);
+            return;
+          }
+
+          var img = rec.img;
+          canvas.width = img.width;
+          canvas.height = img.height;
+          var ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0);
+
+          grouped[sheetId].forEach(function (r) {
+            if (!hasCoords(r)) return;
+            var x = toNum(r.x);
+            var y = toNum(r.y);
+            var w = toNum(r.width);
+            var h = toNum(r.height);
+            if (w <= 0 || h <= 0) return;
+
+            ctx.strokeStyle = '#3ea6ff';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(x + 0.5, y + 0.5, w, h);
+            ctx.fillStyle = 'rgba(62,166,255,0.14)';
+            ctx.fillRect(x, y, w, h);
+          });
+
+          sheetGridEl.appendChild(card);
+        });
+      }
+
+      function renderIcons() {
+        iconsGridEl.innerHTML = '';
+        var rows = filteredRows();
+
+        rows.forEach(function (r) {
+          var card = document.createElement('div');
+          card.className = 'icon-card' + (hasCoords(r) ? '' : ' missing');
+
+          var preview = document.createElement('canvas');
+          preview.className = 'icon-preview';
+          preview.width = state.previewSize;
+          preview.height = state.previewSize;
+
+          var info = document.createElement('div');
+          info.className = 'icon-id';
+          info.textContent = r.icon_id || '(missing icon_id)';
+
+          var meta = document.createElement('div');
+          meta.className = 'meta';
+          meta.textContent = (r.sheet_id || '?') + ' | x:' + (r.x || '-') + ' y:' + (r.y || '-') + ' w:' + (r.width || '-') + ' h:' + (r.height || '-');
+
+          card.appendChild(preview);
+          card.appendChild(info);
+          card.appendChild(meta);
+          iconsGridEl.appendChild(card);
+
+          var rec = state.sheetImages.get(r.sheet_id);
+          if (!rec || !rec.img || !hasCoords(r)) return;
+
+          var sx = toNum(r.x);
+          var sy = toNum(r.y);
+          var sw = toNum(r.width);
+          var sh = toNum(r.height);
+
+          var ctx = preview.getContext('2d');
+          ctx.clearRect(0, 0, preview.width, preview.height);
+
+          var scale = Math.min(preview.width / sw, preview.height / sh);
+          var dw = Math.max(1, Math.floor(sw * scale));
+          var dh = Math.max(1, Math.floor(sh * scale));
+          var dx = Math.floor((preview.width - dw) / 2);
+          var dy = Math.floor((preview.height - dh) / 2);
+
+          ctx.imageSmoothingEnabled = false;
+          ctx.drawImage(rec.img, sx, sy, sw, sh, dx, dy, dw, dh);
+        });
+      }
+
+      init();
+    })();
+  </script>
+</body>
+</html>

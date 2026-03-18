@@ -95,6 +95,7 @@ const LLM_ROLES = {
 let setupAspectConfigs = {
   main: null
 };
+let setupSkillSelection = new Set();
 
 function applyOpenRouterModelSuggestions(fieldId, aspect = 'main') {
   const field = document.getElementById(fieldId);
@@ -144,6 +145,7 @@ function showSetupWizard() {
   setupActive = true;
   setupStep = SETUP_STEPS.MAIN;
   setupAspectConfigs = { main: null };
+  setupSkillSelection = new Set();
   setupData = { currentAspect: 'main', provider: null };
   updateSetupSteps(SETUP_STEPS.MAIN);
   lg('info', 'Setup wizard opened — connect the Main Mind first');
@@ -302,6 +304,7 @@ function advanceSetupStep() {
   setupStep = SETUP_STEPS.READY;
   updateSetupSteps(SETUP_STEPS.READY);
   updateSetupSummary();
+  setupRefreshSkillSummary();
   document.getElementById('setupStatus').textContent = '';
 }
 
@@ -368,6 +371,101 @@ function previousSetupStep() {
   }
 }
 
+function setupRenderSkillSummary(skills) {
+  const host = document.getElementById('setupSkillSummary');
+  if (!host) return;
+  if (!Array.isArray(skills) || skills.length === 0) {
+    host.textContent = 'No skills detected.';
+    return;
+  }
+
+  host.innerHTML = skills.map((skill) => {
+    const name = String(skill?.name || 'Unnamed skill');
+    const desc = String(skill?.description || 'No description');
+    const checked = setupSkillSelection.has(name) ? ' checked' : '';
+    return '<label style="display:block;margin:.32rem 0;padding:.28rem .35rem;border:1px solid var(--border-default);border-radius:8px">'
+      + '<input type="checkbox" data-setup-skill="' + name.replace(/"/g, '&quot;') + '"' + checked + ' style="margin-right:.45rem;vertical-align:middle">'
+      + '<strong>' + name + '</strong>'
+      + '<div style="margin:.2rem 0 0 1.35rem;opacity:.9">' + desc + '</div>'
+      + '</label>';
+  }).join('');
+
+  host.querySelectorAll('input[data-setup-skill]').forEach((el) => {
+    el.addEventListener('change', () => {
+      const skillName = el.getAttribute('data-setup-skill') || '';
+      if (!skillName) return;
+      if (el.checked) setupSkillSelection.add(skillName);
+      else setupSkillSelection.delete(skillName);
+    });
+  });
+}
+
+async function setupFetchNekoTooling() {
+  const resp = await fetch('/api/nekocore/tooling');
+  if (!resp.ok) throw new Error('Failed to load tooling');
+  const data = await resp.json();
+  if (!data.ok) throw new Error(data.error || 'Failed to load tooling');
+  return data;
+}
+
+async function setupRefreshSkillSummary() {
+  try {
+    const tooling = await setupFetchNekoTooling();
+    setupRenderSkillSummary(tooling.skills || []);
+  } catch (_) {
+    setupRenderSkillSummary([]);
+  }
+}
+
+async function setupDisableAllNekoSkills() {
+  try {
+    const tooling = await setupFetchNekoTooling();
+    const enabled = (tooling.skills || []).filter((skill) => !!skill.enabled);
+    for (const skill of enabled) {
+      await fetch('/api/nekocore/tooling/skill-toggle', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: skill.name, enabled: false })
+      });
+    }
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
+async function setupApplySelectedNekoSkills() {
+  try {
+    await setupDisableAllNekoSkills();
+    if (setupSkillSelection.size === 0) return true;
+    for (const skillName of setupSkillSelection) {
+      await fetch('/api/nekocore/tooling/skill-toggle', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: skillName, enabled: true })
+      });
+    }
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
+async function setupEnsureDefaultWorkspace() {
+  try {
+    const resp = await fetch('/api/nekocore/tooling/workspace', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ autoDefault: true })
+    });
+    if (!resp.ok) return false;
+    const data = await resp.json();
+    return !!data.ok;
+  } catch (_) {
+    return false;
+  }
+}
+
 /**
  * Finalize setup: save all configs and hatch entity
  */
@@ -413,6 +511,11 @@ async function setupFinish() {
     savedConfig.profiles[profileName] = profile;
     savedConfig.lastActive = profileName;
     await persistConfig();
+
+    // Auto-provision a default workspace path so first-time users can use tools immediately.
+    await setupEnsureDefaultWorkspace();
+    // Skills default OFF; apply only user-selected skills from setup.
+    await setupApplySelectedNekoSkills();
 
     // Set main provider as active for UI
     const m = setupAspectConfigs.main;

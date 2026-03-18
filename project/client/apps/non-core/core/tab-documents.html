@@ -1,0 +1,52 @@
+﻿  <div class="tab-content" id="tab-documents">
+    <div class="settings-section" style="margin:0;border:none;background:transparent;padding:var(--space-4)">
+      <div class="settings-section-header" style="margin-bottom:var(--space-4);border-bottom:1px solid var(--border-default);padding-bottom:var(--space-3)">
+        <div class="flex items-center gap-3">
+          <h2 style="font-size:var(--text-base)">&#128196; Document Digest</h2>
+        </div>
+        <p>Upload documents (.txt, .md, .json) to break them into bite-sized chunks and ingest them into the entity's long-term memory as searchable knowledge.</p>
+      </div>
+
+      <!-- Document Upload Zone -->
+      <div id="documentUploadZone" class="config-card" style="margin-bottom:var(--space-4)">
+        <div class="config-card-title" style="color:var(--info)">Upload Document</div>
+        
+        <!-- Drop Zone -->
+        <div id="documentDropZone" style="border:2px dashed var(--border-default);border-radius:var(--radius-md);padding:var(--space-6);text-align:center;cursor:pointer;transition:all 0.2s ease;background:rgba(0,0,0,0.1)">
+          <div style="font-size:3rem;opacity:0.4;margin-bottom:var(--space-3)">&#128196;</div>
+          <p class="text-tertiary-c mb-3">Drag & drop a document here</p>
+          <button class="btn bp" id="documentBrowseBtn">Browse Files</button>
+          <input type="file" id="documentFileInput" accept=".txt,.md,.json" style="display:none">
+          <p class="text-xs-c text-tertiary-c mt-3">Supported formats: .txt, .md, .json (max 10MB)</p>
+        </div>
+
+        <!-- Progress Bar -->
+        <div id="documentDigestProgress" style="display:none;margin-top:var(--space-4)">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-2)">
+            <span class="text-sm-c">Ingesting document...</span>
+            <span id="documentDigestProgressText" class="text-xs-c text-tertiary-c font-mono">0 / 0</span>
+          </div>
+          <div style="width:100%;height:8px;background:var(--bg-tertiary);border-radius:var(--radius-sm);overflow:hidden">
+            <div id="documentDigestProgressBar" style="width:0%;height:100%;background:var(--bp);transition:width 0.3s ease"></div>
+          </div>
+        </div>
+
+        <!-- Status Messages -->
+        <div id="documentDigestStatus" class="text-xs-c mt-3" style="display:none"></div>
+      </div>
+
+      <!-- Instructions -->
+      <div class="config-card">
+        <div class="config-card-title" style="color:var(--info)">How It Works</div>
+        <ul class="text-sm-c text-tertiary-c" style="list-style:disc;padding-left:var(--space-4);line-height:1.8">
+          <li>Documents are automatically split into ~1500 token chunks</li>
+          <li>Each chunk is stored as both a conscious LTM memory and an episodic memory</li>
+          <li>Topics are extracted from capitalized words and filename</li>
+          <li>Sequential chunks are connected via the trace graph</li>
+          <li>Knowledge becomes fully searchable and retrievable during conversations</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== BROWSER TAB ===== -->

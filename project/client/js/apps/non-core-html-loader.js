@@ -1,0 +1,285 @@
+// ============================================================
+// NekoCore OS - Non-core app HTML loader
+// Loads optional tab HTML from manifest-backed modular files.
+// ============================================================
+
+(function () {
+  var MANIFEST_PATH = 'apps/non-core/non-core-apps.manifest.json';
+  var DEFAULT_NON_CORE = [
+    { tabId: 'workspace', enabled: true, path: 'apps/non-core/core/tab-workspace.html', label: 'Workspace', icon: '📁', navTarget: '#navOptionalAppsHost' },
+    { tabId: 'skills', enabled: true, path: 'apps/non-core/core/tab-skills.html', label: 'Skills', icon: '🧩', navTarget: '#navOptionalAppsHost' },
+    { tabId: 'popouts', enabled: true, path: 'apps/non-core/core/tab-popouts.html', label: 'Popouts', icon: '↗', navTarget: '#navOptionalAppsHost' },
+    { tabId: 'themes', enabled: true, path: 'apps/non-core/core/tab-themes.html', label: 'Themes', icon: '🎨', navTarget: '#navOptionalAppsHost' },
+    { tabId: 'visualizer', enabled: true, path: 'apps/non-core/core/tab-visualizer.html', label: 'Visualizer', icon: '🕸️', navTarget: '#navOptionalAppsHost' },
+    { tabId: 'physical', enabled: true, path: 'apps/non-core/core/tab-physical.html', label: 'Physical', icon: '❤️', navTarget: '#navOptionalAppsHost' },
+    { tabId: 'dreamgallery', enabled: true, path: 'apps/non-core/core/tab-dreamgallery.html', label: 'Dreams', icon: '🖼️', navTarget: '#navOptionalAppsHost' },
+    { tabId: 'lifediary', enabled: true, path: 'apps/non-core/core/tab-lifediary.html', label: 'Life Diary', icon: '📖', navTarget: '#navOptionalAppsHost' },
+    { tabId: 'dreamdiary', enabled: true, path: 'apps/non-core/core/tab-dreamdiary.html', label: 'Dream Diary', icon: '🌙', navTarget: '#navOptionalAppsHost' },
+    { tabId: 'documents', enabled: true, path: 'apps/non-core/core/tab-documents.html', label: 'Documents', icon: '📄', navTarget: '#navOptionalAppsHost' },
+    { tabId: 'browser', enabled: true, path: 'apps/non-core/core/tab-browser.html', label: 'Browser', icon: '🌐', navTarget: '#navOptionalAppsHost' }
+  ];
+
+  var DEFAULT_NON_CORE_BY_TAB = DEFAULT_NON_CORE.reduce(function (acc, item) {
+    acc[item.tabId] = item;
+    return acc;
+  }, {});
+
+  function isSafeTabId(tabId) {
+    return /^[a-z0-9_-]+$/i.test(String(tabId || '').trim());
+  }
+
+  function isSafeHtmlPath(path) {
+    var p = String(path || '').trim();
+    return !!p && p.startsWith('apps/non-core/') && p.endsWith('.html') && p.indexOf('..') === -1;
+  }
+
+  function isSafeNavTarget(selector) {
+    var s = String(selector || '').trim();
+    return /^#[a-z0-9_-]+$/i.test(s);
+  }
+
+  function syncGetText(path) {
+    try {
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', path, false);
+      xhr.send(null);
+      if ((xhr.status >= 200 && xhr.status < 300) || (xhr.status === 0 && xhr.responseText)) {
+        return xhr.responseText;
+      }
+    } catch (_) {
+      // Ignore and return null.
+    }
+    return null;
+  }
+
+  function setNavVisibility(tabId, visible) {
+    if (!tabId) return;
+    var selector = '[data-tab="' + tabId + '"]';
+    document.querySelectorAll(selector).forEach(function (el) {
+      el.hidden = !visible;
+      el.style.display = visible ? '' : 'none';
+      el.setAttribute('aria-hidden', visible ? 'false' : 'true');
+    });
+  }
+
+  function escapeHtml(text) {
+    return String(text || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  function getNavTarget(selector, fallbackSelector) {
+    if (isSafeNavTarget(selector)) {
+      var exact = document.querySelector(selector);
+      if (exact) return exact;
+    }
+    if (fallbackSelector && isSafeNavTarget(fallbackSelector)) {
+      var fallback = document.querySelector(fallbackSelector);
+      if (fallback) return fallback;
+    }
+    return document.querySelector('.nav') || null;
+  }
+
+  function ensureNavButton(entry, isCustomApp) {
+    var tabId = String(entry.tabId || '').trim();
+    if (!isSafeTabId(tabId)) return;
+
+    var navButtons = Array.from(document.querySelectorAll('[data-tab="' + tabId + '"]'));
+    if (navButtons.length > 0) {
+      navButtons.forEach(function (btn) {
+        btn.hidden = false;
+        btn.style.display = '';
+        btn.setAttribute('aria-hidden', 'false');
+      });
+      return;
+    }
+
+    var navTarget = getNavTarget(entry.navTarget, isCustomApp ? '#navCustomAppsHost' : '#navOptionalAppsHost');
+    if (!navTarget) return;
+
+    var button = document.createElement('button');
+    button.className = 'nav-item nav-item-dynamic' + (isCustomApp ? ' nav-item-custom' : ' nav-item-optional');
+    button.setAttribute('data-tab', tabId);
+    button.setAttribute('type', 'button');
+    button.setAttribute('aria-hidden', 'false');
+    var label = String(entry.label || tabId).trim() || tabId;
+    var icon = String(entry.icon || '🧩').trim() || '🧩';
+    button.innerHTML = '<span style="font-size:16px;line-height:1">' + escapeHtml(icon) + '</span><span class="nav-label">' + escapeHtml(label) + '</span>';
+    button.addEventListener('click', function () {
+      if (typeof switchMainTab === 'function') switchMainTab(tabId, button);
+    });
+    navTarget.appendChild(button);
+  }
+
+  function mountTabHtml(tabId, html) {
+    var slot = document.getElementById('optional-tab-slot-' + tabId);
+    if (slot) {
+      slot.outerHTML = html;
+      return true;
+    }
+    var existing = document.getElementById('tab-' + tabId);
+    if (existing) {
+      existing.outerHTML = html;
+      return true;
+    }
+
+    var customSlot = document.getElementById('optional-tab-custom-slot');
+    if (customSlot) {
+      var wrapped = html;
+      if (!/id\s*=\s*"tab-[^"]+"/i.test(html)) {
+        wrapped = '<div class="tab-content" id="tab-' + tabId + '">' + html + '</div>';
+      }
+      customSlot.insertAdjacentHTML('beforebegin', wrapped);
+      return true;
+    }
+
+    var stage = document.getElementById('windowStage');
+    if (stage) {
+      var finalHtml = html;
+      if (!/id\s*=\s*"tab-[^"]+"/i.test(html)) {
+        finalHtml = '<div class="tab-content" id="tab-' + tabId + '">' + html + '</div>';
+      }
+      stage.insertAdjacentHTML('beforeend', finalHtml);
+      return true;
+    }
+    return false;
+  }
+
+  function createDisabledTabHtml(tabId, reason) {
+    return '<div class="tab-content" id="tab-' + tabId + '">' +
+      '<div class="placeholder-sm text-xs-c" style="padding:var(--space-4)">' + reason + '</div>' +
+      '</div>';
+  }
+
+  function resolveManifest() {
+    var raw = syncGetText(MANIFEST_PATH);
+    if (!raw) return { nonCoreApps: DEFAULT_NON_CORE, customApps: [] };
+    try {
+      var parsed = JSON.parse(raw);
+      var nonCoreApps = Array.isArray(parsed.nonCoreApps) ? parsed.nonCoreApps : DEFAULT_NON_CORE;
+      var customApps = Array.isArray(parsed.customApps) ? parsed.customApps : [];
+      return { nonCoreApps: nonCoreApps, customApps: customApps };
+    } catch (_) {
+      return { nonCoreApps: DEFAULT_NON_CORE, customApps: [] };
+    }
+  }
+
+  function normalizeEntry(entry, fallback, defaultNavTarget) {
+    var tabId = String(entry && entry.tabId || fallback && fallback.tabId || '').trim();
+    var path = String(entry && entry.path || fallback && fallback.path || '').trim();
+    var enabled = entry && entry.enabled !== undefined ? entry.enabled !== false : (fallback ? fallback.enabled !== false : true);
+    var label = String(entry && entry.label || fallback && fallback.label || tabId).trim() || tabId;
+    var icon = String(entry && entry.icon || fallback && fallback.icon || '🧩').trim() || '🧩';
+    var navTarget = String(entry && entry.navTarget || fallback && fallback.navTarget || defaultNavTarget).trim();
+    return {
+      tabId: tabId,
+      path: path,
+      enabled: enabled,
+      label: label,
+      icon: icon,
+      navTarget: navTarget,
+      id: String(entry && entry.id || tabId || 'custom').trim()
+    };
+  }
+
+  function mountCustomHtmlEntries(entries) {
+    entries.forEach(function (entry) {
+      if (!entry || entry.enabled === false) return;
+      if (!isSafeHtmlPath(entry.path)) return;
+      var html = syncGetText(entry.path);
+      if (!html) return;
+      var targetSelector = String(entry.target || '#nonCoreCustomAppHost').trim();
+      var target = document.querySelector(targetSelector);
+      if (!target) return;
+      if (String(entry.mode || 'append').toLowerCase() === 'replace') {
+        target.innerHTML = '';
+      }
+      var wrap = document.createElement('div');
+      wrap.className = 'non-core-custom-block';
+      wrap.dataset.customAppId = String(entry.id || 'custom');
+      wrap.innerHTML = html;
+      target.appendChild(wrap);
+    });
+  }
+
+  function loadNonCoreAppHtml() {
+    var manifest = resolveManifest();
+    var enabledTabs = new Set();
+    var managedTabs = new Set(Object.keys(DEFAULT_NON_CORE_BY_TAB));
+
+    manifest.nonCoreApps.forEach(function (entry) {
+      var fallback = DEFAULT_NON_CORE_BY_TAB[String(entry && entry.tabId || '').trim()] || null;
+      var normalized = normalizeEntry(entry, fallback, '#navOptionalAppsHost');
+      var tabId = normalized.tabId;
+      if (!tabId) return;
+      managedTabs.add(tabId);
+      var enabled = normalized.enabled;
+      if (!enabled) {
+        setNavVisibility(tabId, false);
+        mountTabHtml(tabId, createDisabledTabHtml(tabId, 'Optional app disabled.'));
+        return;
+      }
+      var path = normalized.path;
+      if (!isSafeHtmlPath(path)) {
+        setNavVisibility(tabId, false);
+        mountTabHtml(tabId, createDisabledTabHtml(tabId, 'Optional app path is invalid.'));
+        return;
+      }
+      var html = syncGetText(path);
+      if (!html) {
+        setNavVisibility(tabId, false);
+        mountTabHtml(tabId, createDisabledTabHtml(tabId, 'Optional app HTML is missing.'));
+        return;
+      }
+      mountTabHtml(tabId, html);
+      setNavVisibility(tabId, true);
+      ensureNavButton(normalized, false);
+      enabledTabs.add(tabId);
+    });
+
+    managedTabs.forEach(function (tabId) {
+      if (!enabledTabs.has(tabId)) {
+        setNavVisibility(tabId, false);
+      }
+    });
+
+    (manifest.customApps || []).forEach(function (entry) {
+      if (!entry) return;
+      var normalized = normalizeEntry(entry, null, '#navCustomAppsHost');
+
+      if (!normalized.tabId) {
+        mountCustomHtmlEntries([entry]);
+        return;
+      }
+
+      if (!isSafeTabId(normalized.tabId)) return;
+
+      if (normalized.enabled === false) {
+        setNavVisibility(normalized.tabId, false);
+        return;
+      }
+
+      if (!isSafeHtmlPath(normalized.path)) {
+        setNavVisibility(normalized.tabId, false);
+        return;
+      }
+
+      var html = syncGetText(normalized.path);
+      if (!html) {
+        setNavVisibility(normalized.tabId, false);
+        return;
+      }
+
+      mountTabHtml(normalized.tabId, html);
+      ensureNavButton(normalized, true);
+      setNavVisibility(normalized.tabId, true);
+    });
+
+    return true;
+  }
+
+  window.__nonCoreHtmlReady = Promise.resolve(loadNonCoreAppHtml());
+})();

@@ -124,6 +124,7 @@ test('document-digest.js declares initDocumentDigest entrypoint', () => {
 // ============================================================
 
 const BROWSER_APP_JS = path.join(ROOT, 'client', 'js', 'apps', 'optional', 'browser-app.js');
+const POPOUT_MANAGER_JS = path.join(ROOT, 'client', 'js', 'apps', 'optional', 'popout-manager.js');
 
 test('app.js does not hard-call initBrowserApp entrypoint', () => {
   const src = read(APP_JS);
@@ -138,5 +139,24 @@ test('browser-app.js declares initBrowserApp entrypoint', () => {
   assert.ok(
     src.includes('async function initBrowserApp()'),
     'browser-app.js must declare initBrowserApp entrypoint for browser tab'
+  );
+});
+
+test('index.html loads popout-manager.js from optional app folder', () => {
+  const src = read(INDEX_HTML);
+  assert.ok(
+    src.includes('js/apps/optional/popout-manager.js'),
+    'index.html must load popout-manager.js from js/apps/optional'
+  );
+  assert.ok(
+    !src.includes('js/popout-manager.js'),
+    'legacy root path js/popout-manager.js must not remain in index.html'
+  );
+});
+
+test('optional popout manager module exists at new path', () => {
+  assert.ok(
+    fs.existsSync(POPOUT_MANAGER_JS),
+    'optional popout-manager.js file must exist at js/apps/optional'
   );
 });

@@ -1,0 +1,110 @@
+﻿  <div class="tab-content" id="tab-themes">
+    <div class="settings-container">
+      <div class="settings-section">
+        <div class="settings-section-header">
+          <h2>🎨 Theme Gallery</h2>
+          <p>Pick a look for your NekoCore shell. Themes are applied instantly.</p>
+        </div>
+        <div class="theme-gallery" id="themeGalleryGrid"></div>
+      </div>
+
+      <div class="settings-section" style="margin-top:var(--space-4)">
+        <div class="settings-section-header">
+          <h2>🛠️ Theme Customizer</h2>
+          <p>Customize core colors directly in the OS. Changes save locally and can be reset any time.</p>
+        </div>
+
+        <div class="config-card" style="padding:var(--space-4)">
+          <div class="model-row" style="margin-bottom:var(--space-3)">
+            <div class="fl">
+              <label>Background Start</label>
+              <input type="color" id="themeBgStart" value="#04060d" style="height:40px;padding:4px">
+            </div>
+            <div class="fl">
+              <label>Background End</label>
+              <input type="color" id="themeBgEnd" value="#0b172a" style="height:40px;padding:4px">
+            </div>
+          </div>
+
+          <div class="model-row" style="margin-bottom:var(--space-3)">
+            <div class="fl" style="flex:1">
+              <label>Background Opacity: <span id="themeBgOpacityValue">100%</span></label>
+              <input type="range" id="themeBgOpacity" min="0" max="1" step="0.01" value="1">
+              <div style="font-size:var(--text-xs);color:var(--text-secondary);margin-top:var(--space-1)">Set to 0% to make the desktop fully transparent (see Windows behind NekoCore OS).</div>
+            </div>
+          </div>
+
+          <div class="model-row" style="margin-bottom:var(--space-3)">
+            <div class="fl" style="flex:1">
+              <label>Background Image</label>
+              <select id="themeWallpaperImage">
+                <option value="">Gradient Only</option>
+              </select>
+              <div style="font-size:var(--text-xs);color:var(--text-secondary);margin-top:var(--space-1)">Images load from assets/Background images.</div>
+            </div>
+          </div>
+
+          <div class="model-row" style="margin-bottom:var(--space-3)">
+            <div class="fl" style="flex:1">
+              <label>Custom Background Filename (optional)</label>
+              <input type="text" id="themeWallpaperCustom" placeholder="my-background.png">
+              <div style="font-size:var(--text-xs);color:var(--text-secondary);margin-top:var(--space-1)">Drop your file into project/assets/Background images, then enter the filename here.</div>
+            </div>
+          </div>
+
+          <div class="model-row" style="margin-bottom:var(--space-3)">
+            <div class="fl">
+              <label>Window Color</label>
+              <input type="color" id="themeWindowColor" value="#0d1526" style="height:40px;padding:4px">
+            </div>
+            <div class="fl">
+              <label>Window Opacity: <span id="themeWindowOpacityValue">0.82</span></label>
+              <input type="range" id="themeWindowOpacity" min="0.35" max="1" step="0.01" value="0.82">
+            </div>
+          </div>
+
+          <div class="model-row" style="margin-bottom:var(--space-3)">
+            <div class="fl">
+              <label>Primary Text</label>
+              <input type="color" id="themeTextPrimary" value="#e4e4e7" style="height:40px;padding:4px">
+            </div>
+            <div class="fl">
+              <label>Secondary Text</label>
+              <input type="color" id="themeTextSecondary" value="#a1a1aa" style="height:40px;padding:4px">
+            </div>
+          </div>
+
+          <div class="model-row" style="margin-bottom:var(--space-3)">
+            <div class="fl">
+              <label>Text Field Background</label>
+              <input type="color" id="themeInputBg" value="#0b172a" style="height:40px;padding:4px">
+            </div>
+            <div class="fl">
+              <label>Text Field Text</label>
+              <input type="color" id="themeInputText" value="#eaf4ff" style="height:40px;padding:4px">
+            </div>
+          </div>
+
+          <div class="model-row" style="margin-bottom:var(--space-2)">
+            <div class="fl">
+              <label>Custom Theme Name</label>
+              <input type="text" id="themeCustomName" value="My Custom Theme" placeholder="My Neon Dream Theme">
+            </div>
+            <div class="fl">
+              <label>Accent Color</label>
+              <input type="color" id="themeAccent" value="#34d399" style="height:40px;padding:4px">
+            </div>
+            <div class="fl" style="display:flex;align-items:flex-end;gap:var(--space-2)">
+              <button class="btn bp" type="button" id="themeCustomizerApply" style="flex:1">Save As New Theme</button>
+              <button class="btn" type="button" id="themeCustomizerResetNeko">Reset to NekoCore</button>
+              <button class="btn bg" type="button" id="themeCustomizerReset">Reset Customizer</button>
+            </div>
+          </div>
+
+          <div id="themeCustomizerStatus" class="text-xs-c text-secondary-c" style="margin-top:var(--space-2)">Customizer ready.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== VISUALIZER TAB (embedded) ===== -->

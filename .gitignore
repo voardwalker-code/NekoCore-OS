@@ -50,3 +50,7 @@ project/skills/*/workspace/*
 # IDE
 .vscode/
 *.code-workspace
+
+# Internal process and planning docs — not for public repo
+WORKLOG.md
+Documents/
