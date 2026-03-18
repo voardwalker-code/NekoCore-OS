@@ -23,22 +23,6 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
-          cache-dependency-path: project/package.json
-
-      - name: Install dependencies
-        working-directory: project
-        run: npm install --omit=optional
 
       - name: Run tests
-        working-directory: project
         run: npm test
-
-      - name: Upload test results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-results-node-${{ matrix.node-version }}
-          path: |
-            project/test-results/
-            project/coverage/
-          retention-days: 7
