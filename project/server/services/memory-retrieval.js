@@ -25,25 +25,20 @@ const fs = require('fs');
 const path = require('path');
 const zlib = require('zlib');
 const { normalizeTopics } = require('../brain/topic-utils');
+const { extractPhrases: rakeExtract } = require('../brain/utils/rake');
+const { bm25ScoreWithImportance } = require('../brain/utils/bm25');
 const ThoughtTypes = require('../brain/thought-types');
 
 // ── Pure helpers ──────────────────────────────────────────────────────────────
 
 function extractSubconsciousTopics(messageText) {
   if (!messageText || typeof messageText !== 'string') return [];
-  const stopwords = new Set([
-    'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'is', 'was', 'are', 'be', 'been',
-    'i', 'you', 'he', 'she', 'it', 'we', 'they', 'this', 'that', 'with', 'from', 'have', 'what', 'when', 'where', 'why', 'how',
-    'about', 'into', 'just', 'like', 'your', 'their', 'them', 'then', 'than'
-  ]);
 
-  const raw = messageText
-    .toLowerCase()
-    .split(/[^a-z0-9_]+/)
-    .filter(w => w.length >= 4 && !stopwords.has(w))
-    .slice(0, 12);
-
-  return normalizeTopics(raw);
+  // IME I1-0: RAKE keyphrasing — produces multi-word phrases like
+  // "pipeline orchestration" instead of two noisy single tokens.
+  // Falls back to single-word tokenizer internally when text is too short.
+  const phrases = rakeExtract(messageText, 12);
+  return normalizeTopics(phrases);
 }
 
 function getSemanticPreview(memRoot, memId) {
@@ -244,7 +239,10 @@ function createMemoryRetrieval({
         if (!meta) continue;
         const importance = Number(meta.importance ?? 0.5);
         const decay = Number(meta.decay ?? 1.0);
-        let relevanceScore = baseScore * (0.35 + (importance * decay));
+        // IME I1-1: BM25 scoring — TF saturation + length normalisation.
+        // Falls back to legacy baseScore signal if meta.topics are absent.
+        let relevanceScore = bm25ScoreWithImportance(topics, meta.topics || [], importance, decay);
+        if (relevanceScore === 0) relevanceScore = baseScore * 0.35;
 
         // Neurochemistry emotion similarity bonus
         if (neurochemistry && meta.emotionalTag) {
@@ -406,7 +404,8 @@ function createMemoryRetrieval({
       try {
         const runtime = loadAspectRuntimeConfig('subconscious') || loadAspectRuntimeConfig('main');
         if (runtime) {
-          const rerank = await callSubconsciousReranker(runtime, userMessage, topConnections.slice(0, Math.min(20, topConnections.length)));
+          // IME I1-2: candidate pool expanded 20→50 after BM25 pre-filtering.
+          const rerank = await callSubconsciousReranker(runtime, userMessage, topConnections.slice(0, Math.min(50, topConnections.length)));
           if (rerank.ok && rerank.scoreMap) {
             rerankUsed = true;
             topConnections.forEach(c => {

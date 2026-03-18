@@ -179,6 +179,34 @@ function createNekoCoreChat(deps) {
         return { ok: false, error: 'Skill edit failed: ' + e.message };
       }
     };
+    const archiveSearchFn = async (query, yearRangeRaw, limitRaw) => {
+      if (!query) return { ok: false, error: 'No query provided' };
+      try {
+        const { extractPhrases } = require('../brain/utils/rake');
+        const { queryArchive }   = require('../brain/utils/archive-index');
+        const archivePaths       = require('../entityPaths');
+        const topics = extractPhrases(String(query));
+        let yearRange = {};
+        if (yearRangeRaw && typeof yearRangeRaw === 'string') {
+          try { yearRange = JSON.parse(yearRangeRaw); } catch (_) {}
+        } else if (yearRangeRaw && typeof yearRangeRaw === 'object') {
+          yearRange = yearRangeRaw;
+        }
+        const limit = Math.min(Math.max(parseInt(limitRaw, 10) || 5, 1), 20);
+        const hits = queryArchive(NEKOCORE_ID, topics, limit, yearRange);
+        const results = hits.map(h => {
+          let summary = '';
+          try {
+            const ep = path.join(archivePaths.getArchiveEpisodicPath(NEKOCORE_ID), h.memId, 'semantic.txt');
+            const dp = path.join(archivePaths.getArchiveDocsPath(NEKOCORE_ID), h.memId, 'semantic.txt');
+            const src = require('fs').existsSync(ep) ? ep : require('fs').existsSync(dp) ? dp : null;
+            if (src) summary = require('fs').readFileSync(src, 'utf8').slice(0, 1500);
+          } catch (_) {}
+          return { id: h.memId, score: h.score, summary, archivedAt: h.meta.archivedAt || null, topics: h.meta.topics || [], type: h.meta.type || 'episodic' };
+        });
+        return { ok: true, results, total: results.length };
+      } catch (e) { return { ok: false, error: 'Archive search failed: ' + e.message }; }
+    };
 
     // Construct & run orchestrator
     const orchestrator = new Orchestrator({
@@ -222,6 +250,7 @@ function createNekoCoreChat(deps) {
         webFetch,
         memorySearch: memorySearchFn,
         memoryCreate: memoryCreateFn,
+        archiveSearch: archiveSearchFn,
         skillCreate: skillCreateFn,
         skillList: skillListFn,
         skillEdit: skillEditFn,
@@ -255,6 +284,7 @@ function createNekoCoreChat(deps) {
           workspaceTools,
           memorySearch: memorySearchFn,
           memoryCreate: memoryCreateFn,
+          archiveSearch: archiveSearchFn,
           skillCreate: skillCreateFn,
           skillList: skillListFn,
           skillEdit: skillEditFn,

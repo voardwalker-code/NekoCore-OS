@@ -55,6 +55,10 @@ window.RemAPI = (function () {
   const saveConfig         = (data)     => post('/api/config', data);
   const getEntityConfig    = (entityId) => get('/api/entity-config?entityId=' + encodeURIComponent(entityId));
 
+  // ── Archive endpoints ──
+  const archiveSearch      = (body)    => post('/api/archive/search', body);
+  const archiveIngestCorpus = (body)   => post('/api/archive/ingest-corpus', body);
+
   // ── Shutdown ──
   const shutdown           = ()        => post('/api/shutdown', {});
 
@@ -72,6 +76,8 @@ window.RemAPI = (function () {
     getBeliefGraph, getSomatic, toggleSomatic, getSystemPrompt, getSessionMeta,
     // config
     getConfig, saveConfig, getEntityConfig,
+    // archive
+    archiveSearch, archiveIngestCorpus,
     // shutdown
     shutdown
   };

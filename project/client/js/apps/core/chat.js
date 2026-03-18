@@ -872,17 +872,16 @@ function naturalTypingDelay(text) {
   return Math.min(240 + (text || '').length * 10, 1200) + Math.floor(Math.random() * 140);
 }
 
-// Character typing speed (slightly faster than average reading cadence).
-const CHAT_TYPING_CPS_MIN = 17;
-const CHAT_TYPING_CPS_MAX = 24;
-const CHAT_WORD_CORRECTION_CHANCE = 0.03;
-const CHAT_TRANSPOSE_CORRECTION_CHANCE = 0.025;
-const CHAT_CHAR_TYPO_CHANCE = 0.012;
-const CHAT_MISSING_SPACE_CHANCE = 0.028;
-const CHAT_DOUBLE_LETTER_DROP_CHANCE = 0.03;
-const CHAT_FILLER_PAUSE_CHANCE = 0.05;
-const CHAT_BRB_PAUSE_CHANCE = 0.035;
-const CHAT_DOUBLE_WORD_CORRECTION_CHANCE = 0.32;
+// ── Per-entity voice profile (populated from server on entity load) ──
+// Falls back to defaults when no entity voice is available.
+const DEFAULT_VOICE = {
+  typingSpeed: { min: 17, max: 24 },
+  rhythm: { punctuationPause: [35, 90], sentenceEndPause: [90, 180], newlinePause: [110, 210], burstChance: 0.05 },
+  errors: { typo: 0.012, transpose: 0.025, missedSpace: 0.028, doubleLetter: 0.03, wordCorrection: 0.03, doubleCorrection: 0.32 },
+  fillers: { chance: 0.05, phrases: [' um.. '] },
+  brb: { chance: 0.035, phrases: ['Hold on brrb. ', 'just a sec... '], returnPhrase: 'Sorry, ' }
+};
+function getVoice() { return (typeof currentEntityVoice !== 'undefined' && currentEntityVoice) || DEFAULT_VOICE; }
 
 const KEYBOARD_NEIGHBORS = {
   a: ['s', 'q', 'w', 'z'], b: ['v', 'g', 'h', 'n'], c: ['x', 'd', 'f', 'v'],
@@ -993,15 +992,16 @@ function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-function typingCharDelay(ch) {
-  const cps = randomInt(CHAT_TYPING_CPS_MIN, CHAT_TYPING_CPS_MAX);
+function typingCharDelay(ch, voice) {
+  const v = voice || getVoice();
+  const cps = randomInt(v.typingSpeed.min, v.typingSpeed.max);
   let delay = 1000 / cps;
 
   if (ch === ' ') delay *= 0.55;
-  if (/[,;:]/.test(ch)) delay += randomInt(35, 90);
-  if (/[.!?]/.test(ch)) delay += randomInt(90, 180);
-  if (ch === '\n') delay += randomInt(110, 210);
-  if (Math.random() < 0.05) delay += randomInt(12, 55);
+  if (/[,;:]/.test(ch)) delay += randomInt(v.rhythm.punctuationPause[0], v.rhythm.punctuationPause[1]);
+  if (/[.!?]/.test(ch)) delay += randomInt(v.rhythm.sentenceEndPause[0], v.rhythm.sentenceEndPause[1]);
+  if (ch === '\n') delay += randomInt(v.rhythm.newlinePause[0], v.rhythm.newlinePause[1]);
+  if (Math.random() < v.rhythm.burstChance) delay += randomInt(12, 55);
 
   return Math.max(12, Math.round(delay + randomInt(-8, 14)));
 }
@@ -1054,16 +1054,17 @@ function pickDifferentWord(options, notThis) {
   return filtered[randomInt(0, filtered.length - 1)];
 }
 
-async function typeString(contentEl, out, str) {
+async function typeString(contentEl, out, str, voice) {
+  const v = voice || getVoice();
   for (let i = 0; i < str.length; i++) {
     const ch = str[i];
 
-    if (/[A-Za-z]/.test(ch) && Math.random() < CHAT_CHAR_TYPO_CHANCE) {
+    if (/[A-Za-z]/.test(ch) && Math.random() < v.errors.typo) {
       const wrong = maybeNeighborTypoChar(ch);
       out += wrong;
       contentEl.textContent = out;
       scrollChatBottom();
-      await sleep(typingCharDelay(wrong));
+      await sleep(typingCharDelay(wrong, v));
 
       out = out.slice(0, -1);
       contentEl.textContent = out;
@@ -1074,7 +1075,7 @@ async function typeString(contentEl, out, str) {
     out += ch;
     contentEl.textContent = out;
     scrollChatBottom();
-    await sleep(typingCharDelay(ch));
+    await sleep(typingCharDelay(ch, v));
   }
 
   return out;
@@ -1092,22 +1093,26 @@ async function backspaceString(contentEl, out, count) {
 
 /**
  * Render assistant text as character-level human-like typing with occasional corrections.
+ * Uses the per-entity voice profile for speed, errors, fillers, and brb phrases.
  */
 async function renderAssistantTyping(contentEl, text) {
   const safeText = String(text || '');
   if (!contentEl) return;
   if (!safeText) { contentEl.textContent = ''; return; }
 
+  const v = getVoice();
   const tokens = safeText.match(/\s+|[^\s]+/g) || [safeText];
   let out = '';
   let pendingMissedSpace = false;
   contentEl.textContent = '';
 
-  if (safeText.length > 40 && Math.random() < CHAT_BRB_PAUSE_CHANCE) {
-    const brbLine = Math.random() < 0.5 ? 'Hold on brrb. ' : 'just a sec... ';
-    out = await typeString(contentEl, out, brbLine);
+  if (safeText.length > 40 && v.brb.phrases.length > 0 && Math.random() < v.brb.chance) {
+    const brbLine = v.brb.phrases[randomInt(0, v.brb.phrases.length - 1)];
+    out = await typeString(contentEl, out, brbLine, v);
     await sleep(randomInt(2000, 3000));
-    out = await typeString(contentEl, out, 'Sorry, ');
+    if (v.brb.returnPhrase) {
+      out = await typeString(contentEl, out, v.brb.returnPhrase, v);
+    }
     await sleep(randomInt(180, 340));
   }
 
@@ -1116,17 +1121,17 @@ async function renderAssistantTyping(contentEl, text) {
 
     // Whitespace is typed as-is to preserve formatting/newlines exactly.
     if (/^\s+$/.test(token)) {
-      if (token === ' ' && Math.random() < CHAT_MISSING_SPACE_CHANCE) {
+      if (token === ' ' && Math.random() < v.errors.missedSpace) {
         pendingMissedSpace = true;
         continue;
       }
-      out = await typeString(contentEl, out, token);
+      out = await typeString(contentEl, out, token, v);
       continue;
     }
 
     const match = token.match(/^([A-Za-z]+)([^A-Za-z]*)$/);
     if (!match) {
-      out = await typeString(contentEl, out, token);
+      out = await typeString(contentEl, out, token, v);
       continue;
     }
 
@@ -1138,71 +1143,72 @@ async function renderAssistantTyping(contentEl, text) {
       const prefixLen = Math.min(randomInt(1, 3), word.length);
       const prefix = word.slice(0, prefixLen);
       const remainder = word.slice(prefixLen);
-      out = await typeString(contentEl, out, prefix);
+      out = await typeString(contentEl, out, prefix, v);
       await sleep(randomInt(55, 130));
       out = await backspaceString(contentEl, out, prefix.length);
-      out = await typeString(contentEl, out, ' ' + prefix + remainder + trailing);
+      out = await typeString(contentEl, out, ' ' + prefix + remainder + trailing, v);
       pendingMissedSpace = false;
       continue;
     }
 
-    if (Math.random() < CHAT_FILLER_PAUSE_CHANCE && /[.!?]$/.test((out.slice(-1) || ''))) {
-      out = await typeString(contentEl, out, ' um.. ');
+    if (v.fillers.phrases.length > 0 && Math.random() < v.fillers.chance && /[.!?]$/.test((out.slice(-1) || ''))) {
+      const filler = v.fillers.phrases[randomInt(0, v.fillers.phrases.length - 1)];
+      out = await typeString(contentEl, out, filler, v);
       await sleep(randomInt(250, 600));
       await sleep(randomInt(120, 260));
     }
 
     const substitutions = WORD_SELF_CORRECTIONS[lowerWord];
-    if (substitutions && Math.random() < CHAT_WORD_CORRECTION_CHANCE) {
+    if (substitutions && Math.random() < v.errors.wordCorrection) {
       const wrongRaw = substitutions[randomInt(0, substitutions.length - 1)];
       const wrong = applyWordCaseShape(word, wrongRaw);
 
-      out = await typeString(contentEl, out, wrong);
+      out = await typeString(contentEl, out, wrong, v);
       await sleep(randomInt(70, 170));
       out = await backspaceString(contentEl, out, wrong.length);
       await sleep(randomInt(45, 110));
 
-      if (substitutions.length > 1 && Math.random() < CHAT_DOUBLE_WORD_CORRECTION_CHANCE) {
+      if (substitutions.length > 1 && Math.random() < v.errors.doubleCorrection) {
         const wrongRaw2 = pickDifferentWord(substitutions, wrongRaw);
         const wrong2 = applyWordCaseShape(word, wrongRaw2 || wrongRaw);
-        out = await typeString(contentEl, out, wrong2);
+        out = await typeString(contentEl, out, wrong2, v);
         await sleep(randomInt(70, 170));
         out = await backspaceString(contentEl, out, wrong2.length);
         await sleep(randomInt(45, 110));
       }
 
-      out = await typeString(contentEl, out, word);
-      out = await typeString(contentEl, out, trailing);
+      out = await typeString(contentEl, out, word, v);
+      out = await typeString(contentEl, out, trailing, v);
       continue;
     }
 
     const dblIdx = findDoubleLetterIndex(word);
-    if (dblIdx > 0 && Math.random() < CHAT_DOUBLE_LETTER_DROP_CHANCE) {
+    if (dblIdx > 0 && Math.random() < v.errors.doubleLetter) {
       const dropped = removeCharAt(word, dblIdx);
-      out = await typeString(contentEl, out, dropped);
+      out = await typeString(contentEl, out, dropped, v);
       await sleep(randomInt(60, 140));
       out = await backspaceString(contentEl, out, dropped.length);
-      out = await typeString(contentEl, out, word);
-      out = await typeString(contentEl, out, trailing);
+      out = await typeString(contentEl, out, word, v);
+      out = await typeString(contentEl, out, trailing, v);
       continue;
     }
 
-    if (word.length >= 4 && Math.random() < CHAT_TRANSPOSE_CORRECTION_CHANCE) {
+    if (word.length >= 4 && Math.random() < v.errors.transpose) {
       const transposed = swapAdjacentChars(word);
       if (transposed === word) {
-        out = await typeString(contentEl, out, word + trailing);
+        out = await typeString(contentEl, out, word + trailing, v);
         continue;
       }
-      out = await typeString(contentEl, out, transposed);
+      out = await typeString(contentEl, out, transposed, v);
       await sleep(randomInt(65, 150));
       out = await backspaceString(contentEl, out, transposed.length);
       await sleep(randomInt(40, 95));
-      out = await typeString(contentEl, out, word);
-      out = await typeString(contentEl, out, trailing);
+      out = await typeString(contentEl, out, word, v);
+      out = await typeString(contentEl, out, trailing, v);
       continue;
     }
 
-    out = await typeString(contentEl, out, word + trailing);
+    out = await typeString(contentEl, out, word + trailing, v);
   }
 }
 

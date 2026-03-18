@@ -115,6 +115,7 @@ const { boot }            = require('./services/boot');
 
 const PORT = process.env.PORT || 3847;
 const CLIENT_DIR = path.join(__dirname, '..', 'client');
+const ASSETS_DIR = path.join(__dirname, '..', 'assets');
 const SERVER_DATA_DIR = path.join(__dirname, 'data');
 
 const CONFIG_DIR = path.join(__dirname, '..', 'Config');
@@ -299,7 +300,8 @@ cognitiveBus.on('memory_connections_pruned', (data) => {
 
 // Bridge somatic awareness events to SSE clients
 cognitiveBus.on('somatic_update', (data) => {
-  const toggles = entityRuntime?.somaticAwareness ? entityRuntime.somaticAwareness.getMetricToggles() : {};
+  const activeSomatic = entityRuntime?.somaticAwareness ?? nekoSystemRuntime?.somaticAwareness;
+  const toggles = activeSomatic ? activeSomatic.getMetricToggles() : {};
   broadcastSSE('thought', { type: 'SOMATIC_UPDATE', metrics: data.metrics, sensations: data.sensations, overallStress: data.overallStress, bodyNarrative: data.bodyNarrative, toggles, timestamp: data.timestamp || Date.now() });
 });
 cognitiveBus.on('somatic_alarm', (data) => {
@@ -351,6 +353,8 @@ const MIME_TYPES = {
   '.json': 'application/json; charset=utf-8',
   '.png': 'image/png',
   '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.webp': 'image/webp',
   '.svg': 'image/svg+xml',
   '.ico': 'image/x-icon',
   '.gif': 'image/gif',
@@ -574,7 +578,7 @@ function getTokenLimit(key) {
 }
 
 const { callLLMWithRuntime, callSubconsciousReranker } = createLLMInterface({
-  getSomaticAwareness: () => entityRuntime?.somaticAwareness,
+  getSomaticAwareness: () => entityRuntime?.somaticAwareness ?? nekoSystemRuntime?.somaticAwareness,
   getDefaultMaxTokens: () => _defaultMaxTokens
 });
 
@@ -645,8 +649,8 @@ const ctx = {
   get dreamVisualizer()     { return entityRuntime?.dreamVisualizer; },
   get goalsManager()        { return entityRuntime?.goalsManager; },
   get beliefGraph()         { return entityRuntime?.beliefGraph; },
-  get neurochemistry()      { return entityRuntime?.neurochemistry; },
-  get somaticAwareness()    { return entityRuntime?.somaticAwareness; },
+  get neurochemistry()      { return entityRuntime?.neurochemistry ?? nekoSystemRuntime?.neurochemistry; },
+  get somaticAwareness()    { return entityRuntime?.somaticAwareness ?? nekoSystemRuntime?.somaticAwareness; },
   get consciousMemory()     { return entityRuntime?.consciousMemory; },
   get skillManager()        { return entityRuntime?.skillManager; },
   get curiosityEngine()     { return entityRuntime?.curiosityEngine; },
@@ -695,8 +699,8 @@ const lifecycle = createRuntimeLifecycle({
   setTelegramBot: (bot) => { telegramBot = bot; },
   getMemoryIndex: () => memoryIndex,
   getBrainLoop: () => brainLoop,
-  getSomaticAwareness:  () => entityRuntime?.somaticAwareness,
-  getNeurochemistry:    () => entityRuntime?.neurochemistry,
+  getSomaticAwareness:  () => entityRuntime?.somaticAwareness ?? nekoSystemRuntime?.somaticAwareness,
+  getNeurochemistry:    () => entityRuntime?.neurochemistry    ?? nekoSystemRuntime?.neurochemistry,
   getMemoryStorage:     () => entityRuntime?.memoryStorage,
   getGoalsManager:      () => entityRuntime?.goalsManager,
   getDreamEngine:       () => entityRuntime?.dreamEngine,
@@ -727,6 +731,7 @@ const createAuthRoutes     = require('./routes/auth-routes');
 const createBrowserRoutes  = require('./routes/browser-routes');
 const createVfsRoutes      = require('./routes/vfs-routes');
 const createNekoCoreRoutes = require('./routes/nekocore-routes');
+const createArchiveRoutes  = require('./routes/archive-routes');
 
 const sseRoutes      = createSSERoutes(ctx);
 const configRoutes   = createConfigRoutes(ctx);
@@ -741,8 +746,9 @@ const authRoutes     = createAuthRoutes(ctx);
 const browserRoutes   = createBrowserRoutes(ctx);
 const vfsRoutes       = createVfsRoutes(ctx);
 const nekocoreRoutes  = createNekoCoreRoutes(ctx);
+const archiveRoutes   = createArchiveRoutes(ctx);
 
-const _routeDispatchers = [authRoutes, sseRoutes, configRoutes, memoryRoutes, chatRoutes, entityRoutes, brainRoutes, skillsRoutes, cogRoutes, documentRoutes, browserRoutes, vfsRoutes, nekocoreRoutes];
+const _routeDispatchers = [authRoutes, sseRoutes, configRoutes, memoryRoutes, chatRoutes, entityRoutes, brainRoutes, skillsRoutes, cogRoutes, documentRoutes, browserRoutes, vfsRoutes, nekocoreRoutes, archiveRoutes];
 
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://localhost:${PORT}`);
@@ -789,13 +795,19 @@ const server = http.createServer(async (req, res) => {
   // ── Static file serving (fallback for unmatched paths) ──────────────────────
   {
     let filePath;
+    let fileBaseDir = CLIENT_DIR;
     if (url.pathname === '/' || url.pathname === '/index.html') {
       filePath = path.join(CLIENT_DIR, 'index.html');
     } else {
-      const safePath = path.normalize(url.pathname).replace(/^(\.\.[\/\\])+/, '');
-      filePath = path.join(CLIENT_DIR, safePath);
+      const servingAssets = url.pathname.startsWith('/shared-assets/');
+      fileBaseDir = servingAssets ? ASSETS_DIR : CLIENT_DIR;
+      const rawPath = servingAssets ? url.pathname.replace(/^\/shared-assets\//, '/') : url.pathname;
+      let decodedPath = rawPath;
+      try { decodedPath = decodeURIComponent(rawPath); } catch (_) { decodedPath = rawPath; }
+      const safePath = path.normalize(decodedPath).replace(/^(\.\.[\/\\])+/, '');
+      filePath = path.join(fileBaseDir, safePath);
     }
-    if (!filePath.startsWith(CLIENT_DIR)) {
+    if (!filePath.startsWith(fileBaseDir)) {
       res.writeHead(403, { 'Content-Type': 'text/plain' });
       res.end('Forbidden');
       return;

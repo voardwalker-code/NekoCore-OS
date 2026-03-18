@@ -69,6 +69,13 @@
       "dependencies": ["js/app.js"]
     },
     {
+      "tabId": "archive",
+      "class": "core",
+      "sourcePath": "js/apps/core/archive-ui.js",
+      "bootstrapCritical": false,
+      "dependencies": ["js/app.js", "shared/api.js"]
+    },
+    {
       "tabId": "nekocore",
       "class": "core",
       "sourcePath": "nekocore.html",
@@ -127,6 +134,14 @@
       "note": "Inline file explorer; VFS is primary backing module",
       "bootstrapCritical": false,
       "dependencies": ["js/app.js", "js/desktop.js"]
+    },
+    {
+      "tabId": "popouts",
+      "class": "optional",
+      "sourcePath": "js/apps/optional/popout-manager.js",
+      "note": "Managed browser-window popouts for detached app windows",
+      "bootstrapCritical": false,
+      "dependencies": ["js/app.js", "js/window-manager.js"]
     },
     {
       "tabId": "skills",

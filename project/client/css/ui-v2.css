@@ -10,7 +10,7 @@
 body {
   font-family: var(--font-sans);
   background: var(--desktop-wallpaper);
-  color: var(--text-primary);
+  color: var(--app-text);
   min-height: 100vh;
   line-height: var(--leading-normal);
   font-size: var(--text-base);
@@ -815,20 +815,21 @@ body::before {
 .fl input, .fl select {
   width: 100%;
   padding: var(--space-2) var(--space-3);
-  background: var(--surface-2);
-  border: 1px solid var(--border-default);
+  background: var(--app-input-bg);
+  border: 1px solid var(--app-input-border);
   border-radius: var(--radius-md);
-  color: var(--text-primary);
+  color: var(--app-input-text);
   font-size: var(--text-sm);
   font-family: var(--font-mono);
   outline: none;
   transition: border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out);
 }
 .fl input:focus, .fl select:focus {
-  border-color: var(--info-strong);
-  box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.1);
+  background: var(--app-input-bg-focus);
+  border-color: var(--app-input-border-focus);
+  box-shadow: 0 0 0 3px var(--app-input-focus-ring);
 }
-.fl input::placeholder { color: var(--text-quaternary); }
+.fl input::placeholder { color: var(--app-input-placeholder); }
 .fl select {
   cursor: pointer;
   appearance: none;
@@ -836,7 +837,7 @@ body::before {
   background-repeat: no-repeat;
   background-position: right 12px center;
 }
-.fl select option { background: var(--surface-2); color: var(--text-primary); }
+.fl select option { background: var(--app-input-bg); color: var(--app-input-text); }
 .model-row { display: flex; gap: var(--space-2); align-items: end; }
 .model-row .fl { flex: 1; }
 .btn-fetch {
@@ -968,13 +969,13 @@ body::before {
   padding: var(--space-4);
   font-family: var(--font-mono);
   font-size: var(--text-sm);
-  color: var(--text-primary);
+  color: var(--app-input-text);
   resize: none;
   outline: none;
   line-height: var(--leading-relaxed);
   min-height: 250px;
 }
-.pnl textarea::placeholder { color: var(--text-quaternary); }
+.pnl textarea::placeholder { color: var(--app-input-placeholder); }
 .pnl textarea:read-only { color: var(--text-secondary); }
 
 .ws-full { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-5); margin-top: var(--space-5); }
@@ -1697,11 +1698,11 @@ body::before {
 }
 .chat-input {
   flex: 1;
-  background: var(--surface-2);
+  background: var(--app-input-bg);
   border: 1px solid var(--border-default);
   border-radius: var(--radius-lg);
   padding: var(--space-3) var(--space-4);
-  color: var(--text-primary);
+  color: var(--app-input-text);
   font-family: var(--font-sans);
   font-size: var(--text-base);
   resize: none;
@@ -1712,10 +1713,11 @@ body::before {
   transition: border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out);
 }
 .chat-input:focus {
-  border-color: var(--accent-strong);
-  box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.08);
+  background: var(--app-input-bg-focus);
+  border-color: var(--app-input-border-focus);
+  box-shadow: 0 0 0 3px var(--app-input-focus-ring);
 }
-.chat-input::placeholder { color: var(--text-quaternary); }
+.chat-input::placeholder { color: var(--app-input-placeholder); }
 .chat-send {
   width: 42px;
   height: 42px;
@@ -2488,7 +2490,7 @@ body.nav-collapsed .hdr { padding-left: initial; }
 .auth-panel-inline { }
 
 .auth-card-compact {
-  background: var(--surface-2);
+  background: var(--app-surface-alt);
   border: 1px solid var(--border-default);
   border-radius: var(--radius-lg);
   padding: var(--space-4);
@@ -2506,18 +2508,21 @@ body.nav-collapsed .hdr { padding-left: initial; }
   letter-spacing: 0.04em;
 }
 .auth-card-compact input, .auth-card-compact select {
-  background: var(--surface-1);
-  border: 1px solid var(--border-default);
+  background: var(--app-input-bg);
+  border: 1px solid var(--app-input-border);
   border-radius: var(--radius-sm);
   padding: var(--space-2) var(--space-3);
-  color: var(--text-primary);
+  color: var(--app-input-text);
+  -webkit-text-fill-color: var(--app-input-text);
   font-size: var(--text-sm);
   outline: none;
   transition: border-color var(--duration-fast) var(--ease-out);
 }
+.auth-card-compact input::placeholder { color: var(--app-input-placeholder); opacity: 1; }
 .auth-card-compact input:focus, .auth-card-compact select:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.08);
+  background: var(--app-input-bg-focus);
+  border-color: var(--app-input-border-focus);
+  box-shadow: 0 0 0 3px var(--app-input-focus-ring);
 }
 
 /* ============================================================
@@ -2804,7 +2809,7 @@ body.nav-collapsed .hdr { padding-left: initial; }
 }
 .setup-overlay.active { display: flex; }
 .setup-card {
-  background: var(--surface-1);
+  background: var(--app-surface);
   border: 1px solid var(--border-default);
   border-radius: var(--radius-xl);
   padding: var(--space-10) var(--space-8);
@@ -2887,7 +2892,7 @@ body.nav-collapsed .hdr { padding-left: initial; }
   margin-top: var(--space-2);
 }
 .setup-provider-btn {
-  background: var(--surface-2);
+  background: var(--app-surface-alt);
   border: 2px solid var(--border-default);
   border-radius: var(--radius-lg);
   padding: var(--space-5);
@@ -2911,14 +2916,48 @@ body.nav-collapsed .hdr { padding-left: initial; }
 .setup-config-section { display: none; margin-top: var(--space-6); }
 .setup-card .fl input,
 .setup-card .fl select {
-  color: var(--text-primary);
-  background: color-mix(in srgb, var(--surface-2) 84%, #000 16%);
-  border-color: var(--border-emphasis);
-  -webkit-text-fill-color: var(--text-primary);
+  color: var(--app-input-text);
+  background: var(--app-input-bg);
+  border-color: var(--app-input-border);
+  caret-color: var(--app-input-text);
+  color-scheme: light;
+  -webkit-text-fill-color: var(--app-input-text);
+}
+.setup-card .fl input[type="password"],
+.setup-card .fl input[type="password"]:focus,
+.setup-card .fl input[type="password"]:active,
+#loginOverlay input[type="password"],
+#loginOverlay input[type="password"]:focus,
+#loginOverlay input[type="password"]:active {
+  background: var(--app-input-bg) !important;
+  color: var(--app-input-text) !important;
+  -webkit-text-fill-color: var(--app-input-text) !important;
+  caret-color: var(--app-input-text) !important;
+}
+.setup-card .fl input[type="password"]::selection,
+#loginOverlay input[type="password"]::selection {
+  background: rgba(52, 211, 153, 0.18);
+  color: var(--app-input-text);
+  -webkit-text-fill-color: var(--app-input-text);
 }
 .setup-card .fl input::placeholder {
-  color: var(--text-secondary);
-  opacity: 0.85;
+  color: var(--app-input-placeholder);
+  opacity: 1;
+}
+.setup-card .fl input[list] {
+  appearance: none;
+}
+.setup-card .fl select option {
+  color: var(--app-input-text);
+  background: var(--app-input-bg);
+}
+.setup-card .fl input:-webkit-autofill,
+.setup-card .fl input:-webkit-autofill:hover,
+.setup-card .fl input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--app-input-text);
+  -webkit-box-shadow: 0 0 0 1000px var(--app-input-bg) inset;
+  box-shadow: 0 0 0 1000px var(--app-input-bg) inset;
+  transition: background-color 9999s ease-in-out 0s;
 }
 .setup-card code {
   color: var(--text-primary);
@@ -4280,17 +4319,51 @@ body {
 }
 
 .os-start-button {
-  width: calc(42px * var(--taskbar-scale, 1) * var(--taskbar-icon-scale, 1));
-  height: calc(42px * var(--taskbar-scale, 1) * var(--taskbar-icon-scale, 1));
-  min-width: calc(42px * var(--taskbar-scale, 1) * var(--taskbar-icon-scale, 1));
-  padding: 0;
+  width: auto;
+  min-width: calc(96px * var(--taskbar-scale, 1));
+  height: calc(36px * var(--taskbar-scale, 1));
+  padding: 0 calc(14px * var(--taskbar-scale, 1));
   justify-content: center;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(160deg,
+    rgba(190, 210, 235, 0.18) 0%,
+    rgba(100, 130, 165, 0.09) 45%,
+    rgba(170, 195, 225, 0.15) 100%
+  );
+  border: 1px solid rgba(160, 190, 220, 0.30);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.10), 0 2px 8px rgba(0,0,0,0.22);
 }
 
-.os-start-button-icon {
-  width: calc(26px * var(--taskbar-scale, 1) * var(--taskbar-icon-scale, 1));
-  height: calc(26px * var(--taskbar-scale, 1) * var(--taskbar-icon-scale, 1));
-  display: block;
+.os-start-button::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg,
+    transparent 30%,
+    rgba(255,255,255,0.06) 50%,
+    transparent 70%
+  );
+  pointer-events: none;
+}
+
+.os-start-button:hover {
+  background: linear-gradient(160deg,
+    rgba(200, 220, 245, 0.24) 0%,
+    rgba(120, 150, 185, 0.13) 45%,
+    rgba(185, 210, 238, 0.21) 100%
+  );
+  border-color: rgba(180, 210, 240, 0.42);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.14), 0 4px 14px rgba(0,0,0,0.28);
+}
+
+.os-start-label {
+  font-size: calc(11px * var(--taskbar-scale, 1));
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: rgba(210, 225, 245, 0.92);
+  white-space: nowrap;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.4);
 }
 
 .os-taskbar-pinned {
@@ -4351,6 +4424,29 @@ body {
 .os-dash-app.on {
   border-color: color-mix(in srgb, var(--accent) 50%, transparent);
   background: color-mix(in srgb, var(--accent) 20%, transparent);
+}
+
+.os-pinned-app.is-detached::after,
+.os-dash-app.is-detached::after,
+.os-overflow-app.is-detached::after,
+.os-shortcut.is-detached .os-shortcut-icon::after {
+  content: '↗';
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: #dff7ff;
+  background: linear-gradient(135deg, rgba(14,165,233,.95), rgba(37,99,235,.92));
+  border: 1px solid rgba(191,219,254,.55);
+  box-shadow: 0 8px 18px rgba(2,132,199,.24);
 }
 
 .os-taskbar-overflow {
@@ -4570,6 +4666,18 @@ body {
   border-color: var(--border-emphasis);
 }
 
+.launcher-detached-badge {
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #dff7ff;
+  padding: 4px 7px;
+  border-radius: 999px;
+  border: 1px solid rgba(191,219,254,.4);
+  background: linear-gradient(135deg, rgba(14,165,233,.18), rgba(37,99,235,.2));
+  flex-shrink: 0;
+}
+
 .os-start-pinned-app {
   border-color: color-mix(in srgb, var(--accent) 45%, transparent);
   background: color-mix(in srgb, var(--accent) 14%, transparent);
@@ -4579,6 +4687,19 @@ body {
   color: var(--text-primary);
   border-color: color-mix(in srgb, var(--accent) 35%, transparent);
   background: color-mix(in srgb, var(--surface-3) 82%, transparent);
+}
+
+.wm-window.is-detached .wm-title::after {
+  content: 'Detached';
+  margin-left: 10px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #dff7ff;
+  border: 1px solid rgba(191,219,254,.35);
+  background: linear-gradient(135deg, rgba(14,165,233,.16), rgba(37,99,235,.18));
 }
 
 .os-start-footer {
@@ -4738,10 +4859,12 @@ body {
   box-shadow: 0 0 20px rgba(var(--ic), 0.18), inset 0 1px 0 rgba(255,255,255,0.06);
 }
 
+body.theme-has-side-dash .os-side-dash,
 body.theme-ubuntu-dash .os-side-dash {
   display: block;
 }
 
+body.theme-has-side-dash .app,
 body.theme-ubuntu-dash .app {
   left: 74px;
 }
@@ -4755,6 +4878,10 @@ body.theme-light-mode .os-start-menu {
 
 body.popout-mode .os-side-dash {
   display: none !important;
+}
+
+#themeCustomExtensionHost:empty {
+  display: none;
 }
 
 .browser-shell {
@@ -5921,10 +6048,12 @@ body.popout-mode .app {
     min-width: 220px;
   }
 
+  body.theme-has-side-dash .app,
   body.theme-ubuntu-dash .app {
     left: 0;
   }
 
+  body.theme-has-side-dash .os-side-dash,
   body.theme-ubuntu-dash .os-side-dash {
     display: none;
   }
@@ -6550,6 +6679,42 @@ body.popout-mode .app {
   flex-shrink: 0;
 }
 
+.os-shortcut-icon[data-accent] > img,
+.os-pinned-app-icon[data-accent] > img,
+.os-start-category-app-icon[data-accent] > img,
+.launcher-app-icon[data-accent] > img,
+.wm-title-icon[data-accent] > img {
+  width: 74%;
+  height: 74%;
+  object-fit: contain;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.os-shortcut-icon[data-accent] > .os-runtime-icon-sprite,
+.os-pinned-app-icon[data-accent] > .os-runtime-icon-sprite,
+.os-start-category-app-icon[data-accent] > .os-runtime-icon-sprite,
+.launcher-app-icon[data-accent] > .os-runtime-icon-sprite,
+.wm-title-icon[data-accent] > .os-runtime-icon-sprite {
+  width: 74%;
+  height: 74%;
+  border-radius: 6px;
+  flex-shrink: 0;
+  background-color: rgba(var(--ic), 0.15);
+}
+
+.os-runtime-icon-sprite {
+  display: inline-block;
+  background-repeat: no-repeat;
+}
+
+.wm-btn .os-runtime-icon-sprite {
+  width: 13px;
+  height: 13px;
+  border-radius: 3px;
+  vertical-align: middle;
+}
+
 /* ── Desktop shortcut icons ── */
 .os-shortcut-icon[data-accent] {
   display: grid;
@@ -7076,14 +7241,43 @@ body.popout-mode .app {
 
 .fl input,
 .fl select {
-  background: rgba(4, 6, 13, 0.45);
-  border: 1px solid rgba(52, 211, 153, 0.1);
+  background: var(--app-input-bg);
+  border: 1px solid var(--app-input-border);
 }
 .fl input:focus,
 .fl select:focus {
-  border-color: #34d399;
-  box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.1), 0 0 20px rgba(52, 211, 153, 0.06);
-  background: rgba(4, 6, 13, 0.65);
+  border-color: var(--app-input-border-focus);
+  box-shadow: 0 0 0 3px var(--app-input-focus-ring), 0 0 20px color-mix(in srgb, var(--accent) 12%, transparent);
+  background: var(--app-input-bg-focus);
+}
+
+/* Setup wizard fields must remain readable regardless of later glass-theme focus rules. */
+.setup-card .fl input,
+.setup-card .fl select,
+.setup-card .fl input:hover,
+.setup-card .fl select:hover,
+.setup-card .fl input:focus,
+.setup-card .fl select:focus,
+.setup-card .fl input:active,
+.setup-card .fl select:active {
+  background: var(--app-input-bg) !important;
+  color: var(--app-input-text) !important;
+  -webkit-text-fill-color: var(--app-input-text) !important;
+  caret-color: var(--app-input-text) !important;
+  border-color: var(--app-input-border) !important;
+  box-shadow: none !important;
+}
+
+.setup-card .fl input::selection,
+.setup-card .fl select::selection {
+  background: rgba(52, 211, 153, 0.22);
+  color: var(--app-input-text);
+}
+
+.setup-card .fl input:focus,
+.setup-card .fl select:focus {
+  border-color: var(--app-input-border-focus) !important;
+  box-shadow: 0 0 0 3px var(--app-input-focus-ring) !important;
 }
 
 /* Auth tabs */
@@ -7678,15 +7872,15 @@ body.popout-mode .app {
 }
 /* Login overlay — light card, always readable regardless of OS theme */
 #loginOverlay .inp {
-  background: #ffffff !important;
-  color: #111111 !important;
-  border: 1px solid #cccccc !important;
+  background: var(--app-input-bg) !important;
+  color: var(--app-input-text) !important;
+  border: 1px solid var(--app-input-border) !important;
 }
 #loginOverlay .inp:focus {
-  background: #ffffff !important;
-  border-color: #4caf8a !important;
-  box-shadow: 0 0 0 3px rgba(76, 175, 138, 0.15) !important;
+  background: var(--app-input-bg-focus) !important;
+  border-color: var(--app-input-border-focus) !important;
+  box-shadow: 0 0 0 3px var(--app-input-focus-ring) !important;
 }
 #loginOverlay .inp::placeholder {
-  color: #999999 !important;
+  color: var(--app-input-placeholder) !important;
 }

@@ -19,9 +19,9 @@ const MANIFEST_PATH = path.join(ROOT, 'client', 'js', 'apps', 'app-manifest.json
 // Canonical list of expected tab IDs drawn from WINDOW_APPS in app.js
 const EXPECTED_TAB_IDS = [
   'chat', 'entity', 'creator', 'users', 'browser', 'skills', 'workspace',
-  'documents', 'visualizer', 'physical', 'dreamgallery', 'lifediary',
+  'popouts', 'documents', 'visualizer', 'physical', 'dreamgallery', 'lifediary',
   'dreamdiary', 'themes', 'settings', 'advanced', 'activity', 'observability',
-  'debugcore', 'nekocore'
+  'debugcore', 'nekocore', 'archive'
 ];
 
 const VALID_CLASSES = ['core', 'optional'];
@@ -38,7 +38,7 @@ test('manifest contains an apps array with entries', () => {
   assert.ok(manifest.apps.length > 0, 'manifest apps array must be non-empty');
 });
 
-test('manifest covers all 20 expected WINDOW_APPS tab IDs', () => {
+test('manifest covers all 22 expected WINDOW_APPS tab IDs', () => {
   const manifestIds = manifest.apps.map(a => a.tabId);
   for (const expectedId of EXPECTED_TAB_IDS) {
     assert.ok(
@@ -92,12 +92,12 @@ test('manifest JS sourcePaths that exist on disk are at expected locations', () 
   }
 });
 
-test('core apps total matches expected count (10 core)', () => {
+test('core apps total matches expected count (11 core)', () => {
   const coreApps = manifest.apps.filter(a => a.class === 'core');
-  assert.strictEqual(coreApps.length, 10, 'manifest must classify exactly 10 apps as core');
+  assert.strictEqual(coreApps.length, 11, 'manifest must classify exactly 11 apps as core');
 });
 
-test('optional apps total matches expected count (10 optional)', () => {
+test('optional apps total matches expected count (11 optional)', () => {
   const optionalApps = manifest.apps.filter(a => a.class === 'optional');
-  assert.strictEqual(optionalApps.length, 10, 'manifest must classify exactly 10 apps as optional');
+  assert.strictEqual(optionalApps.length, 11, 'manifest must classify exactly 11 apps as optional');
 });

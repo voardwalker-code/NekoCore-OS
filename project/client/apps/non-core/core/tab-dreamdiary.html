@@ -1,0 +1,21 @@
+﻿  <div class="tab-content" id="tab-dreamdiary">
+    <div class="settings-section" style="margin:0;border:none;background:transparent;padding:var(--space-4)">
+      <div class="settings-section-header" style="margin-bottom:var(--space-4);border-bottom:1px solid var(--border-default);padding-bottom:var(--space-3)">
+        <div class="flex items-center gap-3">
+          <h2 style="font-size:var(--text-base)">&#127769; Dream Diary</h2>
+          <button class="btn bg text-xs-c" onclick="loadDreamDiary()" title="Refresh">Refresh</button>
+          <a id="dreamDiaryDownload" class="btn bg text-xs-c" style="display:none" title="Download .md">&#11015; Download</a>
+        </div>
+        <p>The entity's dream journal &mdash; first-person interpretations with dream visualizations</p>
+      </div>
+      <div id="dreamDiaryContent" class="diary-content">
+        <div class="text-tertiary-c text-center" style="padding:var(--space-8)">
+          <div style="font-size:3rem;opacity:0.3;margin-bottom:var(--space-3)">&#127769;</div>
+          <p>No dream diary entries yet.</p>
+          <p class="text-xs-c mt-2">Dream diary entries are created during sleep cycles as the entity interprets its dreams.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== DOCUMENTS TAB ===== -->

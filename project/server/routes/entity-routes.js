@@ -6,6 +6,7 @@ const BrainLoop = require('../brain/brain-loop');
 const MemoryService = require('../services/memory-service');
 const MemoryStorage = require('../brain/memory-storage');
 const entityCheckout = require('../services/entity-checkout');
+const { generateVoiceFromTraits, getDefaultVoice } = require('../services/voice-profile');
 const RESERVED_ENTITY_NAME_KEYS = new Set(['nekocore', 'neko', 'echo', 'agentecho']);
 
 function createEntityRoutes(ctx) {
@@ -151,7 +152,7 @@ function createEntityRoutes(ctx) {
         } catch (_) {}
       }
       res.writeHead(200, apiHeaders);
-      res.end(JSON.stringify({ ok: true, entity: { name: entity.name, gender: entity.gender, personality_traits: entity.personality_traits, emotional_baseline: entity.emotional_baseline, introduction: entity.introduction, memory_count: memCount, core_memories: entity.core_memories, chapters: entity.chapters, created: entity.created } }));
+      res.end(JSON.stringify({ ok: true, entity: { name: entity.name, gender: entity.gender, personality_traits: entity.personality_traits, emotional_baseline: entity.emotional_baseline, introduction: entity.introduction, memory_count: memCount, core_memories: entity.core_memories, chapters: entity.chapters, created: entity.created, voice: entity.voice || generateVoiceFromTraits(entity.personality_traits, entity.gender) } }));
     } catch (e) {
       res.writeHead(500, apiHeaders);
       res.end(JSON.stringify({ error: e.message }));
@@ -285,15 +286,17 @@ function createEntityRoutes(ctx) {
       _assertEntityNameAllowed(name);
 
       ctx.entityManager.createEntityFolder(canonicalId);
+      const traitsArr = Array.isArray(traits) ? traits : [];
       const entity = {
         id: canonicalId, name, gender: gender || 'neutral',
         ownerId:  req.accountId || null,
         isPublic: false,
         skillApprovalRequired: true,
-        personality_traits: Array.isArray(traits) ? traits : [],
+        personality_traits: traitsArr,
         emotional_baseline: { curiosity: 0.7, confidence: 0.6, openness: 0.7, stability: 0.5 },
         introduction: introduction || `Hello, I'm ${name}.`,
         memory_count: 0, core_memories: [], chapters: [],
+        voice: generateVoiceFromTraits(traitsArr, gender || 'neutral'),
         configProfileRef: getPreferredGlobalProfileForEntity(null),
         created: new Date().toISOString()
       };
@@ -348,6 +351,7 @@ function createEntityRoutes(ctx) {
       const entity = hatchResult.entity;
       if (gender) entity.gender = gender;
       _assertEntityNameAllowed(entity.name);
+      entity.voice = generateVoiceFromTraits(entity.personality_traits, entity.gender);
       entity.configProfileRef = getPreferredGlobalProfileForEntity(null);
       entity.ownerId  = req.accountId || null;
       entity.isPublic = false;
@@ -517,6 +521,7 @@ function createEntityRoutes(ctx) {
           backstoryDepth: depthLevel,
           hasKnowledgeSeed: hasSeed
         },
+        voice: generateVoiceFromTraits(traitsArr, gender || 'neutral'),
         configProfileRef: getPreferredGlobalProfileForEntity(null),
         created: new Date().toISOString()
       };
@@ -653,7 +658,7 @@ function createEntityRoutes(ctx) {
       const entityMemRoot = entityPathsModule.getMemoryRoot(canonicalId);
       if (!fs.existsSync(entityMemRoot)) fs.mkdirSync(entityMemRoot, { recursive: true });
 
-      const entity = { id: canonicalId, name, gender: derivedGender, ownerId: req.accountId || null, isPublic: false, skillApprovalRequired: true, personality_traits: finalTraits, emotional_baseline: emotionalBaseline, introduction: voiceData.greeting || `I am ${name}.`, source_material: source || 'original', creation_mode: 'character_ingestion', memory_count: memories.length, core_memories: memories.length, chapters: [], configProfileRef: getPreferredGlobalProfileForEntity(null), created: new Date().toISOString(), blueprint_metadata: { archetype: blueprint.identity?.archetype || '', themes: blueprint.themes || [], behavior_rules: blueprint.behavior_rules || [], beliefs: blueprint.beliefs_and_values || [], motivations: blueprint.motivations || [], relationships: blueprint.relationships || [] } };
+      const entity = { id: canonicalId, name, gender: derivedGender, ownerId: req.accountId || null, isPublic: false, skillApprovalRequired: true, personality_traits: finalTraits, emotional_baseline: emotionalBaseline, introduction: voiceData.greeting || `I am ${name}.`, source_material: source || 'original', creation_mode: 'character_ingestion', memory_count: memories.length, core_memories: memories.length, chapters: [], voice: generateVoiceFromTraits(finalTraits, derivedGender), configProfileRef: getPreferredGlobalProfileForEntity(null), created: new Date().toISOString(), blueprint_metadata: { archetype: blueprint.identity?.archetype || '', themes: blueprint.themes || [], behavior_rules: blueprint.behavior_rules || [], beliefs: blueprint.beliefs_and_values || [], motivations: blueprint.motivations || [], relationships: blueprint.relationships || [] } };
       fs.writeFileSync(path.join(entityRoot, 'entity.json'), JSON.stringify(entity, null, 2), 'utf8');
 
       const speechStyle = blueprint.speech_style || {};

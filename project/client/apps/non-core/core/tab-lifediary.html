@@ -1,0 +1,21 @@
+﻿  <div class="tab-content" id="tab-lifediary">
+    <div class="settings-section" style="margin:0;border:none;background:transparent;padding:var(--space-4)">
+      <div class="settings-section-header" style="margin-bottom:var(--space-4);border-bottom:1px solid var(--border-default);padding-bottom:var(--space-3)">
+        <div class="flex items-center gap-3">
+          <h2 style="font-size:var(--text-base)">&#128214; Life Diary</h2>
+          <button class="btn bg text-xs-c" onclick="loadLifeDiary()" title="Refresh">Refresh</button>
+          <a id="lifeDiaryDownload" class="btn bg text-xs-c" style="display:none" title="Download .md">&#11015; Download</a>
+        </div>
+        <p>Autobiographical journal &mdash; the entity's first-person life narrative</p>
+      </div>
+      <div id="lifeDiaryContent" class="diary-content">
+        <div class="text-tertiary-c text-center" style="padding:var(--space-8)">
+          <div style="font-size:3rem;opacity:0.3;margin-bottom:var(--space-3)">&#128214;</div>
+          <p>No life diary entries yet.</p>
+          <p class="text-xs-c mt-2">Life diary entries are written by the entity during significant moments.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== DREAM DIARY TAB ===== -->

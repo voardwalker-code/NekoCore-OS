@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "sheets": [
+    {
+      "id": "main",
+      "file": "assets/icons/NekoCore OS Icons Sprite Sheet.png",
+      "pixelRatio": 1,
+      "cellHint": 64,
+      "smoothing": false
+    }
+  ],
+  "mapCsv": "assets/icons/icon-sprite-map.csv",
+  "defaults": {
+    "pivotX": 0.5,
+    "pivotY": 0.5,
+    "uiScale": 1,
+    "tintable": false
+  }
+}

@@ -128,7 +128,8 @@ test('no core module filename loads from flat js/ root in index.html', () => {
 
 const OPTIONAL_MODULE_FILENAMES = [
   'diary.js', 'theme-manager.js', 'physical-ui.js', 'visualizer-ui.js',
-  'browser-app.js', 'document-digest.js', 'skills-ui.js', 'dream-gallery.js'
+  'browser-app.js', 'document-digest.js', 'skills-ui.js', 'dream-gallery.js',
+  'popout-manager.js'
 ];
 
 test('no optional module filename loads from flat js/ root in index.html', () => {
@@ -185,9 +186,9 @@ test('total non-shared local script count in index.html matches known module inv
   const jsScripts = SCRIPT_SRCS.filter(s => s.startsWith('js/') && !s.includes('http'));
   // Expected: app.js, desktop.js, window-manager.js, vfs.js, context-menu.js,
   //           auth.js, pipeline.js, memory-ui.js, sleep.js, boot.js
-  //         + 9 core apps + 8 optional apps = 27 total
+  //         + 9 core apps + 9 optional apps = 28 total
   assert.ok(
-    jsScripts.length >= 27,
-    `Expected at least 27 js/ local scripts in index.html, found ${jsScripts.length}`
+    jsScripts.length >= 28,
+    `Expected at least 28 js/ local scripts in index.html, found ${jsScripts.length}`
   );
 });

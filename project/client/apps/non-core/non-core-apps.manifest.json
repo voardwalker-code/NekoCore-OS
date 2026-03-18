@@ -1,0 +1,80 @@
+﻿{
+    "nonCoreApps": [
+        {
+            "tabId": "workspace",
+            "enabled": true,
+            "path": "apps/non-core/core/tab-workspace.html"
+        },
+        {
+            "tabId": "skills",
+            "enabled": true,
+            "path": "apps/non-core/core/tab-skills.html"
+        },
+        {
+            "tabId": "popouts",
+            "enabled": true,
+            "path": "apps/non-core/core/tab-popouts.html",
+            "label": "Popouts",
+            "icon": "↗",
+            "navTarget": "#navOptionalAppsHost"
+        },
+        {
+            "tabId": "themes",
+            "enabled": true,
+            "path": "apps/non-core/core/tab-themes.html"
+        },
+        {
+            "tabId": "visualizer",
+            "enabled": true,
+            "path": "apps/non-core/core/tab-visualizer.html"
+        },
+        {
+            "tabId": "physical",
+            "enabled": true,
+            "path": "apps/non-core/core/tab-physical.html"
+        },
+        {
+            "tabId": "dreamgallery",
+            "enabled": true,
+            "path": "apps/non-core/core/tab-dreamgallery.html"
+        },
+        {
+            "tabId": "lifediary",
+            "enabled": true,
+            "path": "apps/non-core/core/tab-lifediary.html"
+        },
+        {
+            "tabId": "dreamdiary",
+            "enabled": true,
+            "path": "apps/non-core/core/tab-dreamdiary.html"
+        },
+        {
+            "tabId": "documents",
+            "enabled": true,
+            "path": "apps/non-core/core/tab-documents.html"
+        },
+        {
+            "tabId": "browser",
+            "enabled": true,
+            "path": "apps/non-core/core/tab-browser.html"
+        }
+    ],
+    "customApps": [
+        {
+            "id": "example-custom-app",
+            "tabId": "custom-example",
+            "enabled": false,
+            "label": "Custom Example",
+            "icon": "🛠️",
+            "path": "apps/non-core/custom/tab-custom-example.html",
+            "navTarget": "#navCustomAppsHost"
+        },
+        {
+            "id": "example-custom-info",
+            "enabled": false,
+            "path": "apps/non-core/custom/example-custom-info.html",
+            "target": "#nonCoreCustomAppHost",
+            "mode": "append"
+        }
+    ]
+}

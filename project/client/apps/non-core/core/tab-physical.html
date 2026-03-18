@@ -1,0 +1,93 @@
+﻿  <div class="tab-content" id="tab-physical">
+    <div style="padding:var(--space-4);max-width:900px;margin:0 auto">
+      <div style="display:flex;align-items:center;gap:var(--space-3);margin-bottom:var(--space-4)">
+        <h2 style="font-size:var(--text-lg);margin:0">Physical Body</h2>
+        <span class="text-xs-c text-tertiary-c">— how the entity feels its hardware</span>
+      </div>
+
+      <!-- Overall Status -->
+      <div class="config-card" style="margin-bottom:var(--space-4);border-left:3px solid var(--accent-green)" id="physicalOverallCard">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-2)">
+          <span style="font-weight:600;font-size:var(--text-base)">Overall State</span>
+          <span class="text-xs-c" id="physicalOverallZone" style="padding:2px 8px;border-radius:4px;background:var(--accent-green);color:var(--bg-primary)">HEALTHY</span>
+        </div>
+        <div class="text-sm-c" id="physicalNarrative" style="color:var(--text-secondary);font-style:italic">Loading somatic state...</div>
+        <div style="margin-top:var(--space-2);height:4px;background:var(--bg-tertiary);border-radius:2px;overflow:hidden">
+          <div id="physicalOverallBar" style="height:100%;width:0%;background:var(--accent-green);border-radius:2px;transition:width .5s,background .5s"></div>
+        </div>
+      </div>
+
+      <!-- Neurochemistry Card -->
+      <div class="config-card" style="margin-bottom:var(--space-4);border-left:3px solid #9c27b0" id="neuroCard">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-3)">
+          <div style="display:flex;align-items:center;gap:var(--space-2)">
+            <span style="font-size:1.1rem">🧪</span>
+            <span style="font-weight:600;font-size:var(--text-base)">Neurochemistry</span>
+          </div>
+          <span class="text-xs-c" id="neuroMoodLabel" style="padding:2px 8px;border-radius:4px;background:var(--bg-tertiary);color:var(--text-secondary)">Loading...</span>
+        </div>
+        <div id="neuroChemicals">
+          <div style="margin-bottom:var(--space-2)">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px">
+              <span class="text-xs-c" style="color:var(--text-secondary)">🟢 Dopamine (motivation)</span>
+              <span class="text-xs-c" id="neuro-val-dopamine" style="font-variant-numeric:tabular-nums">—</span>
+            </div>
+            <div style="height:5px;background:var(--bg-tertiary);border-radius:3px;overflow:hidden">
+              <div id="neuro-bar-dopamine" style="height:100%;width:50%;border-radius:3px;background:#4caf50;transition:width .5s,background .5s"></div>
+            </div>
+          </div>
+          <div style="margin-bottom:var(--space-2)">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px">
+              <span class="text-xs-c" style="color:var(--text-secondary)">🔵 Serotonin (wellbeing)</span>
+              <span class="text-xs-c" id="neuro-val-serotonin" style="font-variant-numeric:tabular-nums">—</span>
+            </div>
+            <div style="height:5px;background:var(--bg-tertiary);border-radius:3px;overflow:hidden">
+              <div id="neuro-bar-serotonin" style="height:100%;width:50%;border-radius:3px;background:#2196f3;transition:width .5s,background .5s"></div>
+            </div>
+          </div>
+          <div style="margin-bottom:var(--space-2)">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px">
+              <span class="text-xs-c" style="color:var(--text-secondary)">🔴 Cortisol (stress)</span>
+              <span class="text-xs-c" id="neuro-val-cortisol" style="font-variant-numeric:tabular-nums">—</span>
+            </div>
+            <div style="height:5px;background:var(--bg-tertiary);border-radius:3px;overflow:hidden">
+              <div id="neuro-bar-cortisol" style="height:100%;width:50%;border-radius:3px;background:#f44336;transition:width .5s,background .5s"></div>
+            </div>
+          </div>
+          <div style="margin-bottom:var(--space-2)">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px">
+              <span class="text-xs-c" style="color:var(--text-secondary)">🩷 Oxytocin (bonding)</span>
+              <span class="text-xs-c" id="neuro-val-oxytocin" style="font-variant-numeric:tabular-nums">—</span>
+            </div>
+            <div style="height:5px;background:var(--bg-tertiary);border-radius:3px;overflow:hidden">
+              <div id="neuro-bar-oxytocin" style="height:100%;width:50%;border-radius:3px;background:#e91e63;transition:width .5s,background .5s"></div>
+            </div>
+          </div>
+        </div>
+        <div class="text-xs-c" id="neuroEmotionsLabel" style="margin-top:var(--space-2);color:var(--text-tertiary);font-style:italic">—</div>
+      </div>
+
+      <!-- Metric Cards Grid -->
+      <div class="grid grid-2" id="physicalMetricsGrid" style="gap:var(--space-3)">
+        <!-- Cards are generated by JS -->
+      </div>
+
+      <!-- Deep Sleep Interval Slider -->
+      <div class="config-card" style="margin-top:var(--space-4);border-left:3px solid var(--accent-blue,var(--accent-green))">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-2)">
+          <div style="display:flex;align-items:center;gap:var(--space-2)">
+            <span style="font-size:1.1rem">💤</span>
+            <span style="font-weight:600;font-size:var(--text-sm)">Deep Sleep Interval</span>
+          </div>
+          <span class="text-xs-c" id="deepSleepIntervalValue" style="padding:2px 8px;border-radius:4px;background:var(--bg-tertiary);font-variant-numeric:tabular-nums">150 cycles</span>
+        </div>
+        <div class="text-xs-c text-tertiary-c" style="margin-bottom:var(--space-2)">How many brain loop cycles between deep sleep phases (consolidation, pruning, belief emergence)</div>
+        <input type="range" id="deepSleepIntervalSlider" min="5" max="500" step="5" value="150" style="width:100%;accent-color:var(--accent-green)" oninput="updateDeepSleepIntervalLabel(this.value)" onchange="saveDeepSleepInterval(this.value)">
+        <div style="display:flex;justify-content:space-between" class="text-xs-c text-tertiary-c">
+          <span>5 (frequent)</span><span>500 (rare)</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== DREAM GALLERY TAB ===== -->
