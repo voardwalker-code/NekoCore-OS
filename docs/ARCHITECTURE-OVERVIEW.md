@@ -15,7 +15,7 @@ Core design conviction: an entity should be shaped by what it has experienced, n
 
 ## Current Direction Snapshot (2026-03-17)
 
-Phases 1–3 (bug fixes, refactor, modularization) are complete (866 passing tests). Feature work is authorized.
+Phases 1–3 (bug fixes, refactor, modularization) are complete (963 passing tests). Feature work is authorized.
 
 - **Phase 4.5 — Intelligent Memory Expansion (IME):** ✅ COMPLETE — dual-path post-turn encoding now produces both episodic (`createCoreMemory`) and semantic knowledge (`createSemanticKnowledge`) records per exchange.
 - **Phase 4.6 — Sharded Topic Archive:** ✅ COMPLETE — RAKE extraction + BM25 scoring over NDJSON topic-keyed shards (`archive-index.js`, `archive-router.js`). Benchmark ceiling: 25K records sub-100ms.
