@@ -27,10 +27,6 @@ jobs:
         working-directory: project
         run: npm install --omit=optional
 
-      - name: Install dependencies
-        working-directory: project
-        run: npm install --omit=optional
-
       - name: Run tests
         working-directory: project
         run: npm test
