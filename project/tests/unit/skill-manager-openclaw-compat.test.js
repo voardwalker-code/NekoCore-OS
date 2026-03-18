@@ -46,8 +46,8 @@ Use curl.
     assert.deepEqual(skill.requires.env, ['API_KEY']);
     assert.equal(skill.primaryEnv, 'API_KEY');
 
-    // Disabled for model prompt injection but still active/enabled.
-    assert.equal(sm.list().find(s => s.name === 'weather').enabled, true);
+    // Secure-by-default: newly loaded skills start disabled regardless of disable-model-invocation.
+    assert.equal(sm.list().find(s => s.name === 'weather').enabled, false);
     assert.equal(sm.buildSkillsPrompt().includes('weather'), false);
   } finally {
     fs.rmSync(root, { recursive: true, force: true });

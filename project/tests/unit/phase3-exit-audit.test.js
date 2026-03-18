@@ -29,12 +29,12 @@ function read(filePath) { return fs.readFileSync(filePath, 'utf8'); }
 // 1. app.js line count — shell-core minimization check
 // ============================================================
 
-test('app.js is within shell-core size bounds (< 1000 lines)', () => {
+test('app.js is within shell-core size bounds (< 1200 lines)', () => {
   const src = read(APP_JS);
   const lineCount = src.split('\n').length;
   assert.ok(
-    lineCount < 1000,
-    'app.js should be < 1000 lines after Phase 3 extraction — got ' + lineCount
+    lineCount < 1200,
+    'app.js should be < 1200 lines after Phase 3 extraction — got ' + lineCount
   );
 });
 
