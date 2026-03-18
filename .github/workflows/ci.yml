@@ -24,11 +24,7 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
           cache-dependency-path: project/package.json
-
-      - name: Install dependencies
-        working-directory: project
-        run: npm install --omit=optional
-
+          
       - name: Run tests
         working-directory: project
         run: npm test
