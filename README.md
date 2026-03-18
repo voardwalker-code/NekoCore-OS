@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <strong>v0.8.0</strong> &nbsp;·&nbsp; MIT License
+  <strong>v0.9.0</strong> &nbsp;·&nbsp; MIT License
 </p>
 
 <p align="center">
@@ -17,7 +17,7 @@
   <img src="https://img.shields.io/badge/node-%3E%3D18-brightgreen?style=flat-square&logo=node.js" alt="Node 18+"/>
   <img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"/>
   <img src="https://img.shields.io/badge/dependencies-0-brightgreen?style=flat-square" alt="zero deps"/>
-  <img src="https://img.shields.io/badge/tests-966%20passing-brightgreen?style=flat-square" alt="966 tests"/>
+  <img src="https://img.shields.io/badge/tests-1369%20passing-brightgreen?style=flat-square" alt="1369 tests"/>
 </p>
 
 ---
@@ -40,7 +40,7 @@ Each entity operates in full isolation — separate memory stores, personality t
 
 ---
 
-## Release Snapshot — v0.8.0
+## Release Snapshot — v0.9.0
 
 - Full cognitive pipeline: subconscious (1A), dream-intuition (1D), conscious (1C), final orchestrator — 1A + 1D in parallel
 - Episodic, semantic, and long-term memory with decay, reinforcement, and divergence repair
@@ -63,7 +63,9 @@ Each entity operates in full isolation — separate memory stores, personality t
 - 3D Neural Visualizer — Three.js WebGL real-time cognitive state display
 - SSE diagnostic bus — live streaming of pipeline events to browser
 - Post-response memory encoding — async write after each turn, no latency impact
-- 963 passing tests (unit + integration)
+- Modular Task Orchestration Architecture (MTOA) — task-first fork, context gatherer, executor/event bus, frontman updates, task UI, task routes, entity-chat planning endpoints
+- Installer app-package runtime — strict marker-boundary install/uninstall with rollback, entry-id targeting, and file lifecycle actions (`create-file` / `delete-file`)
+- 1369 passing tests (unit + integration)
 - Zero external runtime dependencies — pure Node.js, file-system JSON persistence
 
 ---
@@ -82,6 +84,8 @@ Each entity operates in full isolation — separate memory stores, personality t
 - Auth — account system with session token management
 - SSE streaming — all pipeline phases push events to the client in real time
 - Neural Visualizer — orbital graph of entities and memory nodes, live cognitive bus event display
+- Task orchestration surfaces — task badge/history/detail panel in chat + active task state in Task Manager
+- Installer package flow — contract-driven app install/uninstall for shell registrations and payload file lifecycle
 - Telegram bot integration (via config)
 
 ---

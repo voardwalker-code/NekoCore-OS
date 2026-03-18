@@ -1,6 +1,6 @@
 # REM System — Architecture Overview
 
-Version: 0.8.0
+Version: 0.9.0
 Last updated: 2026-03-18
 
 ---
@@ -21,8 +21,9 @@ Phases 1–3 (bug fixes, refactor, modularization) are complete. Feature work is
 - **Phase 4.6 — Sharded Topic Archive:** ✅ COMPLETE — RAKE extraction + BM25 scoring over NDJSON topic-keyed shards (`archive-index.js`, `archive-router.js`).
 - **Phase 4.7 — Agent Echo: Multi-Index Archive + Retrieval Pipeline:** ✅ COMPLETE — Echo Now + Echo Past retrieval behavior integrated.
 - **Phase 4.8 — Pipeline Hardening + Modularization Completion:** ✅ COMPLETE.
-- **Phase 4.9 — Modular Task Orchestration Architecture (MTOA):** in progress at exit-audit stage — task intent fork, context gatherer, executor/event bus, sessions/archive/project store, frontman bridge, task routes, entity-chat planning, and client task UI are implemented.
-- **Phase 5 — Predictive Memory Topology:** next after Phase 4.9 close.
+- **Phase 4.9 — Modular Task Orchestration Architecture (MTOA):** ✅ COMPLETE — task intent fork, context gatherer, executor/event bus, sessions/archive/project store, frontman bridge, task routes, entity-chat planning, and client task UI are live.
+- **Installer package baseline (pre-cleanup):** ✅ COMPLETE — strict marker-boundary installer/uninstaller, rollback guarantees, `JsonEntryId` targeting, and app payload file lifecycle (`create-file`, `delete-file`) validated with Hello World end-to-end.
+- **Phase 5 — Predictive Memory Topology:** next approved feature phase.
 
 Desktop shell, browser, and runtime stability work continues in parallel with Phase 4.x feature slices.
 

@@ -41,11 +41,17 @@ Icon and nav conventions:
 4. Labels should be human-readable title case and stable across installer reruns.
 
 Required install action fields:
-1. `type`: `insert` (bounded pre-cleanup installer path)
+1. `type`: `insert` or `create-file`
 2. `filePath`
-3. `anchorId`
-4. `entryId` (stable string key used for uninstall targeting)
-5. `payload`
+3. `entryId` (stable string key used for uninstall targeting)
+4. For `insert`: `anchorId` and `payload`
+5. For `create-file`: either `payload` or `templatePath` (plus optional `overwrite`)
+
+Required uninstall action fields:
+1. `type`: `remove` or `delete-file`
+2. `filePath`
+3. `entryId`
+4. For `remove`: `expectedFingerprint` is required
 
 Required wrapper model in target source files:
 1. Open marker line: `//Open Next json entry id`
@@ -60,7 +66,8 @@ Required wrapper model in target source files:
 Transactional guarantees:
 1. Marker matching is exact (`open + blank + close`) before insertion.
 2. Missing exact boundary anywhere in batch triggers `auto-rollback-error`.
-3. No partial writes are allowed (`all-or-nothing`).
+3. File lifecycle actions (`create-file` / `delete-file`) participate in the same transaction.
+4. No partial writes are allowed (`all-or-nothing`).
 
 Logging guarantees:
 1. Every insertion log entry must include `entryId`.

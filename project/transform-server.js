@@ -839,7 +839,7 @@ patch(
 
 patch(
   'Fix: update banner branding from REM System to NekoCore OS',
-  `  console.log('  \u2502   REM System v0.8.0                     \u2502');`,
+  `  console.log('  \u2502   REM System v0.9.0                     \u2502');`,
   `  console.log('  \u2502   NekoCore OS                            \u2502');`
 );
 
