@@ -17,7 +17,7 @@
   <img src="https://img.shields.io/badge/node-%3E%3D18-brightgreen?style=flat-square&logo=node.js" alt="Node 18+"/>
   <img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"/>
   <img src="https://img.shields.io/badge/dependencies-0-brightgreen?style=flat-square" alt="zero deps"/>
-  <img src="https://img.shields.io/badge/tests-866%20passing-brightgreen?style=flat-square" alt="866 tests"/>
+  <img src="https://img.shields.io/badge/tests-963%20passing-brightgreen?style=flat-square" alt="963 tests"/>
 </p>
 
 ---
@@ -63,7 +63,7 @@ Each entity operates in full isolation — separate memory stores, personality t
 - 3D Neural Visualizer — Three.js WebGL real-time cognitive state display
 - SSE diagnostic bus — live streaming of pipeline events to browser
 - Post-response memory encoding — async write after each turn, no latency impact
-- 866 passing tests (unit + integration)
+- 963 passing tests (unit + integration)
 - Zero external runtime dependencies — pure Node.js, file-system JSON persistence
 
 ---
@@ -500,7 +500,7 @@ NekoCore-OS/
     ├── server/                # Backend server
     ├── browser-host/          # Browser host modules
     ├── skills/                # Pluggable skill plugins
-    ├── tests/                 # Unit + integration tests (866 passing)
+    ├── tests/                 # Unit + integration tests (963 passing)
     ├── Config/                # Runtime config template/example
     ├── entities/              # Runtime entity data (gitignored)
     ├── memories/              # System memory (gitignored)
