@@ -269,6 +269,29 @@ Logged after testing session: 2026-03-15. Priority and complexity estimates are 
 
 ---
 
+## BUG-22 — Visualizer auto-switches to memory search and tabs disappear
+**Area:** Visualizer / Tab Navigation State
+**Severity:** High
+**Status:** Open
+**Description:** While using the Visualizer, the UI unexpectedly auto-switches into the memory-search view and the expected tab set disappears. This breaks navigation flow and makes it look like core visualizer tabs are missing.
+
+**Expected:**
+- Visualizer remains on the user-selected tab until explicitly changed by the user.
+- Memory search opens only when explicitly triggered.
+- Tab strip remains visible and stable after entity changes, searches, and refreshes.
+
+**Initial repro notes:**
+- Open Visualizer.
+- Navigate between tabs.
+- After interactions (entity switch/search/refresh), view jumps to memory-search and tab controls are no longer shown.
+
+**Investigation targets:**
+- Client Visualizer tab state manager and any auto-focus logic.
+- Event handlers that run after search or entity selection.
+- Any render path that conditionally hides/rebuilds tab controls.
+
+---
+
 ## Summary Table
 
 | ID | Area | Severity | Status |
@@ -294,3 +317,4 @@ Logged after testing session: 2026-03-15. Priority and complexity estimates are 
 | BUG-19 | Context Chat / No-Entity Guard | High | Open |
 | BUG-20 | Visualizer / NekoCore Memory Rendering | High | Fixed |
 | BUG-21 | Visualizer / NekoCore Knowledge Docs Ingestion | High | In Progress |
+| BUG-22 | Visualizer / Auto-Switch + Tabs Disappear | High | Open |

@@ -226,6 +226,13 @@ async function refreshSidebarEntities() {
         if (stateData?.loaded && stateData?.entity?.id) {
           activeEntityId = normalizeEntityId(stateData.entity.id);
           currentEntityId = activeEntityId;
+          // Load voice profile if not yet cached
+          if (!currentEntityVoice) {
+            try {
+              const eResp = await fetch('/api/entity');
+              if (eResp.ok) { const ed = await eResp.json(); if (ed.ok) currentEntityVoice = ed.entity.voice || null; }
+            } catch (_) {}
+          }
         }
       }
     } catch (_) {}
@@ -262,6 +269,7 @@ async function refreshSidebarEntities() {
     if (activeEntityId && entitiesToShow.length === 0) {
       activeEntityId = '';
       currentEntityId = null;
+      currentEntityVoice = null;
       entitiesToShow = data.entities;
     }
 
@@ -321,6 +329,7 @@ async function checkoutEntity(entityId) {
     document.getElementById('entityName').textContent = ' \u2014 ' + data.entity.name;
     document.getElementById('entityTraits').textContent = (data.entity.personality_traits || []).join(', ');
     currentEntityId = entityId;
+    currentEntityVoice = data.entity.voice || null;
     setEntityDisplay(data.entity.name, data.entity.gender, data.entity.personality_traits);
     resetChatForEntitySwitch(data.entity.name, data.entity.introduction, data.entity.memory_count);
     if (typeof initUserSwitcher === 'function') initUserSwitcher();
@@ -578,6 +587,7 @@ async function releaseActiveEntity() {
     lg('ok', 'Entity released');
     currentEntityId = null;
     currentEntityName = null;
+    currentEntityVoice = null;
     currentEntityAvatar = '\U0001F916';
     document.getElementById('entityName').textContent = '';
     document.getElementById('entityTraits').textContent = 'No entity loaded';
@@ -618,6 +628,7 @@ async function sidebarDeleteEntity(entityId, entityName) {
     // If we deleted the active entity, reset the UI
     if (entityId === currentEntityId) {
       currentEntityId = null;
+      currentEntityVoice = null;
       document.getElementById('entityName').textContent = '';
       document.getElementById('entityTraits').textContent = 'No entity loaded';
       const display = document.getElementById('entityDisplay');

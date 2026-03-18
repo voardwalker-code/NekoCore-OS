@@ -1,0 +1,32 @@
+﻿  <div class="tab-content" id="tab-workspace">
+    <div class="fe-container">
+      <div class="fe-toolbar">
+        <button class="fe-btn" id="feBackBtn" onclick="feGoBack()" title="Back" disabled>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div class="fe-breadcrumb" id="feBreadcrumb">
+          <span class="fe-crumb" onclick="feNavigate('/')">workspace</span>
+        </div>
+        <button class="fe-btn" onclick="feNewFolder()" title="New Folder">📁 New Folder</button>
+        <button class="fe-btn" onclick="feNewFile()" title="New File">📄 New File</button>
+        <button class="fe-btn" onclick="feRefresh()" title="Refresh">↺ Refresh</button>
+      </div>
+      <div class="fe-body">
+        <div id="feGrid" class="fe-grid">
+          <div class="fe-empty">Loading…</div>
+        </div>
+        <div id="feEditor" class="fe-editor" style="display:none">
+          <div class="fe-editor-bar">
+            <span id="feEditorName" class="fe-editor-name">file.txt</span>
+            <div style="display:flex;gap:6px;flex-shrink:0">
+              <button class="fe-btn" onclick="feEditorSave()">💾 Save</button>
+              <button class="fe-btn" onclick="feEditorClose()">✕</button>
+            </div>
+          </div>
+          <textarea id="feEditorTextarea" class="fe-editor-textarea" spellcheck="false"></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== TASK MANAGER TAB ===== -->

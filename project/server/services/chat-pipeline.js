@@ -20,7 +20,7 @@ const { postProcessResponse }           = require('./response-postprocess');
 
 const SKILL_RUNTIME_TOOL_COMMANDS = new Set([
   'ws_list', 'ws_read', 'ws_write', 'ws_append', 'ws_delete', 'ws_move',
-  'web_search', 'web_fetch', 'mem_search', 'mem_create'
+  'web_search', 'web_fetch', 'mem_search', 'mem_create', 'search_archive'
 ]);
 
 const pendingSkillToolApprovals = new Map();
@@ -126,6 +126,40 @@ function createChatPipeline(deps) {
     return { memorySearchFn, memoryCreateFn };
   }
 
+  function buildArchiveCallbacks() {
+    const archiveSearchFn = async (query, yearRangeRaw, limitRaw) => {
+      const entityId = brain.entityId || null;
+      if (!entityId) return { ok: false, error: 'No entity loaded' };
+      if (!query) return { ok: false, error: 'No query provided' };
+      try {
+        const { extractPhrases } = require('../brain/utils/rake');
+        const { queryArchive }   = require('../brain/utils/archive-index');
+        const archivePaths       = require('../entityPaths');
+        const topics = extractPhrases(String(query));
+        let yearRange = {};
+        if (yearRangeRaw && typeof yearRangeRaw === 'string') {
+          try { yearRange = JSON.parse(yearRangeRaw); } catch (_) {}
+        } else if (yearRangeRaw && typeof yearRangeRaw === 'object') {
+          yearRange = yearRangeRaw;
+        }
+        const limit = Math.min(Math.max(parseInt(limitRaw, 10) || 5, 1), 20);
+        const hits = queryArchive(entityId, topics, limit, yearRange);
+        const results = hits.map(h => {
+          let summary = '';
+          try {
+            const epPath = path.join(archivePaths.getArchiveEpisodicPath(entityId), h.memId, 'semantic.txt');
+            const docPath = path.join(archivePaths.getArchiveDocsPath(entityId), h.memId, 'semantic.txt');
+            const src = fs.existsSync(epPath) ? epPath : fs.existsSync(docPath) ? docPath : null;
+            if (src) summary = fs.readFileSync(src, 'utf8').slice(0, 1500);
+          } catch (_) {}
+          return { id: h.memId, score: h.score, summary, archivedAt: h.meta.archivedAt || null, topics: h.meta.topics || [], type: h.meta.type || 'episodic' };
+        });
+        return { ok: true, results, total: results.length };
+      } catch (e) { return { ok: false, error: 'Archive search failed: ' + e.message }; }
+    };
+    return { archiveSearchFn };
+  }
+
   function buildSkillCallbacks() {
     const skillCreateFn = async (params) => {
       if (!brain.skillManager) return { ok: false, error: 'No entity loaded — skills unavailable' };
@@ -191,12 +225,14 @@ function createChatPipeline(deps) {
 
     const { memorySearchFn, memoryCreateFn } = buildMemoryCallbacks();
     const { skillCreateFn, skillListFn, skillEditFn, profileUpdateFn } = buildSkillCallbacks();
+    const { archiveSearchFn } = buildArchiveCallbacks();
 
     const toolExec = await workspaceTools.executeToolCalls(pending.rawResponse, {
       workspacePath: pending.workspacePath || '',
       webFetch,
       memorySearch: memorySearchFn,
       memoryCreate: memoryCreateFn,
+      archiveSearch: archiveSearchFn,
       skillCreate: skillCreateFn,
       skillList: skillListFn,
       skillEdit: skillEditFn,
@@ -413,6 +449,7 @@ function createChatPipeline(deps) {
 
     const { memorySearchFn, memoryCreateFn } = buildMemoryCallbacks();
     const { skillCreateFn, skillListFn, skillEditFn, profileUpdateFn } = buildSkillCallbacks();
+    const { archiveSearchFn } = buildArchiveCallbacks();
 
     // Override profileUpdateFn to also update local entity reference on success
     const profileUpdateWithSync = async (params) => {
@@ -473,6 +510,7 @@ function createChatPipeline(deps) {
         webFetch,
         memorySearch: memorySearchFn,
         memoryCreate: memoryCreateFn,
+        archiveSearch: archiveSearchFn,
         skillCreate: skillCreateFn,
         skillList: skillListFn,
         skillEdit: skillEditFn,
@@ -517,6 +555,7 @@ function createChatPipeline(deps) {
           workspaceTools,
           memorySearch: memorySearchFn,
           memoryCreate: memoryCreateFn,
+          archiveSearch: archiveSearchFn,
           skillCreate: skillCreateFn,
           skillList: skillListFn,
           skillEdit: skillEditFn,

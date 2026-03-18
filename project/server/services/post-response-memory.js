@@ -23,6 +23,12 @@ async function runPostResponseMemoryEncoding(params = {}) {
     entityPersona
   } = params;
 
+  const emitSSE = (event, data) => {
+    if (typeof broadcastSSE === 'function') {
+      broadcastSSE(event, data);
+    }
+  };
+
   if (!memoryEntityId || !memoryAspectConfigs?.subconscious) return;
 
   try {
@@ -80,7 +86,7 @@ Return ONLY this JSON (no other text, no markdown, no explanation):
         const coreResult = createCoreMemory(fallbackData);
         if (coreResult.ok) {
           console.log(`  🧠 Episodic memory created (fallback): ${coreResult.memId}`);
-          broadcastSSE('memory_created', {
+          emitSSE('memory_created', {
             memory_id: coreResult.memId,
             type: 'episodic',
             importance: 0.4,
@@ -178,7 +184,7 @@ Return ONLY this JSON (no other text, no markdown, no explanation):
     }
 
     console.log(`  🧠 Episodic memory created: ${coreResult.memId}`);
-    broadcastSSE('memory_created', {
+    emitSSE('memory_created', {
       memory_id: coreResult.memId,
       type: 'episodic',
       importance: episodic.importance || 0.5,
@@ -214,7 +220,7 @@ Return ONLY this JSON (no other text, no markdown, no explanation):
             source: 'subconscious_retrieval',
             relevanceScore: Number(conn.relevanceScore || 0)
           });
-          broadcastSSE('memory_accessed', {
+          emitSSE('memory_accessed', {
             memory_id: conn.id,
             source: 'subconscious_retrieval',
             timestamp: Date.now()

@@ -58,6 +58,35 @@ const ctxMenu = (function() {
   return { show: show, hide: hide };
 })();
 
+function hasDetachedPopout(tab) {
+  return !!(tab && typeof isPopoutOpen === 'function' && isPopoutOpen(tab));
+}
+
+function buildPopoutContextItems(tab) {
+  if (!tab) return [];
+  const detached = hasDetachedPopout(tab);
+  const items = [
+    {
+      icon: '↗',
+      label: detached ? 'Focus Detached Window' : 'Pop Out to Desktop',
+      action: function() {
+        if (typeof focusDetachedPopout === 'function') focusDetachedPopout(tab);
+        else if (typeof popOutWindow === 'function') popOutWindow(tab);
+      }
+    }
+  ];
+  if (detached) {
+    items.push({
+      icon: '✕',
+      label: 'Close Detached Window',
+      action: function() {
+        if (typeof requestPopoutClose === 'function') requestPopoutClose(tab);
+      }
+    });
+  }
+  return items;
+}
+
 // Block browser context menu everywhere inside the app shell
 document.addEventListener('contextmenu', function(e) {
   const target = e.target;
@@ -75,6 +104,7 @@ document.addEventListener('contextmenu', function(e) {
     if (!app) return;
     ctxMenu.show(e.clientX, e.clientY, [
       { icon: '📌', label: 'Unpin from Taskbar', action: function() { togglePinnedApp(tab); } },
+      ...buildPopoutContextItems(tab),
       { icon: app.icon, label: 'Open ' + app.label, action: function() { switchMainTab(tab); } },
       '---',
       { icon: '📄', label: 'Create Shortcut on Desktop', action: function() { vfs.createDesktopShortcut(tab); } }
@@ -106,6 +136,7 @@ document.addEventListener('contextmenu', function(e) {
     const tab = shortcut.getAttribute('data-tab');
     ctxMenu.show(e.clientX, e.clientY, [
       { icon: '🚀', label: 'Open', action: function() { switchMainTab(tab); } },
+      ...buildPopoutContextItems(tab),
       { icon: '📌', label: isPinnedApp(tab) ? 'Unpin from Taskbar' : 'Pin to Taskbar', action: function() { togglePinnedApp(tab); } }
     ]);
     return;
@@ -153,6 +184,7 @@ document.addEventListener('contextmenu', function(e) {
     if (!app) return;
     ctxMenu.show(e.clientX, e.clientY, [
       { icon: app.icon, label: 'Open ' + app.label, action: function() { switchMainTab(tab); } },
+      ...buildPopoutContextItems(tab),
       { icon: '📌', label: isPinnedApp(tab) ? 'Unpin from Taskbar' : 'Pin to Taskbar', action: function() { togglePinnedApp(tab); } },
       { icon: '📄', label: 'Create Desktop Shortcut', action: function() { vfs.createDesktopShortcut(tab); } }
     ]);
@@ -162,12 +194,13 @@ document.addEventListener('contextmenu', function(e) {
   // ── Window titlebar ──
   const titlebar = target.closest('.wm-titlebar');
   if (titlebar) {
-    const appEl = titlebar.closest('.app');
+    const appEl = titlebar.closest('.wm-window, .app');
     if (!appEl) return;
     const tab = appEl.getAttribute('data-tab');
     const app = getWindowApp(tab);
     if (!app) return;
     ctxMenu.show(e.clientX, e.clientY, [
+      ...buildPopoutContextItems(tab),
       { icon: '📌', label: isPinnedApp(tab) ? 'Unpin from Taskbar' : 'Pin to Taskbar', action: function() { togglePinnedApp(tab); } },
       { icon: '📄', label: 'Create Desktop Shortcut', action: function() { vfs.createDesktopShortcut(tab); } },
       '---',

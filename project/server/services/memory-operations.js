@@ -20,6 +20,15 @@ const fs = require('fs');
 const path = require('path');
 const zlib = require('zlib');
 const crypto = require('crypto');
+const { extractTopSentences: trExtract } = require('../brain/utils/textrank');
+
+// IME I2-2: Apply TextRank when stored content exceeds 600 chars.
+// Below that threshold the overhead isn't worth it; above it, TextRank
+// selects the 3 most representative sentences instead of raw truncation.
+function semanticAbstract(text) {
+  if (!text || text.length <= 600) return text;
+  return trExtract(text, 3) || text.slice(0, 600);
+}
 
 /**
  * @param {{
@@ -43,7 +52,9 @@ function createMemoryOperations({ getCurrentEntityId, getMemoryStorage, getMemor
 
     const entityPathsMod = require('../entityPaths');
     const episodicPath = entityPathsMod.getEpisodicMemoryPath(currentEntityId);
-    const normalizedSemantic = (semantic || '').toLowerCase().replace(/\s+/g, ' ').trim();
+    // IME I2-2: abstract long semantic texts before storing.
+    const semToStore = semanticAbstract(semantic || '');
+    const normalizedSemantic = (semToStore).toLowerCase().replace(/\s+/g, ' ').trim();
 
     if (!normalizedSemantic) {
       logTimeline('memory.core.create_failed', { reason: 'empty_semantic' });
@@ -83,8 +94,8 @@ function createMemoryOperations({ getCurrentEntityId, getMemoryStorage, getMemor
     try {
       fs.mkdirSync(memDir, { recursive: true });
 
-      // semantic.txt
-      fs.writeFileSync(path.join(memDir, 'semantic.txt'), semantic, 'utf8');
+      // semantic.txt — TextRank abstract (full content preserved in memory.zip)
+      fs.writeFileSync(path.join(memDir, 'semantic.txt'), semToStore, 'utf8');
 
       // memory.zip (compressed content)
       const memContent = JSON.stringify({
@@ -159,7 +170,9 @@ function createMemoryOperations({ getCurrentEntityId, getMemoryStorage, getMemor
 
     const entityPathsMod = require('../entityPaths');
     const semanticPath = entityPathsMod.getSemanticMemoryPath(currentEntityId);
-    const normalizedKnowledge = (knowledge || '').toLowerCase().replace(/\s+/g, ' ').trim();
+    // IME I2-2: abstract long knowledge before storing.
+    const knowledgeToStore = semanticAbstract(knowledge || '');
+    const normalizedKnowledge = (knowledgeToStore).toLowerCase().replace(/\s+/g, ' ').trim();
 
     if (!normalizedKnowledge || normalizedKnowledge.length < 10) {
       logTimeline('memory.semantic.create_failed', { reason: 'knowledge_too_short' });
@@ -197,8 +210,8 @@ function createMemoryOperations({ getCurrentEntityId, getMemoryStorage, getMemor
     try {
       fs.mkdirSync(memDir, { recursive: true });
 
-      // semantic.txt — the knowledge itself
-      fs.writeFileSync(path.join(memDir, 'semantic.txt'), knowledge, 'utf8');
+      // semantic.txt — TextRank abstract (full content preserved in memory.zip)
+      fs.writeFileSync(path.join(memDir, 'semantic.txt'), knowledgeToStore, 'utf8');
 
       // memory.zip (compressed content)
       const memContent = JSON.stringify({

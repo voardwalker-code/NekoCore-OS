@@ -93,9 +93,9 @@ class SkillManager {
     if (Object.prototype.hasOwnProperty.call(this.enabledOverrides, name)) {
       return this.enabledOverrides[name];
     }
-    // Legacy compatibility for old manifests.
-    if (typeof meta.enabled === 'boolean') return meta.enabled;
-    return true;
+    // Secure-by-default: newly discovered skills start disabled.
+    // Manifest `enabled` is ignored so bundled skills never auto-enable on first run.
+    return false;
   }
 
   /** Ensure the entity skills directory exists */

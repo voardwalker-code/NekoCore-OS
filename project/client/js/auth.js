@@ -171,6 +171,8 @@ async function saveNekocoreConfig() {
       }
     } catch (_) {}
   }
+  // Fall back to Main Chat key if still blank (matches Advanced per-stage behavior)
+  if (!key) key = (document.getElementById('apikeyKey-main')?.value || '').trim();
   if (!key) { setStatus('API key is required (or save one once first)', false); return; }
 
   try {

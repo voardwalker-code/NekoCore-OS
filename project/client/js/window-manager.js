@@ -417,15 +417,30 @@ function startResize(meta, direction, event) {
 // ── Pop-out ──────────────────────────────────────────────────────────────────
 
 function popOutWindow(tabName) {
+  const app = getWindowApp(tabName);
+  const width = Math.max(720, Number(app.w) || 980);
+  const height = Math.max(520, Number(app.h) || 680);
+  const windowName = 'rem-popout-' + String(tabName || 'app');
   const url = new URL(window.location.href);
   url.searchParams.set('popout', tabName);
-  window.open(url.toString(), '_blank', 'popup=yes,width=1400,height=900,resizable=yes,scrollbars=yes');
+  const popout = window.open(
+    url.toString(),
+    windowName,
+    'popup=yes,width=' + width + ',height=' + height + ',resizable=yes,scrollbars=yes'
+  );
+  if (popout && typeof popout.focus === 'function') {
+    try { popout.focus(); } catch (_) {}
+  }
+  if (typeof refreshPopoutManagerView === 'function') {
+    try { refreshPopoutManagerView(); } catch (_) {}
+  }
 }
 
 // ── Shell creation ───────────────────────────────────────────────────────────
 
 function createWindowShell(tabName, tabElement) {
   const app = getWindowApp(tabName);
+  const isCurrentPopout = windowManager.popoutTab === tabName;
   const shell = document.createElement('section');
   shell.className = 'wm-window';
   shell.dataset.tab = tabName;
@@ -438,7 +453,7 @@ function createWindowShell(tabName, tabElement) {
         <button class="wm-btn" data-action="pin" title="Pin/Unpin to taskbar">&#9733;</button>
         <button class="wm-btn" data-action="snap-left" title="Snap left">&#9698;</button>
         <button class="wm-btn" data-action="snap-right" title="Snap right">&#9701;</button>
-        <button class="wm-btn" data-action="popout" title="Pop out window">&#8599;</button>
+        <button class="wm-btn" data-action="popout" title="Pop out window"${isCurrentPopout ? ' disabled aria-disabled="true"' : ''}>&#8599;</button>
         <button class="wm-btn" data-action="maximize" title="Maximize">&#9723;</button>
         <button class="wm-btn wm-btn-close" data-action="close" title="Close">&#10005;</button>
       </div>
@@ -676,6 +691,10 @@ function buildLauncherMenu() {
     };
     tools.appendChild(showAll);
     appsHost.appendChild(tools);
+  }
+
+  if (typeof syncDetachedShellStateUI === 'function') {
+    syncDetachedShellStateUI();
   }
 }
 

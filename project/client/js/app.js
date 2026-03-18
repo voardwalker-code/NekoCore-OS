@@ -12,6 +12,7 @@ let activeConfig = null;
 let currentEntityId = null;
 let currentEntityName = null;
 let currentEntityAvatar = '\u{1F916}';
+let currentEntityVoice = null;
 
 
 // Chat state (used by chat.js)
@@ -52,6 +53,90 @@ const WINDOW_LAYOUT_STORAGE_KEY = 'rem-window-layout-v2';
 const PINNED_APPS_STORAGE_KEY = 'rem-pinned-apps-v1';
 const TASKBAR_LAYOUT_STORAGE_KEY = 'rem-taskbar-layout-v1';
 const DEFAULT_PINNED_APPS = ['chat', 'skills', 'activity', 'browser'];
+const DEFAULT_RUNTIME_ICON_FILE = '/shared-assets/AppTrayIcon.png';
+const DEFAULT_RUNTIME_ICON_HTML = '<img src="' + DEFAULT_RUNTIME_ICON_FILE + '" alt="" aria-hidden="true" class="os-runtime-icon-img">';
+const ICON_SPRITE_SHEET_FILE = 'assets/icons/NekoCore OS Icons Sprite Sheet.png';
+const ICON_SPRITE_COLUMNS = 10;
+const ICON_SPRITE_ROWS = 10;
+const ICON_SPRITE_COORDS = {
+  'app.chat': { col: 4, row: 8 },
+  'app.entity': { col: 3, row: 2 },
+  'app.creator': { col: 2, row: 0 },
+  'app.users': { col: 0, row: 1 },
+  'app.browser': { col: 1, row: 0 },
+  'app.skills': { col: 3, row: 1 },
+  'app.workspace': { col: 0, row: 7 },
+  'app.popouts': { col: 1, row: 4 },
+  'app.documents': { col: 5, row: 1 },
+  'app.visualizer': { col: 3, row: 3 },
+  'app.physical': { col: 8, row: 8 },
+  'app.dreamgallery': { col: 2, row: 2 },
+  'app.lifediary': { col: 6, row: 2 },
+  'app.dreamdiary': { col: 7, row: 2 },
+  'app.themes': { col: 5, row: 2 },
+  'app.settings': { col: 2, row: 1 },
+  'app.advanced': { col: 5, row: 3 },
+  'app.activity': { col: 7, row: 1 },
+  'app.observability': { col: 4, row: 3 },
+  'app.debugcore': { col: 8, row: 3 },
+  'app.archive': { col: 2, row: 4 },
+  'app.nekocore': { col: 7, row: 3 },
+  'start.control_panel': { col: 2, row: 1 },
+  'start.save_layout': { col: 2, row: 3 },
+  'start.restore_layout': { col: 2, row: 5 },
+  'start.reset_layout': { col: 2, row: 6 },
+  'wm.pin': { col: 3, row: 4 },
+  'wm.snap_left': { col: 7, row: 4 },
+  'wm.snap_right': { col: 8, row: 4 },
+  'wm.popout': { col: 1, row: 5 },
+  'wm.maximize': { col: 5, row: 0 },
+  'wm.close': { col: 6, row: 6 },
+  'app.fallback': { col: 5, row: 0 }
+};
+
+function hashIconId(iconId) {
+  const text = String(iconId || 'icon.default');
+  let hash = 0;
+  for (let i = 0; i < text.length; i += 1) {
+    hash = ((hash << 5) - hash) + text.charCodeAt(i);
+    hash |= 0;
+  }
+  return Math.abs(hash);
+}
+
+function getSpriteIndex(iconId) {
+  const total = ICON_SPRITE_COLUMNS * ICON_SPRITE_ROWS;
+  return hashIconId(iconId) % total;
+}
+
+function getSpriteCell(iconId) {
+  const fixed = ICON_SPRITE_COORDS[iconId];
+  if (fixed) return fixed;
+  const index = getSpriteIndex(iconId);
+  return {
+    col: index % ICON_SPRITE_COLUMNS,
+    row: Math.floor(index / ICON_SPRITE_COLUMNS)
+  };
+}
+
+function getSpriteIconHtml(iconId) {
+  const cell = getSpriteCell(iconId);
+  const safeId = String(iconId || 'icon.default').replace(/"/g, '&quot;');
+  const posX = ICON_SPRITE_COLUMNS > 1 ? ((cell.col * 100) / (ICON_SPRITE_COLUMNS - 1)) : 0;
+  const posY = ICON_SPRITE_ROWS > 1 ? ((cell.row * 100) / (ICON_SPRITE_ROWS - 1)) : 0;
+  const sizeX = ICON_SPRITE_COLUMNS * 100;
+  const sizeY = ICON_SPRITE_ROWS * 100;
+  return '<span class="os-runtime-icon-sprite" data-icon-id="' + safeId + '" style="background-image:url(\'' + ICON_SPRITE_SHEET_FILE + '\');background-size:' + sizeX + '% ' + sizeY + '%;background-position:' + posX + '% ' + posY + '%"></span>';
+}
+
+function getRuntimeIconHtml(iconId) {
+  if (!iconId) return DEFAULT_RUNTIME_ICON_HTML;
+  return getSpriteIconHtml(iconId);
+}
+
+function getRuntimeIconHtmlById(iconId) {
+  return getRuntimeIconHtml(iconId);
+}
 
 const WINDOW_APPS = [
   { tab: 'chat', label: 'Chat', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>', accent: 'green', w: 980, h: 680 },
@@ -61,6 +146,7 @@ const WINDOW_APPS = [
   { tab: 'browser', label: 'NekoCore Browser', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>', accent: 'cyan', w: 1080, h: 720 },
   { tab: 'skills', label: 'Skills', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>', accent: 'orange', w: 980, h: 680 },
   { tab: 'workspace', label: 'Workspace', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>', accent: 'orange', w: 980, h: 680 },
+  { tab: 'popouts', label: 'Popouts', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M21 14v7H3V3h7"/></svg>', accent: 'orange', w: 980, h: 680 },
   { tab: 'documents', label: 'Documents', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>', accent: 'orange', w: 980, h: 680 },
   { tab: 'visualizer', label: 'Visualizer', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>', accent: 'indigo', w: 1020, h: 700 },
   { tab: 'physical', label: 'Physical Body', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>', accent: 'pink', w: 900, h: 640 },
@@ -73,6 +159,7 @@ const WINDOW_APPS = [
   { tab: 'activity', label: 'Task Manager', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>', accent: 'indigo', w: 980, h: 680 },
   { tab: 'observability', label: 'Observability', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>', accent: 'indigo', w: 980, h: 680 },
   { tab: 'debugcore', label: 'Core Debug', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v.01"/><path d="M12 8v5"/></svg>', accent: 'indigo', w: 980, h: 700 },
+  { tab: 'archive', label: 'Archive', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>', accent: 'indigo', w: 980, h: 680 },
   { tab: 'nekocore', label: 'NekoCore OS', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></svg>', accent: 'indigo', w: 900, h: 640 }
 ];
 
@@ -94,6 +181,7 @@ const APP_CATEGORY_BY_TAB = {
   browser: 'browse',
   skills: 'tools',
   workspace: 'tools',
+  popouts: 'tools',
   documents: 'tools',
   visualizer: 'mind',
   physical: 'mind',
@@ -106,6 +194,7 @@ const APP_CATEGORY_BY_TAB = {
   activity: 'system',
   observability: 'system',
   debugcore: 'system',
+  archive: 'system',
   nekocore: 'system'
 };
 
@@ -153,6 +242,20 @@ const START_MENU_SPECIAL_APPS = [
     action: 'resetWindowLayout'
   }
 ];
+
+function applyRuntimeIconOverrides() {
+  WINDOW_APPS.forEach((app) => {
+    app.icon = getRuntimeIconHtml('app.' + app.tab);
+  });
+  START_MENU_SPECIAL_APPS.forEach((app) => {
+    const iconId = app.id ? ('start.' + String(app.id).replace(/-/g, '_')) : 'start.special';
+    app.icon = getRuntimeIconHtml(iconId);
+  });
+}
+
+// applyRuntimeIconOverrides() — disabled; inline SVGs in WINDOW_APPS are used directly.
+// Per-app icon files (see icon-replacement-matrix.csv) will be wired manually when ready.
+// window.getRuntimeIconHtmlById is not exported; wm titlebar buttons use HTML entity fallbacks.
 
 const windowManager = {
   stage: null,
@@ -489,7 +592,8 @@ async function saveSessionMetaToServer(metaText) {
 // NEW TAB SYSTEM & ENTITY MANAGEMENT
 // ============================================================
 
-function switchMainTab(tabName, el) {
+function switchMainTab(tabName, el, options) {
+  const opts = options && typeof options === 'object' ? options : {};
   if (!windowManager.initialized) {
     const tab = document.getElementById('tab-' + tabName);
     document.querySelectorAll('.tab-content').forEach((node) => node.classList.remove('on'));
@@ -503,6 +607,19 @@ function switchMainTab(tabName, el) {
 
   if (el) el.classList.add('on');
   document.querySelectorAll('[data-tab="' + tabName + '"]').forEach((button) => button.classList.add('on'));
+
+  const shouldFocusDetached = !windowManager.popoutTab
+    && opts.forceInShell !== true
+    && typeof isPopoutOpen === 'function'
+    && isPopoutOpen(tabName)
+    && typeof focusDetachedPopout === 'function';
+
+  if (shouldFocusDetached) {
+    focusDetachedPopout(tabName);
+    runtimeTelemetry.activeWindowTab = tabName;
+    closeStartMenu();
+    return;
+  }
 
   openWindow(tabName);
   runtimeTelemetry.activeWindowTab = tabName;
@@ -622,7 +739,8 @@ function inheritMainConfigToAspect(panel) {
   const idMap = {
     subconscious: { ep: 'subApiEndpoint', key: 'subApiKey' },
     dreams:       { ep: 'dreamApiEndpoint', key: 'dreamApiKey' },
-    orchestrator: { ep: 'orchApiEndpoint', key: 'orchApiKey' }
+    orchestrator: { ep: 'orchApiEndpoint', key: 'orchApiKey' },
+    nekocore:     { ep: 'apikeyEndpoint-nekocore', key: 'nekocoreApiKey' }
   };
   const ids = idMap[panel];
   if (!ids) return;

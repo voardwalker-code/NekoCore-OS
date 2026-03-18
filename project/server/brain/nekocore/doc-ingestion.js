@@ -17,6 +17,8 @@
 
 const fs   = require('fs');
 const path = require('path');
+const { extractTopSentences } = require('../utils/textrank');
+const { appendArchiveEntry }  = require('../utils/archive-index');
 
 const MANIFEST_FILE = '.nk-doc-manifest.json';
 
@@ -93,8 +95,11 @@ function chunkDocument(docName, content) {
     const body = raw.slice(firstLine.length).trim();
     const topicsFromContent = extractTopicsFromText(heading + ' ' + body.slice(0, 300), seedTopics);
 
-    // Format the semantic.txt content: heading + body, capped at 3000 chars
-    const semanticText = `[SYSTEM DOC: ${baseName}] ${heading}\n\n${body.slice(0, 3000)}`;
+    // IME I2-1: TextRank abstract instead of first-N-char truncation.
+    // extractTopSentences selects the 5 most representative sentences from the body.
+    // Falls back to a hard truncation if TextRank yields nothing (very short sections).
+    const bodyAbstract = extractTopSentences(body, 5) || body.slice(0, 600);
+    const semanticText = `[SYSTEM DOC: ${baseName}] ${heading}\n\n${bodyAbstract}`;
 
     chunks.push({
       heading,
@@ -106,9 +111,11 @@ function chunkDocument(docName, content) {
   return chunks;
 }
 
-// ── Write a single semantic memory chunk to disk ─────────────────────────────
-function writeChunk(semanticDir, memId, chunk, now) {
-  const memDir = path.join(semanticDir, memId);
+// ── Write a single doc-archive chunk to disk ─────────────────────────────────
+// IME I3-2: writes to memories/archive/docs/ instead of memories/semantic/
+// Writes archiveIndex.json entry; does NOT touch memoryIndex.json.
+function writeChunk(archiveDocsDir, memRoot, memId, chunk, now) {
+  const memDir = path.join(archiveDocsDir, memId);
   if (!fs.existsSync(memDir)) fs.mkdirSync(memDir, { recursive: true });
 
   fs.writeFileSync(path.join(memDir, 'semantic.txt'), chunk.semantic, 'utf8');
@@ -128,27 +135,49 @@ function writeChunk(semanticDir, memId, chunk, now) {
     source:              'system_document',
   };
   fs.writeFileSync(path.join(memDir, 'log.json'), JSON.stringify(log, null, 2), 'utf8');
+
+  // Write archiveIndex entry so search_archive can find this chunk
+  // Derive entityId from memRoot (memRoot = entities/entity_<id>/memories)
+  const entityRoot = path.dirname(memRoot);
+  const entityId   = path.basename(entityRoot).replace(/^entity_/, '');
+  appendArchiveEntry(entityId, memId, {
+    topics:         chunk.topics,
+    archivedAt:     now,
+    type:           'semantic_knowledge',
+    decayAtArchive: 0.0005,
+    created:        now,
+    emotion:        'professional',
+    importance:     0.92,
+    docId:          chunk.heading || memId,
+  });
 }
 
 // ── Remove old chunks for a doc that is being re-ingested ────────────────────
-function removeOldChunks(semanticDir, oldChunkIds) {
+// Checks both the new archive/docs path and the legacy memories/semantic/ path.
+function removeOldChunks(archiveDocsDir, oldChunkIds, legacySemanticDir) {
   for (const id of (oldChunkIds || [])) {
-    const dir = path.join(semanticDir, id);
-    if (fs.existsSync(dir)) {
-      try { fs.rmSync(dir, { recursive: true, force: true }); } catch (_) {}
+    for (const dir of [archiveDocsDir, legacySemanticDir].filter(Boolean)) {
+      const chunkDir = path.join(dir, id);
+      if (fs.existsSync(chunkDir)) {
+        try { fs.rmSync(chunkDir, { recursive: true, force: true }); } catch (_) {}
+      }
     }
   }
 }
 
-// ── Main: ingest all docs from docsDir into NekoCore's semantic memories ─────
+// ── Main: ingest all docs from docsDir into NekoCore's archive/docs/ ─────────
+// IME I3-2: chunks go to memories/archive/docs/ not memories/semantic/
 function ingestArchitectureDocs(memRoot, docsDir) {
   if (!fs.existsSync(docsDir)) {
     console.log('  ℹ NekoCore doc ingestion: Documents/current not found, skipping.');
     return;
   }
 
-  const semanticDir = path.join(memRoot, 'semantic');
-  if (!fs.existsSync(semanticDir)) fs.mkdirSync(semanticDir, { recursive: true });
+  // New destination: archive/docs/
+  const archiveDocsDir  = path.join(memRoot, 'archive', 'docs');
+  // Legacy path (chunks may remain here from before I3-2)
+  const legacySemanticDir = path.join(memRoot, 'semantic');
+  if (!fs.existsSync(archiveDocsDir)) fs.mkdirSync(archiveDocsDir, { recursive: true });
 
   const manifestPath = path.join(memRoot, MANIFEST_FILE);
   let manifest = {};
@@ -171,8 +200,8 @@ function ingestArchitectureDocs(memRoot, docsDir) {
     const entry = manifest[docFile];
     if (entry && entry.mtime === mtime) { skipped++; continue; }
 
-    // Re-ingest: remove old chunks first
-    if (entry && entry.chunkIds) removeOldChunks(semanticDir, entry.chunkIds);
+    // Re-ingest: remove old chunks from both archive/docs and legacy semantic/
+    if (entry && entry.chunkIds) removeOldChunks(archiveDocsDir, entry.chunkIds, legacySemanticDir);
 
     let content;
     try { content = fs.readFileSync(docPath, 'utf8'); } catch (_) { continue; }
@@ -183,7 +212,7 @@ function ingestArchitectureDocs(memRoot, docsDir) {
 
     for (let i = 0; i < chunks.length; i++) {
       const memId = `nkdoc_${baseName.toLowerCase().replace(/[^a-z0-9]+/g, '_').slice(0, 28)}_${i}`;
-      writeChunk(semanticDir, memId, chunks[i], now);
+      writeChunk(archiveDocsDir, memRoot, memId, chunks[i], now);
       chunkIds.push(memId);
     }
 
@@ -195,7 +224,7 @@ function ingestArchitectureDocs(memRoot, docsDir) {
   // Remove manifest entries for docs that no longer exist
   for (const key of Object.keys(manifest)) {
     if (!fs.existsSync(path.join(docsDir, key))) {
-      if (manifest[key].chunkIds) removeOldChunks(semanticDir, manifest[key].chunkIds);
+      if (manifest[key].chunkIds) removeOldChunks(archiveDocsDir, manifest[key].chunkIds, legacySemanticDir);
       delete manifest[key];
     }
   }

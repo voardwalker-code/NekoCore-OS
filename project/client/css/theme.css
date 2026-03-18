@@ -22,6 +22,22 @@
   --text-tertiary:  #52525b;
   --text-quaternary:#3f3f46;
 
+  /* ── Semantic UI Tokens ── */
+  --app-bg: var(--surface-0);
+  --app-surface: var(--surface-1);
+  --app-surface-alt: var(--surface-2);
+  --app-surface-elevated: var(--surface-3);
+  --app-text: var(--text-primary);
+  --app-text-muted: var(--text-secondary);
+  --app-input-bg: var(--app-surface-alt);
+  --app-input-bg-hover: color-mix(in srgb, var(--app-input-bg) 90%, var(--app-surface-elevated));
+  --app-input-bg-focus: color-mix(in srgb, var(--app-input-bg) 80%, var(--app-surface));
+  --app-input-text: var(--app-text);
+  --app-input-placeholder: var(--text-quaternary);
+  --app-input-border: var(--border-default);
+  --app-input-border-focus: var(--info-strong);
+  --app-input-focus-ring: color-mix(in srgb, var(--accent) 16%, transparent);
+
   /* ── Accent: Emerald (arch doc --accent) ── */
   --accent:        #34d399;
   --accent-strong: #10b981;

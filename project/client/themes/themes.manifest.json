@@ -1,0 +1,91 @@
+{
+  "themes": [
+    {
+      "id": "system-default",
+      "label": "System Default",
+      "href": "",
+      "preview": {
+        "bg": "linear-gradient(135deg,#1a1a2e 50%,#f5f5f5 50%)",
+        "fg": "#ffffff",
+        "accent": "#6c63ff"
+      }
+    },
+    {
+      "id": "light-default",
+      "label": "Light Mode",
+      "href": "themes/core/light-default.css",
+      "bodyClasses": ["theme-light-mode"],
+      "preview": {
+        "bg": "#f5f5f5",
+        "fg": "#1a1a2e",
+        "accent": "#0078d4"
+      }
+    },
+    {
+      "id": "neko-default",
+      "label": "NekoCore",
+      "href": "themes/core/neko-default.css",
+      "preview": {
+        "bg": "#04060d",
+        "fg": "#e4e4e7",
+        "accent": "#34d399"
+      }
+    },
+    {
+      "id": "sunset-terminal",
+      "label": "Sunset Terminal",
+      "href": "themes/core/sunset-terminal.css",
+      "preview": {
+        "bg": "#1c1017",
+        "fg": "#f0d0a0",
+        "accent": "#ff6b35"
+      }
+    },
+    {
+      "id": "frosted-orbit",
+      "label": "Frosted Orbit",
+      "href": "themes/core/frosted-orbit.css",
+      "preview": {
+        "bg": "#101828",
+        "fg": "#d0dff0",
+        "accent": "#38bdf8"
+      }
+    },
+    {
+      "id": "mac-sequoia",
+      "label": "Mac Sequoia",
+      "href": "themes/custom/mac-sequoia.css",
+      "bodyClasses": ["theme-mac-sequoia"],
+      "preview": {
+        "bg": "#1e1e2e",
+        "fg": "#cdd6f4",
+        "accent": "#89b4fa"
+      }
+    },
+    {
+      "id": "ubuntu-dash",
+      "label": "Ubuntu Dash",
+      "href": "themes/custom/ubuntu-dash.css",
+      "bodyClasses": ["theme-ubuntu-dash", "theme-has-side-dash"],
+      "preview": {
+        "bg": "#2c001e",
+        "fg": "#ffffff",
+        "accent": "#e95420"
+      },
+      "extras": {
+        "css": [],
+        "html": []
+      }
+    },
+    {
+      "id": "glass-clear",
+      "label": "Glass Clear",
+      "href": "themes/core/glass-clear.css",
+      "preview": {
+        "bg": "#000000",
+        "fg": "#f4f4f5",
+        "accent": "#e4e4e7"
+      }
+    }
+  ]
+}

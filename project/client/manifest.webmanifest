@@ -1,0 +1,17 @@
+{
+  "name": "NekoCore OS",
+  "short_name": "NekoCore",
+  "description": "NekoCore OS Cognitive WebOS shell",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0a1022",
+  "theme_color": "#11244d",
+  "icons": [
+    {
+      "src": "/shared-assets/AppTrayIcon.png",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

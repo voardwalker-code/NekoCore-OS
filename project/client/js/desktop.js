@@ -404,7 +404,7 @@ function startWebUiPresenceHeartbeat() {
 
 function getWindowApp(tabName) {
   return WINDOW_APPS.find((app) => app.tab === tabName)
-    || { tab: tabName, label: tabName, icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>', w: 900, h: 640 };
+    || { tab: tabName, label: tabName, icon: '<img src="/shared-assets/AppTrayIcon.png" alt="" aria-hidden="true" class="os-runtime-icon-img">', w: 900, h: 640 };
 }
 
 function loadPinnedApps() {
@@ -539,6 +539,50 @@ function createPinnedButton(app, className) {
   button.addEventListener('dragover', onPinnedDragOver);
   button.addEventListener('drop', onPinnedDrop);
   return button;
+}
+
+function syncDetachedShellStateUI(registry) {
+  const detachedRegistry = registry && typeof registry === 'object'
+    ? registry
+    : (typeof getPopoutRegistrySnapshot === 'function' ? getPopoutRegistrySnapshot() : {});
+
+  const isDetached = (tabName) => !!(tabName && detachedRegistry && detachedRegistry[tabName]);
+
+  document.querySelectorAll('.os-pinned-app[data-tab], .os-dash-app[data-tab], .os-overflow-app[data-tab], .os-shortcut[data-tab], .wm-window[data-tab]').forEach((el) => {
+    const tabName = el.getAttribute('data-tab');
+    const detached = isDetached(tabName);
+    el.classList.toggle('is-detached', detached);
+    if (el.classList.contains('wm-window')) {
+      el.setAttribute('data-detached', detached ? 'true' : 'false');
+    }
+    if (el.classList.contains('os-pinned-app') || el.classList.contains('os-dash-app') || el.classList.contains('os-overflow-app')) {
+      const app = getWindowApp(tabName);
+      const label = app && app.label ? app.label : tabName;
+      el.title = detached ? label + ' (Detached window active)' : label;
+      el.setAttribute('aria-label', detached ? label + ' detached window active' : label);
+    }
+  });
+
+  document.querySelectorAll('.os-launcher-item[data-tab]').forEach((el) => {
+    const tabName = el.getAttribute('data-tab');
+    const detached = isDetached(tabName);
+    el.classList.toggle('is-detached', detached);
+
+    let badge = el.querySelector('.launcher-detached-badge');
+    if (detached && !badge) {
+      badge = document.createElement('span');
+      badge.className = 'launcher-detached-badge';
+      badge.textContent = 'Detached';
+      const pin = el.querySelector('.launcher-pin-btn');
+      if (pin && pin.parentNode === el) {
+        el.insertBefore(badge, pin);
+      } else {
+        el.appendChild(badge);
+      }
+    } else if (!detached && badge) {
+      badge.remove();
+    }
+  });
 }
 
 function updateTaskbarOverflow() {
@@ -681,4 +725,5 @@ function renderPinnedApps() {
   bindTaskbarOverflowControls();
   updateTaskbarOverflow();
   updateTaskManagerView();
+  syncDetachedShellStateUI();
 }

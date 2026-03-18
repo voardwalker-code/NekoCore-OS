@@ -1,0 +1,209 @@
+﻿  <div class="tab-content" id="tab-browser">
+    <div class="browser-shell">
+      <!-- Tab Strip (Chrome-style) -->
+      <div class="browser-tab-strip">
+        <div class="browser-tabs" id="browserTabs"></div>
+        <button class="browser-tab-new" onclick="browserNewTab()" title="New Tab (Ctrl+T)">+</button>
+      </div>
+
+      <!-- Omnibar (Chrome-style unified toolbar) -->
+      <div class="browser-omnibar">
+        <div class="browser-nav-btns">
+          <button class="browser-nav-btn" onclick="browserGoBack()" title="Back (Alt+←)">←</button>
+          <button class="browser-nav-btn" onclick="browserGoForward()" title="Forward (Alt+→)">→</button>
+          <button class="browser-nav-btn" onclick="browserReload()" title="Reload (Ctrl+R)">⟳</button>
+        </div>
+        <div class="browser-url-box">
+          <span class="browser-url-icon">🔍</span>
+          <input id="browserUrlInput" class="browser-url-input" type="text" placeholder="Search or enter web address" onkeydown="if(event.key==='Enter')browserNavigateFromInput()" spellcheck="false" autocomplete="off">
+        </div>
+        <div class="browser-action-btns">
+          <button class="browser-action-btn" id="browserBookmarkBtn" onclick="browserToggleBookmark()" title="Bookmark (Ctrl+D)">☆</button>
+          <button class="browser-action-btn" onclick="browserOpenBookmarkManager()" title="Bookmarks (Ctrl+Shift+B)">📑</button>
+          <button class="browser-action-btn" onclick="browserOpenHistoryManager()" title="History (Ctrl+H)">🕐</button>
+          <button class="browser-action-btn" onclick="browserToggleDownloads()" title="Downloads (Ctrl+J)">⬇</button>
+          <button class="browser-action-btn" onclick="browserOpenExternal()" title="Open in system browser">↗</button>
+          <button class="browser-action-btn" id="browserLLMModeBtn" onclick="browserToggleLLMMode()" title="LLM Mode">🧠</button>
+        </div>
+      </div>
+
+
+
+      <!-- Home Page -->
+      <div class="browser-home-wrap" id="browserHomeWrap">
+        <div class="browser-home-hero">
+          <div class="browser-home-logo">🌐</div>
+          <div class="browser-home-title">NekoCore Browser</div>
+          <div class="browser-home-sub">Search or enter a web address above</div>
+        </div>
+        <div class="browser-home-grid">
+          <section class="browser-home-card">
+            <div class="browser-home-card-title">Quick Searches</div>
+            <div id="browserQuickSearchChips" class="browser-chip-list"></div>
+          </section>
+          <section class="browser-home-card">
+            <div class="browser-home-card-title">Recent Searches</div>
+            <div id="browserRecentSearchChips" class="browser-chip-list"></div>
+          </section>
+          <section class="browser-home-card">
+            <div class="browser-home-card-title">Bookmarks</div>
+            <div id="browserBookmarksList" class="browser-chip-list"></div>
+          </section>
+          <section class="browser-home-card">
+            <div class="browser-home-card-title">Recent History</div>
+            <div id="browserHistoryList"></div>
+          </section>
+        </div>
+      </div>
+
+      <!-- Search Results -->
+      <div class="browser-search-results hidden" id="browserSearchResultsWrap">
+        <div class="browser-results-title">
+          <span>Search Results</span>
+          <div class="browser-results-actions">
+            <button class="btn bg text-xs-c" onclick="_browserShowPageView()">Back to Page</button>
+            <button class="btn bg text-xs-c" onclick="_browserShowHomeView()">Home</button>
+          </div>
+        </div>
+        <div id="browserSearchResultsList" class="file-browser" style="max-height:100%;overflow:auto"></div>
+      </div>
+
+      <!-- Tab Frames Container (iframes live here) -->
+      <div class="browser-frames hidden" id="browserFrames"></div>
+
+      <!-- Downloads Panel -->
+      <div class="browser-downloads hidden" id="browserDownloadsPanel">
+        <div class="browser-downloads-header">
+          <span>Downloads</span>
+          <button class="btn bg text-xs-c" onclick="browserToggleDownloads()">✕</button>
+        </div>
+        <div id="browserDownloadsList"></div>
+      </div>
+
+      <!-- Bookmark Manager Panel -->
+      <div class="browser-manager-panel hidden" id="browserBookmarkManager">
+        <div class="browser-manager-header">
+          <h3>📑 Bookmark Manager</h3>
+          <div class="browser-manager-actions">
+            <button class="btn bg text-xs-c" onclick="browserExportBookmarks()" title="Export bookmarks">Export</button>
+            <button class="btn bg text-xs-c" onclick="browserImportBookmarks()" title="Import bookmarks">Import</button>
+            <button class="btn bg text-xs-c" onclick="browserCloseBookmarkManager()">✕</button>
+          </div>
+        </div>
+        <div class="browser-manager-toolbar">
+          <input id="bmManagerSearch" class="browser-manager-search" type="text" placeholder="Search bookmarks..." oninput="_bmFilterChanged()">
+          <select id="bmManagerFolderFilter" class="browser-manager-select" onchange="_bmFolderChanged()">
+            <option value="">All Folders</option>
+          </select>
+        </div>
+        <div class="browser-manager-add-row">
+          <input id="bmAddUrl" class="bm-add-input" type="text" placeholder="URL">
+          <input id="bmAddTitle" class="bm-add-input" type="text" placeholder="Title">
+          <input id="bmAddFolder" class="bm-add-input bm-add-folder" type="text" placeholder="Folder" value="default">
+          <button class="btn bp text-xs-c" onclick="bmAddBookmarkFromManager()">Add</button>
+        </div>
+        <div id="bmManagerList" class="browser-manager-list"></div>
+      </div>
+
+      <!-- History Manager Panel -->
+      <div class="browser-manager-panel hidden" id="browserHistoryManager">
+        <div class="browser-manager-header">
+          <h3>🕐 History</h3>
+          <div class="browser-manager-actions">
+            <button class="btn bg text-xs-c" onclick="browserExportHistory()" title="Export history">Export</button>
+            <button class="btn bg text-xs-c btn-warn-sm" onclick="histDeleteToday()">Clear Today</button>
+            <button class="btn bg text-xs-c btn-danger-sm" onclick="histClearAll()">Clear All</button>
+            <button class="btn bg text-xs-c" onclick="browserCloseHistoryManager()">✕</button>
+          </div>
+        </div>
+        <div class="browser-manager-toolbar">
+          <input id="histManagerSearch" class="browser-manager-search" type="text" placeholder="Search history..." oninput="_histFilterChanged()">
+        </div>
+        <div id="histManagerList" class="browser-manager-list"></div>
+      </div>
+
+      <!-- LLM Mode Panel (NB-6) -->
+      <div class="browser-llm-panel hidden" id="browserLLMPanel">
+        <div class="llm-panel-header">
+          <h3>🤖 LLM Mode</h3>
+          <div class="llm-panel-controls">
+            <span id="llmSessionLabel" class="llm-session-label"></span>
+            <button class="btn bg text-xs-c" id="llmEphemeralBtn" onclick="browserToggleEphemeral()" title="Ephemeral — nothing auto-saved">👁 Ephemeral</button>
+            <button class="btn bg text-xs-c" onclick="browserNewResearchSession()" title="Start research session">📂 Session</button>
+            <button class="btn bg text-xs-c" onclick="browserToggleLLMMode()">✕</button>
+          </div>
+        </div>
+
+        <!-- Source Preview -->
+        <div class="llm-source-section">
+          <div class="llm-section-title">Page Source</div>
+          <div id="llmSourcePreview" class="llm-source-preview">
+            <div class="llm-source-empty">No page content extracted. Navigate to a page and click Extract.</div>
+          </div>
+          <button class="btn bg text-xs-c" onclick="browserExtractPage()" title="Re-extract current page">🔄 Extract</button>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="llm-actions">
+          <button class="btn bp text-xs-c" onclick="browserSummarizePage()">📝 Summarize</button>
+          <button class="btn bg text-xs-c" onclick="browserExtractStructured('outline')">📑 Outline</button>
+          <button class="btn bg text-xs-c" onclick="browserExtractStructured('entities')">🏷️ Entities</button>
+          <button class="btn bg text-xs-c" onclick="browserExtractStructured('tables')">📊 Tables</button>
+          <button class="btn bg text-xs-c" onclick="browserExtractStructured('links')">🔗 Links</button>
+        </div>
+
+        <!-- Ask This Page -->
+        <div class="llm-ask-section">
+          <div class="llm-section-title">Ask This Page</div>
+          <div class="llm-ask-row">
+            <input id="llmAskInput" class="llm-ask-input" type="text" placeholder="Ask a question about this page..." onkeydown="if(event.key==='Enter')browserAskPage()">
+            <button class="btn bp text-xs-c" onclick="browserAskPage()">Ask</button>
+          </div>
+        </div>
+
+        <!-- Output Area -->
+        <div id="llmOutput" class="llm-output"></div>
+
+        <!-- Footer Actions -->
+        <div class="llm-footer">
+          <span id="llmStatus" class="llm-status"></span>
+          <div class="llm-footer-actions">
+            <button class="btn bg text-xs-c" onclick="browserSaveToMemory()" title="Save analysis to entity memory">💾 Save to Memory</button>
+            <button class="btn bg text-xs-c" onclick="_llmClearOutput()">Clear</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Save to Memory Confirmation Dialog (NB-6) -->
+      <div class="llm-save-dialog hidden" id="llmSaveConfirm">
+        <div class="llm-save-content">
+          <h4>💾 Save to Entity Memory?</h4>
+          <p>This will save the current analysis to the active entity's memory.</p>
+          <div id="llmSavePreview" class="llm-save-preview"></div>
+          <div class="llm-save-topics-row">
+            <label>Topics:</label>
+            <input id="llmSaveTopics" class="llm-save-topics" type="text" placeholder="browser-research, analysis" value="browser-research">
+          </div>
+          <div class="llm-save-actions">
+            <button class="btn bp" onclick="browserConfirmSave()">Confirm Save</button>
+            <button class="btn bg" onclick="browserCancelSave()">Cancel</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Keyboard Shortcuts Reference -->
+      <div class="browser-shortcuts-bar">
+        <span class="browser-shortcut-hint">Ctrl+T New Tab</span>
+        <span class="browser-shortcut-hint">Ctrl+W Close</span>
+        <span class="browser-shortcut-hint">Ctrl+L Address</span>
+        <span class="browser-shortcut-hint">Ctrl+D Bookmark</span>
+        <span class="browser-shortcut-hint">Ctrl+H History</span>
+        <span class="browser-shortcut-hint">Right-click tab for menu</span>
+      </div>
+
+      <!-- Status -->
+      <div class="browser-note">Some websites block embedding. Use ↗ to open in your system browser.</div>
+    </div>
+  </div>
+
+  <!-- ===== ADVANCED TAB (was dropdown, now a regular tab panel) ===== -->
