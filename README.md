@@ -17,7 +17,7 @@
   <img src="https://img.shields.io/badge/node-%3E%3D18-brightgreen?style=flat-square&logo=node.js" alt="Node 18+"/>
   <img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"/>
   <img src="https://img.shields.io/badge/dependencies-0-brightgreen?style=flat-square" alt="zero deps"/>
-  <img src="https://img.shields.io/badge/tests-963%20passing-brightgreen?style=flat-square" alt="963 tests"/>
+  <a href="https://github.com/voardwalker-code/NekoCore-OS/actions/workflows/ci.yml"><img src="https://github.com/voardwalker-code/NekoCore-OS/actions/workflows/ci.yml/badge.svg?branch=main" alt="Tests"/></a>
 </p>
 
 ---
