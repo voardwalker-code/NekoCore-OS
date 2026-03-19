@@ -64,6 +64,8 @@ WORKLOG.md
 Documents/
 PIPELINE-ARCHITECTURE-IMAGE-PROMPT.txt
 Modular Task Orch.txt
+booter.js
+Start-NekoCore-Server.bat
 
 # Explicit archive index docs inside ignored planning tree
 Documents/current/completed-phase-plans/INDEX.md
