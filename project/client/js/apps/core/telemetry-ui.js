@@ -2,7 +2,7 @@
 // NekoCore OS — Telemetry UI
 // Extracted from app.js by P3-S11
 // Depends on globals: windowManager (window-manager.js), getWindowApp (desktop.js),
-//   pinnedApps (app.js), activeConfig (app.js), syncShellStatusWidgets (app.js)
+//   pinnedApps (app.js), activeConfig (app.js), savedConfig (app.js), syncShellStatusWidgets (app.js)
 // Exports: runtimeTelemetry, formatTelemetryModel, pushTelemetryEvent,
 //   normalizePercent, getFocusedWindowTab, getOrCreateAppStats, pushSeriesPoint,
 //   estimateHeapPercent, updateAppStatsSeries, sparklinePath, renderAppMetrics,
@@ -39,6 +39,28 @@ const runtimeTelemetry = {
 function formatTelemetryModel(model) {
   if (!model) return '—';
   return String(model).split('/').pop();
+}
+
+function getSavedTaskManagerConfigs() {
+  const profileName = savedConfig?.lastActive;
+  const profile = profileName ? savedConfig?.profiles?.[profileName] : null;
+  if (!profile || typeof profile !== 'object') return {};
+
+  const main = profile.main && typeof profile.main === 'object'
+    ? profile.main
+    : (profile._activeType === 'ollama' && profile.ollama
+        ? { type: 'ollama', endpoint: profile.ollama.url, model: profile.ollama.model }
+        : profile.apikey
+          ? { type: 'openrouter', endpoint: profile.apikey.endpoint, apiKey: profile.apikey.key, model: profile.apikey.model }
+          : null);
+
+  return {
+    main,
+    subconscious: profile.subconscious || main,
+    dream: profile.dream || profile.dreams || main,
+    conscious: profile.main || main,
+    orchestrator: profile.orchestrator || main
+  };
 }
 
 function pushTelemetryEvent(line) {
@@ -177,12 +199,14 @@ function reportOrchestrationMetrics(data) {
 }
 
 function updateTaskManagerView() {
-  const providerType = activeConfig?.type || 'none';
-  const providerModel = activeConfig?.model || 'Not connected';
+  const savedConfigs = getSavedTaskManagerConfigs();
+  const providerConfig = activeConfig || savedConfigs.main || null;
+  const providerType = providerConfig?.type || 'none';
+  const providerModel = providerConfig?.model || 'Not connected';
   const providerModelEl = document.getElementById('tmProviderModel');
   const providerTypeEl = document.getElementById('tmProviderType');
-  if (providerModelEl) providerModelEl.textContent = providerModel;
-  if (providerTypeEl) providerTypeEl.textContent = providerType;
+  if (providerModelEl) providerModelEl.textContent = formatTelemetryModel(providerModel) || 'Not connected';
+  if (providerTypeEl) providerTypeEl.textContent = providerType === 'none' ? 'Not connected' : providerType;
 
   const phaseEl = document.getElementById('tmPipelinePhase');
   const ageEl = document.getElementById('tmPipelineAge');
@@ -211,14 +235,20 @@ function updateTaskManagerView() {
   }
 
   const models = runtimeTelemetry.models || {};
+  const fallbackModels = {
+    subconscious: savedConfigs.subconscious?.model || null,
+    dream: savedConfigs.dream?.model || null,
+    conscious: savedConfigs.conscious?.model || savedConfigs.main?.model || null,
+    orchestrator: savedConfigs.orchestrator?.model || null
+  };
   const setModel = (id, value) => {
     const el = document.getElementById(id);
     if (el) el.textContent = formatTelemetryModel(value);
   };
-  setModel('tmModelSub', models.subconscious);
-  setModel('tmModelDream', models.dream);
-  setModel('tmModelConscious', models.conscious);
-  setModel('tmModelOrchestrator', models.orchestrator);
+  setModel('tmModelSub', models.subconscious || fallbackModels.subconscious);
+  setModel('tmModelDream', models.dream || fallbackModels.dream);
+  setModel('tmModelConscious', models.conscious || fallbackModels.conscious);
+  setModel('tmModelOrchestrator', models.orchestrator || fallbackModels.orchestrator);
 
   // T-7: Active task section in Task Manager
   const tmTaskSection = document.getElementById('tmActiveTaskSection');
