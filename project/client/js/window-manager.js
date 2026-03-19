@@ -150,11 +150,12 @@ function openNekoCoreWithMessage(msg) {
   const fr = document.getElementById('nekocore-panel-frame');
   if (!fr) return;
   const dispatch = () => fr.contentWindow && fr.contentWindow.postMessage({ type: 'nk_send_message', text }, '*');
-  if (fr.getAttribute('src')) {
+  if (!frameHasExpectedPath(fr, ['nekocore.html'])) {
+    fr.addEventListener('load', () => setTimeout(dispatch, 80), { once: true });
+    fr.src = '/nekocore.html';
+  } else {
     // Already loaded — post immediately (allow a tick for focus)
     setTimeout(dispatch, 80);
-  } else {
-    fr.addEventListener('load', () => setTimeout(dispatch, 80), { once: true });
   }
 }
 
@@ -218,6 +219,28 @@ function shouldLaunchViaShadowLoader(manifestEntry) {
     return false;
   }
   return true;
+}
+
+function frameHasExpectedPath(frame, expectedPaths) {
+  if (!frame || !Array.isArray(expectedPaths) || expectedPaths.length === 0) {
+    return false;
+  }
+
+  const rawSrc = String(frame.getAttribute('src') || '').trim();
+  if (!rawSrc) return false;
+
+  const normalizedExpected = expectedPaths
+    .map((entry) => String(entry || '').replace(/\\/g, '/').toLowerCase())
+    .filter(Boolean);
+
+  try {
+    const resolved = new URL(rawSrc, window.location.href);
+    const pathname = resolved.pathname.replace(/\\/g, '/').toLowerCase();
+    return normalizedExpected.some((expected) => pathname === '/' + expected || pathname.endsWith('/' + expected));
+  } catch (_) {
+    const fallbackPath = rawSrc.replace(/\\/g, '/').toLowerCase();
+    return normalizedExpected.some((expected) => fallbackPath === expected || fallbackPath.endsWith('/' + expected));
+  }
 }
 
 function openWindow(tabName, options = {}) {
@@ -297,16 +320,18 @@ function openWindow(tabName, options = {}) {
         }
       } catch (_) {}
     };
-    if (fr && fr.contentWindow && typeof fr.contentWindow.resetCreatorFlow === 'function') {
+    if (fr && !frameHasExpectedPath(fr, ['create.html', 'apps/entity-creator/index.html'])) {
+      fr.addEventListener('load', () => setTimeout(resetCreator, 60), { once: true });
+      fr.src = '/create.html?embed=1';
+    } else if (fr && fr.contentWindow && typeof fr.contentWindow.resetCreatorFlow === 'function') {
       setTimeout(resetCreator, 60);
     } else if (fr) {
       fr.addEventListener('load', () => setTimeout(resetCreator, 60), { once: true });
     }
   }
   if (tabName === 'nekocore') {
-    // Lazy-load the iframe on first open so no API calls happen at startup
     const fr = document.getElementById('nekocore-panel-frame');
-    if (fr && !fr.getAttribute('src')) fr.src = 'nekocore.html';
+    if (fr && !frameHasExpectedPath(fr, ['nekocore.html'])) fr.src = '/nekocore.html';
   }
 }
 

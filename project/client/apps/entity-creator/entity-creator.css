@@ -175,6 +175,128 @@ body.embed-mode .creator-card {
   border-radius: .9rem;
 }
 
+.creator-shell .entity-mode-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.creator-shell .entity-mode-card {
+  position: relative;
+  min-height: 220px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: flex-start;
+  gap: .55rem;
+  padding: 1.15rem;
+  overflow: hidden;
+  isolation: isolate;
+  text-align: left;
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 1.15rem;
+  background-color: #13203d;
+  background-position: center;
+  background-size: cover;
+  box-shadow: 0 20px 44px rgba(3, 8, 20, 0.32);
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+
+.creator-shell .entity-mode-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  background-size: cover;
+  background-position: center;
+  transform: scale(1.02);
+}
+
+.creator-shell .entity-mode-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(180deg, rgba(6, 11, 24, 0.08) 0%, rgba(6, 11, 24, 0.64) 58%, rgba(6, 11, 24, 0.9) 100%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0) 48%);
+}
+
+.creator-shell .entity-mode-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(255, 255, 255, 0.26);
+  box-shadow: 0 28px 50px rgba(3, 8, 20, 0.38);
+}
+
+.creator-shell .entity-mode-card h4,
+.creator-shell .entity-mode-card p {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  color: #f8fafc;
+  text-shadow: 0 1px 2px rgba(2, 6, 23, 0.45);
+}
+
+.creator-shell .entity-mode-card h4 {
+  font-size: 1.02rem;
+  font-weight: 700;
+}
+
+.creator-shell .entity-mode-card p {
+  color: rgba(241, 245, 249, 0.92);
+  line-height: 1.45;
+}
+
+.creator-shell .entity-mode-icon {
+  display: inline-flex;
+  align-items: center;
+  min-height: auto;
+  margin-bottom: .1rem;
+  padding: .38rem .72rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(7, 12, 26, 0.42);
+  color: #f8fafc;
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  font-family: var(--font-sans, 'Outfit', 'Segoe UI', 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif);
+}
+
+.creator-shell .entity-mode-card--random::before {
+  background-image:
+    radial-gradient(circle at 18% 18%, rgba(255, 244, 167, 0.92) 0 10%, rgba(255, 244, 167, 0) 28%),
+    radial-gradient(circle at 74% 28%, rgba(244, 114, 182, 0.44) 0 14%, rgba(244, 114, 182, 0) 34%),
+    radial-gradient(circle at 70% 78%, rgba(96, 165, 250, 0.5) 0 15%, rgba(96, 165, 250, 0) 34%),
+    linear-gradient(145deg, rgba(37, 99, 235, 0.62), rgba(14, 116, 144, 0.54) 46%, rgba(91, 33, 182, 0.58));
+}
+
+.creator-shell .entity-mode-card--empty::before {
+  background-image:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.16) 0 2%, rgba(255, 255, 255, 0) 2% 100%),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.07) 0 1px, transparent 1px),
+    linear-gradient(rgba(255, 255, 255, 0.07) 0 1px, transparent 1px),
+    linear-gradient(145deg, rgba(30, 41, 59, 0.84), rgba(71, 85, 105, 0.72));
+  background-size: auto, 34px 34px, 34px 34px, auto;
+}
+
+.creator-shell .entity-mode-card--guided::before {
+  background-image:
+    radial-gradient(circle at 24% 22%, rgba(251, 191, 36, 0.8) 0 10%, rgba(251, 191, 36, 0) 26%),
+    linear-gradient(120deg, rgba(255, 255, 255, 0.18) 0 6%, rgba(255, 255, 255, 0) 6% 17%, rgba(255, 255, 255, 0.18) 17% 23%, rgba(255, 255, 255, 0) 23% 34%, rgba(255, 255, 255, 0.18) 34% 40%, rgba(255, 255, 255, 0) 40% 100%),
+    linear-gradient(150deg, rgba(8, 145, 178, 0.78), rgba(21, 94, 117, 0.66) 48%, rgba(15, 23, 42, 0.82));
+}
+
+.creator-shell .entity-mode-card--character::before {
+  background-image:
+    radial-gradient(circle at 82% 20%, rgba(254, 240, 138, 0.5) 0 10%, rgba(254, 240, 138, 0) 24%),
+    radial-gradient(circle at 18% 68%, rgba(248, 113, 113, 0.34) 0 14%, rgba(248, 113, 113, 0) 30%),
+    linear-gradient(0deg, rgba(15, 23, 42, 0.28), rgba(15, 23, 42, 0.28)),
+    linear-gradient(155deg, rgba(127, 29, 29, 0.82), rgba(88, 28, 135, 0.68) 52%, rgba(30, 41, 59, 0.82));
+}
+
 @media (max-width: 680px) {
   .creator-main {
     padding: .5rem;
@@ -189,5 +311,13 @@ body.embed-mode .creator-card {
 
   .creator-card-header h1 {
     font-size: 1rem;
+  }
+
+  .creator-shell .entity-mode-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .creator-shell .entity-mode-card {
+    min-height: 200px;
   }
 }

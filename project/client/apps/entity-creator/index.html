@@ -60,23 +60,23 @@
         <div id="entityCreationModeStep" style="display:none">
           <p class="text-secondary-c mb-5"><strong>Creator:</strong> Pick a creation mode:</p>
           <div class="entity-mode-grid">
-            <div class="entity-mode-card" onclick="selectEntityMode('random')">
-              <div class="entity-mode-icon">Random</div>
+            <div class="entity-mode-card entity-mode-card--random" onclick="selectEntityMode('random')">
+              <div class="entity-mode-icon">Random Mode</div>
               <h4>Random Generation</h4>
               <p>Automatically generate a complete entity with name, personality, life story, and core memories</p>
             </div>
-            <div class="entity-mode-card" onclick="selectEntityMode('empty')">
-              <div class="entity-mode-icon">Empty</div>
+            <div class="entity-mode-card entity-mode-card--empty" onclick="selectEntityMode('empty')">
+              <div class="entity-mode-icon">Blank Canvas</div>
               <h4>Empty Entity</h4>
               <p>Create a blank entity with your custom name and traits. No history - build memories through conversation</p>
             </div>
-            <div class="entity-mode-card" onclick="selectEntityMode('guided')">
-              <div class="entity-mode-icon">Guided</div>
+            <div class="entity-mode-card entity-mode-card--guided" onclick="selectEntityMode('guided')">
+              <div class="entity-mode-icon">Guided Build</div>
               <h4>Guided Creation</h4>
               <p>Walk through a step-by-step process to design your entity's personality and life story</p>
             </div>
-            <div class="entity-mode-card" onclick="selectEntityMode('character')">
-              <div class="entity-mode-icon">Character</div>
+            <div class="entity-mode-card entity-mode-card--character" onclick="selectEntityMode('character')">
+              <div class="entity-mode-icon">Character Source</div>
               <h4>Character Ingestion</h4>
               <p>Create an entity inspired by a fictional or real character. The LLM extracts personality, speech style, and memories from your description</p>
             </div>
