@@ -344,15 +344,24 @@ function createConfigRoutes(ctx) {
       }
 
       if (!config) throw new Error('Missing config');
-      const normalizedConfig = normalizeIncomingRuntimeConfig(config);
-      if (!normalizedConfig) throw new Error('Invalid provider config payload');
-
       const globalCfg = ctx.loadConfig();
       if (!globalCfg.profiles || typeof globalCfg.profiles !== 'object') globalCfg.profiles = {};
       if (!globalCfg.lastActive) globalCfg.lastActive = 'default-multi-llm';
       if (!globalCfg.profiles[globalCfg.lastActive]) globalCfg.profiles[globalCfg.lastActive] = {};
 
       const targetProfile = globalCfg.profiles[globalCfg.lastActive];
+      const storedAspectConfig = targetProfile[normalizedProvider] || {};
+      const mergeBase = (normalizedProvider === 'main' && targetProfile.apikey)
+        ? {
+            ...storedAspectConfig,
+            apiKey: storedAspectConfig.apiKey || targetProfile.apikey.key || targetProfile.apikey.apiKey || ''
+          }
+        : storedAspectConfig;
+
+      const mergedConfig = mergeKeysBack(config, mergeBase);
+      const normalizedConfig = normalizeIncomingRuntimeConfig(mergedConfig);
+      if (!normalizedConfig) throw new Error('Invalid provider config payload');
+
       targetProfile[normalizedProvider] = normalizedConfig;
       if (!targetProfile._activeTypes || typeof targetProfile._activeTypes !== 'object') targetProfile._activeTypes = {};
       targetProfile._activeTypes[normalizedProvider] = normalizedConfig.type;

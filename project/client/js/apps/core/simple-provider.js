@@ -12,6 +12,33 @@
 // ============================================================
 
 let simpleActiveProvider = 'openrouter';
+const SIMPLE_PROVIDER_REDACTED_KEY = '••••••••';
+
+function _getSimpleStoredOpenRouterConfig() {
+  const profile = savedConfig?.profiles?.[savedConfig?.lastActive] || null;
+  const mainCfg = profile?.main;
+  if (mainCfg && String(mainCfg.type || '').toLowerCase() === 'openrouter') {
+    return mainCfg;
+  }
+  if (profile?.apikey) {
+    return {
+      type: 'openrouter',
+      endpoint: profile.apikey.endpoint || OPENROUTER_PRESET.ep,
+      apiKey: profile.apikey.apiKey || profile.apikey.key || '',
+      model: profile.apikey.model || ''
+    };
+  }
+  if (activeConfig?.type === 'openrouter') {
+    return activeConfig;
+  }
+  return null;
+}
+
+function _simpleHasStoredOpenRouterKey() {
+  const stored = _getSimpleStoredOpenRouterConfig();
+  const key = String(stored?.apiKey || stored?.key || '').trim();
+  return !!key;
+}
 
 function initSimpleProviderUI() {
   // Populate OpenRouter model suggestions in the simple UI datalist
@@ -48,7 +75,11 @@ function initSimpleProviderUI() {
           simplePickProvider('openrouter');
           const keyEl = document.getElementById('simpleOrKey');
           const modelEl = document.getElementById('simpleOrModel');
-          if (keyEl && mainCfg.apiKey) keyEl.value = mainCfg.apiKey;
+          if (keyEl) {
+            keyEl.value = '';
+            keyEl.dataset.hasStoredKey = mainCfg.apiKey ? 'true' : 'false';
+            if (mainCfg.apiKey) keyEl.placeholder = 'Saved API key on file';
+          }
           if (modelEl && mainCfg.model) modelEl.value = mainCfg.model;
         }
       }
@@ -67,6 +98,13 @@ function initSimpleProviderUI() {
       }
     }
   } catch (_) {}
+
+  const keyEl = document.getElementById('simpleOrKey');
+  if (keyEl && !keyEl.dataset.hasStoredKey) {
+    const hasStoredKey = _simpleHasStoredOpenRouterKey();
+    keyEl.dataset.hasStoredKey = hasStoredKey ? 'true' : 'false';
+    if (hasStoredKey && !keyEl.value) keyEl.placeholder = 'Saved API key on file';
+  }
 }
 
 function simplePickProvider(provider) {
@@ -154,7 +192,10 @@ async function simpleSaveConfig() {
   } else {
     mainType = 'openrouter';
     mainEndpoint = OPENROUTER_PRESET.ep;
-    mainKey = (document.getElementById('simpleOrKey')?.value || '').trim();
+    const keyEl = document.getElementById('simpleOrKey');
+    const typedKey = (keyEl?.value || '').trim();
+    const hasStoredKey = keyEl?.dataset.hasStoredKey === 'true' || _simpleHasStoredOpenRouterKey();
+    mainKey = typedKey || (hasStoredKey ? SIMPLE_PROVIDER_REDACTED_KEY : '');
     mainModel = (document.getElementById('simpleOrModel')?.value || '').trim();
     if (!mainKey) {
       simpleShowStatus('orStatus', 'API key is required', 'var(--dn)');
@@ -184,12 +225,18 @@ async function simpleSaveConfig() {
     activeConfig = {
       type: mainType,
       endpoint: mainEndpoint,
-      ...(mainKey ? { apiKey: mainKey } : {}),
+      ...(typedKey ? { apiKey: typedKey } : {}),
       model: mainModel
     };
 
     // Sync savedConfig from server
     await refreshSavedConfig();
+
+    if (!isOllama && keyEl) {
+      keyEl.value = '';
+      keyEl.dataset.hasStoredKey = 'true';
+      keyEl.placeholder = 'Saved API key on file';
+    }
 
     // On first setup, seed any unconfigured aspects with role-appropriate default models
     if (!isOllama && mainKey) {

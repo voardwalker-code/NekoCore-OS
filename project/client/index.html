@@ -987,8 +987,8 @@
 
         <!-- Provider picker -->
         <div class="flex gap-3 mb-4">
-          <button class="provider-btn on" id="simpleProviderBtn-openrouter" onclick="simplePickProvider('openrouter')" style="flex:1;padding:.75rem;font-size:1rem">?? OpenRouter</button>
-          <button class="provider-btn" id="simpleProviderBtn-ollama" onclick="simplePickProvider('ollama')" style="flex:1;padding:.75rem;font-size:1rem">?? Ollama (Local)</button>
+          <button class="provider-btn on" id="simpleProviderBtn-openrouter" onclick="simplePickProvider('openrouter')" style="flex:1;padding:.75rem;font-size:1rem">&#9729; OpenRouter</button>
+          <button class="provider-btn" id="simpleProviderBtn-ollama" onclick="simplePickProvider('ollama')" style="flex:1;padding:.75rem;font-size:1rem">&#128302; Ollama (Local)</button>
         </div>
 
         <!-- OpenRouter panel -->
@@ -998,7 +998,7 @@
             <input type="password" id="simpleOrKey" placeholder="sk-or-v1-...">
           </div>
           <p class="text-xs-c text-secondary-c" style="margin:.55rem 0 0">
-            New to OpenRouter? <a href="https://openrouter.ai" target="_blank" rel="noopener noreferrer">Sign up here ?</a>
+            New to OpenRouter? <a href="https://openrouter.ai" target="_blank" rel="noopener noreferrer">Sign up here &#8599;</a>
           </p>
           <div class="fl">
             <label>Model <span class="text-xs-c text-secondary-c">(pick or paste any OpenRouter model ID)</span></label>
@@ -1045,7 +1045,7 @@
 
         <!-- Advanced per-aspect overrides (collapsed by default) -->
         <details id="simpleAdvancedToggle" class="mt-4" style="border:1px solid var(--border-default);border-radius:var(--radius-lg);padding:.5rem 1rem">
-          <summary style="cursor:pointer;font-size:.85rem;color:var(--text-secondary);user-select:none;padding:.4rem 0">?? Advanced � per-stage model overrides</summary>
+          <summary style="cursor:pointer;font-size:.85rem;color:var(--text-secondary);user-select:none;padding:.4rem 0">&#9881; Advanced - per-stage model overrides</summary>
           <div class="text-xs-c text-secondary-c mt-2 mb-3">Leave blank to use the main model for all stages. Only set these if you want different models per pipeline stage.</div>
           <div class="text-xs-c" style="margin:-.35rem 0 .8rem;color:var(--warning,#f59e0b)">
             Recommendation: avoid using the same model for both Main Mind and Orchestrator. For Mercury 2, best observed pairing is Mercury 2 (Main) + Claude Sonnet 4/4.6 (Orchestrator).
@@ -1073,7 +1073,7 @@
       <!-- NekoCore OS Section -->
       <div class="settings-section">
         <div class="settings-section-header">
-          <h2>?? NekoCore OS</h2>
+          <h2>&#129302; NekoCore OS</h2>
           <p>Dedicated LLM for the NekoCore operating layer. Separate from entity configs. NekoCore uses this model to manage entities, monitor model health, and route governance decisions.</p>
         </div>
 
@@ -1106,26 +1106,26 @@
 
         <div class="health-tools">
           <div class="health-card">
-            <div class="health-title">?? Memory Log Self-Healing</div>
+            <div class="health-title">&#129520; Memory Log Self-Healing</div>
             <div class="health-desc">Automatically detect and repair corrupted memory log files</div>
             <button class="btn bp" onclick="repairMemoryLogs()">Run Self-Heal</button>
             <div id="healStatus" class="status-toast" style="margin-top:.75rem;display:none"></div>
           </div>
           
           <div class="health-card">
-            <div class="health-title">?? Memory Statistics</div>
+            <div class="health-title">&#128202; Memory Statistics</div>
             <div class="health-desc">View memory usage and compression statistics</div>
             <button class="btn bg" onclick="showMemoryStats()">View Stats</button>
           </div>
 
           <div class="health-card">
-            <div class="health-title">?? Rebuild Trace Graph</div>
+            <div class="health-title">&#128257; Rebuild Trace Graph</div>
             <div class="health-desc">Rebuild semantic connections in memory graph</div>
             <button class="btn bg" onclick="rebuildTraceGraph()">Rebuild</button>
           </div>
 
           <div class="health-card">
-            <div class="health-title">?? Full Backup</div>
+            <div class="health-title">&#128190; Full Backup</div>
             <div class="health-desc">Save config, runtime data, entities, and memories to a backup folder</div>
             <input id="backupTargetFolder" type="text" placeholder="C:/Backups" style="width:100%;margin:.5rem 0;padding:.5rem;border-radius:8px;border:1px solid var(--border-default);background:var(--bg-secondary);color:var(--text-primary)">
             <button class="btn bp" onclick="runSystemBackup(this)">Create Backup</button>
@@ -1133,7 +1133,7 @@
           </div>
 
           <div class="health-card">
-            <div class="health-title">? Restore Backup</div>
+            <div class="health-title">&#128194; Restore Backup</div>
             <div class="health-desc">Restore config, runtime data, entities, and memories from a backup folder</div>
             <input id="restoreSourceFolder" type="text" placeholder="C:/Backups/NekoCore-backup-YYYYMMDD-HHMMSS" style="width:100%;margin:.5rem 0;padding:.5rem;border-radius:8px;border:1px solid var(--border-default);background:var(--bg-secondary);color:var(--text-primary)">
             <button class="btn bg" onclick="runSystemRestore(this)">Restore Backup</button>
