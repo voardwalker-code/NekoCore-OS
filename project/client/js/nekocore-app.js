@@ -544,7 +544,7 @@ const Chat = (() => {
     if (box) box.innerHTML = '';
   }
 
-  // Send on Ctrl+Enter / Cmd+Enter
+  // Send on Enter; reserve Shift+Enter for a newline.
   document.addEventListener('DOMContentLoaded', () => {
     const infoToggle = document.getElementById('nkInfoToggle');
     const saveBtn = document.getElementById('nkSavePersona');
@@ -570,7 +570,8 @@ const Chat = (() => {
     const input = document.getElementById('nkChatInput');
     if (input) {
       input.addEventListener('keydown', (e) => {
-        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        if (e.isComposing) return;
+        if (e.key === 'Enter' && !e.shiftKey) {
           e.preventDefault();
           send();
         }
