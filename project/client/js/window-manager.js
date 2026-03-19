@@ -226,7 +226,9 @@ function openWindow(tabName, options = {}) {
 
   const needsCenter = options.center === true || !meta.open;
   meta.open = true;
+  meta.minimized = false;
   meta.el.style.display = 'flex';
+  meta.el.classList.remove('minimized');
   meta.el.classList.add('open', 'opening');
 
   // ── D-3: Check manifest for packagePath and route through shadow loader ──
@@ -316,7 +318,9 @@ function closeWindow(tabName) {
     _browserSaveSessionSync();
   }
   meta.open = false;
+  meta.minimized = false;
   meta.el.classList.remove('open', 'focused');
+  meta.el.classList.remove('minimized');
   meta.el.style.display = 'none';
   runtimeTelemetry.activeWindowTab = getFocusedWindowTab();
 
@@ -331,6 +335,17 @@ function closeWindow(tabName) {
   } catch (_) {
     // Safely ignore cleanup errors — window closing takes priority
   }
+  syncShellStatusWidgets();
+}
+
+function minimizeWindow(tabName) {
+  const meta = windowManager.windows.get(tabName);
+  if (!meta || !meta.open) return;
+  meta.minimized = true;
+  meta.el.classList.remove('focused');
+  meta.el.classList.add('minimized');
+  meta.el.style.display = 'none';
+  runtimeTelemetry.activeWindowTab = getFocusedWindowTab();
   syncShellStatusWidgets();
 }
 
@@ -560,8 +575,9 @@ function createWindowShell(tabName, tabElement) {
       <div class="wm-title"><span class="wm-title-icon" data-accent="${app.accent || 'green'}">${app.icon}</span> ${app.label}</div>
       <div class="wm-controls">
         <button class="wm-btn" data-action="pin" title="Pin/Unpin to taskbar">&#9733;</button>
-        <button class="wm-btn" data-action="snap-left" title="Snap left">&#9698;</button>
-        <button class="wm-btn" data-action="snap-right" title="Snap right">&#9701;</button>
+        <button class="wm-btn" data-action="minimize" title="Minimize">&#8722;</button>
+        <button class="wm-btn" data-action="snap-left" title="Snap left">&#8592;</button>
+        <button class="wm-btn" data-action="snap-right" title="Snap right">&#8594;</button>
         <button class="wm-btn" data-action="popout" title="Pop out window"${isCurrentPopout ? ' disabled aria-disabled="true"' : ''}>&#8599;</button>
         <button class="wm-btn" data-action="maximize" title="Maximize">&#9723;</button>
         <button class="wm-btn wm-btn-close" data-action="close" title="Close">&#10005;</button>
@@ -586,6 +602,7 @@ function createWindowShell(tabName, tabElement) {
     tab: tabName,
     el: shell,
     open: false,
+    minimized: false,
     maximized: false,
     restoreRect: null,
     snapState: null
@@ -604,6 +621,7 @@ function createWindowShell(tabName, tabElement) {
     if (!button) return;
     const action = button.getAttribute('data-action');
     if (action === 'close') closeWindow(tabName);
+    if (action === 'minimize') minimizeWindow(tabName);
     if (action === 'maximize') toggleMaximizeWindow(tabName);
     if (action === 'popout') popOutWindow(tabName);
     if (action === 'snap-left') snapWindow(tabName, 'left');
