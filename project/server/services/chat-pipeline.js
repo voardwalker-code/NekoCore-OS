@@ -279,9 +279,11 @@ function createChatPipeline(deps) {
 
   async function processChatMessage(userMessage, chatHistory = []) {
     const isInternalResume = /^\s*\[INTERNAL-RESUME\]/i.test(String(userMessage || ''));
+    const isWakeFromSleep = /^\s*\[WAKE-FROM-SLEEP\]/i.test(String(userMessage || ''));
     const effectiveUserMessage = isInternalResume ? stripInternalResumeTag(userMessage) : userMessage;
     logTimeline('chat.user_message', {
       isInternalResume,
+      isWakeFromSleep,
       userMessage: String(effectiveUserMessage || '').slice(0, 1200),
       chatHistoryCount: Array.isArray(chatHistory) ? chatHistory.length : 0
     });
@@ -396,7 +398,7 @@ function createChatPipeline(deps) {
         workspacePath: entity?.workspacePath || '',
         systemPromptText: entity?.systemPromptText || ''
       }, {
-        isInternalResume,
+        isInternalResume: isInternalResume || isWakeFromSleep,
         aspectConfigs
       });
 

@@ -182,7 +182,7 @@
       </div>
       <div style="padding:.45rem .75rem;border-radius:999px;border:1px solid rgba(140,255,208,.18);font-size:.72rem;color:rgba(201,255,228,.78);background:rgba(15,25,38,.64);">Boot Sequence</div>
     </div>
-    <div id="bootDetail" style="margin-top:.9rem;font-size:.95rem;line-height:1.6;color:rgba(218,237,228,.82);">Loading desktop shell…</div>
+    <div id="bootDetail" style="margin-top:.9rem;font-size:.95rem;line-height:1.6;color:rgba(218,237,228,.82);">Loading desktop shellï¿½</div>
     <div style="margin-top:1.25rem;height:10px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden;">
       <div id="bootProgressBar" style="height:100%;width:8%;border-radius:999px;background:linear-gradient(90deg,#7cf7c3,#b9fff0);box-shadow:0 0 24px rgba(124,247,195,.45);transition:width .35s ease;"></div>
     </div>
@@ -533,7 +533,7 @@
   <!-- ===== DESKTOP FILES AREA ===== -->
   <section class="os-desktop-files" id="desktopFilesArea"></section>
 
-  <!-- ===== MODEL/PROFILE SIDEBAR (hidden — replaced by nav-sidebar) ===== -->
+  <!-- ===== MODEL/PROFILE SIDEBAR (hidden ï¿½ replaced by nav-sidebar) ===== -->
   <div class="model-sidebar" id="modelSidebar">
 
     <!-- LLM Profiles Section -->
@@ -643,8 +643,8 @@
               </div>
             </div>
           </div>
-          <!-- T-7: Task status badge — updated live by task-ui.js via SSE events -->
-          <div id="taskStatusBadge" class="task-badge" style="display:none" title="Active task status — click for history">
+          <!-- T-7: Task status badge ï¿½ updated live by task-ui.js via SSE events -->
+          <div id="taskStatusBadge" class="task-badge" style="display:none" title="Active task status ï¿½ click for history">
             <span class="task-badge-label" onclick="openTaskHistory()">? task</span>
             <span class="task-badge-step">Step 0</span>
             <button class="task-badge-cancel" onclick="cancelActiveTask()" title="Cancel task">?</button>
@@ -740,7 +740,7 @@
         <div class="tm-card">
           <div class="tm-label">Total Tokens (Last Call)</div>
           <div class="tm-value" id="tmTokensTotal">0</div>
-          <div class="tm-sub" id="tmTokensBreakdown">In: 0 • Out: 0</div>
+          <div class="tm-sub" id="tmTokensBreakdown">In: 0 ï¿½ Out: 0</div>
         </div>
         <div class="tm-card">
           <div class="tm-label">Brain Loop</div>
@@ -753,10 +753,10 @@
         <div class="tm-panel">
           <div class="tm-panel-title">Contributor Models</div>
           <div id="tmModels" class="tm-list">
-            <div class="tm-list-row"><span>Subconscious</span><strong id="tmModelSub">—</strong></div>
-            <div class="tm-list-row"><span>Dream</span><strong id="tmModelDream">—</strong></div>
-            <div class="tm-list-row"><span>Conscious</span><strong id="tmModelConscious">—</strong></div>
-            <div class="tm-list-row"><span>Orchestrator</span><strong id="tmModelOrchestrator">—</strong></div>
+            <div class="tm-list-row"><span>Subconscious</span><strong id="tmModelSub">ï¿½</strong></div>
+            <div class="tm-list-row"><span>Dream</span><strong id="tmModelDream">ï¿½</strong></div>
+            <div class="tm-list-row"><span>Conscious</span><strong id="tmModelConscious">ï¿½</strong></div>
+            <div class="tm-list-row"><span>Orchestrator</span><strong id="tmModelOrchestrator">ï¿½</strong></div>
           </div>
         </div>
         <div class="tm-panel">
@@ -822,7 +822,7 @@
           </div>
 
           <div style="display:flex;gap:var(--space-2);margin-bottom:var(--space-3)">
-            <input type="text" id="archiveSearchQuery" placeholder="Search topics, memories, docs…"
+            <input type="text" id="archiveSearchQuery" placeholder="Search topics, memories, docsï¿½"
               style="flex:1;padding:var(--space-3);background:var(--surface-2);border:1px solid var(--border-default);border-radius:var(--radius-md);color:var(--text-primary);font-size:var(--text-sm);outline:none;font-family:inherit">
             <button class="btn bp text-xs-c" id="archiveSearchBtn" type="button">Search</button>
           </div>
@@ -874,7 +874,7 @@
               <input type="text" id="archiveIngestFile" placeholder="/absolute/path/to/corpus.txt"
                 style="display:block;width:100%;box-sizing:border-box;margin-top:var(--space-1);padding:var(--space-2) var(--space-3);background:var(--surface-2);border:1px solid var(--border-default);border-radius:var(--radius-md);color:var(--text-primary);font-size:var(--text-sm);outline:none;font-family:var(--font-mono)">
             </label>
-            <label style="font-size:var(--text-xs);color:var(--text-secondary)">Doc ID (optional — defaults to filename)
+            <label style="font-size:var(--text-xs);color:var(--text-secondary)">Doc ID (optional ï¿½ defaults to filename)
               <input type="text" id="archiveIngestDocId" placeholder="e.g. wikipedia_neuroscience"
                 style="display:block;width:100%;box-sizing:border-box;margin-top:var(--space-1);padding:var(--space-2) var(--space-3);background:var(--surface-2);border:1px solid var(--border-default);border-radius:var(--radius-md);color:var(--text-primary);font-size:var(--text-sm);outline:none;font-family:inherit">
             </label>
@@ -1045,7 +1045,7 @@
 
         <!-- Advanced per-aspect overrides (collapsed by default) -->
         <details id="simpleAdvancedToggle" class="mt-4" style="border:1px solid var(--border-default);border-radius:var(--radius-lg);padding:.5rem 1rem">
-          <summary style="cursor:pointer;font-size:.85rem;color:var(--text-secondary);user-select:none;padding:.4rem 0">?? Advanced — per-stage model overrides</summary>
+          <summary style="cursor:pointer;font-size:.85rem;color:var(--text-secondary);user-select:none;padding:.4rem 0">?? Advanced ï¿½ per-stage model overrides</summary>
           <div class="text-xs-c text-secondary-c mt-2 mb-3">Leave blank to use the main model for all stages. Only set these if you want different models per pipeline stage.</div>
           <div class="text-xs-c" style="margin:-.35rem 0 .8rem;color:var(--warning,#f59e0b)">
             Recommendation: avoid using the same model for both Main Mind and Orchestrator. For Mercury 2, best observed pairing is Mercury 2 (Main) + Claude Sonnet 4/4.6 (Orchestrator).
@@ -1186,9 +1186,9 @@
             <div class="fl mb-2">
               <label>Dream Depth</label>
               <select id="sleepDreamDepth" class="w-full">
-                <option value="shallow">Shallow — Quick dreams, minimal consolidation</option>
-                <option value="normal" selected>Normal — Balanced dreaming and memory processing</option>
-                <option value="deep">Deep — Extended dreaming, rich memory consolidation</option>
+                <option value="shallow">Shallow ï¿½ Quick dreams, minimal consolidation</option>
+                <option value="normal" selected>Normal ï¿½ Balanced dreaming and memory processing</option>
+                <option value="deep">Deep ï¿½ Extended dreaming, rich memory consolidation</option>
               </select>
             </div>
             <div class="fl mb-2">
@@ -1419,16 +1419,16 @@
     <div class="os-taskbar-inner">
       <div class="os-taskbar-left">
         <button class="os-start-user os-taskbar-user" onclick="switchMainTab('users', this)" title="Open Users app" aria-label="Open Users app">
-          <span class="os-start-user-avatar">??</span>
+          <span class="os-start-user-avatar">&#128100;</span>
           <span class="os-start-user-name" id="osStartUserName">NekoCore User</span>
         </button>
         <div class="os-start-power-wrap os-taskbar-power-wrap">
-          <button class="btn br power-btn os-start-power-btn os-taskbar-power-btn" id="osStartPowerButton" onclick="toggleStartPowerMenu()" aria-expanded="false" aria-haspopup="menu" title="Power options" aria-label="Power options">?</button>
+          <button class="btn br power-btn os-start-power-btn os-taskbar-power-btn" id="osStartPowerButton" onclick="toggleStartPowerMenu()" aria-expanded="false" aria-haspopup="menu" title="Power options" aria-label="Power options">&#x23FB;</button>
           <div class="os-start-power-menu" id="osStartPowerMenu" aria-hidden="true" role="menu">
-            <button class="os-start-power-item" role="menuitem" onclick="closeStartMenu()">?? Sleep (Close Menu)</button>
-            <button class="os-start-power-item" role="menuitem" onclick="restartShellUI()">?? Restart UI</button>
-            <button class="os-start-power-item" role="menuitem" onclick="if (typeof handleLogout === 'function') handleLogout(); closeStartMenu();">?? Sign out</button>
-            <button class="os-start-power-item danger" role="menuitem" onclick="shutdownServer()">? Shut Down Server</button>
+            <button class="os-start-power-item" role="menuitem" onclick="closeStartMenu()">&#127769; Sleep (Close Menu)</button>
+            <button class="os-start-power-item" role="menuitem" onclick="restartShellUI()">&#8635; Restart UI</button>
+            <button class="os-start-power-item" role="menuitem" onclick="if (typeof handleLogout === 'function') handleLogout(); closeStartMenu();">&#128682; Sign out</button>
+            <button class="os-start-power-item danger" role="menuitem" onclick="shutdownServer()">&#x23FB; Shut Down Server</button>
           </div>
         </div>
       </div>
@@ -1443,7 +1443,7 @@
         </div>
       </div>
       <div class="nk-quick-bar" id="nkQuickBar" title="Ask NekoCore OS">
-        <input id="nkQuickInput" class="nk-quick-input" type="text" placeholder="Ask NekoCore…" maxlength="400"
+        <input id="nkQuickInput" class="nk-quick-input" type="text" placeholder="Ask NekoCoreï¿½" maxlength="400"
           onkeydown="if(event.key==='Enter'){event.preventDefault();openNekoCoreWithMessage(this.value);}">
         <button class="nk-quick-send" onclick="openNekoCoreWithMessage(document.getElementById('nkQuickInput').value)">Ask</button>
       </div>
@@ -1592,7 +1592,7 @@
   <div class="sleep-phase" id="sleepPhase">Initializing sleep cycle</div>
 </div>
 
-<!-- Module scripts — load order matters -->
+<!-- Module scripts ï¿½ load order matters -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 <!-- Shared utility modules (must load before app scripts) -->
@@ -1603,9 +1603,12 @@
 <!-- App scripts -->
 <script src="js/login.js"></script>
 <script src="js/apps/non-core-html-loader.js"></script>
+<script src="js/apps/system-apps-adapter.js"></script>
 <script src="js/app.js"></script>
 <script src="js/desktop.js"></script>
 <script src="js/window-manager.js"></script>
+<script src="js/app-window.js"></script>
+<script src="js/shadow-content-loader.js"></script>
 <script src="js/vfs.js"></script>
 <script src="js/context-menu.js"></script>
 <script src="js/auth.js"></script>

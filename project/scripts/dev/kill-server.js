@@ -1,6 +1,6 @@
 // kill-server.js
 // Kills any process using the specified port (default 3847)
-// Usage: node kill-server.js [port]
+// Usage: node scripts/dev/kill-server.js [port]
 
 const { exec } = require('child_process');
 const port = process.argv[2] || 3847;

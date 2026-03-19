@@ -393,7 +393,9 @@ const App = {
       // Secondary: breakdown + disk size as context only
       if (sub) {
         const mb = (data.diskMB || 0).toFixed(1);
-        sub.textContent = data.episodicCount + ' experiences  ·  ' + data.semanticCount + ' semantic  ·  ' + data.docCount + ' knowledge docs  ·  ' + mb + ' MB on disk';
+        const archivedExperiences = Number(data.archivedExperienceCount || 0);
+        const archivedExperienceText = archivedExperiences > 0 ? '  ·  ' + archivedExperiences + ' archived experiences' : '';
+        sub.textContent = data.episodicCount + ' live experiences  ·  ' + data.semanticCount + ' live semantic  ·  ' + data.docCount + ' archived knowledge docs' + archivedExperienceText + '  ·  ' + mb + ' MB on disk';
       }
     } catch (_) {}
   },

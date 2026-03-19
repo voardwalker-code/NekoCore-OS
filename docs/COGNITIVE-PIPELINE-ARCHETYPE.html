@@ -1,0 +1,1061 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Cognitive Pipeline Archetype — A New Architecture for LLMs</title>
+<style>
+  :root {
+    --tan: #f6f2e8;
+    --tan-border: #c2b78f;
+    --amber: #ffe9b8;
+    --amber-border: #b8930b;
+    --blue: #dce9f7;
+    --blue-accent: #6a9fd8;
+    --blue-dark: #1e5a74;
+    --green: #e1f0e1;
+    --green-accent: #5a9e5a;
+    --green-dark: #2c6b2f;
+    --pink: #fbe3e8;
+    --pink-accent: #c4647a;
+    --violet: #ece4f6;
+    --violet-accent: #8b6bb5;
+    --violet-dark: #5a3c9a;
+    --gray-light: #f5f5f5;
+    --text: #1a1a1a;
+    --text-muted: #555;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+    background: #fff;
+    color: var(--text);
+    line-height: 1.65;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 50px 40px 80px;
+  }
+
+  /* ── typography ─────────────────────────────── */
+  h1 {
+    font-size: 42px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    margin-bottom: 6px;
+    color: var(--text);
+  }
+  .hero-sub {
+    font-size: 20px;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+    font-weight: 400;
+  }
+  .hero-tag {
+    display: inline-block;
+    background: var(--green);
+    border: 1px solid var(--green-accent);
+    color: var(--green-dark);
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 40px;
+  }
+
+  h2 {
+    font-size: 28px;
+    font-weight: 700;
+    margin-top: 60px;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 3px solid var(--green-accent);
+    display: inline-block;
+  }
+  h3 {
+    font-size: 20px;
+    font-weight: 700;
+    margin-top: 32px;
+    margin-bottom: 10px;
+    color: var(--blue-dark);
+  }
+
+  p { margin-bottom: 14px; font-size: 16px; }
+
+  .lead {
+    font-size: 18px;
+    color: var(--text-muted);
+    margin-bottom: 20px;
+    max-width: 900px;
+  }
+
+  blockquote {
+    border-left: 4px solid var(--violet-accent);
+    padding: 14px 20px;
+    background: var(--violet);
+    margin: 20px 0;
+    border-radius: 0 8px 8px 0;
+    font-style: italic;
+    color: var(--violet-dark);
+  }
+
+  /* ── diagram containers ────────────────────── */
+  .diagram {
+    background: var(--gray-light);
+    border: 2px solid #ddd;
+    border-radius: 14px;
+    padding: 30px;
+    margin: 24px 0 32px;
+    overflow-x: auto;
+  }
+  .diagram-title {
+    font-size: 15px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    margin-bottom: 20px;
+  }
+
+  /* ── evolution timeline ────────────────────── */
+  .evo-timeline {
+    display: flex;
+    gap: 0;
+    align-items: stretch;
+  }
+  .evo-era {
+    flex: 1;
+    padding: 20px;
+    border-radius: 10px;
+    position: relative;
+    min-width: 200px;
+  }
+  .evo-era::after {
+    content: '→';
+    position: absolute;
+    right: -16px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 28px;
+    font-weight: 700;
+    color: #aaa;
+    z-index: 1;
+  }
+  .evo-era:last-child::after { content: ''; }
+
+  .evo-era.era-1 { background: #f0f0f0; border: 2px solid #ccc; }
+  .evo-era.era-2 { background: var(--tan); border: 2px solid var(--tan-border); }
+  .evo-era.era-3 { background: var(--amber); border: 2px solid var(--amber-border); }
+  .evo-era.era-4 { background: var(--blue); border: 2px solid var(--blue-accent); }
+  .evo-era.era-5 { background: var(--green); border: 2px solid var(--green-accent); }
+
+  .evo-era h4 {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .evo-era .era-year {
+    font-size: 11px;
+    color: #888;
+    margin-bottom: 6px;
+  }
+  .evo-era ul {
+    font-size: 13px;
+    padding-left: 16px;
+    color: #444;
+  }
+  .evo-era ul li { margin-bottom: 3px; }
+
+  /* ── archetype pattern diagram ─────────────── */
+  .arch-grid {
+    display: grid;
+    grid-template-columns: 160px 1fr 200px;
+    grid-template-rows: auto auto auto auto;
+    gap: 10px;
+  }
+
+  .arch-box {
+    padding: 16px;
+    border-radius: 10px;
+    border: 2px solid;
+    font-size: 13px;
+  }
+  .arch-box h5 {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .arch-box ul { padding-left: 16px; }
+  .arch-box ul li { margin-bottom: 2px; }
+
+  .arch-entry { background: var(--tan); border-color: var(--tan-border); grid-column: 1; grid-row: 1/5; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; }
+  .arch-dispatch { background: var(--amber); border-color: var(--amber-border); grid-column: 2; grid-row: 1; }
+  .arch-parallel { background: var(--green); border-color: var(--green-accent); grid-column: 2; grid-row: 2; }
+  .arch-reason { background: var(--blue); border-color: var(--blue-accent); grid-column: 2; grid-row: 3; }
+  .arch-voice { background: #e8f0e8; border-color: var(--green-dark); grid-column: 2; grid-row: 4; border-width: 3px; }
+  .arch-policy { background: var(--pink); border-color: var(--pink-accent); border-style: dashed; grid-column: 3; grid-row: 2/5; }
+  .arch-async { background: var(--violet); border-color: var(--violet-accent); grid-column: 1/4; grid-row: 5; }
+
+  .arch-arrow {
+    text-align: center;
+    font-size: 20px;
+    color: #888;
+    font-weight: 700;
+    padding: 4px 0;
+  }
+
+  /* ── comparison table ──────────────────────── */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    font-size: 14px;
+  }
+  th {
+    background: var(--blue);
+    border: 1px solid var(--blue-accent);
+    padding: 12px 16px;
+    text-align: left;
+    font-weight: 700;
+  }
+  td {
+    border: 1px solid #ddd;
+    padding: 10px 16px;
+  }
+  tr:nth-child(even) td { background: #fafafa; }
+  .check { color: var(--green-dark); font-weight: 700; }
+  .cross { color: #c44; font-weight: 700; }
+  .partial { color: var(--amber-border); font-weight: 700; }
+
+  /* ── pattern cards ─────────────────────────── */
+  .pattern-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin: 20px 0;
+  }
+  .pattern-card {
+    padding: 20px;
+    border-radius: 10px;
+    border: 2px solid;
+  }
+  .pattern-card h4 {
+    font-size: 16px;
+    margin-bottom: 8px;
+  }
+  .pattern-card p {
+    font-size: 13px;
+    margin-bottom: 0;
+    color: #444;
+  }
+  .pattern-card.pc-green { background: var(--green); border-color: var(--green-accent); }
+  .pattern-card.pc-blue { background: var(--blue); border-color: var(--blue-accent); }
+  .pattern-card.pc-violet { background: var(--violet); border-color: var(--violet-accent); }
+  .pattern-card.pc-amber { background: var(--amber); border-color: var(--amber-border); }
+  .pattern-card.pc-pink { background: var(--pink); border-color: var(--pink-accent); }
+  .pattern-card.pc-tan { background: var(--tan); border-color: var(--tan-border); }
+
+  /* ── use-case flow ─────────────────────────── */
+  .usecase-flow {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin: 16px 0;
+  }
+  .uf-step {
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    border: 2px solid;
+    min-width: 120px;
+    text-align: center;
+  }
+  .uf-arrow { font-size: 20px; color: #aaa; font-weight: 700; }
+
+  /* ── implementation spectrum ────────────────── */
+  .spectrum {
+    display: flex;
+    height: 40px;
+    border-radius: 8px;
+    overflow: hidden;
+    margin: 16px 0;
+    border: 2px solid #ccc;
+  }
+  .spectrum-seg {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    color: #333;
+  }
+
+  /* ── footer ────────────────────────────────── */
+  .footer {
+    margin-top: 60px;
+    padding-top: 20px;
+    border-top: 2px solid #eee;
+    font-size: 13px;
+    color: #999;
+  }
+
+  /* ── full-width pipeline diagram ───────────── */
+  .pipeline-full {
+    width: 100%;
+    position: relative;
+  }
+  .lane {
+    padding: 18px 20px;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    border: 2px solid;
+  }
+  .lane-head {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 12px;
+  }
+  .lane-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .node {
+    padding: 10px 14px;
+    border-radius: 8px;
+    border: 2px solid;
+    font-size: 12px;
+    font-weight: 600;
+    text-align: center;
+    min-width: 100px;
+  }
+  .node-sub {
+    font-size: 10px;
+    font-weight: 400;
+    color: #555;
+    margin-top: 3px;
+  }
+  .diamond-sm {
+    width: 80px;
+    height: 80px;
+    transform: rotate(45deg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid;
+    font-size: 10px;
+    font-weight: 600;
+    text-align: center;
+    flex-shrink: 0;
+  }
+  .diamond-sm span { transform: rotate(-45deg); display: block; }
+  .arr { font-size: 18px; color: #888; font-weight: 700; flex-shrink: 0; }
+  .branch-label { font-size: 11px; font-weight: 700; color: var(--amber-border); }
+
+  .parallel-box {
+    border: 2px dashed var(--green-accent);
+    border-radius: 8px;
+    padding: 10px;
+    display: flex;
+    gap: 8px;
+    background: rgba(255,255,255,0.5);
+    position: relative;
+  }
+  .par-label {
+    position: absolute;
+    top: -9px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--green-accent);
+    color: #fff;
+    font-size: 9px;
+    font-weight: 700;
+    padding: 1px 8px;
+    border-radius: 4px;
+  }
+
+  .dashed-conn {
+    border: 1px dashed var(--pink-accent);
+    flex-grow: 1;
+    max-width: 40px;
+  }
+
+  /* ── callout box ───────────────────────────── */
+  .callout {
+    padding: 18px 22px;
+    border-radius: 10px;
+    margin: 20px 0;
+  }
+  .callout.callout-green { background: var(--green); border-left: 5px solid var(--green-accent); }
+  .callout.callout-blue { background: var(--blue); border-left: 5px solid var(--blue-accent); }
+  .callout.callout-amber { background: var(--amber); border-left: 5px solid var(--amber-border); }
+  .callout.callout-violet { background: var(--violet); border-left: 5px solid var(--violet-accent); }
+  .callout strong { display: block; margin-bottom: 4px; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- HERO                                            -->
+<!-- ═══════════════════════════════════════════════ -->
+<h1>The Cognitive Pipeline Archetype</h1>
+<p class="hero-sub">A new architectural pattern for LLMs — moving beyond single-call inference into parallel, memory-augmented, self-reviewing cognitive systems.</p>
+<span class="hero-tag">Derived from NekoCore OS — Cognitive WebOS</span>
+
+<p class="lead">
+Current LLM architectures treat each call as stateless and serial. The Cognitive Pipeline Archetype proposes that LLM systems should be built as <strong>multi-contributor pipelines</strong> — where memory, intuition, reasoning, and expression are separate parallel stages, each with distinct responsibilities, and the system <em>learns from every interaction</em> without blocking the user.
+</p>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- 1. THE EVOLUTION                                -->
+<!-- ═══════════════════════════════════════════════ -->
+<h2>1. The Evolution of LLM Architectures</h2>
+
+<p>LLM system design has progressed through distinct eras. Each era solved a limitation of its predecessor — but also introduced new constraints. The Cognitive Pipeline Archetype represents the next step.</p>
+
+<div class="diagram">
+  <div class="diagram-title">Architectural Evolution Timeline</div>
+  <div class="evo-timeline">
+    <div class="evo-era era-1">
+      <div class="era-year">2020–2022</div>
+      <h4>Era 1: Single Call</h4>
+      <ul>
+        <li>One prompt → one response</li>
+        <li>No memory</li>
+        <li>No context beyond the prompt</li>
+        <li>Stateless</li>
+      </ul>
+    </div>
+    <div class="evo-era era-2">
+      <div class="era-year">2022–2023</div>
+      <h4>Era 2: RAG</h4>
+      <ul>
+        <li>Retrieval-augmented generation</li>
+        <li>External knowledge injected</li>
+        <li>Still single-call reasoning</li>
+        <li>No persistent identity</li>
+      </ul>
+    </div>
+    <div class="evo-era era-3">
+      <div class="era-year">2023–2024</div>
+      <h4>Era 3: Chain-of-Thought</h4>
+      <ul>
+        <li>Multi-step serial reasoning</li>
+        <li>Tool use and agents</li>
+        <li>Still stateless between sessions</li>
+        <li>No emotional or relational context</li>
+      </ul>
+    </div>
+    <div class="evo-era era-4">
+      <div class="era-year">2024–2025</div>
+      <h4>Era 4: Multi-Agent</h4>
+      <ul>
+        <li>Multiple LLMs collaborate</li>
+        <li>Role specialization</li>
+        <li>Complex orchestration</li>
+        <li>Memory still bolted on</li>
+      </ul>
+    </div>
+    <div class="evo-era era-5">
+      <div class="era-year">2025–</div>
+      <h4>Era 5: Cognitive Pipeline</h4>
+      <ul>
+        <li><strong>Parallel contributors</strong></li>
+        <li><strong>Native memory + identity</strong></li>
+        <li><strong>Separate reasoning & voice</strong></li>
+        <li><strong>Async learning loop</strong></li>
+        <li><strong>Policy-guarded delivery</strong></li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<blockquote>
+  "The shift isn't adding more LLM calls — it's giving each call a distinct cognitive purpose, running them in parallel where possible, and making the system learn from every exchange without blocking the conversation."
+</blockquote>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- 2. THE CORE PATTERN                             -->
+<!-- ═══════════════════════════════════════════════ -->
+<h2>2. The Core Pattern</h2>
+
+<p>The Cognitive Pipeline Archetype defines six architectural layers that any LLM system can adopt — independently or together. Each layer addresses a specific cognitive function that single-call architectures collapse into one undifferentiated prompt.</p>
+
+<div class="diagram">
+  <div class="diagram-title">Archetype Layer Map</div>
+  <div class="arch-grid">
+    <div class="arch-box arch-entry">
+      <h5>INTAKE</h5>
+      <p style="font-size:12px;">Classify intent.<br>Route to the right pipeline path.</p>
+    </div>
+
+    <div class="arch-box arch-dispatch">
+      <h5>Layer 1 — Intent Dispatch</h5>
+      <p>Every input is classified <em>before</em> any LLM call fires. Structured tasks route to a task executor. Free-form input enters the cognitive pipeline. This replaces the "one prompt does everything" pattern.</p>
+      <ul>
+        <li>Task confidence scoring</li>
+        <li>Structured vs. conversational routing</li>
+        <li>Session continuity detection</li>
+      </ul>
+    </div>
+
+    <div class="arch-box arch-parallel">
+      <h5>Layer 2 — Parallel Contributors</h5>
+      <p>Multiple cognitive functions run <strong>simultaneously</strong>, not serially. Each contributor has a distinct purpose and information diet. They cannot see each other's output — only the downstream Reasoner sees everything.</p>
+      <ul>
+        <li><strong>Memory Contributor</strong> — retrieves relevant past experience, relationship state, emotional context</li>
+        <li><strong>Intuition Contributor</strong> — generates lateral associations, creative connections, abstract pattern matching</li>
+        <li><strong>Domain Contributors</strong> — any number of specialized retrievers (code, medical, legal, etc.)</li>
+      </ul>
+    </div>
+
+    <div class="arch-box arch-reason">
+      <h5>Layer 3 — Unified Reasoner</h5>
+      <p>Receives the <strong>complete output of all parallel contributors</strong> before reasoning. This is the only stage that sees the full picture. It produces the primary response draft.</p>
+      <ul>
+        <li>Full cognitive context (memory + intuition + domain)</li>
+        <li>Tool invocation capability</li>
+        <li>Task planning capability</li>
+      </ul>
+    </div>
+
+    <div class="arch-box arch-voice">
+      <h5>Layer 4 — Reviewer + Voicer</h5>
+      <p>Separates <em>what to say</em> from <em>how to say it</em>. Reviews the Reasoner's draft for coherence and fit, then delivers it in the system's authentic voice. Does NOT re-reason — only shapes expression.</p>
+      <ul>
+        <li>Voice/personality enforcement</li>
+        <li>Coherence review</li>
+        <li>Multi-part output support</li>
+      </ul>
+    </div>
+
+    <div class="arch-box arch-policy">
+      <h5>Policy Guards</h5>
+      <p style="font-size:12px;">Modulate the Voicer stage:</p>
+      <ul>
+        <li><strong>Escalation</strong> — route to a more capable model when needed</li>
+        <li><strong>Budget</strong> — enforce token/cost limits</li>
+        <li><strong>Latency</strong> — timeout with graceful fallback</li>
+        <li><strong>Safety</strong> — content filtering and compliance</li>
+      </ul>
+    </div>
+
+    <div class="arch-box arch-async">
+      <h5>Layer 5 — Async Learning Loop</h5>
+      <p>After the response is delivered, the system <strong>learns without blocking the user</strong>. Memory encoding, relationship updates, belief graph evolution, and knowledge consolidation all run as fire-and-forget side effects.</p>
+      <div style="display:flex; gap:20px; margin-top:8px;">
+        <div>
+          <strong style="font-size:12px;">Memory Encoding</strong>
+          <ul><li>Episodic (what happened)</li><li>Semantic (what was learned)</li></ul>
+        </div>
+        <div>
+          <strong style="font-size:12px;">Relationship Update</strong>
+          <ul><li>Trust/rapport delta</li><li>Role evolution</li></ul>
+        </div>
+        <div>
+          <strong style="font-size:12px;">Knowledge Graph</strong>
+          <ul><li>Belief formation</li><li>Cross-reference linking</li></ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- 3. WHY PARALLEL BEATS SERIAL                    -->
+<!-- ═══════════════════════════════════════════════ -->
+<h2>3. Why Parallel Beats Serial</h2>
+
+<p>Chain-of-thought and multi-agent systems run LLM calls serially — each step waits for the previous one. The Cognitive Pipeline runs contributors in parallel, with a single synchronization barrier before reasoning.</p>
+
+<div class="diagram">
+  <div class="diagram-title">Latency Comparison</div>
+  <div style="display:flex; gap:40px;">
+    <div style="flex:1;">
+      <h4 style="margin-bottom:10px; color:#c44;">Serial (Chain-of-Thought)</h4>
+      <div style="display:flex; flex-direction:column; gap:4px;">
+        <div style="background:#f0f0f0; border:1px solid #ccc; padding:8px 12px; border-radius:6px; font-size:12px;">
+          Step 1: Retrieve context <span style="float:right; color:#888;">~800ms</span>
+        </div>
+        <div style="text-align:center; color:#aaa;">↓ waits</div>
+        <div style="background:#f0f0f0; border:1px solid #ccc; padding:8px 12px; border-radius:6px; font-size:12px;">
+          Step 2: Generate associations <span style="float:right; color:#888;">~600ms</span>
+        </div>
+        <div style="text-align:center; color:#aaa;">↓ waits</div>
+        <div style="background:#f0f0f0; border:1px solid #ccc; padding:8px 12px; border-radius:6px; font-size:12px;">
+          Step 3: Reason and draft <span style="float:right; color:#888;">~1200ms</span>
+        </div>
+        <div style="text-align:center; color:#aaa;">↓ waits</div>
+        <div style="background:#f0f0f0; border:1px solid #ccc; padding:8px 12px; border-radius:6px; font-size:12px;">
+          Step 4: Review and voice <span style="float:right; color:#888;">~900ms</span>
+        </div>
+        <div style="background:#fee; border:1px solid #c44; padding:8px 12px; border-radius:6px; font-size:13px; font-weight:700; margin-top:8px;">
+          Total: ~3500ms (serial sum)
+        </div>
+      </div>
+    </div>
+    <div style="flex:1;">
+      <h4 style="margin-bottom:10px; color:var(--green-dark);">Parallel (Cognitive Pipeline)</h4>
+      <div style="display:flex; flex-direction:column; gap:4px;">
+        <div style="display:flex; gap:6px;">
+          <div style="flex:1; background:var(--green); border:1px solid var(--green-accent); padding:8px 12px; border-radius:6px; font-size:12px;">
+            Memory retrieval <span style="color:#888;">~800ms</span>
+          </div>
+          <div style="flex:1; background:var(--green); border:1px solid var(--green-accent); padding:8px 12px; border-radius:6px; font-size:12px;">
+            Intuition generation <span style="color:#888;">~600ms</span>
+          </div>
+        </div>
+        <div style="text-align:center; color:var(--green-accent); font-weight:700; font-size:11px;">⬇ barrier — max(800, 600) = 800ms</div>
+        <div style="background:var(--blue); border:1px solid var(--blue-accent); padding:8px 12px; border-radius:6px; font-size:12px;">
+          Reason with full context <span style="float:right; color:#888;">~1200ms</span>
+        </div>
+        <div style="text-align:center; color:#aaa;">↓</div>
+        <div style="background:#e8f0e8; border:2px solid var(--green-dark); padding:8px 12px; border-radius:6px; font-size:12px;">
+          Review and voice <span style="float:right; color:#888;">~900ms</span>
+        </div>
+        <div style="background:var(--green); border:1px solid var(--green-dark); padding:8px 12px; border-radius:6px; font-size:13px; font-weight:700; margin-top:8px;">
+          Total: ~2900ms (parallel saves 600ms)
+        </div>
+        <div style="background:var(--violet); border:1px solid var(--violet-accent); padding:6px 12px; border-radius:6px; font-size:11px; margin-top:4px; color:var(--violet-dark);">
+          + async learning (non-blocking) — Memory + Relationship update happen after response
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="callout callout-green">
+  <strong>Key insight:</strong> With more parallel contributors (domain experts, safety checkers, persona consultants), the serial penalty grows linearly while the parallel pipeline pays only the cost of the slowest contributor. At 4+ contributors, the latency advantage becomes dramatic.
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- 4. THE SIX DESIGN PRINCIPLES                    -->
+<!-- ═══════════════════════════════════════════════ -->
+<h2>4. The Six Design Principles</h2>
+
+<div class="pattern-grid">
+  <div class="pattern-card pc-green">
+    <h4>1. Separate Cognition from Expression</h4>
+    <p>The Reasoner decides <em>what</em> to say. The Voicer decides <em>how</em> to say it. These are fundamentally different tasks — collapsing them into one prompt produces inconsistent quality. The Voicer can be swapped (different personality, language, tone) without changing the reasoning layer.</p>
+  </div>
+  <div class="pattern-card pc-blue">
+    <h4>2. Parallel > Serial for Context</h4>
+    <p>Memory retrieval, creative association, and domain lookup can all run at the same time. None depends on the other. Only the final reasoning step needs all outputs — so parallelize everything upstream of reasoning.</p>
+  </div>
+  <div class="pattern-card pc-violet">
+    <h4>3. Learn After, Not During</h4>
+    <p>Memory encoding and relationship updates happen <em>after</em> the response is sent. This means the user never waits for the system to learn. The learning loop is async, fire-and-forget — but it still runs on every single interaction.</p>
+  </div>
+  <div class="pattern-card pc-amber">
+    <h4>4. Classify Before You Call</h4>
+    <p>Not every input needs the full cognitive pipeline. A task request ("search for X") should route directly to a task executor. A conversational turn ("how are you feeling?") needs the full pipeline. Classify first, route smart.</p>
+  </div>
+  <div class="pattern-card pc-pink">
+    <h4>5. Policy Guards as First-Class Citizens</h4>
+    <p>Escalation, budget limits, and latency timeouts are not afterthoughts — they are architectural components that modulate the pipeline in real time. Every call returns telemetry. Every guard has a graceful fallback.</p>
+  </div>
+  <div class="pattern-card pc-tan">
+    <h4>6. Identity Persists Across Sessions</h4>
+    <p>The system remembers. Relationships evolve. Beliefs form from cross-referenced memories. The entity that responds today is shaped by every conversation it has ever had — not just the current system prompt.</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- 5. CAPABILITY COMPARISON                        -->
+<!-- ═══════════════════════════════════════════════ -->
+<h2>5. Capability Comparison</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>Capability</th>
+      <th>Single-Call</th>
+      <th>RAG</th>
+      <th>Chain-of-Thought</th>
+      <th>Multi-Agent</th>
+      <th style="background:var(--green); color:var(--green-dark);">Cognitive Pipeline</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Persistent memory</td>
+      <td class="cross">✗</td>
+      <td class="partial">~</td>
+      <td class="partial">~</td>
+      <td class="partial">~</td>
+      <td class="check">✓ native</td>
+    </tr>
+    <tr>
+      <td>Parallel cognitive contributors</td>
+      <td class="cross">✗</td>
+      <td class="cross">✗</td>
+      <td class="cross">✗</td>
+      <td class="partial">~ ad hoc</td>
+      <td class="check">✓ by design</td>
+    </tr>
+    <tr>
+      <td>Reasoning/expression separation</td>
+      <td class="cross">✗</td>
+      <td class="cross">✗</td>
+      <td class="cross">✗</td>
+      <td class="partial">~ possible</td>
+      <td class="check">✓ enforced</td>
+    </tr>
+    <tr>
+      <td>Async post-turn learning</td>
+      <td class="cross">✗</td>
+      <td class="cross">✗</td>
+      <td class="cross">✗</td>
+      <td class="cross">✗</td>
+      <td class="check">✓ every turn</td>
+    </tr>
+    <tr>
+      <td>Intent-based routing</td>
+      <td class="cross">✗</td>
+      <td class="cross">✗</td>
+      <td class="partial">~ tool routing</td>
+      <td class="check">✓</td>
+      <td class="check">✓ pre-pipeline</td>
+    </tr>
+    <tr>
+      <td>Policy/budget/latency guards</td>
+      <td class="cross">✗</td>
+      <td class="cross">✗</td>
+      <td class="partial">~ manual</td>
+      <td class="partial">~ per-agent</td>
+      <td class="check">✓ first-class</td>
+    </tr>
+    <tr>
+      <td>Relationship tracking</td>
+      <td class="cross">✗</td>
+      <td class="cross">✗</td>
+      <td class="cross">✗</td>
+      <td class="cross">✗</td>
+      <td class="check">✓ per-user</td>
+    </tr>
+    <tr>
+      <td>Pluggable contributor slots</td>
+      <td class="cross">✗</td>
+      <td class="cross">✗</td>
+      <td class="cross">✗</td>
+      <td class="check">✓</td>
+      <td class="check">✓ with contract</td>
+    </tr>
+    <tr>
+      <td>Graceful degradation</td>
+      <td class="cross">✗</td>
+      <td class="partial">~</td>
+      <td class="partial">~</td>
+      <td class="partial">~</td>
+      <td class="check">✓ layered fallbacks</td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- 6. GENERALIZED USE CASES                        -->
+<!-- ═══════════════════════════════════════════════ -->
+<h2>6. Generalized Use Cases</h2>
+
+<p>The archetype is not limited to companion AI. Here's how each layer maps to different domains:</p>
+
+<h3>6.1 — Medical Diagnosis Assistant</h3>
+<div class="usecase-flow">
+  <div class="uf-step" style="background:var(--tan); border-color:var(--tan-border);">Patient symptom input</div>
+  <div class="uf-arrow">→</div>
+  <div class="uf-step" style="background:var(--amber); border-color:var(--amber-border);">Triage classifier</div>
+  <div class="uf-arrow">→</div>
+  <div class="uf-step" style="background:var(--green); border-color:var(--green-accent);">Medical history retrieval ∥ Drug interaction check ∥ Symptom pattern matcher</div>
+  <div class="uf-arrow">→</div>
+  <div class="uf-step" style="background:var(--blue); border-color:var(--blue-accent);">Diagnostic reasoner</div>
+  <div class="uf-arrow">→</div>
+  <div class="uf-step" style="background:#e8f0e8; border-color:var(--green-dark);">Patient-friendly voicer</div>
+  <div class="uf-arrow">→</div>
+  <div class="uf-step" style="background:var(--violet); border-color:var(--violet-accent);">Async: Update patient record</div>
+</div>
+
+<h3>6.2 — Code Generation IDE</h3>
+<div class="usecase-flow">
+  <div class="uf-step" style="background:var(--tan); border-color:var(--tan-border);">Developer prompt</div>
+  <div class="uf-arrow">→</div>
+  <div class="uf-step" style="background:var(--amber); border-color:var(--amber-border);">Task vs. chat classifier</div>
+  <div class="uf-arrow">→</div>
+  <div class="uf-step" style="background:var(--green); border-color:var(--green-accent);">Codebase retrieval ∥ Documentation search ∥ Pattern library</div>
+  <div class="uf-arrow">→</div>
+  <div class="uf-step" style="background:var(--blue); border-color:var(--blue-accent);">Code reasoner + planner</div>
+  <div class="uf-arrow">→</div>
+  <div class="uf-step" style="background:#e8f0e8; border-color:var(--green-dark);">Style-matched formatter</div>
+  <div class="uf-arrow">→</div>
+  <div class="uf-step" style="background:var(--violet); border-color:var(--violet-accent);">Async: Index new patterns</div>
+</div>
+
+<h3>6.3 — Customer Support</h3>
+<div class="usecase-flow">
+  <div class="uf-step" style="background:var(--tan); border-color:var(--tan-border);">Customer message</div>
+  <div class="uf-arrow">→</div>
+  <div class="uf-step" style="background:var(--amber); border-color:var(--amber-border);">Issue type router</div>
+  <div class="uf-arrow">→</div>
+  <div class="uf-step" style="background:var(--green); border-color:var(--green-accent);">Ticket history ∥ Product knowledge ∥ Sentiment analysis</div>
+  <div class="uf-arrow">→</div>
+  <div class="uf-step" style="background:var(--blue); border-color:var(--blue-accent);">Resolution reasoner</div>
+  <div class="uf-arrow">→</div>
+  <div class="uf-step" style="background:#e8f0e8; border-color:var(--green-dark);">Brand-voice responder</div>
+  <div class="uf-arrow">→</div>
+  <div class="uf-step" style="background:var(--violet); border-color:var(--violet-accent);">Async: Update CRM + satisfaction score</div>
+</div>
+
+<h3>6.4 — Educational Tutor</h3>
+<div class="usecase-flow">
+  <div class="uf-step" style="background:var(--tan); border-color:var(--tan-border);">Student question</div>
+  <div class="uf-arrow">→</div>
+  <div class="uf-step" style="background:var(--amber); border-color:var(--amber-border);">Exercise vs. concept classifier</div>
+  <div class="uf-arrow">→</div>
+  <div class="uf-step" style="background:var(--green); border-color:var(--green-accent);">Learning history ∥ Curriculum knowledge ∥ Common misconceptions</div>
+  <div class="uf-arrow">→</div>
+  <div class="uf-step" style="background:var(--blue); border-color:var(--blue-accent);">Pedagogical reasoner</div>
+  <div class="uf-arrow">→</div>
+  <div class="uf-step" style="background:#e8f0e8; border-color:var(--green-dark);">Age-appropriate voicer</div>
+  <div class="uf-arrow">→</div>
+  <div class="uf-step" style="background:var(--violet); border-color:var(--violet-accent);">Async: Update mastery graph</div>
+</div>
+
+<div class="callout callout-blue">
+  <strong>The pattern is the same every time:</strong> Classify → Gather in parallel → Reason with full context → Voice appropriately → Learn async. The contributors change, the structure doesn't.
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- 7. IMPLEMENTATION SPECTRUM                      -->
+<!-- ═══════════════════════════════════════════════ -->
+<h2>7. Implementation Spectrum</h2>
+
+<p>The archetype can be adopted incrementally. You don't have to build the full pipeline on day one.</p>
+
+<div class="diagram">
+  <div class="diagram-title">Adoption Levels</div>
+
+  <div class="spectrum">
+    <div class="spectrum-seg" style="flex:1; background:#f0f0f0;">Level 0: Single Call</div>
+    <div class="spectrum-seg" style="flex:1.2; background:var(--tan);">Level 1: + Intent Dispatch</div>
+    <div class="spectrum-seg" style="flex:1.5; background:var(--green);">Level 2: + Parallel Contributors</div>
+    <div class="spectrum-seg" style="flex:1.3; background:var(--blue);">Level 3: + Reason/Voice Split</div>
+    <div class="spectrum-seg" style="flex:1.4; background:var(--violet);">Level 4: + Async Learning</div>
+    <div class="spectrum-seg" style="flex:1.6; background:var(--pink);">Level 5: Full Cognitive Pipeline</div>
+  </div>
+
+  <div style="margin-top:16px;">
+    <table>
+      <tr>
+        <th>Level</th>
+        <th>What You Add</th>
+        <th>What You Gain</th>
+        <th>LLM Calls</th>
+      </tr>
+      <tr>
+        <td><strong>0</strong></td>
+        <td>Nothing — single prompt/response</td>
+        <td>Baseline</td>
+        <td>1</td>
+      </tr>
+      <tr>
+        <td><strong>1</strong></td>
+        <td>Intent classifier before LLM call</td>
+        <td>Task routing, reduced waste on structured requests</td>
+        <td>1 + classifier</td>
+      </tr>
+      <tr>
+        <td><strong>2</strong></td>
+        <td>Parallel memory + intuition contributors</td>
+        <td>Context-aware responses, creative augmentation, lower latency than serial</td>
+        <td>2–4 parallel + 1 reasoner</td>
+      </tr>
+      <tr>
+        <td><strong>3</strong></td>
+        <td>Separate voicer/reviewer pass</td>
+        <td>Consistent voice, swappable personality, coherence checking</td>
+        <td>+1 voicer</td>
+      </tr>
+      <tr>
+        <td><strong>4</strong></td>
+        <td>Async post-turn memory + relationship encoding</td>
+        <td>System improves with every interaction, identity persistence</td>
+        <td>+2 async (non-blocking)</td>
+      </tr>
+      <tr>
+        <td><strong>5</strong></td>
+        <td>Policy guards, worker slots, escalation, full telemetry</td>
+        <td>Production-grade: budget control, latency safety, pluggable cognition</td>
+        <td>4 sync + 2 async + guards</td>
+      </tr>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- 8. REFERENCE ARCHITECTURE                       -->
+<!-- ═══════════════════════════════════════════════ -->
+<h2>8. Reference Architecture — Full Pipeline</h2>
+
+<p>This is the complete Cognitive Pipeline Archetype as implemented in NekoCore OS. Every box, arrow, and guard shown here is running in production.</p>
+
+<div class="diagram">
+  <div class="diagram-title">Complete Cognitive Pipeline — Reference Implementation</div>
+  <div class="pipeline-full">
+
+    <!-- Entry -->
+    <div class="lane" style="background:var(--tan); border-color:var(--tan-border);">
+      <div class="lane-head" style="color:#8a6a00;">Intake</div>
+      <div class="lane-row">
+        <div class="node" style="background:#f0ebdb; border-color:var(--tan-border); border-radius:20px;">User Turn</div>
+        <span class="arr">→</span>
+        <div class="node" style="background:#f0ebdb; border-color:var(--tan-border);">Chat Pipeline Entry</div>
+        <span class="arr">→</span>
+        <div class="diamond-sm" style="background:var(--amber); border-color:var(--amber-border);">
+          <span>Task Intent<br>≥ Threshold?</span>
+        </div>
+        <span class="branch-label" style="margin-left:8px;">Yes → Task Lane &nbsp;&nbsp;|&nbsp;&nbsp; No → Cognition Lane</span>
+      </div>
+    </div>
+
+    <!-- Task Lane -->
+    <div class="lane" style="background:var(--blue); border-color:var(--blue-accent);">
+      <div class="lane-head" style="color:var(--blue-dark);">Task Lane (MTOA)</div>
+      <div class="lane-row">
+        <div class="node" style="background:#c5daf0; border-color:var(--blue-accent);">Task Session<div class="node-sub">Create or Resume</div></div>
+        <span class="arr">→</span>
+        <div class="node" style="background:#c5daf0; border-color:var(--blue-accent);">Gather Context<div class="node-sub">by Task Type</div></div>
+        <span class="arr">→</span>
+        <div class="node" style="background:#c5daf0; border-color:var(--blue-accent);">Execute Module<div class="node-sub">Steps</div></div>
+        <span class="arr">→</span>
+        <div class="node" style="background:#c5daf0; border-color:var(--blue-accent);">Frontman SSE<div class="node-sub">milestone · input · complete · error · steering · follow_up</div></div>
+        <span class="arr">→</span>
+        <div class="node" style="background:#c5daf0; border-color:var(--blue-accent); border-radius:20px;">Task Response Path</div>
+        <span class="arr">→</span>
+        <div class="node" style="background:#e8e8e8; border-color:#666; border-radius:20px; font-size:13px;">Response →<br>Client</div>
+      </div>
+    </div>
+
+    <!-- Cognition Lane -->
+    <div class="lane" style="background:var(--green); border-color:var(--green-accent);">
+      <div class="lane-head" style="color:var(--green-dark);">Companion Cognition Lane</div>
+
+      <div class="lane-row">
+        <div class="parallel-box">
+          <span class="par-label">PARALLEL — Promise.all</span>
+          <div class="node" style="background:#c8e6c8; border-color:var(--green-accent);">
+            Subconscious (1A)
+            <div class="node-sub">Memory · Relationship · Emotion · Topic</div>
+          </div>
+          <div class="node" style="background:#c8e6c8; border-color:var(--green-accent);">
+            Dream-Intuition (1D)
+            <div class="node-sub">Turn signals · Lateral links · Creative</div>
+          </div>
+        </div>
+        <span class="arr">→</span>
+        <div class="node" style="background:#b6ddb6; border-color:#3a7a3a; font-weight:700;">Join Barrier</div>
+        <span class="arr">→</span>
+        <div class="node" style="background:#c8e6c8; border-color:var(--green-accent);">
+          Conscious (1C)
+          <div class="node-sub">Full 1A + 1D context · Reason · Draft · [TOOL:] tags</div>
+        </div>
+        <span class="arr">→</span>
+        <div class="diamond-sm" style="background:var(--amber); border-color:var(--amber-border); width:70px; height:70px;">
+          <span>[TOOL:]?</span>
+        </div>
+      </div>
+
+      <div class="lane-row" style="margin-top:10px; margin-left:40px;">
+        <span class="branch-label">Yes →</span>
+        <div class="node" style="background:#ffebc8; border-color:#d4a04a;">
+          Server Tool Execution
+          <div class="node-sub">TOOL priority over TASK_PLAN</div>
+        </div>
+        <span class="arr">→</span>
+        <span class="branch-label" style="color:#888;">&nbsp;| No →&nbsp;</span>
+        <span class="arr" style="color:var(--green-dark);">⇒</span>
+        <div class="node" style="background:#e8f0e8; border-color:var(--green-dark); border-width:3px; min-width:180px;">
+          <strong>Final Orchestrator</strong>
+          <div class="node-sub">Reviewer + Voicer · Entity-authentic · [CONTINUE] multi-bubble</div>
+        </div>
+        <div class="dashed-conn"></div>
+        <div style="display:flex; flex-direction:column; gap:4px;">
+          <div class="node" style="background:var(--pink); border-color:var(--pink-accent); border-style:dashed; font-size:11px;">Escalation<div class="node-sub">high-tension · planning-combo</div></div>
+          <div class="node" style="background:var(--pink); border-color:var(--pink-accent); border-style:dashed; font-size:11px;">Budget<div class="node-sub">token cap guard</div></div>
+          <div class="node" style="background:var(--pink); border-color:var(--pink-accent); border-style:dashed; font-size:11px;">Latency<div class="node-sub">35s → fallback → 1C</div></div>
+        </div>
+        <span class="arr">→</span>
+        <div class="node" style="background:#e8e8e8; border-color:#666; border-radius:20px; font-size:13px;">Response →<br>Client</div>
+      </div>
+    </div>
+
+    <!-- Async Lane -->
+    <div class="lane" style="background:var(--violet); border-color:var(--violet-accent);">
+      <div class="lane-head" style="color:var(--violet-dark);">Async Lane — fire-and-forget after response sent</div>
+      <div class="lane-row">
+        <div class="node" style="background:#ddd0f0; border-color:var(--violet-accent);">
+          Memory Encoding
+          <div class="node-sub">createCoreMemory + createSemanticKnowledge · userId stamped · boilerplate guard</div>
+        </div>
+        <div style="width:30px;"></div>
+        <div class="node" style="background:#ddd0f0; border-color:var(--violet-accent);">
+          Relationship Update
+          <div class="node-sub">Trust delta ±0.08 · LLM JSON delta · Per-user persistence</div>
+        </div>
+        <div style="width:30px;"></div>
+        <div class="node" style="background:#ddd0f0; border-color:var(--violet-accent);">
+          Belief Graph
+          <div class="node-sub">Cross-reference · Emergent beliefs · Dream links</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- 9. THE FUNDAMENTAL SHIFT                        -->
+<!-- ═══════════════════════════════════════════════ -->
+<h2>9. The Fundamental Shift</h2>
+
+<div class="callout callout-violet">
+  <strong>From stateless inference to cognitive system.</strong>
+  Current LLM architectures optimize for the quality of a single response. The Cognitive Pipeline Archetype optimizes for the quality of the <em>relationship over time</em>. Every interaction makes the next one better. Memory compounds. Trust builds. Identity deepens. This is not a chatbot with a longer context window — it's a system that <em>grows</em>.
+</div>
+
+<div style="display:flex; gap:24px; margin-top:20px;">
+  <div style="flex:1; padding:20px; background:#f8f8f8; border:2px solid #ddd; border-radius:10px;">
+    <h4 style="margin-bottom:8px; color:#888;">Old Mental Model</h4>
+    <p style="font-size:22px; font-weight:700; margin-bottom:12px; color:#666;">LLM = Function</p>
+    <p style="font-size:14px; color:#888; margin:0;">
+      input → output<br>
+      Stateless. No memory. No identity.<br>
+      Quality = f(prompt engineering)
+    </p>
+  </div>
+  <div style="flex:1; padding:20px; background:var(--green); border:2px solid var(--green-dark); border-radius:10px;">
+    <h4 style="margin-bottom:8px; color:var(--green-dark);">New Mental Model</h4>
+    <p style="font-size:22px; font-weight:700; margin-bottom:12px; color:var(--green-dark);">LLM = Cognitive System</p>
+    <p style="font-size:14px; color:#333; margin:0;">
+      input → classify → parallel cognition → reason → voice → respond → learn<br>
+      Persistent. Evolving. Identity-aware.<br>
+      Quality = f(accumulated experience)
+    </p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- FOOTER                                          -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="footer">
+  <p><strong>The Cognitive Pipeline Archetype</strong> — Derived from the NekoCore OS Cognitive WebOS architecture</p>
+  <p>Reference implementation: <a href="https://github.com/your-repo/nekocore-os">NekoCore OS</a> &nbsp;|&nbsp; Architecture version: 2.0.0 &nbsp;|&nbsp; 2026-03-18</p>
+  <p style="margin-top:8px;">Open this file in a browser. Use Ctrl+P → Save as PDF for a print-ready version.</p>
+</div>
+
+</body>
+</html>

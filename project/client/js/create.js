@@ -254,7 +254,7 @@ function goToMain() {
     syncParentAfterCreate();
     return;
   }
-  window.location.href = 'index.html';
+  window.location.href = '/index.html';
 }
 
 function syncParentAfterCreate() {

@@ -7,7 +7,9 @@ function getEntityMemoryScanDirs(memoryRoot, options = {}) {
   const dirs = [
     { dir: path.join(memoryRoot, 'episodic'), fallbackType: 'episodic' },
     { dir: path.join(memoryRoot, 'semantic'), fallbackType: 'semantic' },
-    { dir: path.join(memoryRoot, 'ltm'), fallbackType: 'long_term_memory' }
+    { dir: path.join(memoryRoot, 'ltm'), fallbackType: 'long_term_memory' },
+    { dir: path.join(memoryRoot, 'archive', 'episodic'), fallbackType: 'episodic' },
+    { dir: path.join(memoryRoot, 'archive', 'docs'), fallbackType: 'semantic_knowledge' }
   ];
 
   if (includeDreams) {

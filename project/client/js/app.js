@@ -212,6 +212,35 @@ const APP_CATEGORY_BY_TAB = {
   nekocore: 'system'
 };
 
+// B-2 compatibility mode: if system-apps.json is available, overlay
+// launcher/window metadata onto legacy WINDOW_APPS while preserving
+// existing call paths and fallback behavior.
+let systemAppsCompatStatus = { ok: false, reason: 'adapter-missing' };
+if (window.SystemAppsAdapter && typeof window.SystemAppsAdapter.applyCompat === 'function') {
+  try {
+    systemAppsCompatStatus = window.SystemAppsAdapter.applyCompat({
+      windowApps: WINDOW_APPS,
+      categoryByTab: APP_CATEGORY_BY_TAB
+    });
+  } catch (err) {
+    systemAppsCompatStatus = { ok: false, reason: 'adapter-error', message: err && err.message ? err.message : String(err) };
+  }
+}
+window.__systemAppsCompatStatus = systemAppsCompatStatus;
+
+function getShellWindowApps() {
+  if (window.SystemAppsAdapter && typeof window.SystemAppsAdapter.resolveWindowApps === 'function') {
+    try {
+      const resolved = window.SystemAppsAdapter.resolveWindowApps(WINDOW_APPS, { preferManifest: true });
+      if (Array.isArray(resolved) && resolved.length) return resolved;
+    } catch (_) {
+      // Fall back to legacy list.
+    }
+  }
+  return WINDOW_APPS;
+}
+window.getShellWindowApps = getShellWindowApps;
+
 const START_MENU_SPECIAL_APPS = [
   {
     id: 'control-panel',

@@ -48,6 +48,26 @@ function createLegacyMemory2Record(entityId, memId) {
   );
 }
 
+function createArchiveDocRecord(entityId, memId) {
+  const memoryDir = path.join(entityPaths.getMemoryRoot(entityId), 'archive', 'docs', memId);
+  fs.mkdirSync(memoryDir, { recursive: true });
+  fs.writeFileSync(path.join(memoryDir, 'semantic.txt'), '[SYSTEM DOC] NekoCore archive doc should appear in visualizer search.', 'utf8');
+  fs.writeFileSync(path.join(memoryDir, 'log.json'), JSON.stringify({
+    memory_id: memId,
+    created: '2026-03-18T00:00:00.000Z',
+    type: 'semantic_knowledge',
+    topics: ['nekocore', 'memory', 'archive', 'visualizer'],
+    importance: 0.97,
+    decay: 0.0005,
+    access_count: 1,
+    source: 'system_document'
+  }, null, 2), 'utf8');
+  fs.writeFileSync(
+    path.join(memoryDir, 'memory.zip'),
+    zlib.gzipSync(JSON.stringify({ text: 'Archived system document payload for NekoCore visualizer coverage.' }))
+  );
+}
+
 function createJsonResponseCapture() {
   return {
     statusCode: null,
@@ -144,6 +164,52 @@ test('full mind graph includes legacy Memory2 records so NekoCore nodes render i
     assert.ok(
       data.nodes.some((node) => node.id === 'mem_legacy_graph'),
       'expected legacy Memory2 node to appear in /api/memory-graph/full-mind'
+    );
+  } finally {
+    removeTestEntity(entityId);
+  }
+});
+
+test('visualizer memory search includes archive doc records for NekoCore document knowledge', async () => {
+  const entityId = makeEntityId('test_neko_archive_search');
+  createTestEntity(entityId);
+  createArchiveDocRecord(entityId, 'nkdoc_test_archive');
+
+  try {
+    const routes = createMemoryRoutes(createMemoryRoutesContext(entityId));
+    const searchData = await dispatchJson(
+      routes.dispatch,
+      '/api/memories/search',
+      entityId,
+      '?q=archive&type=semantic_knowledge'
+    );
+
+    assert.ok(
+      searchData.memories.some((memory) => memory.id === 'nkdoc_test_archive'),
+      'expected archive doc memory to appear in /api/memories/search'
+    );
+  } finally {
+    removeTestEntity(entityId);
+  }
+});
+
+test('full mind graph includes archive doc records so NekoCore document nodes render in visualizer', async () => {
+  const entityId = makeEntityId('test_neko_archive_graph');
+  createTestEntity(entityId);
+  createArchiveDocRecord(entityId, 'nkdoc_test_graph');
+
+  try {
+    const routes = createCognitiveRoutes(createCognitiveRoutesContext(entityId));
+    const data = await dispatchJson(
+      routes.dispatch.bind(routes),
+      '/api/memory-graph/full-mind',
+      entityId,
+      `?entityId=${encodeURIComponent(entityId)}`
+    );
+
+    assert.ok(
+      data.nodes.some((node) => node.id === 'nkdoc_test_graph'),
+      'expected archive doc node to appear in /api/memory-graph/full-mind'
     );
   } finally {
     removeTestEntity(entityId);

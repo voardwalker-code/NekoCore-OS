@@ -1,0 +1,482 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2026-03-18",
+  "apps": [
+    {
+      "id": "chat",
+      "name": "Chat",
+      "icon": "WINDOW_APPS:inline-svg",
+      "sourcePath": "js/apps/core/chat.js",
+      "appType": "shell-inline",
+      "defaultWindow": { "width": 980, "height": 680 },
+      "standalonePath": null,
+      "optional": false,
+      "launchMode": "both",
+      "embedded": { "tabId": "chat", "target": "#tab-chat" },
+      "popout": { "eligible": true, "queryParam": "?popout=chat" },
+      "ownership": {
+        "controllerPath": "js/apps/core/chat.js",
+        "hostPath": "index.html#tab-chat",
+        "pagePath": null,
+        "sharedSourceGroup": null
+      },
+      "notes": ["Shell-native core tab"]
+    },
+    {
+      "id": "entity",
+      "name": "Entity",
+      "icon": "WINDOW_APPS:inline-svg",
+      "sourcePath": "js/apps/core/entity-ui.js",
+      "appType": "shell-inline",
+      "defaultWindow": { "width": 820, "height": 620 },
+      "standalonePath": null,
+      "optional": false,
+      "launchMode": "both",
+      "embedded": { "tabId": "entity", "target": "#tab-entity" },
+      "popout": { "eligible": true, "queryParam": "?popout=entity" },
+      "ownership": {
+        "controllerPath": "js/apps/core/entity-ui.js",
+        "hostPath": "index.html#tab-entity",
+        "pagePath": null,
+        "sharedSourceGroup": null
+      },
+      "notes": ["Shell-native core tab"]
+    },
+    {
+      "id": "creator",
+      "name": "Creator",
+      "icon": "WINDOW_APPS:inline-svg",
+      "sourcePath": "create.html",
+      "appType": "iframe-page",
+      "defaultWindow": { "width": 980, "height": 760 },
+      "standalonePath": "create.html",
+      "packagePath": "apps/entity-creator",
+      "packageEntry": "apps/entity-creator/index.html",
+      "optional": false,
+      "launchMode": "both+standalone",
+      "embedded": { "tabId": "creator", "target": "#tab-creator iframe", "hostPath": "index.html#tab-creator" },
+      "popout": { "eligible": true, "queryParam": "?popout=creator" },
+      "ownership": {
+        "controllerPath": "js/create.js",
+        "hostPath": "index.html#tab-creator",
+        "pagePath": "create.html",
+        "sharedSourceGroup": null
+      },
+      "notes": [
+        "Iframe-hosted in shell via create.html?embed=1",
+        "C-2 package body extracted while legacy create.html compatibility bridge stays active"
+      ]
+    },
+    {
+      "id": "users",
+      "name": "Users",
+      "icon": "WINDOW_APPS:inline-svg",
+      "sourcePath": "js/apps/core/users-ui.js",
+      "appType": "shell-inline",
+      "defaultWindow": { "width": 900, "height": 660 },
+      "standalonePath": null,
+      "optional": false,
+      "launchMode": "both",
+      "embedded": { "tabId": "users", "target": "#tab-users" },
+      "popout": { "eligible": true, "queryParam": "?popout=users" },
+      "ownership": {
+        "controllerPath": "js/apps/core/users-ui.js",
+        "hostPath": "index.html#tab-users",
+        "pagePath": null,
+        "sharedSourceGroup": null
+      },
+      "notes": ["Shell-native core tab"]
+    },
+    {
+      "id": "browser",
+      "name": "NekoCore Browser",
+      "icon": "WINDOW_APPS:inline-svg",
+      "sourcePath": "js/apps/optional/browser-app.js",
+      "appType": "hybrid-shell-html",
+      "defaultWindow": { "width": 1080, "height": 720 },
+      "standalonePath": null,
+      "optional": true,
+      "launchMode": "both",
+      "embedded": { "tabId": "browser", "target": "#tab-browser", "hostPath": "apps/non-core/core/tab-browser.html", "navTarget": "#navOptionalAppsHost" },
+      "popout": { "eligible": true, "queryParam": "?popout=browser" },
+      "ownership": {
+        "controllerPath": "js/apps/optional/browser-app.js",
+        "hostPath": "apps/non-core/core/tab-browser.html",
+        "pagePath": null,
+        "sharedSourceGroup": null
+      },
+      "notes": ["Mounted optional HTML host plus JS browser runtime"]
+    },
+    {
+      "id": "skills",
+      "name": "Skills",
+      "icon": "WINDOW_APPS:inline-svg",
+      "sourcePath": "js/apps/optional/skills-ui.js",
+      "appType": "hybrid-shell-html",
+      "defaultWindow": { "width": 980, "height": 680 },
+      "standalonePath": null,
+      "optional": true,
+      "launchMode": "both",
+      "embedded": { "tabId": "skills", "target": "#tab-skills", "hostPath": "apps/non-core/core/tab-skills.html", "navTarget": "#navOptionalAppsHost" },
+      "popout": { "eligible": true, "queryParam": "?popout=skills" },
+      "ownership": {
+        "controllerPath": "js/apps/optional/skills-ui.js",
+        "hostPath": "apps/non-core/core/tab-skills.html",
+        "pagePath": null,
+        "sharedSourceGroup": null
+      },
+      "notes": ["Mounted optional HTML host plus JS controller"]
+    },
+    {
+      "id": "workspace",
+      "name": "Workspace",
+      "icon": "WINDOW_APPS:inline-svg",
+      "sourcePath": "js/vfs.js",
+      "appType": "hybrid-shell-html",
+      "defaultWindow": { "width": 980, "height": 680 },
+      "standalonePath": null,
+      "optional": true,
+      "launchMode": "both",
+      "embedded": { "tabId": "workspace", "target": "#tab-workspace", "hostPath": "apps/non-core/core/tab-workspace.html", "navTarget": "#navOptionalAppsHost" },
+      "popout": { "eligible": true, "queryParam": "?popout=workspace" },
+      "ownership": {
+        "controllerPath": "js/vfs.js",
+        "hostPath": "apps/non-core/core/tab-workspace.html",
+        "pagePath": null,
+        "sharedSourceGroup": null
+      },
+      "notes": ["Shell-critical flat-path JS exception", "Mounted optional HTML host plus VFS controller"]
+    },
+    {
+      "id": "popouts",
+      "name": "Popouts",
+      "icon": "WINDOW_APPS:inline-svg",
+      "sourcePath": "js/apps/optional/popout-manager.js",
+      "appType": "hybrid-shell-html",
+      "defaultWindow": { "width": 980, "height": 680 },
+      "standalonePath": null,
+      "optional": true,
+      "launchMode": "embedded",
+      "embedded": { "tabId": "popouts", "target": "#tab-popouts", "hostPath": "apps/non-core/core/tab-popouts.html", "navTarget": "#navOptionalAppsHost" },
+      "popout": { "eligible": false, "excludedReason": "Explicitly filtered out by getPopoutApps()" },
+      "ownership": {
+        "controllerPath": "js/apps/optional/popout-manager.js",
+        "hostPath": "apps/non-core/core/tab-popouts.html",
+        "pagePath": null,
+        "sharedSourceGroup": null
+      },
+      "notes": ["Detached-window manager UI should remain shell-only"]
+    },
+    {
+      "id": "documents",
+      "name": "Documents",
+      "icon": "WINDOW_APPS:inline-svg",
+      "sourcePath": "js/apps/optional/document-digest.js",
+      "appType": "hybrid-shell-html",
+      "defaultWindow": { "width": 980, "height": 680 },
+      "standalonePath": null,
+      "optional": true,
+      "launchMode": "both",
+      "embedded": { "tabId": "documents", "target": "#tab-documents", "hostPath": "apps/non-core/core/tab-documents.html", "navTarget": "#navOptionalAppsHost" },
+      "popout": { "eligible": true, "queryParam": "?popout=documents" },
+      "ownership": {
+        "controllerPath": "js/apps/optional/document-digest.js",
+        "hostPath": "apps/non-core/core/tab-documents.html",
+        "pagePath": null,
+        "sharedSourceGroup": null
+      },
+      "notes": ["Mounted optional HTML host plus JS controller"]
+    },
+    {
+      "id": "visualizer",
+      "name": "Visualizer",
+      "icon": "WINDOW_APPS:inline-svg",
+      "sourcePath": "js/apps/optional/visualizer-ui.js",
+      "appType": "hybrid-iframe-page",
+      "defaultWindow": { "width": 1020, "height": 700 },
+      "standalonePath": "visualizer.html",
+      "optional": true,
+      "launchMode": "both+nested-standalone",
+      "embedded": { "tabId": "visualizer", "target": "#tab-visualizer iframe", "hostPath": "apps/non-core/core/tab-visualizer.html", "navTarget": "#navOptionalAppsHost" },
+      "popout": { "eligible": true, "queryParam": "?popout=visualizer" },
+      "ownership": {
+        "controllerPath": "js/apps/optional/visualizer-ui.js",
+        "hostPath": "apps/non-core/core/tab-visualizer.html",
+        "pagePath": "visualizer.html",
+        "sharedSourceGroup": null
+      },
+      "notes": ["Mounted HTML host wraps standalone visualizer iframe", "Legacy top-tab alias drift: index.html still exposes data-tab=neural"]
+    },
+    {
+      "id": "physical",
+      "name": "Physical Body",
+      "icon": "WINDOW_APPS:inline-svg",
+      "sourcePath": "js/apps/optional/physical-ui.js",
+      "appType": "hybrid-shell-html",
+      "defaultWindow": { "width": 900, "height": 640 },
+      "standalonePath": null,
+      "optional": true,
+      "launchMode": "both",
+      "embedded": { "tabId": "physical", "target": "#tab-physical", "hostPath": "apps/non-core/core/tab-physical.html", "navTarget": "#navOptionalAppsHost" },
+      "popout": { "eligible": true, "queryParam": "?popout=physical" },
+      "ownership": {
+        "controllerPath": "js/apps/optional/physical-ui.js",
+        "hostPath": "apps/non-core/core/tab-physical.html",
+        "pagePath": null,
+        "sharedSourceGroup": null
+      },
+      "notes": ["Mounted optional HTML host plus JS controller"]
+    },
+    {
+      "id": "dreamgallery",
+      "name": "Dream Gallery",
+      "icon": "WINDOW_APPS:inline-svg",
+      "sourcePath": "js/apps/optional/dream-gallery.js",
+      "appType": "hybrid-shell-html",
+      "defaultWindow": { "width": 980, "height": 680 },
+      "standalonePath": null,
+      "optional": true,
+      "launchMode": "both",
+      "embedded": { "tabId": "dreamgallery", "target": "#tab-dreamgallery", "hostPath": "apps/non-core/core/tab-dreamgallery.html", "navTarget": "#navOptionalAppsHost" },
+      "popout": { "eligible": true, "queryParam": "?popout=dreamgallery" },
+      "ownership": {
+        "controllerPath": "js/apps/optional/dream-gallery.js",
+        "hostPath": "apps/non-core/core/tab-dreamgallery.html",
+        "pagePath": null,
+        "sharedSourceGroup": null
+      },
+      "notes": ["Mounted optional HTML host plus JS controller"]
+    },
+    {
+      "id": "lifediary",
+      "name": "Life Diary",
+      "icon": "WINDOW_APPS:inline-svg",
+      "sourcePath": "js/apps/optional/diary.js",
+      "appType": "hybrid-shell-html",
+      "defaultWindow": { "width": 900, "height": 640 },
+      "standalonePath": null,
+      "optional": true,
+      "launchMode": "both",
+      "embedded": { "tabId": "lifediary", "target": "#tab-lifediary", "hostPath": "apps/non-core/core/tab-lifediary.html", "navTarget": "#navOptionalAppsHost" },
+      "popout": { "eligible": true, "queryParam": "?popout=lifediary" },
+      "ownership": {
+        "controllerPath": "js/apps/optional/diary.js",
+        "hostPath": "apps/non-core/core/tab-lifediary.html",
+        "pagePath": null,
+        "sharedSourceGroup": "diary"
+      },
+      "notes": ["Shares controller with dreamdiary"]
+    },
+    {
+      "id": "dreamdiary",
+      "name": "Dream Diary",
+      "icon": "WINDOW_APPS:inline-svg",
+      "sourcePath": "js/apps/optional/diary.js",
+      "appType": "hybrid-shell-html",
+      "defaultWindow": { "width": 900, "height": 640 },
+      "standalonePath": null,
+      "optional": true,
+      "launchMode": "both",
+      "embedded": { "tabId": "dreamdiary", "target": "#tab-dreamdiary", "hostPath": "apps/non-core/core/tab-dreamdiary.html", "navTarget": "#navOptionalAppsHost" },
+      "popout": { "eligible": true, "queryParam": "?popout=dreamdiary" },
+      "ownership": {
+        "controllerPath": "js/apps/optional/diary.js",
+        "hostPath": "apps/non-core/core/tab-dreamdiary.html",
+        "pagePath": null,
+        "sharedSourceGroup": "diary"
+      },
+      "notes": ["Shares controller with lifediary"]
+    },
+    {
+      "id": "helloworld",
+      "name": "Hello World",
+      "icon": "WINDOW_APPS:inline-svg",
+      "sourcePath": "apps/non-core/core/tab-hello-world.html",
+      "appType": "installer-html",
+      "defaultWindow": { "width": 980, "height": 680 },
+      "standalonePath": null,
+      "optional": true,
+      "launchMode": "both",
+      "embedded": { "tabId": "helloworld", "target": "#tab-helloworld", "hostPath": "apps/non-core/core/tab-hello-world.html", "navTarget": "#navOptionalAppsHost" },
+      "popout": { "eligible": true, "queryParam": "?popout=helloworld" },
+      "ownership": {
+        "controllerPath": null,
+        "hostPath": "apps/non-core/core/tab-hello-world.html",
+        "pagePath": null,
+        "sharedSourceGroup": null
+      },
+      "installerHooks": {
+        "managed": true,
+        "createFile": true,
+        "deleteFile": true,
+        "entryIds": ["hello-window-001", "hello-category-001", "hello-loader-001"],
+        "registrationAnchors": [
+          { "file": "client/js/app.js", "owner": "WINDOW_APPS" },
+          { "file": "client/js/app.js", "owner": "APP_CATEGORY_BY_TAB" },
+          { "file": "client/js/apps/non-core-html-loader.js", "owner": "manifest.nonCoreApps" }
+        ]
+      },
+      "notes": ["Installer-managed optional HTML app", "Absent from legacy app-manifest.json by design today"]
+    },
+    {
+      "id": "themes",
+      "name": "Themes",
+      "icon": "WINDOW_APPS:inline-svg",
+      "sourcePath": "js/apps/optional/theme-manager.js",
+      "appType": "hybrid-shell-html",
+      "defaultWindow": { "width": 900, "height": 640 },
+      "standalonePath": null,
+      "optional": true,
+      "launchMode": "both",
+      "embedded": { "tabId": "themes", "target": "#tab-themes", "hostPath": "apps/non-core/core/tab-themes.html", "navTarget": "#navOptionalAppsHost" },
+      "popout": { "eligible": true, "queryParam": "?popout=themes" },
+      "ownership": {
+        "controllerPath": "js/apps/optional/theme-manager.js",
+        "hostPath": "apps/non-core/core/tab-themes.html",
+        "pagePath": null,
+        "sharedSourceGroup": null
+      },
+      "notes": ["Mounted optional HTML host plus JS controller"]
+    },
+    {
+      "id": "settings",
+      "name": "Settings",
+      "icon": "WINDOW_APPS:inline-svg",
+      "sourcePath": "js/apps/core/setup-ui.js",
+      "appType": "shell-inline",
+      "defaultWindow": { "width": 980, "height": 700 },
+      "standalonePath": null,
+      "optional": false,
+      "launchMode": "both",
+      "embedded": { "tabId": "settings", "target": "#tab-settings" },
+      "popout": { "eligible": true, "queryParam": "?popout=settings" },
+      "ownership": {
+        "controllerPath": "js/apps/core/setup-ui.js",
+        "hostPath": "index.html#tab-settings",
+        "pagePath": null,
+        "sharedSourceGroup": "setup-ui"
+      },
+      "notes": ["Shares controller with advanced"]
+    },
+    {
+      "id": "advanced",
+      "name": "Advanced",
+      "icon": "WINDOW_APPS:inline-svg",
+      "sourcePath": "js/apps/core/setup-ui.js",
+      "appType": "shell-inline",
+      "defaultWindow": { "width": 980, "height": 680 },
+      "standalonePath": null,
+      "optional": false,
+      "launchMode": "both",
+      "embedded": { "tabId": "advanced", "target": "#tab-advanced" },
+      "popout": { "eligible": true, "queryParam": "?popout=advanced" },
+      "ownership": {
+        "controllerPath": "js/apps/core/setup-ui.js",
+        "hostPath": "index.html#tab-advanced",
+        "pagePath": null,
+        "sharedSourceGroup": "setup-ui"
+      },
+      "notes": ["Shares controller with settings"]
+    },
+    {
+      "id": "activity",
+      "name": "Task Manager",
+      "icon": "WINDOW_APPS:inline-svg",
+      "sourcePath": "js/apps/core/system-health.js",
+      "appType": "shell-inline",
+      "defaultWindow": { "width": 980, "height": 680 },
+      "standalonePath": null,
+      "optional": false,
+      "launchMode": "both",
+      "embedded": { "tabId": "activity", "target": "#tab-activity" },
+      "popout": { "eligible": true, "queryParam": "?popout=activity" },
+      "ownership": {
+        "controllerPath": "js/apps/core/system-health.js",
+        "hostPath": "index.html#tab-activity",
+        "pagePath": null,
+        "sharedSourceGroup": null
+      },
+      "notes": ["Shell-native core tab"]
+    },
+    {
+      "id": "observability",
+      "name": "Observability",
+      "icon": "WINDOW_APPS:inline-svg",
+      "sourcePath": "js/apps/core/telemetry-ui.js",
+      "appType": "shell-inline",
+      "defaultWindow": { "width": 980, "height": 680 },
+      "standalonePath": null,
+      "optional": false,
+      "launchMode": "both",
+      "embedded": { "tabId": "observability", "target": "#tab-observability" },
+      "popout": { "eligible": true, "queryParam": "?popout=observability" },
+      "ownership": {
+        "controllerPath": "js/apps/core/telemetry-ui.js",
+        "hostPath": "index.html#tab-observability",
+        "pagePath": null,
+        "sharedSourceGroup": null
+      },
+      "notes": ["Shell-native core tab"]
+    },
+    {
+      "id": "debugcore",
+      "name": "Core Debug",
+      "icon": "WINDOW_APPS:inline-svg",
+      "sourcePath": "js/apps/core/debug-core-app.js",
+      "appType": "shell-inline",
+      "defaultWindow": { "width": 980, "height": 700 },
+      "standalonePath": null,
+      "optional": false,
+      "launchMode": "both",
+      "embedded": { "tabId": "debugcore", "target": "#tab-debugcore" },
+      "popout": { "eligible": true, "queryParam": "?popout=debugcore" },
+      "ownership": {
+        "controllerPath": "js/apps/core/debug-core-app.js",
+        "hostPath": "index.html#tab-debugcore",
+        "pagePath": null,
+        "sharedSourceGroup": null
+      },
+      "notes": ["Shell-native core tab"]
+    },
+    {
+      "id": "archive",
+      "name": "Archive",
+      "icon": "WINDOW_APPS:inline-svg",
+      "sourcePath": "js/apps/core/archive-ui.js",
+      "appType": "shell-inline",
+      "defaultWindow": { "width": 980, "height": 680 },
+      "standalonePath": null,
+      "optional": false,
+      "launchMode": "both",
+      "embedded": { "tabId": "archive", "target": "#tab-archive" },
+      "popout": { "eligible": true, "queryParam": "?popout=archive" },
+      "ownership": {
+        "controllerPath": "js/apps/core/archive-ui.js",
+        "hostPath": "index.html#tab-archive",
+        "pagePath": null,
+        "sharedSourceGroup": null
+      },
+      "notes": ["Shell-native core tab"]
+    },
+    {
+      "id": "nekocore",
+      "name": "NekoCore OS",
+      "icon": "WINDOW_APPS:inline-svg",
+      "sourcePath": "nekocore.html",
+      "appType": "iframe-page",
+      "defaultWindow": { "width": 900, "height": 640 },
+      "standalonePath": "nekocore.html",
+      "optional": false,
+      "launchMode": "both+standalone",
+      "embedded": { "tabId": "nekocore", "target": "#tab-nekocore iframe", "hostPath": "index.html#tab-nekocore" },
+      "popout": { "eligible": true, "queryParam": "?popout=nekocore" },
+      "ownership": {
+        "controllerPath": null,
+        "hostPath": "index.html#tab-nekocore",
+        "pagePath": "nekocore.html",
+        "sharedSourceGroup": null
+      },
+      "notes": ["Shell iframe is lazy-loaded on first open"]
+    }
+  ]
+}

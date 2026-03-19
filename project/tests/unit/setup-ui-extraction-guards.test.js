@@ -59,6 +59,10 @@ test('setup-ui.js owns isApiConfigured', () => {
     setupUiJs.includes('function isApiConfigured('),
     'setup-ui.js must define isApiConfigured()'
   );
+  assert.ok(
+    !setupUiJs.includes('window.__desktopTestBypass'),
+    'setup-ui.js must not bypass provider setup via window.__desktopTestBypass'
+  );
 });
 
 test('setup-ui.js owns showSetupRequired', () => {

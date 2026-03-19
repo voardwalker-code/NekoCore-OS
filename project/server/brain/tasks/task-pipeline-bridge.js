@@ -19,8 +19,26 @@ function createTaskPipelineBridge(deps = {}) {
     webFetch,
     workspaceTools,
     logTimeline = () => {},
-    classifyIntent = classify
+    classifyIntent = classify,
+    gatherTaskContext = gatherContext,
+    taskExecutorImpl = taskExecutor,
+    taskSessionStore = taskSession,
+    taskProjectStoreApi = taskProjectStore,
+    taskArchiveWriterApi = taskArchiveWriter,
+    taskModuleRegistryApi = taskModuleRegistry
   } = deps;
+
+  function stripTaskIntentDecorators(userMessage) {
+    const raw = String(userMessage || '');
+    if (!raw) return '';
+
+    if (/^\s*Subconscious turn context for this user message only:/i.test(raw)) {
+      const match = raw.match(/User message:\s*([^\n]+)/i);
+      if (match && match[1]) return String(match[1]).trim();
+    }
+
+    return raw.trim();
+  }
 
   async function _relationshipSignal(userMessage) {
     if (typeof getSubconsciousMemoryContext !== 'function') return 'neutral';
@@ -75,13 +93,15 @@ function createTaskPipelineBridge(deps = {}) {
     if (!entity || !entity.id) return { handled: false };
     if (isInternalResume) return { handled: false };
 
-    const classification = await classifyIntent(userMessage, { llmFallback: false });
+    const taskIntentMessage = stripTaskIntentDecorators(userMessage);
+
+    const classification = await classifyIntent(taskIntentMessage, { llmFallback: false });
     const active = frontman.getActiveSession(entity.id);
 
     // Mid-task user message handling (when not a new high-confidence task intent)
     const isHighConfidenceTask = classification.intent === 'task' && classification.confidence >= TASK_MIN_CONFIDENCE;
     if (active && !isHighConfidenceTask) {
-      const routed = await frontman.handleMidTaskUserMessage(entity.id, userMessage, { isNewTaskIntent: false });
+      const routed = await frontman.handleMidTaskUserMessage(entity.id, taskIntentMessage, { isNewTaskIntent: false });
       if (routed.handled) {
         logTimeline('task.frontman.mid_task_routed', {
           entityId: entity.id,
@@ -101,20 +121,20 @@ function createTaskPipelineBridge(deps = {}) {
       return { handled: false, classification };
     }
 
-    const relationshipSignal = await _relationshipSignal(userMessage);
+    const relationshipSignal = await _relationshipSignal(taskIntentMessage);
 
     // Planning mode: create collaborative chat session instead of single executor
     if (classification.taskType === 'planning') {
-      const participantIds = _selectPlanningEntities(userMessage);
+      const participantIds = _selectPlanningEntities(taskIntentMessage);
       const planningSession = entityChatManager.createSession({
         sessionType: 'planning',
-        prompt: userMessage,
+        prompt: taskIntentMessage,
         entityIds: participantIds
       });
 
       entityChatManager.routeMessage(planningSession.id, {
         from: entity.id,
-        content: userMessage
+        content: taskIntentMessage
       });
 
       const response = `I kicked off a planning session with ${participantIds.length || 0} specialist entities. I will moderate the discussion and bring you a consolidated plan.`;
@@ -134,31 +154,31 @@ function createTaskPipelineBridge(deps = {}) {
       };
     }
 
-    const module = taskModuleRegistry.getModule(classification.taskType);
+    const module = taskModuleRegistryApi.getModule(classification.taskType);
     if (!module) {
       return { handled: false, classification };
     }
 
-    const project = taskProjectStore.resolveOrCreateProject(entity.id, classification.taskType, userMessage);
+    const project = taskProjectStoreApi.resolveOrCreateProject(entity.id, classification.taskType, taskIntentMessage);
     const taskId = 'task_' + Date.now();
-    const taskArchiveId = taskArchiveWriter.createTaskArchive(project.id, taskId, {
-      userMessage,
+    const taskArchiveId = taskArchiveWriterApi.createTaskArchive(project.id, taskId, {
+      userMessage: taskIntentMessage,
       taskType: classification.taskType
     }, { entityId: entity.id });
 
-    const session = taskSession.createSession({
+    const session = taskSessionStore.createSession({
       entityId: entity.id,
       taskType: classification.taskType,
       projectId: project.id,
       taskArchiveId,
       sharedContext: {
-        userMessage,
+        userMessage: taskIntentMessage,
         classification
       }
     });
 
-    const context = await gatherContext(classification.taskType, userMessage, { id: entity.id });
-    taskSession.updateSession(session.id, {
+    const context = await gatherTaskContext(classification.taskType, taskIntentMessage, { id: entity.id });
+    taskSessionStore.updateSession(session.id, {
       sharedContext: { taskContext: context }
     });
 
@@ -173,9 +193,9 @@ function createTaskPipelineBridge(deps = {}) {
     // Fire-and-forget task execution. Frontman emits user-visible progress from events.
     setImmediate(async () => {
       try {
-        const execResult = await taskExecutor.executeTask({
+        const execResult = await taskExecutorImpl.executeTask({
           taskType: classification.taskType,
-          userMessage,
+          userMessage: taskIntentMessage,
           entity,
           contextSnippets: context.snippets || [],
           callLLM: callLLMWithRuntime,
@@ -185,21 +205,23 @@ function createTaskPipelineBridge(deps = {}) {
             webFetch
           },
           taskArchiveId,
-          archiveWriter: taskArchiveWriter
+          archiveWriter: taskArchiveWriterApi
         });
 
-        taskSession.updateSession(session.id, {
+        taskSessionStore.updateSession(session.id, {
           sharedContext: {
             finalOutput: execResult.finalOutput,
             completedAt: execResult.completedAt
           }
         });
+        taskSessionStore.closeSession(session.id, 'complete');
       } catch (e) {
-        taskSession.updateSession(session.id, {
+        taskSessionStore.updateSession(session.id, {
           sharedContext: {
             lastError: e.message
           }
         });
+        taskSessionStore.closeSession(session.id, 'error');
       }
     });
 

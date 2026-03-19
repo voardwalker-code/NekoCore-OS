@@ -359,35 +359,54 @@ function createNekoCoreRoutes(ctx) {
     return total;
   }
 
+  function _countChildDirs(dir, options = {}) {
+    const exclude = new Set(Array.isArray(options.exclude) ? options.exclude : []);
+    try {
+      return fs.readdirSync(dir, { withFileTypes: true })
+        .filter((entry) => entry.isDirectory() && !exclude.has(entry.name))
+        .length;
+    } catch (_) {
+      return 0;
+    }
+  }
+
   function getMemoryStats(req, res, apiHeaders) {
     try {
       const memRoot = getMemoryRoot('nekocore');
       if (!fs.existsSync(memRoot)) {
         res.writeHead(200, apiHeaders);
-        res.end(JSON.stringify({ ok: true, totalCount: 0, episodicCount: 0, semanticCount: 0, docCount: 0, diskBytes: 0, diskMB: 0, softLimitCount: MEMORY_SOFT_LIMIT_COUNT }));
+        res.end(JSON.stringify({ ok: true, totalCount: 0, episodicCount: 0, semanticCount: 0, docCount: 0, archivedExperienceCount: 0, diskBytes: 0, diskMB: 0, softLimitCount: MEMORY_SOFT_LIMIT_COUNT }));
         return;
       }
 
-      // Read the memory index for counts (no dir scan required for counts)
+      // Read the live memory index for counts. Archived system docs are stored in
+      // archive/docs and do not participate in the live index.
       const MemoryIndexCache = require('../brain/memory/memory-index-cache');
       const cache = new MemoryIndexCache('nekocore');
       cache.load();
       const index = cache.memoryIndex || {};
 
-      let episodicCount = 0, semanticCount = 0, docCount = 0;
-      for (const [id, meta] of Object.entries(index)) {
-        if (id.startsWith('nkdoc_')) { docCount++; }
-        else if ((meta.type || '') === 'episodic') { episodicCount++; }
-        else { semanticCount++; }
+      let episodicCount = 0;
+      let semanticCount = 0;
+      for (const [, meta] of Object.entries(index)) {
+        const type = String(meta?.type || '').toLowerCase();
+        if (type === 'episodic' || type === 'core_memory') {
+          episodicCount++;
+        } else {
+          semanticCount++;
+        }
       }
-      const totalCount = episodicCount + semanticCount + docCount;
+
+      const docCount = _countChildDirs(path.join(memRoot, 'archive', 'docs'));
+      const archivedExperienceCount = _countChildDirs(path.join(memRoot, 'archive', 'episodic'));
+      const totalCount = episodicCount + semanticCount + docCount + archivedExperienceCount;
 
       // Disk size: walk the memories dir
       const diskBytes = _getDirSizeBytes(memRoot);
       const diskMB    = diskBytes / (1024 * 1024);
 
       res.writeHead(200, apiHeaders);
-      res.end(JSON.stringify({ ok: true, totalCount, episodicCount, semanticCount, docCount, diskBytes, diskMB, softLimitCount: MEMORY_SOFT_LIMIT_COUNT }));
+      res.end(JSON.stringify({ ok: true, totalCount, episodicCount, semanticCount, docCount, archivedExperienceCount, diskBytes, diskMB, softLimitCount: MEMORY_SOFT_LIMIT_COUNT }));
     } catch (e) {
       res.writeHead(500, apiHeaders);
       res.end(JSON.stringify({ ok: false, error: e.message }));

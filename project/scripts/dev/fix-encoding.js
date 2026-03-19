@@ -6,9 +6,9 @@
 //   This script reverses that process.
 //
 // Usage:
-//   node fix-encoding.js          — fix all server/**/*.js in-place
-//   node fix-encoding.js --dry    — preview changes without writing
-//   node fix-encoding.js server/server.js  — fix a single file
+//   node scripts/dev/fix-encoding.js          — fix all server/**/*.js in-place
+//   node scripts/dev/fix-encoding.js --dry    — preview changes without writing
+//   node scripts/dev/fix-encoding.js server/server.js  — fix a single file
 
 'use strict';
 
@@ -145,7 +145,7 @@ function collectFiles(dir) {
   return files;
 }
 
-const ROOT    = path.resolve(__dirname);
+const ROOT    = path.resolve(__dirname, '..', '..');
 const fileList = targets.length > 0
   ? targets.map(t => path.resolve(t))
   : collectFiles(path.join(ROOT, 'server'));

@@ -10,12 +10,39 @@ function _sessionFile(opts = {}) {
   return opts.dataFile || DEFAULT_SESSION_FILE;
 }
 
+function _applyDerivedStatus(session) {
+  if (!session || typeof session !== 'object') return session;
+
+  const sharedContext = (session.sharedContext && typeof session.sharedContext === 'object')
+    ? session.sharedContext
+    : {};
+
+  if ((session.status === 'active' || session.status === 'stalled') && sharedContext.lastError) {
+    session.status = 'error';
+  } else if ((session.status === 'active' || session.status === 'stalled') && sharedContext.completedAt) {
+    session.status = 'complete';
+  }
+
+  return session;
+}
+
 function _readSessions(opts = {}) {
   const filePath = _sessionFile(opts);
   if (!fs.existsSync(filePath)) return {};
   try {
     const parsed = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-    return parsed && typeof parsed === 'object' ? parsed : {};
+    if (!parsed || typeof parsed !== 'object') return {};
+
+    let changed = false;
+    Object.keys(parsed).forEach((id) => {
+      const session = parsed[id];
+      const beforeStatus = session && typeof session === 'object' ? session.status : undefined;
+      parsed[id] = _applyDerivedStatus(session);
+      if (parsed[id] && parsed[id].status !== beforeStatus) changed = true;
+    });
+
+    if (changed) _writeSessions(parsed, opts);
+    return parsed;
   } catch (_) {
     return {};
   }
@@ -86,6 +113,8 @@ function updateSession(id, patch = {}, opts = {}) {
     sharedContext: _mergeSharedContext(current.sharedContext, patch.sharedContext),
     updatedAt: Date.now()
   };
+
+  _applyDerivedStatus(merged);
 
   sessions[id] = merged;
   _writeSessions(sessions, opts);

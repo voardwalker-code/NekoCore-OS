@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 // One-shot transformation script — applies all P2-S1/S2/S3/S6 changes to server.js.
-// Run once from project/ directory: node transform-server.js
+// Run once from project/ directory: node scripts/dev/transform-server.js
 // Writes the result in-place and emits a diff summary.
 'use strict';
 
 const fs = require('fs');
 const path = require('path');
 
-const FILE = path.join(__dirname, 'server', 'server.js');
+const FILE = path.join(__dirname, '..', '..', 'server', 'server.js');
 // Normalize line endings (Windows CRLF → LF) so all string comparisons work uniformly
 let src = fs.readFileSync(FILE, 'utf8').replace(/\r\n/g, '\n');
 const original = src;

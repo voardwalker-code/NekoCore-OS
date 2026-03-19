@@ -346,7 +346,7 @@ ${archiveSummaries.slice(0, 12000)}`;
     document.getElementById('chatModelLabel').textContent = activeConfig.model || '';
 
     const wakeMsg = `[WAKE-FROM-SLEEP]\nSleep cycle #${newPersona.sleepCount} complete.\n\n${metaBlock}\n\n[CONTINUITY]\n${newPersona.continuityNotes}\n\n[DREAM]\n${newPersona.dreamSummary}`;
-    chatHistory.push({ role: 'user', content: wakeMsg + '\n\nYou have just woken up. Briefly acknowledge your updated state \u2014 your mood, how you feel about the user, and any key things you remember. Be natural, not robotic.' });
+    chatHistory.push({ role: 'user', content: '[INTERNAL-RESUME] ' + wakeMsg + '\n\nYou have just woken up. Briefly acknowledge your updated state \u2014 your mood, how you feel about the user, and any key things you remember. Be natural, not robotic.' });
 
     setSleepUI('Waking up...', '\u2600\uFE0F Good morning!', 100);
     await new Promise(r => setTimeout(r, 800));

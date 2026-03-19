@@ -202,3 +202,16 @@ test('cleanup guard: installer marker boundaries remain present in shell registr
   assert.match(appJs, emptyBoundaryPattern, 'app.js must preserve at least one empty installer safe slot');
   assert.match(loaderJs, emptyBoundaryPattern, 'non-core-html-loader.js must preserve at least one empty installer safe slot');
 });
+
+test('cleanup guard: non-core loader preserves dynamic payload script execution path', () => {
+  const loaderPath = path.join(projectRoot, 'client', 'js', 'apps', 'non-core-html-loader.js');
+  const loaderJs = fs.readFileSync(loaderPath, 'utf8');
+
+  assert.match(loaderJs, /function runMountedScripts\(root, htmlSource\)/, 'non-core-html-loader.js must keep mounted script execution helper');
+  assert.match(loaderJs, /probe\.innerHTML = htmlSource;/, 'non-core-html-loader.js must parse fetched HTML source for sibling script tags');
+  assert.match(loaderJs, /probe\.querySelectorAll\('script'\)/, 'non-core-html-loader.js must scan raw HTML for script tags');
+  assert.match(loaderJs, /\(0, eval\)\(code\);/, 'non-core-html-loader.js must preserve global-scope inline script execution for mounted payloads');
+
+  const mountCalls = loaderJs.match(/runMountedScripts\(getMountedTabRoot\(tabId\), html\);/g) || [];
+  assert.ok(mountCalls.length >= 4, 'non-core-html-loader.js must execute mounted payload scripts in every mount path');
+});

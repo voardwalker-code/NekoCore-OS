@@ -191,6 +191,14 @@ async function callChatLLM() {
   if (!activeConfig) throw new Error('No provider configured');
 
   const messages = chatHistory.filter(m => m.content);
+  const currentUserIndex = (() => {
+    for (let i = messages.length - 1; i >= 0; i -= 1) {
+      if (messages[i] && messages[i].role === 'user') return i;
+    }
+    return messages.length - 1;
+  })();
+  const currentMessage = messages[currentUserIndex] || messages[messages.length - 1] || { content: '' };
+  const historyForServer = messages.filter((_, index) => index !== currentUserIndex);
   
   // Call the server's orchestrator endpoint instead of direct LLM call
   try {
@@ -198,8 +206,8 @@ async function callChatLLM() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        message: messages[messages.length - 1]?.content || '',
-        chatHistory: messages.slice(0, -1), // Exclude the current user message (already in body)
+        message: currentMessage.content || '',
+        chatHistory: historyForServer,
         memoryRecall: _memoryRecall,
         memorySave:   _memorySave
       })

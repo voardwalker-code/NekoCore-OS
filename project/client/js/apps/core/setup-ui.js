@@ -12,7 +12,6 @@
 // SETUP ENFORCEMENT — Require API configuration before entity ops
 // ============================================================
 function isApiConfigured() {
-  if (window.__desktopTestBypass === true) return true;
   if (!activeConfig || !activeConfig.model || !activeConfig.endpoint) return false;
   // OpenRouter requires API key, Ollama does not
   if (activeConfig.type === 'openrouter') {

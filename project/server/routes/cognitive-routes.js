@@ -597,8 +597,8 @@ function createCognitiveRoutes(ctx) {
       if (p === '/api/memory-graph/rebuild' && m === 'POST') { await this.rebuildMemoryGraph(req, res, apiHeaders, readBody); return true; }
       if (p === '/api/memory/summary' && m === 'GET') { await this.getMemorySummary(req, res, apiHeaders, readBody, url); return true; }
       if (p === '/api/memory-graph/nodes' && m === 'GET') { await this.getMemoryGraphNodes(req, res, apiHeaders, readBody, url); return true; }
-      if (p === '/api/memory-graph/full-mind' && m === 'GET') { await this.getFullMindGraph(req, res, apiHeaders); return true; }
-      if (p === '/api/traces' && m === 'GET') { await this.getTraces(req, res, apiHeaders); return true; }
+      if (p === '/api/memory-graph/full-mind' && m === 'GET') { await this.getFullMindGraph(req, res, apiHeaders, readBody, url); return true; }
+      if (p === '/api/traces' && m === 'GET') { await this.getTraces(req, res, apiHeaders, readBody, url); return true; }
       if (p === '/api/belief-graph/nodes' && m === 'GET') { await this.getBeliefGraphNodes(req, res, apiHeaders, readBody, url); return true; }
       if (p === '/api/curiosity/trigger' && m === 'POST') { await this.triggerCuriosity(req, res, apiHeaders); return true; }
       if (p === '/api/trace-rebuild' && m === 'POST') { await this.rebuildTraces(req, res, apiHeaders); return true; }

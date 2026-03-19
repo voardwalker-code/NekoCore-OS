@@ -89,6 +89,33 @@ test('closeSession updates status', () => {
   t.cleanup();
 });
 
+test('updateSession derives complete status when completedAt is recorded', () => {
+  const t = tempFile();
+  const s = session.createSession({}, { dataFile: t.dataFile });
+  const updated = session.updateSession(s.id, {
+    sharedContext: { completedAt: 12345, finalOutput: 'done' }
+  }, { dataFile: t.dataFile });
+
+  assert.equal(updated.status, 'complete');
+  t.cleanup();
+});
+
+test('getSession repairs stale active sessions that already have completedAt', () => {
+  const t = tempFile();
+  const s = session.createSession({}, { dataFile: t.dataFile });
+  const map = JSON.parse(fs.readFileSync(t.dataFile, 'utf8'));
+  map[s.id].status = 'active';
+  map[s.id].sharedContext = { completedAt: 12345, finalOutput: 'done' };
+  fs.writeFileSync(t.dataFile, JSON.stringify(map, null, 2), 'utf8');
+
+  const repaired = session.getSession(s.id, { dataFile: t.dataFile });
+  assert.equal(repaired.status, 'complete');
+
+  const persisted = JSON.parse(fs.readFileSync(t.dataFile, 'utf8'));
+  assert.equal(persisted[s.id].status, 'complete');
+  t.cleanup();
+});
+
 test('pruneOldSessions skips active and stalled sessions', () => {
   const t = tempFile();
   const now = Date.now();

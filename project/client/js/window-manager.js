@@ -158,6 +158,68 @@ function openNekoCoreWithMessage(msg) {
   }
 }
 
+// ── D-3: Manifest Entry Lookup ──────────────────────────────────────────────────
+
+function getManifestAppEntry(appId) {
+  try {
+    if (typeof window.SystemAppsAdapter !== 'object' || typeof window.SystemAppsAdapter.loadManifestSync !== 'function') {
+      return null;
+    }
+    const manifest = window.SystemAppsAdapter.loadManifestSync();
+    if (!manifest || !Array.isArray(manifest.apps)) return null;
+    return manifest.apps.find((entry) => entry && entry.id === appId) || null;
+  } catch (_) {
+    return null;
+  }
+}
+
+// ── D-3: Shadow App Loader Integration ──────────────────────────────────────────
+
+function launchAppViaShadowLoader(tabName, packagePath, packageEntry) {
+  try {
+    // Guard: AppWindow and ShadowContentLoader must be available
+    if (typeof window.getOrCreateAppWindow !== 'function' || typeof window.getOrCreateShadowLoader !== 'function') {
+      return false;
+    }
+
+    // Get/create AppWindow for this tab
+    const meta = windowManager.windows.get(tabName);
+    if (!meta) return false;
+
+    const appMetadata = { name: meta.label || tabName, packagePath };
+    const appWindow = window.getOrCreateAppWindow(tabName, appMetadata);
+    if (!appWindow) return false;
+
+    // Initialize shadow root if not already done
+    if (!appWindow.getShadowRoot) {
+      appWindow.initialize();
+    }
+
+    // Create/get shadow content loader
+    const loader = window.getOrCreateShadowLoader(appWindow, packagePath, packageEntry);
+    if (!loader) return false;
+
+    // Load the app package payload
+    return loader.load();
+  } catch (_) {
+    return false;
+  }
+}
+
+function shouldLaunchViaShadowLoader(manifestEntry) {
+  if (!manifestEntry || typeof manifestEntry !== 'object') {
+    return false;
+  }
+  if (typeof manifestEntry.packagePath !== 'string' || !manifestEntry.packagePath.trim()) {
+    return false;
+  }
+  const appType = String(manifestEntry.appType || '').trim();
+  if (appType === 'iframe-page' || appType === 'hybrid-iframe-page') {
+    return false;
+  }
+  return true;
+}
+
 function openWindow(tabName, options = {}) {
   const meta = windowManager.windows.get(tabName);
   if (!meta) return;
@@ -165,6 +227,41 @@ function openWindow(tabName, options = {}) {
   const needsCenter = options.center === true || !meta.open;
   meta.open = true;
   meta.el.style.display = 'flex';
+  meta.el.classList.add('open', 'opening');
+
+  // ── D-3: Check manifest for packagePath and route through shadow loader ──
+  const manifestEntry = getManifestAppEntry(tabName);
+  if (shouldLaunchViaShadowLoader(manifestEntry)) {
+    const shadowLoaded = launchAppViaShadowLoader(
+      tabName,
+      manifestEntry.packagePath,
+      manifestEntry.packageEntry || manifestEntry.packagePath + '/index.html'
+    );
+    if (shadowLoaded) {
+      // Shadow loader handled the app load — apply visual effects and close legacy hooks
+      window.setTimeout(() => meta.el.classList.remove('opening'), 220);
+      if (needsCenter && !meta.maximized) {
+        const stage = getStageRect();
+        const app = getWindowApp(tabName);
+        setWindowRect(meta, {
+          left: Math.round((stage.width - app.w) / 2),
+          top: Math.round((stage.height - app.h) / 2),
+          width: app.w,
+          height: app.h
+        });
+      }
+      if (options.maximize) {
+        toggleMaximizeWindow(tabName, true);
+      }
+      focusWindow(tabName);
+      applyWindowActivationEffects(tabName);
+      syncShellStatusWidgets();
+      return; // Exit early — shadow loader took over
+    }
+    // If shadow load failed, fall through to legacy path below
+  }
+
+  // ── Legacy path (non-packaged apps) ──────────────────────────────────────────
   meta.el.classList.add('open', 'opening');
   window.setTimeout(() => meta.el.classList.remove('opening'), 220);
 
@@ -222,6 +319,18 @@ function closeWindow(tabName) {
   meta.el.classList.remove('open', 'focused');
   meta.el.style.display = 'none';
   runtimeTelemetry.activeWindowTab = getFocusedWindowTab();
+
+  // ── D-3: Cleanup shadow-hosted app if present ──
+  try {
+    if (typeof window.getShadowLoader === 'function') {
+      const loader = window.getShadowLoader(tabName);
+      if (loader && typeof loader.unload === 'function') {
+        loader.unload();
+      }
+    }
+  } catch (_) {
+    // Safely ignore cleanup errors — window closing takes priority
+  }
   syncShellStatusWidgets();
 }
 
@@ -516,7 +625,8 @@ function buildLauncherMenu() {
   categoryHost.innerHTML = '';
   appsHost.innerHTML = '';
 
-  const allApps = WINDOW_APPS
+  const sourceApps = typeof getShellWindowApps === 'function' ? getShellWindowApps() : WINDOW_APPS;
+  const allApps = sourceApps
     .filter((app) => windowManager.windows.has(app.tab))
     .map((app) => ({
       ...app,

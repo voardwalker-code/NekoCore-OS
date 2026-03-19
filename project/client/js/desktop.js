@@ -403,7 +403,8 @@ function startWebUiPresenceHeartbeat() {
 }
 
 function getWindowApp(tabName) {
-  return WINDOW_APPS.find((app) => app.tab === tabName)
+  const sourceApps = typeof getShellWindowApps === 'function' ? getShellWindowApps() : WINDOW_APPS;
+  return sourceApps.find((app) => app.tab === tabName)
     || { tab: tabName, label: tabName, icon: '<img src="/shared-assets/AppTrayIcon.png" alt="" aria-hidden="true" class="os-runtime-icon-img">', w: 900, h: 640 };
 }
 
@@ -415,7 +416,8 @@ function loadPinnedApps() {
       hasStoredPins = true;
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed)) {
-        pinnedApps = parsed.filter((tab) => WINDOW_APPS.some((app) => app.tab === tab));
+        const sourceApps = typeof getShellWindowApps === 'function' ? getShellWindowApps() : WINDOW_APPS;
+        pinnedApps = parsed.filter((tab) => sourceApps.some((app) => app.tab === tab));
       } else {
         pinnedApps = [];
       }

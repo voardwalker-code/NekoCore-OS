@@ -35,6 +35,7 @@ project/server/data/nekocore-audit.ndjson
 !/project/restore-snapshots/.gitkeep
 /project/server/data/restore-snapshots/*
 !/project/server/data/restore-snapshots/.gitkeep
+/project/artifacts/**
 
 # Server entity runtime state
 /project/server/entity/*
