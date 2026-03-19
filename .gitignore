@@ -63,6 +63,7 @@ project/skills/*/workspace/*
 WORKLOG.md
 Documents/
 PIPELINE-ARCHITECTURE-IMAGE-PROMPT.txt
+Modular Task Orch.txt
 
 # Explicit archive index docs inside ignored planning tree
 Documents/current/completed-phase-plans/INDEX.md

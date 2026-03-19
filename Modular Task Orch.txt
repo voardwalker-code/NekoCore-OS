@@ -1,68 +1,0 @@
-We need to get NekoCore OS set up so that the user can use it properly for getting work done and not just as an amazing chatbot.. We have created a powerful system here. We have proven our current orchestration works and our storage and retrieval is already amazing for consistent and “aware” Companion/assistan style chats. 
-
-The original goal of this from Hubslie was to create a Modular Task Orchestration Architecture. NekoCore is that orchestrator She knows her Entities. 
-
-Now lets pull the mask off of this project so people can see the power of how well it can complete tasks competently  and why it is so much easier and better for a human and an LLM to work together when they are treated fairly. I want to draw a line here . People need to stop treating LLM like a simple chatbot they can be used as an amazing tool that we have yet to even consider the posoblities from. 
-
-Bellow is a break down / My idea of how vs code copilot “ the best Orchestation Architecture around .. In my opinion” does this. 
-
-I want to use this as a reference and create a new feature in NekoCore OS  I want this to be a separate pipeline from the current but I want it to be a hybrid. Using this document and the current NekoCore OS system lets make the most competent userfriendly  system on earth
-
-
-We are not building this from scratch we have proven both our system is capable at what it was designed to do and that VS Code is at what it does as well . Now lets freaking GO! 
-
-
-
-
-
-
-
-
-
-Modular Task Orchestration Architecture
-To achieve a "Source of Truth" per task type, the system must decouple Intent Discovery from Task Execution.
-1. High-Level System Flow
-The system follows a "Tri-Stage" pipeline: Classify $\rightarrow$ Contextualize $\rightarrow$ Execute.
-Code snippet
-graph TD
-    A[User Input] --> B{Router / Intent Classifier}
-    
-    B -->|Type: Research| C[Research Module]
-    B -->|Type: Calculation| D[Math/Logic Module]
-    B -->|Type: Content Gen| E[Creative Module]
-    
-    C --> F[Source of Truth: Web/Vector DB]
-    D --> G[Source of Truth: Python Interpreter]
-    E --> H[Source of Truth: Brand Voice/Style Guide]
-    
-    F & G & H --> I[Aggregator / Result Formatter]
-    I --> J[Final Output]
-
-2. Core Architectural Components
-A. The Semantic Router (The Brain)
-Instead of one giant prompt, use a lightweight model (or a fast prompt) to categorize the task.
-* Purpose: To pick which "Module" to wake up.
-* Logic: It matches the user's natural language against a Manifest of available task modules.
-B. Specialized Task Modules (The Workers)
-Each module is a "Black Box" containing:
-1. System Prompt: Tailored specifically for that task (e.g., "You are an expert Researcher").
-2. Tools: Access to specific APIs (Google Search, Calculator, Database).
-3. Source of Truth: A dedicated data store. For a "Legal" task, this is your legal PDF library; for "Coding," it’s your GitHub repo.
-C. The State Manager (The Memory)
-In a modular system, the "Creative Module" might need to know what the "Research Module" just found.
-* Implementation: Use a Shared Context Object (a JSON blob) that gets passed between modules as the task progresses.
-
-3. Modular "Source of Truth" Structure
-To keep the system modular, you should organize your data and prompts using a Registry Pattern.
-Task TypeSource of Truth (Knowledge)Execution EnvironmentData AnalysisSQL Schema / CSV MetadataPython / Pandas SandboxMarket ResearchReal-time Search / Competitor DocsBrowsing AgentTechnical WritingMarkdown Templates / Style GuidesLLM + LinterAction ExecutionAPI DocumentationJSON-RPC / Webhooks
-4. Why this works for "Task Completion"
-By isolating the Source of Truth, you avoid "Model Drift" and "Hallucination."
-* Reliability: If the math module fails, it doesn't break the research module.
-* Scalability: You can add a new "Task Type" (e.g., "Invoice Processing") just by adding a new configuration file and a new vector folder, without retraining the main model.
-* Verifiability: Since each task has a source of truth, the system can cross-reference its answer against the provided data before showing it to you.
-
-5. Implementation Roadmap
-1. Define the Registry: Create a JSON file that maps task_type to a specific system_prompt and knowledge_base_id.
-2. Build the Context Gatherer: Like Copilot, this function should grab the 3 most relevant snippets from the specific source of truth linked to that task.
-3. Implement Tool Calling: Use OpenAI/Anthropic "Function Calling" to let the model interact with the source of truth (e.g., query_database or run_code).
-
