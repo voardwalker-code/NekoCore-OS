@@ -7296,24 +7296,24 @@ body.popout-mode .app {
 .setup-card .fl select:focus,
 .setup-card .fl input:active,
 .setup-card .fl select:active {
-  background: var(--app-input-bg) !important;
-  color: var(--app-input-text) !important;
-  -webkit-text-fill-color: var(--app-input-text) !important;
-  caret-color: var(--app-input-text) !important;
-  border-color: var(--app-input-border) !important;
+  background: #ffffff !important;
+  color: #111111 !important;
+  -webkit-text-fill-color: #111111 !important;
+  caret-color: #111111 !important;
+  border-color: #cbd5e1 !important;
   box-shadow: none !important;
 }
 
 .setup-card .fl input::selection,
 .setup-card .fl select::selection {
   background: rgba(52, 211, 153, 0.22);
-  color: var(--app-input-text);
+  color: #111111;
 }
 
 .setup-card .fl input:focus,
 .setup-card .fl select:focus {
-  border-color: var(--app-input-border-focus) !important;
-  box-shadow: 0 0 0 3px var(--app-input-focus-ring) !important;
+  border-color: #34d399 !important;
+  box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.12) !important;
 }
 
 /* Auth tabs */
@@ -7455,19 +7455,18 @@ body.popout-mode .app {
    SETUP WIZARD — Glass
    ============================================================ */
 .setup-overlay {
-  background: rgba(4, 6, 13, 0.95);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: rgba(232, 232, 236, 0.96);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 .setup-card {
-  background: rgba(8, 13, 24, 0.9);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(52, 211, 153, 0.12);
+  background: #ffffff;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border: 1px solid #d0d0d8;
   box-shadow:
-    0 24px 80px rgba(0, 0, 0, 0.5),
-    0 0 80px rgba(52, 211, 153, 0.06),
-    inset 0 1px 0 rgba(255,255,255,0.04);
+    0 24px 80px rgba(0, 0, 0, 0.14),
+    0 8px 32px rgba(0, 0, 0, 0.08);
   border-radius: 24px;
 }
 .setup-logo {
@@ -7480,10 +7479,23 @@ body.popout-mode .app {
 .setup-title {
   font-family: var(--font-sans);
   letter-spacing: -0.03em;
-  background: linear-gradient(135deg, #e4e4e7, #a1a1aa);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  background: none;
+  -webkit-background-clip: initial;
+  -webkit-text-fill-color: #111111;
+  background-clip: initial;
+  color: #111111;
+}
+.setup-subtitle,
+.setup-panel .text-secondary-c,
+.setup-provider-desc,
+.setup-status {
+  color: #4b5563 !important;
+}
+.setup-panel-title,
+.setup-provider-name,
+.setup-card label,
+.setup-card .fl label {
+  color: #111111 !important;
 }
 .setup-step.active {
   border-color: #34d399;
@@ -7496,17 +7508,22 @@ body.popout-mode .app {
 .setup-step-line { background: rgba(52, 211, 153, 0.12); }
 
 .setup-provider-btn {
-  background: rgba(13, 21, 38, 0.4);
-  border: 2px solid rgba(52, 211, 153, 0.08);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: #ffffff;
+  border: 2px solid #dbe3ea;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   border-radius: 14px;
+  color: #111111;
 }
 .setup-provider-btn:hover {
   border-color: #34d399;
-  background: rgba(52, 211, 153, 0.06);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3), 0 0 20px rgba(52, 211, 153, 0.1);
+  background: #f8fffb;
+  box-shadow: 0 10px 24px rgba(16, 185, 129, 0.12);
   transform: translateY(-3px);
+}
+.setup-provider-icon {
+  font-family: var(--font-emoji);
+  color: #111111;
 }
 
 /* ============================================================
