@@ -414,6 +414,10 @@ function _injectUserThemes() {
   });
 }
 
+// Hydrate saved user themes as soon as the script loads so early boot-time
+// theme restore can resolve custom theme ids before it writes fallback state.
+_injectUserThemes();
+
 function _saveCurrentAsUserTheme(custom) {
   const themeName = _sanitizeThemeName(document.getElementById('themeCustomName')?.value);
   const baseThemeId = getStoredThemeId();
