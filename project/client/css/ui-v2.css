@@ -2953,16 +2953,16 @@ body.nav-collapsed .hdr { padding-left: initial; }
 #loginOverlay input[type="password"],
 #loginOverlay input[type="password"]:focus,
 #loginOverlay input[type="password"]:active {
-  background: var(--app-input-bg) !important;
-  color: var(--app-input-text) !important;
-  -webkit-text-fill-color: var(--app-input-text) !important;
-  caret-color: var(--app-input-text) !important;
+  background: #ffffff !important;
+  color: #111111 !important;
+  -webkit-text-fill-color: #111111 !important;
+  caret-color: #111111 !important;
 }
 .setup-card .fl input[type="password"]::selection,
 #loginOverlay input[type="password"]::selection {
   background: rgba(52, 211, 153, 0.18);
-  color: var(--app-input-text);
-  -webkit-text-fill-color: var(--app-input-text);
+  color: #111111;
+  -webkit-text-fill-color: #111111;
 }
 .setup-card .fl input::placeholder {
   color: var(--app-input-placeholder);
@@ -2977,11 +2977,23 @@ body.nav-collapsed .hdr { padding-left: initial; }
 }
 .setup-card .fl input:-webkit-autofill,
 .setup-card .fl input:-webkit-autofill:hover,
-.setup-card .fl input:-webkit-autofill:focus {
+.setup-card .fl input:-webkit-autofill:focus,
+#loginOverlay input:-webkit-autofill,
+#loginOverlay input:-webkit-autofill:hover,
+#loginOverlay input:-webkit-autofill:focus {
   -webkit-text-fill-color: var(--app-input-text);
   -webkit-box-shadow: 0 0 0 1000px var(--app-input-bg) inset;
   box-shadow: 0 0 0 1000px var(--app-input-bg) inset;
   transition: background-color 9999s ease-in-out 0s;
+}
+
+#loginOverlay input:-webkit-autofill,
+#loginOverlay input:-webkit-autofill:hover,
+#loginOverlay input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #111111 !important;
+  caret-color: #111111 !important;
+  -webkit-box-shadow: 0 0 0 1000px #ffffff inset !important;
+  box-shadow: 0 0 0 1000px #ffffff inset !important;
 }
 .setup-card code {
   color: var(--text-primary);
@@ -7896,17 +7908,22 @@ body.popout-mode .app {
 }
 /* Login overlay — light card, always readable regardless of OS theme */
 #loginOverlay .inp {
-  background: var(--app-input-bg) !important;
-  color: var(--app-input-text) !important;
-  border: 1px solid var(--app-input-border) !important;
+  background: #ffffff !important;
+  color: #111111 !important;
+  -webkit-text-fill-color: #111111 !important;
+  caret-color: #111111 !important;
+  border: 1px solid #bbbbbb !important;
 }
 #loginOverlay .inp:focus {
-  background: var(--app-input-bg-focus) !important;
-  border-color: var(--app-input-border-focus) !important;
-  box-shadow: 0 0 0 3px var(--app-input-focus-ring) !important;
+  background: #ffffff !important;
+  color: #111111 !important;
+  -webkit-text-fill-color: #111111 !important;
+  caret-color: #111111 !important;
+  border-color: #34d399 !important;
+  box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.12) !important;
 }
 #loginOverlay .inp::placeholder {
-  color: var(--app-input-placeholder) !important;
+  color: #6b7280 !important;
 }
 
 /* ══════════════════════════════════════════════════════════════════════════════
