@@ -3153,6 +3153,42 @@ body.nav-collapsed .hdr { padding-left: initial; }
   color: var(--info);
 }
 
+.setup-card .summary-card {
+  background: #ffffff;
+  border: 1px solid #dbe3ea;
+  box-shadow: none;
+}
+
+.setup-card .summary-row {
+  color: #374151;
+}
+
+.setup-card .summary-row span {
+  color: #111111;
+}
+
+.setup-card #setupSkillSummary,
+.setup-card #setupSkillSummary .text-xs-c,
+.setup-card #setupSkillSummary .text-secondary-c,
+.setup-card #setupPanel2 .text-xs-c,
+.setup-card #setupPanel2 .text-secondary-c {
+  color: #4b5563 !important;
+}
+
+.setup-card #setupSkillSummary label {
+  background: #ffffff;
+  color: #111111;
+  border-color: #dbe3ea !important;
+}
+
+.setup-card #setupSkillSummary strong {
+  color: #111111;
+}
+
+.setup-card #setupSkillSummary input[type="checkbox"] {
+  accent-color: #10b981;
+}
+
 /* Inline card for settings grid items */
 .config-card {
   background: var(--surface-2);
