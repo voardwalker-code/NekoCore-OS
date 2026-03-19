@@ -62,6 +62,7 @@ project/skills/*/workspace/*
 # Internal process and planning docs — not for public repo
 WORKLOG.md
 Documents/
+PIPELINE-ARCHITECTURE-IMAGE-PROMPT.txt
 
 # Explicit archive index docs inside ignored planning tree
 Documents/current/completed-phase-plans/INDEX.md
