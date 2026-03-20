@@ -367,6 +367,18 @@ function initDesktopShell() {
     if (!windowManager.popoutTab) saveWindowLayout();
     if (typeof browserCleanup === 'function') browserCleanup();
     reportWebUiPresence(false, { beacon: true });
+
+    // Release active entity on page unload so the server clears brain modules
+    // and the checkout lock is freed for other users.
+    if (typeof currentEntityId === 'string' && currentEntityId) {
+      try {
+        const blob = new Blob(
+          [JSON.stringify({ entityId: currentEntityId })],
+          { type: 'application/json' }
+        );
+        navigator.sendBeacon('/api/entities/release', blob);
+      } catch (_) {}
+    }
   });
 }
 

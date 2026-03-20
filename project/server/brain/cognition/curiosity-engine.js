@@ -12,6 +12,7 @@ class CuriosityEngine {
     this.identityManager = options.identityManager;
     this.isActive = false;
     this.curiosityTriggers = [];
+    this.recentQuestions = [];
     this.lastCuriosityTime = 0;
     this.minTimeBetweenCuriosities = options.minTimeBetween || 30000; // 30 seconds
     this.curiosityThreshold = options.curiosityThreshold || 0.3;
@@ -73,6 +74,10 @@ class CuriosityEngine {
     const thought = this.generateCuriosityThought(activeMemories);
     if (thought) {
       this.lastCuriosityTime = now;
+      if (thought.question) {
+        this.recentQuestions.push({ question: thought.question, trigger_type: thought.trigger_type, time: now });
+        if (this.recentQuestions.length > 20) this.recentQuestions.shift();
+      }
       this.cognitiveBus.emitThought(thought);
     }
 
@@ -274,6 +279,30 @@ class CuriosityEngine {
       curiosity_threshold: this.curiosityThreshold,
       recent_triggers: this.curiosityTriggers.slice(-10)
     };
+  }
+
+  /**
+   * Get recently generated curiosity questions.
+   * @param {number} limit - Max questions to return (default 10)
+   * @returns {Array<{question: string, trigger_type: string, time: number}>}
+   */
+  getRecentQuestions(limit = 10) {
+    return this.recentQuestions.slice(-limit);
+  }
+
+  /**
+   * Mark a curiosity question as resolved (answered by conversation).
+   * Removes matching questions from the recent questions cache.
+   * @param {string} questionText - The question text to resolve
+   * @returns {boolean} true if a question was removed
+   */
+  markQuestionResolved(questionText) {
+    if (!questionText) return false;
+    const before = this.recentQuestions.length;
+    this.recentQuestions = this.recentQuestions.filter(
+      q => q.question !== questionText
+    );
+    return this.recentQuestions.length < before;
   }
 }
 

@@ -253,6 +253,71 @@ function initBrainSSE() {
       } catch (_) {}
     });
 
+    // ─── C12: Cognitive state observability events ─────────────────────────
+    brainEventSource.addEventListener('cognitive_snapshot_assembled', (e) => {
+      try {
+        const d = JSON.parse(e.data);
+        if (typeof runtimeTelemetry !== 'undefined') {
+          runtimeTelemetry.cognitiveState.snapshot = d;
+        }
+        if (typeof pushTelemetryEvent === 'function') {
+          pushTelemetryEvent('🧠 Snapshot: ' + d.beliefs + ' beliefs, ' + d.goals + ' goals, mood=' + d.mood);
+        }
+      } catch (_) {}
+    });
+
+    brainEventSource.addEventListener('belief_feedback_applied', (e) => {
+      try {
+        const d = JSON.parse(e.data);
+        if (typeof runtimeTelemetry !== 'undefined') {
+          runtimeTelemetry.cognitiveState.beliefFeedback = d;
+          runtimeTelemetry.cognitiveState.lastFeedbackTime = d.timestamp;
+        }
+        if (typeof pushTelemetryEvent === 'function') {
+          pushTelemetryEvent('🔮 Belief feedback: ' + d.updates + ' update(s)');
+        }
+      } catch (_) {}
+    });
+
+    brainEventSource.addEventListener('goal_status_changed', (e) => {
+      try {
+        const d = JSON.parse(e.data);
+        if (typeof runtimeTelemetry !== 'undefined') {
+          runtimeTelemetry.cognitiveState.goalStatus = d;
+          runtimeTelemetry.cognitiveState.lastFeedbackTime = d.timestamp;
+        }
+        if (typeof pushTelemetryEvent === 'function') {
+          pushTelemetryEvent('🎯 Goal update: ' + d.updates + ' change(s)');
+        }
+      } catch (_) {}
+    });
+
+    brainEventSource.addEventListener('curiosity_resolved', (e) => {
+      try {
+        const d = JSON.parse(e.data);
+        if (typeof runtimeTelemetry !== 'undefined') {
+          runtimeTelemetry.cognitiveState.curiosity = d;
+          runtimeTelemetry.cognitiveState.lastFeedbackTime = d.timestamp;
+        }
+        if (typeof pushTelemetryEvent === 'function') {
+          pushTelemetryEvent('🔍 Curiosity: ' + d.resolved + ' question(s) resolved');
+        }
+      } catch (_) {}
+    });
+
+    brainEventSource.addEventListener('mood_nudge_applied', (e) => {
+      try {
+        const d = JSON.parse(e.data);
+        if (typeof runtimeTelemetry !== 'undefined') {
+          runtimeTelemetry.cognitiveState.moodNudge = d;
+          runtimeTelemetry.cognitiveState.lastFeedbackTime = d.timestamp;
+        }
+        if (typeof pushTelemetryEvent === 'function') {
+          pushTelemetryEvent('💊 Mood nudge: ' + d.type + ' (intensity=' + d.intensity + ')');
+        }
+      } catch (_) {}
+    });
+
     // ─── Task events — delegated to task-ui.js via window hook ───
     // task-frontman.js broadcasts these for UI panels (task badge, history, telemetry feed).
     // NL-translated messages already arrive via chat_follow_up above — these are raw events.

@@ -342,6 +342,22 @@ function closeWindow(tabName) {
   if (tabName === 'browser' && typeof _browserSaveSessionSync === 'function') {
     _browserSaveSessionSync();
   }
+  // Chat-specific: release the active entity so memories sync and checkout frees
+  if (tabName === 'chat' && typeof currentEntityId === 'string' && currentEntityId) {
+    try {
+      fetch('/api/entities/release', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ entityId: currentEntityId }),
+        keepalive: true
+      }).catch(() => {});
+      currentEntityId = null;
+      currentEntityName = null;
+      currentEntityVoice = null;
+      if (typeof clearChat === 'function') clearChat();
+      if (typeof refreshSidebarEntities === 'function') refreshSidebarEntities();
+    } catch (_) {}
+  }
   meta.open = false;
   meta.minimized = false;
   meta.el.classList.remove('open', 'focused');

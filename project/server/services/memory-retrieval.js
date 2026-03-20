@@ -46,11 +46,11 @@ function getSemanticPreview(memRoot, memId) {
     // Check episodic first, then semantic knowledge store
     const episodicPath = path.join(memRoot, 'episodic', memId, 'semantic.txt');
     if (fs.existsSync(episodicPath)) {
-      return fs.readFileSync(episodicPath, 'utf8').trim().slice(0, 280);
+      return fs.readFileSync(episodicPath, 'utf8').trim().slice(0, 150);
     }
     const semanticPath = path.join(memRoot, 'semantic', memId, 'semantic.txt');
     if (fs.existsSync(semanticPath)) {
-      return fs.readFileSync(semanticPath, 'utf8').trim().slice(0, 280);
+      return fs.readFileSync(semanticPath, 'utf8').trim().slice(0, 150);
     }
     return '';
   } catch (e) {
@@ -120,18 +120,15 @@ function buildSubconsciousContextBlock(messageText, topics, connections, chatlog
       );
     });
 
-    lines.push('EXPERIENCE memories are past conversations. The "with user" tag identifies which user was in that conversation.');
-    lines.push('KNOWLEDGE memories are extracted facts/insights from conversations.');
-    lines.push('DOCUMENT memories are ingested from external files/documents — NOT from the user, NOT from any conversation. Do not attribute document content to the user.');
-    lines.push('Use this as optional context only. If weakly relevant, ignore it.');
+    lines.push('EXPERIENCE memories are past conversations. KNOWLEDGE memories are extracted facts. DOCUMENT memories are ingested from external sources — do not attribute to user.');
+    lines.push('Use as optional context only. If weakly relevant, ignore it.');
   }
 
   // Append chatlog context if available
   if (chatlogContext && chatlogContext.length > 0) {
     lines.push('');
     lines.push('[CONVERSATION RECALL]');
-    lines.push('The following compressed chatlogs are from past conversations related to the recalled memories.');
-    lines.push('Reconstruct the narrative context to understand the full conversational history.');
+    lines.push('Compressed chatlogs from recalled memories:');
     for (const cl of chatlogContext) {
       lines.push(`--- chatlog id=${cl.id} topic_overlap=${cl.overlap} ---`);
       if (cl.sessionMeta) lines.push(cl.sessionMeta);
@@ -174,7 +171,8 @@ function createMemoryRetrieval({
   logTimeline,
   callSubconsciousReranker,
   loadAspectRuntimeConfig,
-  getActiveUserId
+  getActiveUserId,
+  llmRerank = false  // Token Optimization T1-4: LLM reranker off by default
 }) {
 
   async function getSubconsciousMemoryContext(userMessage, limit = 36) {
@@ -298,7 +296,7 @@ function createMemoryRetrieval({
           importance: Number(m.importance || 0.5),
           decay: Number(m.decay || 1.0),
           type: m.type || 'episodic',
-          semantic: (m.summary || '').slice(0, 280),
+          semantic: (m.summary || '').slice(0, 150),
           userId: m.userId || null,
           userName: m.userName || null
         });
@@ -378,7 +376,7 @@ function createMemoryRetrieval({
             importance: Number(hit.importance || 0.5),
             decay: Number(hit.decay || 1.0),
             type: hit.type || 'episodic',
-            semantic: (hit.summary || '').slice(0, 280),
+            semantic: (hit.summary || '').slice(0, 150),
             userId: hit.userId || null,
             userName: hit.userName || null,
           });
@@ -399,7 +397,7 @@ function createMemoryRetrieval({
     const minContextScore = topScore > 1
       ? Math.max(0.12, topScore * 0.2)
       : Math.max(0.12, topScore * 0.35);
-    let contextConnections = topConnections.filter((c) => Number(c.relevanceScore || 0) >= minContextScore).slice(0, 12);
+    let contextConnections = topConnections.filter((c) => Number(c.relevanceScore || 0) >= minContextScore).slice(0, 8);
     if (contextConnections.length === 0 && topConnections.length > 0) {
       contextConnections = [topConnections[0]];
     }
@@ -427,9 +425,12 @@ function createMemoryRetrieval({
     }
 
     // Rerank with subconscious LLM if configured
+    // Token Optimization T1-4: bypass LLM reranker by default — BM25 ordering
+    // is already in place and functionally equivalent for most turns.
+    // Set llmRerank: true in the factory options to re-enable LLM reranking.
     let rerankUsed = false;
     let rerankError = null;
-    if (currentEntityId && topConnections.length > 0) {
+    if (llmRerank && currentEntityId && topConnections.length > 0) {
       try {
         const runtime = loadAspectRuntimeConfig('subconscious') || loadAspectRuntimeConfig('main');
         if (runtime) {
@@ -517,7 +518,7 @@ function createMemoryRetrieval({
             // Take the top relevant chatlogs while keeping context bounded.
             ltmScores.sort((a, b) => b.overlap - a.overlap || b.importance - a.importance);
             for (const ltm of ltmScores.slice(0, 3)) {
-              const content = getChatlogContent(memoryRoot, ltm.id, 900);
+              const content = getChatlogContent(memoryRoot, ltm.id, 600);
               if (content) {
                 chatlogContext.push({
                   id: ltm.id,

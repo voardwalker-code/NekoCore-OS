@@ -16,7 +16,13 @@ const { createTaskPipelineBridge } = require('../brain/tasks/task-pipeline-bridg
 const { resumeWithInput } = require('../brain/tasks/task-executor');
 const { stripInternalResumeTag, runtimeLabel } = require('./llm-runtime-utils');
 const { runPostResponseMemoryEncoding } = require('./post-response-memory');
+const { runCognitiveFeedbackLoop }      = require('./post-response-cognitive-feedback');
 const { postProcessResponse }           = require('./response-postprocess');
+const { assembleCognitiveSnapshot }     = require('../brain/cognition/cognitive-snapshot');
+const { classifyTurn }                  = require('../brain/utils/turn-classifier');
+const { getTemplateResponse }           = require('../brain/utils/template-responses');
+const { validateClassification }        = require('../contracts/turn-classifier-contract');
+const { getEntityCache }                = require('../brain/utils/semantic-cache');
 
 // ── Skill approval state ──────────────────────────────────────────────────────
 // Exclusively used by this pipeline — no other module needs these.
@@ -426,7 +432,231 @@ function createChatPipeline(deps) {
       console.warn('  ⚠ Task dispatch fork failed, continuing with companion pipeline:', taskForkErr.message);
     }
 
+    // ── T2-3: Hybrid Router — classify turn and fast-path simple ones ────────
+    const hybridRouterEnabled = loadConfig()?.pipeline?.hybridRouter !== false;
+    if (hybridRouterEnabled && !isInternalResume) {
+      try {
+        const classification = classifyTurn(effectiveUserMessage);
+        const valid = validateClassification(classification);
+        if (valid.ok && classification.bypass) {
+          const templateResult = getTemplateResponse(classification.category, {
+            userName: entity?.persona?.userName || null,
+            name: entity?.name || null,
+            mood: entity?.persona?.mood || 'neutral'
+          });
+
+          if (templateResult) {
+            broadcastSSE('turn_classified', {
+              category: classification.category,
+              confidence: classification.confidence,
+              bypass: true,
+              _source: 'template',
+              timestamp: Date.now()
+            });
+
+            logTimeline('chat.hybrid_router.bypass', {
+              category: classification.category,
+              confidence: classification.confidence,
+              tokens_saved_estimate: 15000
+            });
+
+            // Still run NLP memory encoding + cognitive feedback (async)
+            const memoryEntityId = brain.entityId;
+            const memoryAspectConfigs = { ...aspectConfigs };
+            if (memoryEntityId && memoryAspectConfigs.subconscious) {
+              setImmediate(async () => {
+                await runPostResponseMemoryEncoding({
+                  effectiveUserMessage,
+                  finalResponse: templateResult.response,
+                  innerDialog: null,
+                  memoryEntityId,
+                  memoryAspectConfigs,
+                  callLLMWithRuntime,
+                  getTokenLimit,
+                  createCoreMemory,
+                  createSemanticKnowledge,
+                  broadcastSSE,
+                  traceGraph: brain.traceGraph,
+                  memoryGraph: brain.memoryGraph,
+                  logTimeline,
+                  memoryStorage: brain.memoryStorage,
+                  entityName: entity?.name || null,
+                  userName: entity?.persona?.userName || null,
+                  activeUserId: entity?.persona?.activeUserId || null,
+                  entityPersona: entity?.persona || null
+                });
+                await runCognitiveFeedbackLoop({
+                  userMessage: effectiveUserMessage,
+                  entityResponse: templateResult.response,
+                  preSnapshot: null,
+                  importance: 0,
+                  trustDelta: 0,
+                  beliefGraph: brain.beliefGraph || null,
+                  goalsManager: brain.goalsManager || null,
+                  curiosityEngine: brain.curiosityEngine || null,
+                  cognitiveBus: cognitiveBus || null,
+                  logTimeline,
+                  broadcastSSE,
+                  entityId: memoryEntityId
+                });
+              });
+            }
+
+            // Emit orchestration_complete so Task Manager shows the bypass
+            broadcastSSE('orchestration_complete', {
+              totalDuration: 0,
+              timestamp: Date.now(),
+              tokenUsage: null,
+              models: null,
+              timing: null,
+              _source: 'template'
+            });
+
+            return {
+              finalResponse: templateResult.response,
+              innerDialog: null,
+              memoryConnections: [],
+              _source: 'template',
+              _classification: classification
+            };
+          }
+        }
+
+        // Non-bypass: emit classification for observability, continue to full pipeline
+        if (valid.ok) {
+          broadcastSSE('turn_classified', {
+            category: classification.category,
+            confidence: classification.confidence,
+            bypass: false,
+            timestamp: Date.now()
+          });
+        }
+      } catch (classifyErr) {
+        // Never break companion chat on classifier failures.
+        console.warn('  ⚠ Turn classifier failed, continuing with full pipeline:', classifyErr.message);
+      }
+    }
+
+    // ── T4-1: Semantic cache — check before full pipeline ──────────────────
+    const semanticCacheEnabled = loadConfig()?.pipeline?.semanticCache !== false;
+    if (semanticCacheEnabled && !isInternalResume) {
+      try {
+        const entityCache = getEntityCache(brain.entityId);
+        const cacheResult = entityCache.lookup(effectiveUserMessage);
+        if (cacheResult.hit) {
+          broadcastSSE('cache_hit', {
+            score: cacheResult.entry.score,
+            originalTurnId: cacheResult.entry.originalTurnId,
+            timestamp: Date.now()
+          });
+
+          logTimeline('chat.semantic_cache.hit', {
+            score: cacheResult.entry.score,
+            tokens_saved_estimate: 16000
+          });
+
+          // Still run NLP memory encoding + cognitive feedback (async)
+          const memoryEntityId = brain.entityId;
+          const memoryAspectConfigs = { ...aspectConfigs };
+          if (memoryEntityId && memoryAspectConfigs.subconscious) {
+            setImmediate(async () => {
+              await runPostResponseMemoryEncoding({
+                effectiveUserMessage,
+                finalResponse: cacheResult.entry.response,
+                innerDialog: null,
+                memoryEntityId,
+                memoryAspectConfigs,
+                callLLMWithRuntime,
+                getTokenLimit,
+                createCoreMemory,
+                createSemanticKnowledge,
+                broadcastSSE,
+                traceGraph: brain.traceGraph,
+                memoryGraph: brain.memoryGraph,
+                logTimeline,
+                memoryStorage: brain.memoryStorage,
+                entityName: entity?.name || null,
+                userName: entity?.persona?.userName || null,
+                activeUserId: entity?.persona?.activeUserId || null,
+                entityPersona: entity?.persona || null
+              });
+              await runCognitiveFeedbackLoop({
+                userMessage: effectiveUserMessage,
+                entityResponse: cacheResult.entry.response,
+                preSnapshot: null,
+                importance: 0,
+                trustDelta: 0,
+                beliefGraph: brain.beliefGraph || null,
+                goalsManager: brain.goalsManager || null,
+                curiosityEngine: brain.curiosityEngine || null,
+                cognitiveBus: cognitiveBus || null,
+                logTimeline,
+                broadcastSSE,
+                entityId: memoryEntityId
+              });
+            });
+          }
+
+          // Emit orchestration_complete so Task Manager shows the cache hit
+          broadcastSSE('orchestration_complete', {
+            totalDuration: 0,
+            timestamp: Date.now(),
+            tokenUsage: null,
+            models: null,
+            timing: null,
+            _source: 'semantic-cache'
+          });
+
+          return {
+            finalResponse: cacheResult.entry.response,
+            innerDialog: null,
+            memoryConnections: [],
+            taskMode: taskDispatch.mode,
+            taskSessionId: taskDispatch.taskSessionId || null,
+            planningSessionId: taskDispatch.planningSessionId || null,
+            classification: taskDispatch.classification || null,
+            _source: 'semantic-cache'
+          };
+        }
+      } catch (cacheErr) {
+        console.warn('  ⚠ Semantic cache lookup failed, continuing with full pipeline:', cacheErr.message);
+      }
+    }
+
     // Run orchestrator
+    // ── Assemble cognitive snapshot (pre-turn) ──
+    let cognitiveSnapshotBlock = '';
+    let cognitiveSnapshotData = null;
+    try {
+      const msgTopics = effectiveUserMessage.toLowerCase().split(/[^a-z0-9]+/).filter(w => w.length >= 4);
+      const { snapshot, block } = assembleCognitiveSnapshot({
+        beliefGraph: brain.beliefGraph || null,
+        goalsManager: brain.goalsManager || null,
+        neurochemistry: brain.neurochemistry || null,
+        curiosityEngine: brain.curiosityEngine || null,
+        identityManager: identityManager || null,
+        entityId: brain.entityId,
+        userMessageTopics: msgTopics
+      });
+      cognitiveSnapshotBlock = block || '';
+      cognitiveSnapshotData = snapshot || null;
+
+      // C12: SSE event for cognitive snapshot observability
+      if (cognitiveSnapshotData) {
+        broadcastSSE('cognitive_snapshot_assembled', {
+          beliefs: (snapshot.beliefs?.standing || []).length,
+          conflicts: (snapshot.beliefs?.conflicts || []).length,
+          goals: (snapshot.goals?.active || []).length,
+          mood: snapshot.mood?.current || 'unknown',
+          stressTier: snapshot.mood?.stressTier || 'unknown',
+          curiosity: (snapshot.curiosity?.activeQuestions || []).length,
+          timestamp: Date.now()
+        });
+      }
+    } catch (snapErr) {
+      console.warn('  ⚠ Cognitive snapshot assembly failed, continuing without:', snapErr.message);
+    }
+
     const orchestrator = new Orchestrator({
       entity,
       callLLM: callLLMWithRuntime,
@@ -469,7 +699,8 @@ function createChatPipeline(deps) {
             .filter(e => e && !e.isSystemEntity)
             .map(e => ({ id: e.id, name: e.name, traits: (e.personality_traits || []).slice(0, 3) }));
         } catch (_) { return []; }
-      } : null
+      } : null,
+      cognitiveSnapshot: cognitiveSnapshotBlock
     });
 
     console.log(`  ℹ Running orchestrator with aspects: main=${runtimeLabel(aspectConfigs.main)}, sub=${runtimeLabel(aspectConfigs.subconscious)}, dream=${runtimeLabel(aspectConfigs.dream)}, orch=${runtimeLabel(aspectConfigs.orchestrator)}`);
@@ -675,6 +906,22 @@ function createChatPipeline(deps) {
           activeUserId: entity?.persona?.activeUserId || null,
           entityPersona: entity?.persona || null
         });
+
+        // ── Cognitive feedback loop (C7/C8/C9) ──────────────────────────────
+        await runCognitiveFeedbackLoop({
+          userMessage: effectiveUserMessage,
+          entityResponse: result.finalResponse,
+          preSnapshot: cognitiveSnapshotData,
+          importance: 0,
+          trustDelta: 0,
+          beliefGraph: brain.beliefGraph || null,
+          goalsManager: brain.goalsManager || null,
+          curiosityEngine: brain.curiosityEngine || null,
+          cognitiveBus: cognitiveBus || null,
+          logTimeline,
+          broadcastSSE,
+          entityId: memoryEntityId
+        });
       });
     }
 
@@ -710,6 +957,14 @@ function createChatPipeline(deps) {
     result.chunks = postProcessed.chunks;
     if (postProcessed.error) {
       console.warn('  ⚠ Natural chat processing failed:', postProcessed.error.message);
+    }
+
+    // ── T4-1: Store orchestrator response in semantic cache ─────────────────
+    if (semanticCacheEnabled && !isInternalResume) {
+      try {
+        const entityCache = getEntityCache(brain.entityId);
+        entityCache.store(effectiveUserMessage, result.finalResponse);
+      } catch (_) { /* cache store is non-critical */ }
     }
 
     logTimeline('chat.assistant_response', {
@@ -838,6 +1093,22 @@ function createChatPipeline(deps) {
             userName: entity?.persona?.userName || null,
             activeUserId: entity?.persona?.activeUserId || null,
             entityPersona: entity?.persona || null
+          });
+
+          // ── Cognitive feedback (single-LLM path) ──────────────────────────
+          await runCognitiveFeedbackLoop({
+            userMessage: String(userMessage || ''),
+            entityResponse: finalResponse,
+            preSnapshot: null,
+            importance: 0,
+            trustDelta: 0,
+            beliefGraph: brain.beliefGraph || null,
+            goalsManager: brain.goalsManager || null,
+            curiosityEngine: brain.curiosityEngine || null,
+            cognitiveBus: cognitiveBus || null,
+            logTimeline,
+            broadcastSSE,
+            entityId: memoryEntityId
           });
         } catch (_) { /* memory save failure is non-fatal */ }
       });

@@ -1,7 +1,7 @@
 # WORKLOG
 
 Status: active architecture refactor tracking.
-Last updated: 2026-03-18
+Last updated: 2026-03-20
 
 Repository packaging note:
 1. The runnable source tree now lives under `project/`.
@@ -44,16 +44,198 @@ Emergency exception log:
 
 ---
 
-## Stop/Resume Snapshot — 2026-03-19 (Slash Command System A0+A1+A2 complete)
+## Stop/Resume Snapshot — 2026-03-20 (Entity release on refresh/close fix)
 
 - **Current phase:** `Phase 4 — Feature work`
-- **Current slice:** `Slash Command System — A0/A1/A2 complete; A3 (scheduler) and A4 (project wizard depth) are future`
-- **Last completed work:** `slash-commands.js (full IIFE), guard tests, chat.js wiring (3 edits), tab-chat.html picker + wizard modal, index.html script tag, ui-v2.css picker + wizard styles`
+- **Current slice:** `Bug fix — entity not released on page refresh or chat window close`
+- **Last completed work:** `Fixed entity lingering server-side after page refresh or chat close — sendBeacon release on beforeunload in desktop.js, fetch release on chat window close in window-manager.js, brain loop stop+saveState on server release in entity-routes.js; 1555/1567 full suite (12 pre-existing), 4/4 entity tests`
 - **In-progress item:** `none`
 - **Blocking issue:** `none`
-- **Next action on resume:** `Run guard tests to confirm pass; then backfill Phase 4.5 exit audit and activate PLAN-PREDICTIVE-MEMORY-v1.md`
-- **Active plan:** `Documents/current/PLAN-SLASH-COMMAND-SYSTEM-v1.md`
-- **Phase 5 plan:** `PLAN-PREDICTIVE-MEMORY-v1.md — HTML shadow cleanup checkpoint met; pending Phase 4.5 exit audit/backfill before activation`
+- **Next action on resume:** `Pick next plan from backlog`
+- **Active plans:**
+  - `Documents/current/PLAN-TOKEN-OPTIMIZATION-v1.md` — COMPLETE (Phases 1–4 done, Phase 5 cancelled)
+  - `Documents/current/PLAN-COGNITIVE-STATE-INTEGRATION-v1.md` — COMPLETE (all 4 phases, 14 slices)
+  - `Documents/current/PLAN-INTROSPECTION-LOOP-v1.md` — 6-axis self-inquiry brain-loop phase with local model
+- **Prior plan (paused):** `Documents/current/PLAN-SLASH-COMMAND-SYSTEM-v1.md — A0/A1/A2 complete; A3/A4 future`
+- **Phase 5 plan:** `PLAN-PREDICTIVE-MEMORY-v1.md — held`
+
+---
+
+## Session Ledger — 2026-03-20 (Entity release on refresh/close fix)
+
+Status: `Complete`
+
+- Issue: When user refreshes the web GUI or closes the context chat window, the entity stays loaded server-side with no visual representation on the client — ghost entity lingers indefinitely
+- Root cause 1: `beforeunload` handler in desktop.js did not release the entity — only saved window layout and reported presence disconnect
+- Root cause 2: `closeWindow('chat')` in window-manager.js did not release the entity — only cleared DOM
+- Root cause 3: `postEntitiesRelease` in entity-routes.js did not stop the brain loop — EntityRuntime was deactivated but brain loop kept running with null module references
+- Fix (3 files):
+  - `project/client/js/desktop.js` — Added `navigator.sendBeacon('/api/entities/release', blob)` in beforeunload handler to release entity on page refresh/close; uses Blob with application/json; sendBeacon sends cookies (same-origin) so session middleware attaches req.accountId
+  - `project/client/js/window-manager.js` — Added chat-specific entity release in `closeWindow()` when `tabName === 'chat'` and `currentEntityId` exists; calls `fetch('/api/entities/release', {keepalive: true})` silently (no confirm dialog), then clears currentEntityId/currentEntityName/currentEntityVoice, calls clearChat() and refreshSidebarEntities()
+  - `project/server/routes/entity-routes.js` — Enhanced `postEntitiesRelease()` to stop brain loop before clearing active entity via `loop.stop()` + `loop._saveState()` to flush pending state
+- Memory sync: Confirmed memories are saved per-turn via `runPostResponseMemoryEncoding()` — no batch save needed at release time. Brain loop state now saved via `_saveState()` on release.
+- Tests: 1555/1567 full suite (12 pre-existing), 4/4 entity-specific tests, 0 regressions
+
+Boundary markers: [BOUNDARY_OK]
+
+---
+
+## Session Ledger — 2026-03-20 (Task Manager telemetry fix)
+
+Status: `Complete`
+
+- Issue: Task Manager showing "Pipeline Phase: Idle" and "Total Tokens: 0" for all chat turns — no way to measure token optimization results
+- Root cause: Template bypass (hybrid router) and semantic cache hit paths returned early without emitting `orchestration_complete` SSE event. Full pipeline path was working via cognitiveBus bridge in server.js but user's test messages were likely all caught by the hybrid router.
+- Fix: Added `broadcastSSE('orchestration_complete', ...)` calls in both the template bypass and semantic cache hit early-return paths in `server/services/chat-pipeline.js`; added diagnostic `console.log` in server.js cognitiveBus bridge for the full-pipeline path
+- Files changed: `server/services/chat-pipeline.js` (2 broadcastSSE additions), `server/server.js` (1 diagnostic log)
+- Tests: 113/113 token opt guards, 47/47 cognitive state, 1555/1567 full suite (12 pre-existing)
+
+---
+
+## Session Ledger — 2026-03-20 (Token Optimization Plan Closure)
+
+Status: `Complete`
+
+- Plan: `Documents/current/PLAN-TOKEN-OPTIMIZATION-v1.md` — PLAN COMPLETE
+- Phase 5 (Brain Loop Batching & Gating) cancelled after thorough audit of `server/brain/cognition/brain-loop.js` and all 16 phase files
+- Cancellation rationale: brain loop already has aggressive built-in gating — beliefs every 10 cycles + homeostatic skip, dreams every 5 cycles + homeostatic skip, identity diary with 30-min per-title and 5-min global cooldowns + 20% random skip, boredom requiring boredom≥0.5 + 10min since last action + 15min idle; zero-LLM phases (neurochemistry drift, somatic awareness, goals decay, hebbian, consolidation, pruning, archive, STM) must run every cycle for cognitive state integrity; dirty-flagging would invert purpose of idle inner-life behavior
+- Final tally: 15 slices across 4 phases complete (T1-0 through T4-1), 2 slices cancelled (T5-0, T5-1), 113 guard tests, estimated ~68% per-turn token reduction
+- Phases 1–4 savings breakdown: Phase 1 ~2,700 tokens/turn (NLP encode + reranker bypass), Phase 2 ~15,000 tokens/turn for ~60% of casual turns (hybrid router), Phase 3 ~4,700–9,300 tokens/turn (prompt compression), Phase 4 ~16,000 tokens on cache hits (semantic cache)
+
+---
+
+## Session Ledger — 2026-03-20 (Token Optimization Phase 1 — Call Elimination)
+
+Status: `Complete`
+
+- Plan: `Documents/current/PLAN-TOKEN-OPTIMIZATION-v1.md` — slices T1-0–T1-4
+- Pre-optimization rollback snapshot: `C:\Users\voard\Documents\NekoCore-OS-backup-pre-token-opt_2026-03-20_134152.zip` (30 MB)
+- T1-0: Created `project/tests/unit/token-optimization-guards.test.js` — 37 guard tests across 7 suites: memory encoding output shape (10), reranker behavior (8), existing NLP utilities (4), YAKE extractor (4), NLP encoder (4), pipeline integration (2), security (5)
+- T1-1: Created `project/server/brain/utils/yake.js` — YAKE keyword extractor (~170 lines); statistical features: WPos (position), WFreq (frequency normalization), WCase (uppercase ratio), WRel (sentence spread), WDiff (position spread); unigram + bigram scoring with overlap dedup; `extractKeywords(text, maxKeywords?)` → `string[]`
+- T1-2: Created `project/server/brain/utils/memory-encoder-nlp.js` — NLP memory encoder (~170 lines); RAKE + YAKE for topics, TextRank-lite extractive summarization for semantic/narrative, lexicon-based emotion detection via scoreSentiment() from cognitive-feedback, heuristic importance scoring (question density, exclamation density, topic richness, length, sentiment strength, personal pronouns), regex-based factual knowledge extraction; `encodeMemory(userMessage, entityResponse, opts?)` → `{topics, semantic, narrative, emotion, importance, knowledge}`
+- T1-3: Modified `project/server/services/post-response-memory.js` — imports encodeMemory from NLP encoder; added `useNLP` toggle (default true via `params.memoryEncodingUseNLP !== false`); when NLP enabled, skips LLM callLLMWithRuntime + JSON repair entirely, builds memData directly from NLP result; LLM path preserved as else branch for rollback
+- T1-4: Modified `project/server/services/memory-retrieval.js` — added `llmRerank` parameter to createMemoryRetrieval factory (default false); reranker block gated behind `llmRerank` flag; BM25 ordering preserved as sole ranking path when off; set `llmRerank: true` in factory call to re-enable
+- Estimated savings: ~700 tokens/turn (memory encoding) + ~2000 tokens/turn (reranker bypass) = ~2700 tokens/turn for Phase 1
+- Regression: 37/37 token opt guard tests pass; 73/73 cognitive state tests pass; 1479/1491 full suite (12 pre-existing failures, 0 regressions)
+
+Boundary markers: [BOUNDARY_OK] [JS_OFFLOAD]
+
+---
+
+## Session Ledger — 2026-03-20 (Token Optimization Phase 4 — Semantic Cache)
+
+Status: `Complete`
+
+- Plan: `Documents/current/PLAN-TOKEN-OPTIMIZATION-v1.md` — slices T4-0–T4-1
+- T4-0: Created `project/server/brain/utils/semantic-cache.js` — LRU cache (Map-based, max 200 entries, 15min TTL); vectorization via RAKE `extractPhrases()` → topic arrays; similarity via `bm25Score()` with threshold ≥0.85; messages with <2 RAKE topics excluded (too ambiguous); entity-scoped factory (`getEntityCache(entityId)`) with registry; `clearEntityCache()` for cleanup; hit/miss/hitRate stats tracking
+- T4-1: Modified `project/server/services/chat-pipeline.js` — imports `getEntityCache` from semantic-cache; cache lookup inserted after hybrid router but before cognitive snapshot/orchestrator; on cache hit: returns cached response, emits `cache_hit` SSE event, logs `semantic_cache.hit` with score + tokens_saved_estimate (16000), still runs NLP memory encoding + cognitive feedback (async); after orchestrator completes: stores response in cache via `entityCache.store()`; config toggle: `pipeline.semanticCache !== false` (defaults true)
+- Added 20 new guard tests to `project/tests/unit/token-optimization-guards.test.js`: Section 16 (Semantic cache module T4-0, 13 tests — existence, factories, lookup miss/hit, LRU capacity, ambiguous skip, entity isolation, stats, security, RAKE/BM25 usage), Section 17 (Pipeline integration T4-1, 7 tests — import, toggle, SSE event, savings log, memory encoding, cognitive feedback, cache store)
+- Estimated savings: 100% token savings (~16,000 tokens) on cache hits, estimated ~10-20% of turns in typical sessions
+- Regression: 113/113 token opt guard tests pass; 47/47 cognitive state tests pass; 1662/1674 full suite (12 pre-existing failures, 0 regressions)
+
+Boundary markers: [BOUNDARY_OK]
+
+---
+
+## Session Ledger — 2026-03-20 (Token Optimization Phase 3 — Prompt Compression)
+
+Status: `Complete`
+
+- Plan: `Documents/current/PLAN-TOKEN-OPTIMIZATION-v1.md` — slices T3-0–T3-3
+- T3-0: Modified `project/server/services/memory-retrieval.js` — memory summaries capped at 150 chars (was 280, 4 locations: getSemanticPreview ×2, indexed memory, pulse-hint); context connections 12→8 (line 400); chatlog per-entry limit 900→600; instructional text condensed from 4 lines to 2; conversation recall header condensed to single line
+- T3-1: Modified `project/server/brain/cognition/dream-intuition-adapter.js` — default maxTokens 260→200; system prompt condensed to single line; added hasSignals check that skips 1D entirely when subjects+events+intentHints are all empty (returns zero-usage placeholder)
+- T3-2: Modified `project/server/brain/core/orchestrator.js` — individual history messages capped at 1200 chars via `.slice(0, 1200)` before injection into Conscious prompt
+- T3-3: Modified `project/server/brain/core/orchestrator.js` — replaced full copies of subconsciousOutput/dreamOutput/turnSignals in mergePrompt with condensed versions: subconscious capped at 600 chars, dream at 300 chars, turn signals condensed to single-line summary (subjects/emotion/tension) instead of JSON.stringify dump; header changed from "CONTEXT USED BY CONSCIOUS" to "CONTEXT SUMMARY"
+- Added 16 new guard tests to `project/tests/unit/token-optimization-guards.test.js`: T3-0 (5), T3-1 (5), T3-2 (2), T3-3 (4)
+- Estimated savings: ~4700-9300 tokens/turn across all 4 pipeline nodes
+- Regression: 93/93 token opt guard tests pass; 47/47 cognitive state tests pass; 1642/1654 full suite (12 pre-existing failures, 0 regressions)
+
+Boundary markers: [BOUNDARY_OK]
+
+---
+
+## Session Ledger — 2026-03-20 (Token Optimization Phase 2 — Hybrid Router)
+
+Status: `Complete`
+
+- Plan: `Documents/current/PLAN-TOKEN-OPTIMIZATION-v1.md` — slices T2-0–T2-3
+- T2-0: Created `project/server/contracts/turn-classifier-contract.js` — defines turn classification taxonomy (greeting, status, confirmation, farewell, command, simple-question, deep); `validateClassification(result)` → `{ok, errors}`; exports `VALID_CATEGORIES`, `BYPASS_THRESHOLD` (0.8)
+- T2-1: Created `project/server/brain/utils/turn-classifier.js` — pure regex+keyword classifier (<1ms); pattern libraries per category; confidence=0.95 for matches; guards: >15 words with ? → never bypass, >30 words → always deep; commands bypass=false (handled upstream); `classifyTurn(text)` → `{category, confidence, bypass}`
+- T2-2: Created `project/server/brain/utils/template-responses.js` — per-category response templates with personality-aware variation; mood descriptors for status responses; `getTemplateResponse(category, context?)` → `{response, _source:'template'}` or null; greeting/status/confirmation/farewell have 5 templates each; deep/simple-question return null (need LLM)
+- T2-3: Modified `project/server/services/chat-pipeline.js` — imports classifyTurn, getTemplateResponse, validateClassification; inserts classifier check after T-6 task fork and before cognitive snapshot assembly; on bypass: returns template response, skips full 4-node orchestrator pipeline, still runs NLP memory encoding + cognitive feedback (async); emits `turn_classified` SSE event; logs `tokens_saved_estimate: 15000` on bypass; config toggle: `pipeline.hybridRouter !== false` (defaults true)
+- Added 40 new guard tests to `project/tests/unit/token-optimization-guards.test.js`: turn classifier contract (9 tests), turn classifier engine (12 tests), template response library (8 tests), pipeline hybrid router integration (8 tests), security guards for all new modules (3 tests)
+- Estimated savings: ~15,000 tokens/turn for ~60% of casual turns (greetings, status, confirmations, farewells)
+- Regression: 77/77 token opt guard tests pass; 73/73 cognitive state tests pass; 1626/1638 full suite (12 pre-existing failures, 0 regressions)
+
+Boundary markers: [BOUNDARY_OK] [JS_OFFLOAD] [CONTRACT_ENFORCED]
+
+---
+
+## Session Ledger — 2026-03-20 (Token Optimization Phase 1 — Call Elimination)
+
+Status: `Complete`
+
+- Plan: `Documents/current/PLAN-COGNITIVE-STATE-INTEGRATION-v1.md` — slices C12–C13 (final phase)
+- C12: Modified `project/server/services/chat-pipeline.js` — emits `cognitive_snapshot_assembled` SSE event after snapshot assembly with summary (beliefs, conflicts, goals, mood, stressTier, curiosity, timestamp)
+- C12: Modified `project/client/js/apps/core/telemetry-ui.js` — added `cognitiveState` property to `runtimeTelemetry` object (snapshot, beliefFeedback, goalStatus, curiosity, moodNudge, lastFeedbackTime)
+- C12: Modified `project/client/js/apps/core/chat.js` — added 5 cognitive SSE event listeners in `initBrainSSE()`: cognitive_snapshot_assembled, belief_feedback_applied, goal_status_changed, curiosity_resolved, mood_nudge_applied; each updates runtimeTelemetry.cognitiveState and pushes telemetry event feed entry
+- C13: Created `project/tests/unit/cognitive-state-e2e.test.js` — 26 end-to-end integration tests across 7 suites: pre-turn snapshot assembly (3), post-turn feedback analysis (5), interaction magnitude classification (4), neurochemistry INTERACTION_* wiring (2), graduated mood shift bounds (4), full turn cycle integration (4), SSE observability source-level assertions (4)
+- Full plan summary: 14 slices (C0–C13) across 4 phases complete — pre-turn cognitive snapshot, post-turn feedback loop, graduated neurochemistry nudge from conversation, SSE observability + telemetry + end-to-end tests
+- Regression: 26/26 e2e integration tests pass; 47/47 guard tests pass; 0 regressions
+
+Boundary markers: [BOUNDARY_OK]
+
+---
+
+## Session Ledger — 2026-03-20 (Cognitive State Integration Phase 3 complete)
+
+Status: `Complete`
+
+- Plan: `Documents/current/PLAN-COGNITIVE-STATE-INTEGRATION-v1.md` — slices C10–C11
+- Created `project/server/brain/cognition/interaction-magnitude.js` — classifyInteraction(moodSignal) converts mood signal type+magnitude into typed INTERACTION_* event with numeric intensity; MAGNITUDE_INTENSITY mapping: minor=0.3x, moderate=1.0x, major=3.0x
+- Modified `project/server/brain/affect/neurochemistry.js` — added 5 INTERACTION_* entries to EVENT_EFFECTS table (INTERACTION_POSITIVE: dopamine+0.008/serotonin+0.004, INTERACTION_NEGATIVE: cortisol+0.008/serotonin-0.004, INTERACTION_BONDING: oxytocin+0.008/dopamine+0.003, INTERACTION_CONFLICT: cortisol+0.008/dopamine-0.002, INTERACTION_INSIGHT: dopamine+0.008/serotonin+0.003); updated _subscribe() to forward event.intensity to updateChemistry()
+- Modified `project/server/services/post-response-cognitive-feedback.js` — imports classifyInteraction; after diary trigger, emits INTERACTION_* event on cognitive bus with intensity from magnitude classifier; emits mood_nudge_applied SSE event + timeline log
+- Graduated mood shift math: 100 minor positive turns → 100×0.008×0.3 dopamine = ~0.24 raw, ~0.15 after saturation dampening + baseline drift; 1 major negative turn → 0.008×3.0 cortisol = 0.024 single nudge, decays within 3–5 brain cycles
+- Regression: 47/47 cognitive state guard tests pass; 1525/1536 full suite pass (11 pre-existing failures, 0 regressions)
+
+Boundary markers: [BOUNDARY_OK]
+
+---
+
+## Session Ledger — 2026-03-20 (Cognitive State Integration Phase 2)
+
+Status: `Complete`
+
+- Plan: `Documents/current/PLAN-COGNITIVE-STATE-INTEGRATION-v1.md` — slices C5–C9
+- C5 (recovered): `project/server/contracts/cognitive-feedback-contract.js` — validateFeedback() with belief actions (reinforce/weaken/contradict), goal actions (progress/fulfilled/blocked/irrelevant), mood signal types + magnitudes; intact from prior session
+- C6 (recovered): `project/server/brain/cognition/cognitive-feedback.js` — analyzeTurnFeedback() NLP-only engine: lexicon-based sentiment scoring, RAKE topic extraction, BM25 belief/goal/curiosity matching, graduated magnitude classification, diary trigger detection; intact from prior session
+- C7: Created `project/server/services/post-response-cognitive-feedback.js` — runCognitiveFeedbackLoop() applies belief updates via beliefGraph.reinforceBelief()/contradictBelief(), emits BELIEF_REINFORCED/BELIEF_CONTRADICTED on cognitive bus
+- C8: Goal fulfillment feedback in same module — applies goal updates via goalsManager.markExplored()/completeGoal(), emits GOAL_PROGRESS/GOAL_FULFILLED on cognitive bus
+- C9: Curiosity closure via curiosityEngine.markQuestionResolved() (new method added); diary trigger via LifeDiary.appendEntry() tagged with conversation_feedback source
+- Modified `project/server/brain/bus/thought-types.js` — added GOAL_PROGRESS and CURIOSITY_RESOLVED types
+- Modified `project/server/brain/cognition/curiosity-engine.js` — added markQuestionResolved(questionText) method
+- Modified `project/server/services/chat-pipeline.js` — imports runCognitiveFeedbackLoop; calls it after runPostResponseMemoryEncoding in both orchestrator and single-LLM paths; captures cognitiveSnapshotData for feedback pre-snapshot
+- Regression: 47/47 cognitive state guard tests pass; 1525/1536 full suite pass (11 pre-existing failures in archive-query, chat-extraction, settings-provider, system-apps-manifest, task-manager, task-ui, window-titlebar guards — 0 regressions)
+
+Boundary markers: [BOUNDARY_OK]
+
+---
+
+## Session Ledger — 2026-03-20 (Cognitive State Integration Phase 1)
+
+Status: `Complete`
+
+- Plan: `Documents/current/PLAN-COGNITIVE-STATE-INTEGRATION-v1.md` — slices C0–C4
+- Created `project/tests/unit/cognitive-state-integration-guards.test.js` (47 guard tests — file existence, contract API, assembler API, goals/belief/neuro regression, orchestrator/pipeline integration, thought types, curiosity, security)
+- Created `project/server/contracts/cognitive-snapshot-contract.js` — validateSnapshot() + buildSnapshotBlock() with caps (6 beliefs, 3 conflicts, 3 goals, 3 diary insights, 3 curiosity questions); output header `[COGNITIVE STATE — Your current inner landscape]`
+- Created `project/server/brain/cognition/cognitive-snapshot.js` — assembleCognitiveSnapshot(deps) reads beliefGraph, goalsManager, neurochemistry, curiosityEngine, identityManager, selfModel, entityId, userMessageTopics; graceful degradation for missing subsystems; BM25 curiosity matching; mood trend derivation from chemical positions vs 0.5 baseline (±0.08 threshold); stress tier from cortisol
+- Modified `project/server/brain/cognition/curiosity-engine.js` — added recentQuestions cache (max 20) + getRecentQuestions(limit=10) method
+- Modified `project/server/brain/core/orchestrator.js` — added cognitiveSnapshot constructor option; injects [COGNITIVE STATE] block after [SOMATIC AWARENESS] in runSubconscious()
+- Modified `project/server/services/chat-pipeline.js` — calls assembleCognitiveSnapshot() before orchestrator with all brain subsystems as deps; passes cognitiveSnapshotBlock to orchestrator constructor; try/catch with console.warn fallback
+- Modified `project/server/brain/bus/thought-types.js` — added 5 new types: INTERACTION_POSITIVE, INTERACTION_NEGATIVE, INTERACTION_BONDING, INTERACTION_CONFLICT, INTERACTION_INSIGHT
+- Regression: 47/47 cognitive state guard tests pass; 1525/1537 full suite pass (12 pre-existing failures in archive-query, chat-extraction, settings-provider, system-apps-manifest, task-manager, task-pipeline-bridge, task-ui, window-titlebar guards — 0 regressions from this work)
+
+Boundary markers: [BOUNDARY_OK] [CONTRACT_ENFORCED]
 
 ---
 

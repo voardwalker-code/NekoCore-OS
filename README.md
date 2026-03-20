@@ -22,13 +22,13 @@
   &nbsp;
   <img src="https://img.shields.io/badge/dependencies-0-brightgreen?style=flat-square" alt="zero deps"/>
   &nbsp;
-  <img src="https://img.shields.io/badge/tests-1369%20passing-brightgreen?style=flat-square" alt="1369 tests"/>
+  <img src="https://img.shields.io/badge/tests-1555%20passing-brightgreen?style=flat-square" alt="1555 tests"/>
 </p>
 
 <p align="center">
   <a href="https://neko-core.com"><strong>neko-core.com</strong></a>
   &nbsp;·&nbsp;
-  <a href="project/NekoCore.html">Architecture Deck</a>
+  <a href="project/Neko-Core.html">Architecture Deck</a>
   &nbsp;·&nbsp;
   <strong>v0.9.0</strong>
 </p>
@@ -37,7 +37,7 @@
 
 <div align="center">
 
-| 1,369 | 0 | 5 |
+| 1,555 | 0 | 5 |
 |:-----:|:-:|:-:|
 | **Tests Passing** | **Runtime Dependencies** | **Pipeline Phases** |
 
@@ -69,7 +69,7 @@ Beliefs emerge from memory cross-reference — not hand-authored. Each belief ca
 <tr>
 <td width="33%" valign="top">
 <strong>⚗️ Neurochemistry</strong><br><br>
-Dopamine, cortisol, serotonin, and oxytocin simulate in real time and modulate every response. Neurochemical state is fully observable via the SSE cognitive bus and the browser diagnostic panel.
+Dopamine, cortisol, serotonin, and oxytocin simulate in real time and modulate every response. Graduated mood shift means conversations influence chemistry proportionally to interaction magnitude.
 </td>
 <td width="33%" valign="top">
 <strong>🪪 Entity Hatching</strong><br><br>
@@ -78,6 +78,20 @@ Structured multi-phase birth — name → traits → life history → core memor
 <td width="33%" valign="top">
 <strong>🔌 Skills & Routing</strong><br><br>
 Drop-in function-call plugins with per-phase model routing. Assign different LLMs to 1A, 1D, 1C, and Final. Ollama (local) and OpenRouter (cloud) supported out of the box.
+</td>
+</tr>
+<tr>
+<td width="33%" valign="top">
+<strong>⚡ Token Optimization</strong><br><br>
+Hybrid router classifies simple turns and serves template responses without touching the LLM pipeline. NLP memory encoding, prompt compression, and semantic caching cut ~68% of per-turn token usage.
+</td>
+<td width="33%" valign="top">
+<strong>🧬 Cognitive State</strong><br><br>
+Pre-turn snapshot assembles beliefs, goals, mood, diary, and curiosity into the Subconscious prompt. Post-turn feedback reinforces beliefs, tracks goals, resolves curiosity, and nudges neurochemistry.
+</td>
+<td width="33%" valign="top">
+<strong>📋 Task Orchestration</strong><br><br>
+Slash commands (<code>/task</code>, <code>/skill</code>, <code>/project</code>, <code>/websearch</code>) dispatch structured work. The Frontman bridge translates worker progress into entity-voice milestone messages.
 </td>
 </tr>
 </table>
@@ -113,28 +127,38 @@ See [docs/NEKOCORE-OS-WHITE-PAPER-v2.md](docs/NEKOCORE-OS-WHITE-PAPER-v2.md) for
 ```
                     User Input
                         │
-          ┌─────────────┴─────────────┐
-          ▼                           ▼
-  Phase 1A (Subconscious)    Phase 1D (Dream-Intuition)
-  memory retrieval           abstract associations
-  context assembly           running in parallel
-          │                           │
-          └─────────────┬─────────────┘
-                        │  Promise.all()
-                        ▼
-              Phase 1C (Conscious)
-              reasoning · full context
+                   Turn Classifier
+                   (hybrid router)
                         │
-                        ▼
-           Final Orchestrator (voicing)
-           personality · neurochemistry
+              ┌─────────┴─────────┐
+              │                   │
+         simple turn         complex turn
+              │                   │
+      template response    ┌──────┴──────┐
+              │            ▼             ▼
+              │    Phase 1A        Phase 1D
+              │    (Subconscious)  (Dream-Intuition)
+              │    memory retrieval   abstract associations
+              │            │             │
+              │            └──────┬──────┘
+              │                   │  Promise.all()
+              │                   ▼
+              │         Phase 1C (Conscious)
+              │         reasoning · full context
+              │                   │
+              │                   ▼
+              │        Final Orchestrator (voicing)
+              │        personality · neurochemistry
+              │                   │
+              └─────────┬─────────┘
                         │
                         ▼
                  Response → User
                         │
                         ▼  async, non-blocking
-             Post-Response Memory Write
-                 Relationship Update
+             NLP Memory Encoding
+             Cognitive Feedback Loop
+             Relationship Update
 ```
 
 ### Brain Loop
@@ -144,8 +168,10 @@ The brain loop ticks independently of conversation:
 - **Memory consolidation** — decay tick, LTM compression, index sync
 - **Belief formation** — scan recent echoes for cross-referencing patterns
 - **Goal review** — assess progress against exploration goals
+- **Curiosity engine** — track open questions, mark resolved when addressed
 - **REM sleep trigger** — schedules sleep cycles when the entity is idle
 - **Neurochemistry drift** — baseline levels drift back toward resting state
+- **Somatic awareness** — energy, discomfort, arousal, valence state updates
 
 ---
 
@@ -174,7 +200,7 @@ The brain loop ticks independently of conversation:
 | **Realtime** | SSE cognitive bus — all pipeline events streamed to the browser |
 | **Visualizer** | Three.js WebGL 3D neural node graph — live cognitive bus events |
 | **Skills** | Drop-in function-call plugins: web search, memory tools, workspace ops |
-| **Test suite** | 1,369 passing — unit + integration (Node built-in `--test` runner) |
+| **Test suite** | 1,555 passing — unit + integration (Node built-in `--test` runner) |
 | **Installer** | Contract-driven app install/uninstall with rollback and file lifecycle |
 
 ### Memory System
@@ -212,12 +238,22 @@ The brain loop ticks independently of conversation:
 | `1d_start` / `1d_done` | Dream-intuition phase markers |
 | `1c_start` / `1c_done` | Conscious phase markers |
 | `final_start` / `final_done` | Final orchestrator pass markers |
+| `orchestration_complete` | Full pipeline finished — includes token counts |
+| `turn_classified` | Hybrid router classification result |
+| `cache_hit` | Semantic cache hit — cached response reused |
+| `cognitive_snapshot_assembled` | Pre-turn cognitive state snapshot built |
+| `belief_feedback_applied` | Belief reinforced or contradicted post-turn |
+| `goal_status_changed` | Goal progress detected post-turn |
+| `curiosity_resolved` | Curiosity question addressed post-turn |
+| `mood_nudge_applied` | Neurochemistry nudged by interaction magnitude |
 | `memory_write` | Echo newly encoded |
 | `belief_update` | Belief created or reinforced |
 | `chemistry_update` | Neurochemical state delta |
 | `relationship_update` | User relationship record updated |
 | `sleep_start` / `sleep_done` | REM cycle boundaries |
 | `dream_fragment` | Dream narrative fragment emitted |
+| `task_milestone` | Task orchestration step completed |
+| `task_complete` / `task_error` | Task lifecycle events |
 
 ---
 
@@ -229,14 +265,25 @@ The brain loop ticks independently of conversation:
 ✔  Phase 3    Full App Modularization         Complete  (866 tests, 0 fail)
 ✔  Phase 4    Feature Foundation              Complete
 ✔  Phase 4.5  Intelligent Memory Expansion    Complete
-●  Phase 4.7  Agent Echo (active)             Multi-index archive + retrieval pipeline
-○  Phase 5    Predictive Memory Topology      Gated on Phase 4.7 completion
+✔  Phase 4.6  Slash Command System            Complete  (A0–A2; A3/A4 future)
+✔  Phase 4.7  HTML Shadow Cleanup             Complete  (guard-first refactor)
+✔  Phase 4.8  Cognitive State Integration     Complete  (4 phases, 14 slices)
+✔  Phase 4.8  Token Optimization              Complete  (Phases 1–4, ~68% reduction)
+✔  Phase 4.9  Task Orchestration (MTOA)       Complete  (T-1 → T-7)
+○  Phase 5    Predictive Memory Topology      Next
 ```
 
-**Agent Echo** is a staged retrieval architecture mirroring the entity's three-part cognitive structure:
-- **Echo Now** — hot ~2K memory window, instant recall
-- **Echo Past** — index-narrowed archive search with async round-2 during humanizer typing
-- **Echo Future** — Phase 5 stub for predictive memory topology
+**Token Optimization** eliminated ~68% of per-turn token usage across 4 phases:
+- **Phase 1** — NLP memory encoding + reranker bypass (~2,700 tokens/turn saved)
+- **Phase 2** — Hybrid router diverts simple turns away from the full pipeline (~15K tokens/turn for ~60% of casual turns)
+- **Phase 3** — Prompt compression across all 4 pipeline nodes (~4,700–9,300 tokens/turn)
+- **Phase 4** — Semantic cache for similar inputs (~16K tokens on cache hits)
+
+**Cognitive State Integration** gives entities live inner life that evolves through conversation:
+- Pre-turn cognitive snapshot (beliefs, goals, mood, diary, curiosity) injected into the Subconscious prompt
+- Post-turn feedback loop (belief reinforcement, goal tracking, curiosity resolution, mood signals)
+- Graduated mood shift — conversations nudge neurochemistry proportionally to interaction magnitude
+- Full SSE observability for all cognitive state changes
 
 ---
 
@@ -388,11 +435,11 @@ NekoCore-OS/
     ├── server/                # Backend server
     ├── browser-host/          # Browser host modules
     ├── skills/                # Pluggable skill plugins
-    ├── tests/                 # Unit + integration tests (1,369 passing)
+    ├── tests/                 # Unit + integration tests (1,555 passing)
     ├── Config/                # Runtime config template/example
     ├── entities/              # Runtime entity data (gitignored)
     ├── memories/              # System memory (gitignored)
-    ├── NekoCore.html          # Interactive architecture deck
+    ├── Neko-Core.html          # Interactive architecture deck
     └── package.json
 ```
 
@@ -406,12 +453,19 @@ NekoCore-OS/
 | `GET` | `/api/entities` | List all entities |
 | `POST` | `/api/entities` | Create a new entity |
 | `GET` | `/api/entities/:id` | Get entity state |
+| `POST` | `/api/entities/release` | Release the active entity (cleanup lifecycle) |
 | `POST` | `/api/entities/:id/sleep` | Trigger REM sleep cycle |
 | `GET` | `/api/entities/:id/memories` | List memories |
 | `GET` | `/api/entities/:id/beliefs` | List beliefs |
 | `GET` | `/api/entities/:id/dreams` | List dreams |
 | `GET` | `/api/entities/:id/diary` | Entity self-reflection log |
 | `GET` | `/api/entities/:id/relationships` | Per-user relationship records |
+| `POST` | `/api/task/run` | Dispatch a task (research, skill, project) |
+| `GET` | `/api/task/session/:id` | Get task session details |
+| `POST` | `/api/task/cancel/:id` | Cancel an active task |
+| `GET` | `/api/task/history/:entityId` | Task history for an entity |
+| `POST` | `/api/entity/chat/create` | Create a multi-entity chat session |
+| `POST` | `/api/entity/chat/message` | Send message to entity chat |
 | `POST` | `/api/auth/login` | Authenticate |
 | `POST` | `/api/auth/logout` | Invalidate session |
 | `GET` | `/events` | SSE cognitive bus stream |

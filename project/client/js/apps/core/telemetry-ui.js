@@ -33,6 +33,15 @@ const runtimeTelemetry = {
     stepCount: 0,
     stalled: false,
     complete: false
+  },
+  // C12: Cognitive state observability
+  cognitiveState: {
+    snapshot: null,
+    beliefFeedback: null,
+    goalStatus: null,
+    curiosity: null,
+    moodNudge: null,
+    lastFeedbackTime: null
   }
 };
 

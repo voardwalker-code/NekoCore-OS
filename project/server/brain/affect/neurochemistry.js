@@ -69,7 +69,16 @@ const EVENT_EFFECTS = {
 
   // Boredom — acting on boredom is mildly rewarding (dopamine bump, serotonin from satisfaction)
   [ThoughtTypes.BOREDOM_ACTION]: { dopamine: +0.08, serotonin: +0.03, cortisol: -0.02 },
-  [ThoughtTypes.BOREDOM_TRIGGER]: { dopamine: -0.03, serotonin: -0.02 }
+  [ThoughtTypes.BOREDOM_TRIGGER]: { dopamine: -0.03, serotonin: -0.02 },
+
+  // Interaction-driven mood nudges (Cognitive State Integration C11)
+  // Base deltas are tuned for moderate intensity (1.0). Minor uses 0.3x, major 3.0x.
+  // After saturation dampening + baseline drift, 100 minor positive turns → ~+0.15 dopamine.
+  [ThoughtTypes.INTERACTION_POSITIVE]:  { dopamine: +0.008, serotonin: +0.004 },
+  [ThoughtTypes.INTERACTION_NEGATIVE]:  { cortisol: +0.008, serotonin: -0.004 },
+  [ThoughtTypes.INTERACTION_BONDING]:   { oxytocin: +0.008, dopamine: +0.003 },
+  [ThoughtTypes.INTERACTION_CONFLICT]:  { cortisol: +0.008, dopamine: -0.002 },
+  [ThoughtTypes.INTERACTION_INSIGHT]:   { dopamine: +0.008, serotonin: +0.003 }
 };
 
 class Neurochemistry {
@@ -139,7 +148,7 @@ class Neurochemistry {
     // Listen to all thought events for chemical updates
     this.cognitiveBus.subscribeToAll((event) => {
       if (event.type && EVENT_EFFECTS[event.type]) {
-        this.updateChemistry(event.type);
+        this.updateChemistry(event.type, event.intensity || 1.0);
       }
     });
 

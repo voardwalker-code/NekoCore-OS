@@ -259,6 +259,7 @@ cognitiveBus.on('orchestrator:orchestration_start', (data) => {
 });
 cognitiveBus.on('orchestrator:orchestration_complete', (data) => {
   const id = data.innerDialog;
+  console.log('  ℹ [SSE Bridge] orchestration_complete — tokens:', id?.tokenUsage?.total?.total_tokens || 0, 'duration:', data.totalDuration || 0, 'ms');
   broadcastSSE('orchestration_complete', {
     totalDuration: data.totalDuration,
     timestamp: data.timestamp,

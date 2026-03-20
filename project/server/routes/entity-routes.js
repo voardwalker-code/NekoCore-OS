@@ -1063,8 +1063,18 @@ function createEntityRoutes(ctx) {
         res.end(JSON.stringify({ ok: false, error: 'Entity is checked out by another user' }));
         return;
       }
-      // If releasing the currently active entity, clear server state
-      if (entityPaths.normalizeEntityId(ctx.currentEntityId) === canonicalId) ctx.clearActiveEntity();
+      // If releasing the currently active entity, stop brain loop and clear server state
+      if (entityPaths.normalizeEntityId(ctx.currentEntityId) === canonicalId) {
+        try {
+          const loop = typeof ctx.getBrainLoop === 'function' ? ctx.getBrainLoop() : ctx.brainLoop;
+          if (loop && loop.running) {
+            loop.stop();
+            if (typeof loop._saveState === 'function') loop._saveState();
+            console.log('  ✓ Brain loop stopped for released entity');
+          }
+        } catch (_) {}
+        ctx.clearActiveEntity();
+      }
       res.writeHead(200, apiHeaders);
       res.end(JSON.stringify({ ok: true, message: `Entity ${canonicalId} released` }));
       console.log(`  ✓ Entity released: ${canonicalId}`);

@@ -15,13 +15,21 @@ function toDreamIntuitionArtifact(rawText) {
   return text;
 }
 
-async function runDreamIntuition(runtime, input, callLLM, maxTokens = 260) {
+async function runDreamIntuition(runtime, input, callLLM, maxTokens = 200) {
   if (!runtime || typeof callLLM !== 'function') {
     return { _text: 'No dream-intuition runtime configured.', _usage: null };
   }
 
-  const system = 'You are the Dream-Intuition contributor in a cognitive pipeline. Return concise abstract links only. No user-facing prose. No memory writes. Keep output to 4-8 short bullets.';
-  const user = `Turn signals:\n${JSON.stringify(input, null, 2)}\n\nProduce abstract connections that could help the orchestrator synthesize a better final response.`;
+  // T3-1: Skip 1D entirely when turn signals carry no meaningful content
+  const hasSignals = (input.subjects && input.subjects.length > 0)
+    || (input.events && input.events.length > 0)
+    || (input.intentHints && input.intentHints.length > 0);
+  if (!hasSignals) {
+    return { _text: '', _usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 } };
+  }
+
+  const system = 'Dream-Intuition contributor. Return 4-8 concise abstract links as short bullets. No prose. No memory writes.';
+  const user = `Turn signals:\n${JSON.stringify(input, null, 2)}\n\nProduce abstract connections for the orchestrator.`;
 
   const result = await callLLM(runtime, [
     { role: 'system', content: system },

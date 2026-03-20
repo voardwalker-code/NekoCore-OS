@@ -1,5 +1,6 @@
 'use strict';
 const { parseJsonBlock } = require('./llm-runtime-utils');
+const { encodeMemory } = require('../brain/utils/memory-encoder-nlp');
 
 async function runPostResponseMemoryEncoding(params = {}) {
   const {
@@ -50,6 +51,26 @@ async function runPostResponseMemoryEncoding(params = {}) {
     const userLabel = (userName && userName !== 'User') ? `The user's name is "${userName}"` : 'The user is unnamed';
     const nameGuard = `IMPORTANT: ${entityLabel}. ${userLabel}. Do NOT label the user as "${entityName || 'the entity'}". Keep them clearly distinct in the memory summary.`;
 
+    // ── NLP vs LLM encoding toggle ────────────────────────────────────────
+    // When useNLP is true (default), skip the LLM call entirely and use
+    // on-device NLP for topic extraction, summarization, emotion, and importance.
+    // Saves ~700 tokens/turn + eliminates LLM latency for memory encoding.
+    const useNLP = params.memoryEncodingUseNLP !== false;
+    let memData;
+
+    if (useNLP) {
+      const nlpResult = encodeMemory(effectiveUserMessage, finalResponse);
+      memData = {
+        episodic: {
+          semantic: nlpResult.semantic,
+          narrative: nlpResult.narrative,
+          emotion: nlpResult.emotion,
+          topics: nlpResult.topics,
+          importance: nlpResult.importance
+        },
+        knowledge: nlpResult.knowledge
+      };
+    } else {
     const memPrompt = `Process this conversation exchange into a memory record.
 
 ${nameGuard}
@@ -127,6 +148,7 @@ Return ONLY this JSON (no other text, no markdown, no explanation):
         };
       }
     }
+    } // end else (LLM path)
 
     const episodic = memData.episodic || memData;
     const knowledge = memData.knowledge || '';

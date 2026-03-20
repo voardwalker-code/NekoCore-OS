@@ -40,6 +40,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
 
     startBrainPoll();
+    if (typeof initBrainSSE === 'function') initBrainSSE();
     if (typeof initChatPhysical === 'function') initChatPhysical();
 
     setBootOverlayState(getBootGreetingTitle(), 'Desktop shell ready', 100);

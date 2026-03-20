@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NekoCore OS — Persistent Agent Continuity</title>
+<meta name="description" content="A cognitive operating system for persistent AI identity. Episodic memory, belief formation, dream processing, and layered reasoning — built on the REM System.">
+<link rel="preconnect" href="https://fonts.googleapis.com/">
+<link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&family=Sora:wght@400;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-deep:#08090d;--bg-card:#101318;--bg-hover:#14171f;
+  --border-subtle:rgba(255,255,255,0.04);--border-dim:rgba(255,255,255,0.08);--border-chrome:rgba(180,190,210,0.12);
+  --chrome-light:#c8cdd6;--chrome-mid:#8a92a0;--chrome-dark:#4a5060;
+  --glow-silver:#b0b8c8;--glow-red:#ff4444;--glow-fire:#ff8c00;--glow-ice:#44bbff;--glow-nature:#88dd22;--glow-green:#34d399;
+  --accent:#34d399;--cyan:#22d3ee;--indigo:#818cf8;--gold:#fbbf24;--purple:#a78bfa;--red:#f87171;--orange:#fb923c;
+  --text-primary:#e2e5ea;--text-secondary:#8a92a4;--text-tertiary:#4e5568;
+  --font-display:'Chakra Petch',sans-serif;--font-body:'Sora',sans-serif;--font-mono:'IBM Plex Mono',monospace;
+  --radius-md:12px;--radius-lg:20px;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
+body{background:var(--bg-deep);color:var(--text-primary);font-family:var(--font-body);line-height:1.6;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(90deg,transparent,transparent 1px,rgba(255,255,255,0.008) 1px,rgba(255,255,255,0.008) 2px),repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(255,255,255,0.003) 3px,rgba(255,255,255,0.003) 4px);pointer-events:none;z-index:9998}
+body::after{content:'';position:fixed;inset:0;background:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");pointer-events:none;z-index:9999}
+a{color:var(--accent);text-decoration:none;transition:color .2s}a:hover{color:#5eead4}
+
+.top-nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 clamp(20px,4vw,60px);height:64px;background:linear-gradient(180deg,rgba(12,14,20,.92),rgba(12,14,20,.85));backdrop-filter:blur(24px) saturate(140%);border-bottom:1px solid var(--border-chrome)}
+.top-nav::after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(180,190,210,.15),transparent)}
+.nav-brand{display:flex;align-items:center;gap:10px;font-family:var(--font-display);font-weight:700;font-size:18px;background:linear-gradient(135deg,#fff,var(--chrome-mid));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.nav-brand svg{width:28px;height:28px}
+.nav-links{display:flex;gap:28px;align-items:center}
+.nav-links a{font-size:13px;font-weight:500;color:var(--text-secondary);letter-spacing:.02em;transition:color .2s}
+.nav-links a:hover{color:var(--text-primary)}
+.nav-github{display:inline-flex;align-items:center;gap:8px;background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.2);padding:8px 18px;border-radius:8px;font-size:13px;font-weight:600;color:var(--accent);transition:all .25s}
+.nav-github:hover{background:rgba(52,211,153,.15);border-color:rgba(52,211,153,.4);color:#5eead4;box-shadow:0 0 20px rgba(52,211,153,.12)}
+.nav-github svg{width:16px;height:16px}
+.nav-hamburger{display:none;background:none;border:none;color:var(--text-secondary);cursor:pointer;padding:4px}
+@media(max-width:768px){.nav-links{display:none}.nav-hamburger{display:block}.nav-links.open{display:flex;flex-direction:column;position:absolute;top:64px;left:0;right:0;background:rgba(8,9,13,.97);padding:20px;border-bottom:1px solid var(--border-dim);gap:16px}}
+
+section{padding:100px clamp(20px,5vw,80px) 80px;position:relative}
+.section-inner{max-width:1200px;margin:0 auto}
+.glow-sep{height:2px;max-width:100%;position:relative;overflow:visible}
+.glow-sep::before{content:'';position:absolute;left:10%;right:10%;top:-8px;bottom:-8px;border-radius:50%;filter:blur(12px)}
+.glow-sep.gs-silver{background:linear-gradient(90deg,transparent,var(--glow-silver),transparent)}.glow-sep.gs-silver::before{background:rgba(180,190,210,.15)}
+.glow-sep.gs-red{background:linear-gradient(90deg,transparent,var(--glow-red),transparent)}.glow-sep.gs-red::before{background:rgba(255,68,68,.12)}
+.glow-sep.gs-fire{background:linear-gradient(90deg,transparent,var(--glow-fire),transparent)}.glow-sep.gs-fire::before{background:rgba(255,140,0,.12)}
+.glow-sep.gs-ice{background:linear-gradient(90deg,transparent,var(--glow-ice),transparent)}.glow-sep.gs-ice::before{background:rgba(68,187,255,.12)}
+.glow-sep.gs-nature{background:linear-gradient(90deg,transparent,var(--glow-nature),transparent)}.glow-sep.gs-nature::before{background:rgba(136,221,34,.12)}
+.glow-sep.gs-green{background:linear-gradient(90deg,transparent,var(--glow-green),transparent)}.glow-sep.gs-green::before{background:rgba(52,211,153,.12)}
+.section-glow{position:absolute;top:0;left:50%;transform:translateX(-50%);width:900px;height:500px;border-radius:50%;pointer-events:none;opacity:.4;filter:blur(120px)}
+.sg-silver{background:radial-gradient(circle,rgba(180,190,210,.08),transparent 70%)}
+.sg-red{background:radial-gradient(circle,rgba(255,68,68,.06),transparent 70%)}
+.sg-fire{background:radial-gradient(circle,rgba(255,140,0,.06),transparent 70%)}
+.sg-ice{background:radial-gradient(circle,rgba(68,187,255,.06),transparent 70%)}
+.sg-nature{background:radial-gradient(circle,rgba(136,221,34,.06),transparent 70%)}
+
+.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding-top:64px;position:relative;overflow:hidden}
+.hero-spotlight{position:absolute;top:-30%;left:30%;width:60%;height:80%;background:radial-gradient(ellipse,rgba(255,255,255,.03),transparent 60%);transform:rotate(-15deg);pointer-events:none}
+.hero-spotlight-2{position:absolute;top:-20%;right:20%;width:40%;height:60%;background:radial-gradient(ellipse,rgba(255,255,255,.02),transparent 60%);transform:rotate(25deg);pointer-events:none}
+.hero-grid-bg{position:absolute;inset:0;pointer-events:none;background-image:linear-gradient(rgba(180,190,210,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(180,190,210,.025) 1px,transparent 1px);background-size:60px 60px;mask-image:radial-gradient(ellipse 70% 55% at 50% 40%,black 20%,transparent 65%);-webkit-mask-image:radial-gradient(ellipse 70% 55% at 50% 40%,black 20%,transparent 65%)}
+.hero-logo{width:200px;height:200px;margin-bottom:44px;animation:logoBreathe 4s ease-in-out infinite}
+@keyframes logoBreathe{0%,100%{filter:drop-shadow(0 0 30px rgba(180,190,210,.2)) drop-shadow(0 0 60px rgba(52,211,153,.1))}50%{filter:drop-shadow(0 0 50px rgba(180,190,210,.35)) drop-shadow(0 0 90px rgba(52,211,153,.2))}}
+.hero-tag{font-family:var(--font-mono);font-size:12px;font-weight:500;background:linear-gradient(90deg,var(--chrome-mid),var(--accent),var(--chrome-mid));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:.22em;text-transform:uppercase;margin-bottom:20px;background-size:200% 100%;animation:tagShimmer 4s ease-in-out infinite}
+@keyframes tagShimmer{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+.hero h1{font-family:var(--font-display);font-size:clamp(48px,8vw,96px);font-weight:700;line-height:.95;letter-spacing:-.03em;background:linear-gradient(180deg,#fff 0%,#c8cdd6 30%,#8a92a0 60%,#c8cdd6 80%,#fff 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:24px}
+.hero-sub{font-size:clamp(16px,2vw,19px);color:var(--text-secondary);max-width:660px;line-height:1.75;margin-bottom:44px}
+.hero-sub strong{color:var(--chrome-light);font-weight:600}
+.hero-actions{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;align-items:flex-end}
+
+/* Nature GitHub button */
+.btn-nature-wrap{position:relative;display:inline-flex}
+.btn-nature{display:inline-flex;align-items:center;gap:10px;padding:16px 36px;border-radius:12px;background:linear-gradient(135deg,#2d6a1e,#1a4a10,#2d6a1e);color:#d4ffb8;font-weight:700;font-size:16px;font-family:var(--font-display);letter-spacing:.02em;border:1px solid rgba(136,221,34,.3);cursor:pointer;transition:all .4s;box-shadow:0 0 30px rgba(136,221,34,.15),0 0 60px rgba(52,211,153,.08),inset 0 1px 0 rgba(255,255,255,.1);position:relative;z-index:2;text-decoration:none}
+.btn-nature:hover{transform:translateY(-3px);box-shadow:0 0 50px rgba(136,221,34,.3),0 0 100px rgba(52,211,153,.15),inset 0 1px 0 rgba(255,255,255,.15);border-color:rgba(136,221,34,.6);color:#e8ffd4;background:linear-gradient(135deg,#3a7d28,#1f5a14,#3a7d28)}
+.btn-nature svg{width:18px;height:18px}
+.nature-burst{position:absolute;inset:-80px -60px;z-index:1;pointer-events:none;overflow:visible}
+.nature-burst svg{width:100%;height:100%;overflow:visible}
+.vine{stroke-dasharray:200;stroke-dashoffset:200}
+.btn-nature-wrap:hover .vine{stroke-dashoffset:0;transition:stroke-dashoffset 1.2s cubic-bezier(.4,0,.2,1)}
+.leaf{opacity:0;transform-origin:center}
+.btn-nature-wrap:hover .leaf{animation:leafGrow .6s ease-out forwards}
+.btn-nature-wrap:hover .leaf:nth-child(2){animation-delay:.2s}
+.btn-nature-wrap:hover .leaf:nth-child(3){animation-delay:.35s}
+.btn-nature-wrap:hover .leaf:nth-child(4){animation-delay:.5s}
+.btn-nature-wrap:hover .leaf:nth-child(5){animation-delay:.6s}
+.btn-nature-wrap:hover .leaf:nth-child(6){animation-delay:.7s}
+.btn-nature-wrap:hover .leaf:nth-child(7){animation-delay:.4s}
+.btn-nature-wrap:hover .leaf:nth-child(8){animation-delay:.55s}
+@keyframes leafGrow{0%{opacity:0;transform:scale(0) rotate(-30deg)}60%{transform:scale(1.2) rotate(5deg)}100%{opacity:1;transform:scale(1) rotate(0deg)}}
+.sparkle{opacity:0}
+.btn-nature-wrap:hover .sparkle{animation:sparkleFloat 2s ease-in-out infinite}
+.btn-nature-wrap:hover .sparkle:nth-child(2){animation-delay:.4s}
+.btn-nature-wrap:hover .sparkle:nth-child(3){animation-delay:.8s}
+.btn-nature-wrap:hover .sparkle:nth-child(4){animation-delay:1.2s}
+@keyframes sparkleFloat{0%,100%{opacity:0;transform:translateY(0) scale(.5)}30%{opacity:1;transform:translateY(-8px) scale(1)}70%{opacity:.7;transform:translateY(-16px) scale(.8)}}
+
+.btn-secondary{display:inline-flex;align-items:center;gap:10px;padding:16px 36px;border-radius:12px;background:transparent;color:var(--chrome-light);font-weight:600;font-size:16px;font-family:var(--font-display);letter-spacing:.02em;border:1px solid var(--border-chrome);cursor:pointer;transition:all .3s;text-decoration:none}
+.btn-secondary:hover{border-color:rgba(180,190,210,.3);color:#fff;box-shadow:0 0 20px rgba(180,190,210,.06);transform:translateY(-2px)}
+.hero-stats{display:flex;gap:48px;margin-top:64px;padding-top:40px;border-top:1px solid var(--border-chrome);position:relative}
+.hero-stats::before{content:'';position:absolute;top:-1px;left:10%;right:10%;height:1px;background:linear-gradient(90deg,transparent,rgba(180,190,210,.2),transparent)}
+.hero-stat{text-align:center}
+.hero-stat .val{font-family:var(--font-display);font-size:36px;font-weight:700;line-height:1;background:linear-gradient(180deg,#fff,var(--chrome-mid));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero-stat .val span{background:linear-gradient(180deg,var(--accent),#2dd4bf);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero-stat .lbl{font-size:11px;color:var(--text-tertiary);margin-top:6px;letter-spacing:.08em;text-transform:uppercase;font-weight:600}
+
+.section-label{font-family:var(--font-mono);font-size:11px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;margin-bottom:12px}
+.sl-silver{color:var(--glow-silver)}.sl-red{color:var(--glow-red)}.sl-fire{color:var(--glow-fire)}.sl-ice{color:var(--glow-ice)}.sl-nature{color:var(--glow-nature)}.sl-green{color:var(--glow-green)}
+.section-title{font-family:var(--font-display);font-size:clamp(28px,4vw,48px);font-weight:700;line-height:1.1;margin-bottom:16px}
+.st-chrome{background:linear-gradient(180deg,#fff 0%,var(--chrome-mid) 50%,var(--chrome-light) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.st-red{background:linear-gradient(180deg,#fff 0%,#ff6666 50%,#ff4444 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.st-fire{background:linear-gradient(180deg,#ffe0a0 0%,#ff8c00 50%,#cc6600 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.st-ice{background:linear-gradient(180deg,#fff 0%,#88ccff 50%,#44bbff 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.st-nature{background:linear-gradient(180deg,#eeffcc 0%,#88dd22 50%,#66aa00 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.section-desc{font-size:16px;color:var(--text-secondary);max-width:640px;line-height:1.7}
+
+.feature-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:1px;background:var(--border-chrome);border-radius:var(--radius-lg);overflow:hidden;margin-top:56px;box-shadow:0 0 40px rgba(180,190,210,.04)}
+.feature-card{background:var(--bg-card);padding:36px 30px;position:relative;overflow:hidden;transition:background .3s}
+.feature-card:hover{background:var(--bg-hover)}
+.feature-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;opacity:0;transition:opacity .4s}
+.feature-card:hover::before{opacity:1}
+.feature-card.fc-silver::before{background:linear-gradient(90deg,transparent,var(--glow-silver),transparent)}
+.feature-card.fc-red::before{background:linear-gradient(90deg,transparent,var(--glow-red),transparent)}
+.feature-card.fc-fire::before{background:linear-gradient(90deg,transparent,var(--glow-fire),transparent)}
+.feature-card.fc-ice::before{background:linear-gradient(90deg,transparent,var(--glow-ice),transparent)}
+.feature-card.fc-nature::before{background:linear-gradient(90deg,transparent,var(--glow-nature),transparent)}
+.feature-card.fc-green::before{background:linear-gradient(90deg,transparent,var(--glow-green),transparent)}
+.fc-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:20px;border:1px solid}
+.fc-silver .fc-icon{background:rgba(180,190,210,.06);border-color:rgba(180,190,210,.15)}
+.fc-red .fc-icon{background:rgba(255,68,68,.06);border-color:rgba(255,68,68,.15)}
+.fc-fire .fc-icon{background:rgba(255,140,0,.06);border-color:rgba(255,140,0,.15)}
+.fc-ice .fc-icon{background:rgba(68,187,255,.06);border-color:rgba(68,187,255,.15)}
+.fc-nature .fc-icon{background:rgba(136,221,34,.06);border-color:rgba(136,221,34,.15)}
+.fc-green .fc-icon{background:rgba(52,211,153,.06);border-color:rgba(52,211,153,.15)}
+.fc-title{font-family:var(--font-display);font-size:17px;font-weight:700;margin-bottom:10px;color:var(--text-primary)}
+.fc-desc{font-size:14px;color:var(--text-secondary);line-height:1.65}
+
+.arch-stack{margin-top:48px;border:1px solid rgba(255,68,68,.12);border-radius:var(--radius-lg);overflow:hidden;box-shadow:0 0 40px rgba(255,68,68,.03)}
+.arch-layer{display:flex;align-items:center;gap:16px;padding:18px 28px;border-bottom:1px solid rgba(255,68,68,.06);transition:background .25s,box-shadow .25s}
+.arch-layer:last-child{border-bottom:none}
+.arch-layer:hover{background:rgba(255,68,68,.02);box-shadow:inset 3px 0 0 var(--glow-red)}
+.arch-depth{font-family:var(--font-mono);font-size:11px;font-weight:600;color:rgba(255,68,68,.5);width:28px;text-align:center;flex-shrink:0}
+.arch-name{font-family:var(--font-display);font-size:15px;font-weight:600;color:var(--text-primary);min-width:200px}
+.arch-detail{font-size:13px;color:var(--text-secondary);flex:1}
+.arch-bar{width:4px;height:32px;border-radius:2px;flex-shrink:0;box-shadow:0 0 8px currentColor}
+
+.pipeline-flow{display:flex;align-items:center;gap:0;margin-top:48px;overflow-x:auto;padding-bottom:12px}
+.pipe-node{flex-shrink:0;background:var(--bg-card);border:1px solid rgba(255,140,0,.12);border-radius:var(--radius-md);padding:24px 18px;text-align:center;min-width:155px;max-width:190px;transition:all .35s;position:relative}
+.pipe-node:hover{transform:translateY(-4px);border-color:rgba(255,140,0,.4);box-shadow:0 0 30px rgba(255,140,0,.08),0 8px 30px rgba(0,0,0,.3)}
+.pipe-node .pn-icon{font-size:28px;margin-bottom:10px}
+.pipe-node .pn-label{font-family:var(--font-display);font-size:13px;font-weight:700;margin-bottom:6px;color:var(--glow-fire)}
+.pipe-node .pn-sub{font-size:11px;color:var(--text-tertiary);line-height:1.5}
+.pipe-arrow{flex-shrink:0;width:36px;height:2px;background:linear-gradient(90deg,transparent,var(--glow-fire),transparent);position:relative}
+.pipe-arrow::after{content:'';position:absolute;right:-3px;top:50%;transform:translateY(-50%);border-left:6px solid var(--glow-fire);border-top:4px solid transparent;border-bottom:4px solid transparent}
+
+.convictions{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-top:48px}
+.conviction-card{background:var(--bg-card);border:1px solid rgba(68,187,255,.08);border-radius:var(--radius-md);padding:28px 24px;position:relative;transition:border-color .3s,box-shadow .3s}
+.conviction-card:hover{border-color:rgba(68,187,255,.25);box-shadow:0 0 30px rgba(68,187,255,.05)}
+.conviction-num{font-family:var(--font-display);font-size:52px;font-weight:700;color:rgba(68,187,255,.06);position:absolute;top:10px;right:14px;line-height:1}
+.conviction-title{font-family:var(--font-display);font-size:15px;font-weight:700;color:var(--glow-ice);margin-bottom:8px}
+.conviction-desc{font-size:13px;color:var(--text-secondary);line-height:1.6}
+
+.specs-table{width:100%;margin-top:48px;border-collapse:collapse;border:1px solid rgba(136,221,34,.1);border-radius:var(--radius-md);overflow:hidden;box-shadow:0 0 30px rgba(136,221,34,.02)}
+.specs-table th,.specs-table td{text-align:left;padding:14px 20px;border-bottom:1px solid rgba(136,221,34,.05);font-size:14px}
+.specs-table th{background:rgba(136,221,34,.03);font-family:var(--font-mono);font-size:11px;font-weight:600;color:var(--glow-nature);letter-spacing:.1em;text-transform:uppercase}
+.specs-table td:first-child{font-family:var(--font-display);font-weight:600;color:var(--text-primary)}
+.specs-table td{color:var(--text-secondary)}
+.specs-table tr:last-child td{border-bottom:none}
+.specs-table tr:hover td{background:rgba(136,221,34,.02)}
+
+.roadmap{margin-top:48px;display:flex;flex-direction:column;gap:0;position:relative}
+.roadmap::before{content:'';position:absolute;left:20px;top:0;bottom:0;width:2px;background:linear-gradient(180deg,var(--accent),var(--border-dim))}
+.roadmap-item{display:flex;gap:20px;padding:16px 0;position:relative}
+.roadmap-dot{width:12px;height:12px;border-radius:50%;margin-top:4px;flex-shrink:0;border:2px solid var(--border-dim);position:relative;left:15px;background:var(--bg-deep);z-index:1}
+.roadmap-item.done .roadmap-dot{background:var(--accent);border-color:var(--accent);box-shadow:0 0 10px rgba(52,211,153,.5)}
+.roadmap-item.current .roadmap-dot{background:var(--gold);border-color:var(--gold);box-shadow:0 0 10px rgba(251,191,36,.5);animation:dotPulse 2s ease-in-out infinite}
+@keyframes dotPulse{0%,100%{box-shadow:0 0 10px rgba(251,191,36,.5)}50%{box-shadow:0 0 22px rgba(251,191,36,.8)}}
+.roadmap-content{padding-left:16px}
+.roadmap-phase{font-family:var(--font-mono);font-size:11px;font-weight:600;color:var(--text-tertiary);letter-spacing:.1em;text-transform:uppercase}
+.roadmap-item.done .roadmap-phase{color:var(--accent)}
+.roadmap-item.current .roadmap-phase{color:var(--gold)}
+.roadmap-name{font-family:var(--font-display);font-size:16px;font-weight:700;margin-top:2px}
+.roadmap-desc{font-size:13px;color:var(--text-secondary);margin-top:4px;line-height:1.5}
+
+.cta-section{text-align:center;padding:100px clamp(20px,5vw,80px);position:relative}
+.cta-section h2{font-family:var(--font-display);font-size:clamp(28px,4vw,44px);font-weight:700;margin-bottom:16px;background:linear-gradient(180deg,#fff,var(--chrome-mid));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.cta-section p{font-size:16px;color:var(--text-secondary);max-width:540px;margin:0 auto 40px;line-height:1.7}
+
+footer{border-top:1px solid var(--border-chrome);padding:40px clamp(20px,5vw,80px)}
+footer::before{content:'';display:block;height:1px;margin:-41px auto 40px;max-width:600px;background:linear-gradient(90deg,transparent,rgba(180,190,210,.15),transparent)}
+.footer-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px}
+.footer-brand{display:flex;align-items:center;gap:8px;font-family:var(--font-display);font-weight:600;font-size:14px;color:var(--text-tertiary)}
+.footer-brand svg{width:20px;height:20px;opacity:.5}
+.footer-links{display:flex;gap:24px}
+.footer-links a{font-size:13px;color:var(--text-tertiary)}
+.footer-links a:hover{color:var(--accent)}
+.footer-copy{font-size:12px;color:var(--text-tertiary);width:100%;text-align:center;margin-top:12px}
+
+.reveal{opacity:0;transform:translateY(30px);transition:opacity .7s cubic-bezier(.16,1,.3,1),transform .7s cubic-bezier(.16,1,.3,1)}
+.reveal.visible{opacity:1;transform:translateY(0)}
+.reveal-d1{transition-delay:.1s}.reveal-d2{transition-delay:.2s}
+
+@media(max-width:640px){.hero-stats{flex-direction:column;gap:20px}.pipeline-flow{flex-direction:column;align-items:stretch}.pipe-arrow{width:2px;height:28px;margin:0 auto;background:linear-gradient(180deg,transparent,var(--glow-fire),transparent)}.pipe-arrow::after{display:none}.arch-layer{flex-wrap:wrap}.arch-name{min-width:auto}.footer-inner{justify-content:center;text-align:center}.nature-burst{display:none}}
+</style>
+</head>
+<body>
+
+<nav class="top-nav" id="topNav">
+  <a href="#" class="nav-brand">
+    <svg viewBox="0 0 32 32" fill="none"><path d="M16 4 L10 10 L8 8 L4 14 L8 18 L6 22 L10 28 L14 24 L16 28 L18 24 L22 28 L26 22 L24 18 L28 14 L24 8 L22 10 L16 4Z" fill="none" stroke="url(#ng)" stroke-width="1.5" stroke-linejoin="round"></path><circle cx="12" cy="16" r="2" fill="#b0b8c8" opacity=".7"></circle><circle cx="20" cy="16" r="2" fill="#b0b8c8" opacity=".7"></circle><path d="M14 20 Q16 22 18 20" stroke="#b0b8c8" stroke-width="1" fill="none" stroke-linecap="round"></path><defs><lineargradient id="ng" x1="0" y1="0" x2="32" y2="32"><stop offset="0%" stop-color="#fff"></stop><stop offset="100%" stop-color="#8a92a0"></stop></lineargradient></defs></svg>
+    NekoCore OS
+  </a>
+  <div class="nav-links" id="navLinks">
+    <a href="#features">Features</a>
+    <a href="#architecture">Architecture</a>
+    <a href="#pipeline">Pipeline</a>
+    <a href="#roadmap">Roadmap</a>
+    <a href="https://github.com/voardwalker-code/NekoCore-OS/blob/main/docs/NEKOCORE-OS-WHITE-PAPER-v2.md" target="_blank">White Paper</a>
+    <a href="https://github.com/voardwalker-code/NekoCore-OS" target="_blank" class="nav-github"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path></svg>GitHub</a>
+  </div>
+  <button class="nav-hamburger" onclick="document.getElementById(&#39;navLinks&#39;).classList.toggle(&#39;open&#39;)"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg></button>
+</nav>
+
+<section class="hero" id="hero">
+  <div class="hero-spotlight"></div>
+  <div class="hero-spotlight-2"></div>
+  <div class="hero-grid-bg"></div>
+  <svg class="hero-logo" viewBox="0 0 200 200" fill="none"><defs><lineargradient id="cg" x1="40" y1="20" x2="160" y2="180"><stop offset="0%" stop-color="#fff"></stop><stop offset="25%" stop-color="#c8cdd6"></stop><stop offset="50%" stop-color="#8a92a0"></stop><stop offset="75%" stop-color="#c8cdd6"></stop><stop offset="100%" stop-color="#fff"></stop></lineargradient><filter id="gl"><fegaussianblur stdDeviation="3" result="b"></fegaussianblur><fecomposite in="SourceGraphic" in2="b" operator="over"></fecomposite></filter></defs><ellipse cx="100" cy="128" rx="28" ry="22" stroke="url(#cg)" stroke-width="2.5" fill="rgba(180,190,210,.04)" filter="url(#gl)"></ellipse><ellipse cx="72" cy="100" rx="13" ry="16" stroke="url(#cg)" stroke-width="2" fill="rgba(180,190,210,.03)" transform="rotate(-15 72 100)"></ellipse><ellipse cx="92" cy="86" rx="12" ry="16" stroke="url(#cg)" stroke-width="2" fill="rgba(180,190,210,.03)"></ellipse><ellipse cx="112" cy="86" rx="12" ry="16" stroke="url(#cg)" stroke-width="2" fill="rgba(180,190,210,.03)"></ellipse><ellipse cx="130" cy="100" rx="13" ry="16" stroke="url(#cg)" stroke-width="2" fill="rgba(180,190,210,.03)" transform="rotate(15 130 100)"></ellipse><path d="M50 75 Q35 50 55 38" stroke="url(#cg)" stroke-width="2.5" fill="none" stroke-linecap="round"></path><path d="M78 62 Q72 35 88 28" stroke="url(#cg)" stroke-width="2.5" fill="none" stroke-linecap="round"></path><path d="M122 62 Q128 35 112 28" stroke="url(#cg)" stroke-width="2.5" fill="none" stroke-linecap="round"></path><path d="M150 75 Q165 50 145 38" stroke="url(#cg)" stroke-width="2.5" fill="none" stroke-linecap="round"></path><path d="M34 90 Q18 55 42 26" stroke="url(#cg)" stroke-width="1.5" fill="none" stroke-linecap="round" opacity=".4"></path><path d="M166 90 Q182 55 158 26" stroke="url(#cg)" stroke-width="1.5" fill="none" stroke-linecap="round" opacity=".4"></path><ellipse cx="88" cy="78" rx="3" ry="6" fill="white" opacity=".2" transform="rotate(-10 88 78)"></ellipse><ellipse cx="116" cy="78" rx="3" ry="6" fill="white" opacity=".15" transform="rotate(10 116 78)"></ellipse></svg>
+  <div class="hero-tag">Built on the REM System</div>
+  <h1>NekoCore OS</h1>
+  <p class="hero-sub">A cognitive operating system for <strong>persistent AI identity</strong> — episodic memory, belief formation, dream processing, and layered reasoning across sessions and sleep cycles.</p>
+  <div class="hero-actions">
+    <div class="btn-nature-wrap">
+      <div class="nature-burst"><svg viewBox="-60 -80 340 260" xmlns="http://www.w3.org/2000/svg"><path class="vine" d="M20,50 Q-10,30 -20,5 Q-30,-20 -15,-45" stroke="#4a8c20" stroke-width="2.5" fill="none" stroke-linecap="round"></path><path class="vine" d="M200,50 Q230,25 240,0 Q250,-25 235,-50" stroke="#4a8c20" stroke-width="2.5" fill="none" stroke-linecap="round" style="transition-delay:.15s"></path><path class="vine" d="M110,30 Q105,5 115,-20 Q125,-45 110,-65" stroke="#3d7a18" stroke-width="2" fill="none" stroke-linecap="round" style="transition-delay:.08s"></path><ellipse class="leaf" cx="-10" cy="15" rx="10" ry="5" fill="#5aaa25" transform="rotate(-40 -10 15)" opacity="0"></ellipse><ellipse class="leaf" cx="-22" cy="-15" rx="8" ry="4" fill="#6bbb30" transform="rotate(-55 -22 -15)" opacity="0"></ellipse><ellipse class="leaf" cx="-5" cy="-40" rx="9" ry="4.5" fill="#4d9920" transform="rotate(-30 -5 -40)" opacity="0"></ellipse><ellipse class="leaf" cx="230" cy="10" rx="10" ry="5" fill="#5aaa25" transform="rotate(35 230 10)" opacity="0"></ellipse><ellipse class="leaf" cx="242" cy="-20" rx="8" ry="4" fill="#6bbb30" transform="rotate(50 242 -20)" opacity="0"></ellipse><ellipse class="leaf" cx="100" cy="-10" rx="9" ry="4.5" fill="#5aaa25" transform="rotate(-15 100 -10)" opacity="0"></ellipse><ellipse class="leaf" cx="120" cy="-45" rx="8" ry="4" fill="#4d9920" transform="rotate(20 120 -45)" opacity="0"></ellipse><ellipse class="leaf" cx="105" cy="-60" rx="7" ry="3.5" fill="#6bbb30" transform="rotate(-10 105 -60)" opacity="0"></ellipse><circle class="sparkle" cx="-30" cy="-30" r="2" fill="#aafe55" opacity="0"></circle><circle class="sparkle" cx="250" cy="-10" r="2.5" fill="#88ee33" opacity="0"></circle><circle class="sparkle" cx="90" cy="-55" r="2" fill="#ccff88" opacity="0"></circle><circle class="sparkle" cx="140" cy="-30" r="1.5" fill="#aafe55" opacity="0"></circle></svg></div>
+      <a href="https://github.com/voardwalker-code/NekoCore-OS" target="_blank" class="btn-nature"><svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path></svg>View on GitHub</a>
+    </div>
+    <a href="https://github.com/voardwalker-code/NekoCore-OS/blob/main/docs/NEKOCORE-OS-WHITE-PAPER-v2.md" target="_blank" class="btn-secondary">Read the White Paper</a>
+  </div>
+  <div class="hero-stats">
+    <div class="hero-stat"><div class="val">1369<span>+</span></div><div class="lbl">Tests Passing</div></div>
+    <div class="hero-stat"><div class="val"><span>0</span></div><div class="lbl">Dependencies</div></div>
+    <div class="hero-stat"><div class="val">4</div><div class="lbl">Parallel Pipeline</div></div>
+    <div class="hero-stat"><div class="val"><span>v</span>0.8</div><div class="lbl">Current Version</div></div>
+  </div>
+</section>
+
+<div class="glow-sep gs-silver"></div>
+
+<section id="features"><div class="section-glow sg-silver"></div><div class="section-inner">
+  <div class="reveal"><div class="section-label sl-silver">Core Capabilities</div><div class="section-title st-chrome">Persistent identity is an<br>architecture problem.</div><p class="section-desc">NekoCore OS treats AI continuity as a runtime discipline — not a prompting trick. Memory, beliefs, relationships, and orchestration are explicit subsystems with contracts at every boundary.</p></div>
+  <div class="feature-grid reveal reveal-d1">
+    <div class="feature-card fc-silver"><div class="fc-icon">🧠</div><div class="fc-title">Distributed Identity</div><div class="fc-desc">Identity reconstructed from memories, beliefs, persona state, and relationships on every call. Origin story placed last — lived experience leads.</div></div>
+    <div class="feature-card fc-red"><div class="fc-icon">💾</div><div class="fc-title">Multi-Type Memory</div><div class="fc-desc">Episodic, semantic, long-term, and core memory — each with distinct retention roles, decay models, and retrieval scoring. Bounded injection keeps token cost constant.</div></div>
+    <div class="feature-card fc-fire"><div class="fc-icon">⚡</div><div class="fc-title">Parallel Pipeline</div><div class="fc-desc">Subconscious retrieval and dream intuition run concurrently. Conscious synthesis waits for both. Final orchestrator shapes voice under policy controls.</div></div>
+    <div class="feature-card fc-ice"><div class="fc-icon">💤</div><div class="fc-title">Dual Dream Architecture</div><div class="fc-desc">Live dream intuition (read-only, every turn) separated from offline dream maintenance (writes to state, sleep cycles only). Guard-tested boundary.</div></div>
+    <div class="feature-card fc-nature"><div class="fc-icon">🔮</div><div class="fc-title">Belief Formation</div><div class="fc-desc">Emergent beliefs form from repeated semantic patterns with confidence scoring. Reinforced or weakened by evidence over time — a dynamic worldview.</div></div>
+    <div class="feature-card fc-green"><div class="fc-icon">🤝</div><div class="fc-title">Relationship System</div><div class="fc-desc">Per-user feeling, trust, rapport, beliefs, and roles. Capped at ±0.08 per turn. The entity remembers who you are and what you mean to it.</div></div>
+  </div>
+</div></section>
+
+<div class="glow-sep gs-red"></div>
+
+<section id="architecture"><div class="section-glow sg-red"></div><div class="section-inner">
+  <div class="reveal"><div class="section-label sl-red">System Design</div><div class="section-title st-red">Six-layer stack.<br>Zero framework dependencies.</div><p class="section-desc">Pure Node.js server + vanilla HTML/CSS/JS client. Each layer communicates only with its neighbors. The cognitive pipeline never touches the DOM.</p></div>
+  <div class="arch-stack reveal reveal-d1">
+    <div class="arch-layer"><div class="arch-bar" style="color:#b0b8c8;background:#b0b8c8"></div><div class="arch-depth">01</div><div class="arch-name">Desktop Shell</div><div class="arch-detail">Window manager, app launcher, taskbar, theme engine, settings, browser</div></div>
+    <div class="arch-layer"><div class="arch-bar" style="color:#ff6666;background:#ff6666"></div><div class="arch-depth">02</div><div class="arch-name">Client Application</div><div class="arch-detail">Chat UI, entity management, neural visualizer, timeline playback, diagnostics</div></div>
+    <div class="arch-layer"><div class="arch-bar" style="color:#ff8c00;background:#ff8c00"></div><div class="arch-depth">03</div><div class="arch-name">API / Route Layer</div><div class="arch-detail">auth, chat, entity, memory, brain, cognitive, config, SSE, skills, browser, document</div></div>
+    <div class="arch-layer"><div class="arch-bar" style="color:#44bbff;background:#44bbff"></div><div class="arch-depth">04</div><div class="arch-name">Cognitive Pipeline</div><div class="arch-detail">Orchestrator, contributors (1A, 1D, 1C, Final), policy engine, worker subsystem</div></div>
+    <div class="arch-layer"><div class="arch-bar" style="color:#88dd22;background:#88dd22"></div><div class="arch-depth">05</div><div class="arch-name">Services Layer</div><div class="arch-detail">Memory ops, retrieval, relationships, LLM interface, config runtime, entity runtime</div></div>
+    <div class="arch-layer"><div class="arch-bar" style="color:#34d399;background:#34d399"></div><div class="arch-depth">06</div><div class="arch-name">Persistent State</div><div class="arch-detail">Entity folders, memory files, belief graph, indexes, persona state, relationship records</div></div>
+  </div>
+</div></section>
+
+<div class="glow-sep gs-fire"></div>
+
+<section id="pipeline"><div class="section-glow sg-fire"></div><div class="section-inner">
+  <div class="reveal"><div class="section-label sl-fire">Cognitive Runtime</div><div class="section-title st-fire">Every turn: 4 synchronized stages.</div><p class="section-desc">Subconscious and dream intuition run in parallel. Conscious synthesis waits for both. The final orchestrator reviews and voices the result under policy controls.</p></div>
+  <div class="pipeline-flow reveal reveal-d1">
+    <div class="pipe-node"><div class="pn-icon">🗨️</div><div class="pn-label">User Input</div><div class="pn-sub">Turn signal extraction (deterministic, no LLM)</div></div><div class="pipe-arrow"></div>
+    <div class="pipe-node"><div class="pn-icon">🌊</div><div class="pn-label">1A: Subconscious</div><div class="pn-sub">Memory retrieval, relationship context, topic signals</div></div><div class="pipe-arrow"></div>
+    <div class="pipe-node"><div class="pn-icon">💭</div><div class="pn-label">1D: Dream Intuition</div><div class="pn-sub">Abstract associations, lateral links, no memory writes</div></div><div class="pipe-arrow"></div>
+    <div class="pipe-node"><div class="pn-icon">⚡</div><div class="pn-label">1C: Conscious</div><div class="pn-sub">Full reasoning with 1A + 1D context, response draft</div></div><div class="pipe-arrow"></div>
+    <div class="pipe-node"><div class="pn-icon">🎭</div><div class="pn-label">Final Orchestrator</div><div class="pn-sub">Reviews draft, voices in authentic style, policy enforced</div></div>
+  </div>
+</div></section>
+
+<div class="glow-sep gs-ice"></div>
+
+<section id="convictions"><div class="section-glow sg-ice"></div><div class="section-inner">
+  <div class="reveal"><div class="section-label sl-ice">Philosophy</div><div class="section-title st-ice">Five design convictions.</div><p class="section-desc">Every architectural decision in NekoCore OS traces back to these principles.</p></div>
+  <div class="convictions reveal reveal-d1">
+    <div class="conviction-card"><div class="conviction-num">01</div><div class="conviction-title">Evolution over origin</div><div class="conviction-desc">Origin story placed last in LLM context. Lived experience dominates the entity's present behavior.</div></div>
+    <div class="conviction-card"><div class="conviction-num">02</div><div class="conviction-title">Parallel decomposition</div><div class="conviction-desc">Cognitive work split across 4 specialized contributors with defined contracts.</div></div>
+    <div class="conviction-card"><div class="conviction-num">03</div><div class="conviction-title">Bounded injection</div><div class="conviction-desc">Memory tokens capped at fixed limits regardless of archive size. Constant cost per turn.</div></div>
+    <div class="conviction-card"><div class="conviction-num">04</div><div class="conviction-title">Contracts at boundaries</div><div class="conviction-desc">Every inter-module interface governed by explicit schema. Validate, normalize, or fallback.</div></div>
+    <div class="conviction-card"><div class="conviction-num">05</div><div class="conviction-title">Inspectability by default</div><div class="conviction-desc">Every pipeline stage emits structured telemetry to a cognitive event bus, streamed in real time.</div></div>
+  </div>
+</div></section>
+
+<div class="glow-sep gs-nature"></div>
+
+<section id="specs"><div class="section-glow sg-nature"></div><div class="section-inner">
+  <div class="reveal"><div class="section-label sl-nature">Technical Specs</div><div class="section-title st-nature">Built different.</div></div>
+  <table class="specs-table reveal reveal-d1"><thead><tr><th>Property</th><th>Value</th></tr></thead><tbody>
+    <tr><td>Runtime</td><td>Node.js (server) + vanilla HTML/CSS/JS (client)</td></tr>
+    <tr><td>Framework Dependencies</td><td>Zero — no Express, no React, no ORM</td></tr>
+    <tr><td>LLM Providers</td><td>OpenRouter, Ollama, any OpenAI-compatible endpoint</td></tr>
+    <tr><td>Storage</td><td>Flat-file JSON/TXT with atomic write-to-temp-then-rename</td></tr>
+    <tr><td>Transport</td><td>HTTP REST + Server-Sent Events (SSE)</td></tr>
+    <tr><td>Test Suite</td><td>1369+ tests on Node.js built-in node:test</td></tr>
+    <tr><td>Memory Types</td><td>Episodic, Semantic, Long-Term, Core</td></tr>
+    <tr><td>Retrieval Budget</td><td>Sub-100ms at 25K matched entries</td></tr>
+    <tr><td>Token Injection</td><td>30 core + 40 regular + 36 subconscious (bounded)</td></tr>
+    <tr><td>Pipeline Cost</td><td>4 synchronous LLM calls per turn (constant)</td></tr>
+    <tr><td>Relationship Cap</td><td>±0.08 trust/rapport per turn</td></tr>
+    <tr><td>Entity Portability</td><td>Copy folder to resume — full state intact</td></tr>
+  </tbody></table>
+</div></section>
+
+<div class="glow-sep gs-green"></div>
+
+<section id="roadmap"><div class="section-inner">
+  <div class="reveal"><div class="section-label sl-green">The Path Forward</div><div class="section-title st-chrome">Measured constraints.<br>Concrete next moves.</div></div>
+  <div class="roadmap reveal reveal-d1">
+    <div class="roadmap-item done"><div class="roadmap-dot"></div><div class="roadmap-content"><div class="roadmap-phase">Phase 1–3</div><div class="roadmap-name">Foundation &amp; Modularization</div><div class="roadmap-desc">Bug fixes, refactor, app folder modularization. 1369 tests, 0 failures.</div></div></div>
+    <div class="roadmap-item done"><div class="roadmap-dot"></div><div class="roadmap-content"><div class="roadmap-phase">Phase 4.5–4.6</div><div class="roadmap-name">Memory Expansion &amp; Sharded Archives</div><div class="roadmap-desc">Intelligent memory expansion, sharded topic archive, voice profiles.</div></div></div>
+    <div class="roadmap-item current"><div class="roadmap-dot"></div><div class="roadmap-content"><div class="roadmap-phase">Phase 4.7 — Current</div><div class="roadmap-name">Agent Echo: Multi-Index Retrieval</div><div class="roadmap-desc">Echo Now (hot window), Echo Past (index-narrowed archive), async deep retrieval during typing delay.</div></div></div>
+    <div class="roadmap-item"><div class="roadmap-dot"></div><div class="roadmap-content"><div class="roadmap-phase">Phase 5</div><div class="roadmap-name">Predictive Memory Topology</div><div class="roadmap-desc">Anticipating what an entity needs before it asks. Blocked on Phase 4.7.</div></div></div>
+    <div class="roadmap-item"><div class="roadmap-dot"></div><div class="roadmap-content"><div class="roadmap-phase">Research</div><div class="roadmap-name">Distributed Social-Cognition</div><div class="roadmap-desc">Multi-entity experiments across separate machines with relay hub, perspective shards, and structural state capture.</div></div></div>
+  </div>
+</div></section>
+
+<div class="glow-sep gs-silver"></div>
+
+<section class="cta-section"><div class="reveal">
+  <div class="section-label sl-silver">Open Source</div>
+  <h2>Shaped by experience,<br>not just instructions.</h2>
+  <p>NekoCore OS is open source. Explore the architecture, run the tests, build on the REM System. Persistent agents are an engineering discipline — not a prompting trick.</p>
+  <div class="hero-actions">
+    <div class="btn-nature-wrap">
+      <div class="nature-burst"><svg viewBox="-60 -80 340 260" xmlns="http://www.w3.org/2000/svg"><path class="vine" d="M20,50 Q-10,30 -20,5 Q-30,-20 -15,-45" stroke="#4a8c20" stroke-width="2.5" fill="none" stroke-linecap="round"></path><path class="vine" d="M200,50 Q230,25 240,0 Q250,-25 235,-50" stroke="#4a8c20" stroke-width="2.5" fill="none" stroke-linecap="round" style="transition-delay:.15s"></path><path class="vine" d="M110,30 Q105,5 115,-20 Q125,-45 110,-65" stroke="#3d7a18" stroke-width="2" fill="none" stroke-linecap="round" style="transition-delay:.08s"></path><ellipse class="leaf" cx="-10" cy="15" rx="10" ry="5" fill="#5aaa25" transform="rotate(-40 -10 15)" opacity="0"></ellipse><ellipse class="leaf" cx="-22" cy="-15" rx="8" ry="4" fill="#6bbb30" transform="rotate(-55 -22 -15)" opacity="0"></ellipse><ellipse class="leaf" cx="-5" cy="-40" rx="9" ry="4.5" fill="#4d9920" transform="rotate(-30 -5 -40)" opacity="0"></ellipse><ellipse class="leaf" cx="230" cy="10" rx="10" ry="5" fill="#5aaa25" transform="rotate(35 230 10)" opacity="0"></ellipse><ellipse class="leaf" cx="242" cy="-20" rx="8" ry="4" fill="#6bbb30" transform="rotate(50 242 -20)" opacity="0"></ellipse><ellipse class="leaf" cx="100" cy="-10" rx="9" ry="4.5" fill="#5aaa25" transform="rotate(-15 100 -10)" opacity="0"></ellipse><ellipse class="leaf" cx="120" cy="-45" rx="8" ry="4" fill="#4d9920" transform="rotate(20 120 -45)" opacity="0"></ellipse><ellipse class="leaf" cx="105" cy="-60" rx="7" ry="3.5" fill="#6bbb30" transform="rotate(-10 105 -60)" opacity="0"></ellipse><circle class="sparkle" cx="-30" cy="-30" r="2" fill="#aafe55" opacity="0"></circle><circle class="sparkle" cx="250" cy="-10" r="2.5" fill="#88ee33" opacity="0"></circle><circle class="sparkle" cx="90" cy="-55" r="2" fill="#ccff88" opacity="0"></circle><circle class="sparkle" cx="140" cy="-30" r="1.5" fill="#aafe55" opacity="0"></circle></svg></div>
+      <a href="https://github.com/voardwalker-code/NekoCore-OS" target="_blank" class="btn-nature"><svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path></svg>View on GitHub</a>
+    </div>
+    <a href="https://github.com/voardwalker-code/NekoCore-OS/blob/main/docs/NEKOCORE-OS-WHITE-PAPER-v2.md" target="_blank" class="btn-secondary">Read the White Paper</a>
+  </div>
+</div></section>
+
+<footer><div class="footer-inner">
+  <div class="footer-brand"><svg viewBox="0 0 32 32" fill="none"><path d="M16 4 L10 10 L8 8 L4 14 L8 18 L6 22 L10 28 L14 24 L16 28 L18 24 L22 28 L26 22 L24 18 L28 14 L24 8 L22 10 L16 4Z" fill="none" stroke="#8a92a0" stroke-width="1.5" stroke-linejoin="round" opacity=".4"></path></svg>NekoCore OS</div>
+  <div class="footer-links"><a href="https://github.com/voardwalker-code/NekoCore-OS" target="_blank">GitHub</a><a href="https://github.com/voardwalker-code/NekoCore-OS/blob/main/docs/NEKOCORE-OS-WHITE-PAPER-v2.md" target="_blank">White Paper</a><a href="https://github.com/voardwalker-code/NekoCore-OS/discussions" target="_blank">Discussions</a></div>
+  <div class="footer-copy">Built on the REM System (Recursive Echo Memory) — March 2026</div>
+</div></footer>
+
+<script>
+window.addEventListener('scroll',()=>{document.getElementById('topNav').classList.toggle('scrolled',window.scrollY>40)},{passive:true});
+const ro=new IntersectionObserver(e=>{e.forEach(x=>{if(x.isIntersecting){x.target.classList.add('visible');ro.unobserve(x.target)}})},{threshold:.12,rootMargin:'0px 0px -30px 0px'});
+document.querySelectorAll('.reveal').forEach(el=>ro.observe(el));
+document.querySelectorAll('a[href^="#"]').forEach(a=>{a.addEventListener('click',e=>{e.preventDefault();const t=document.querySelector(a.getAttribute('href'));if(t)t.scrollIntoView({behavior:'smooth',block:'start'});document.getElementById('navLinks').classList.remove('open')})});
+</script>
+
+
+</body></html>

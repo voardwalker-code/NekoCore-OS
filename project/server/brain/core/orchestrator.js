@@ -66,6 +66,8 @@ class Orchestrator {
     this.getSkillContext = options.getSkillContext || null;
     // B-3: Optional entity summaries supplier — invoked when this entity is a system orchestrator
     this.getEntitySummaries = options.getEntitySummaries || null;
+    // C-Integration: Pre-assembled cognitive state snapshot block
+    this.cognitiveSnapshot = options.cognitiveSnapshot || null;
   }
 
   isRuntimeUsable(runtime) {
@@ -401,6 +403,11 @@ class Orchestrator {
       }
     }
 
+    // ── Inject cognitive state snapshot — the entity's inner landscape ──
+    if (this.cognitiveSnapshot) {
+      contextBlock += '\n' + this.cognitiveSnapshot;
+    }
+
     // Ask subconscious LLM to reflect on the memory context
     const systemPrompt = getSubconsciousPrompt(this.entity);
     let userContent = `The user said: "${userMessage}"`;
@@ -700,7 +707,9 @@ Rules:
     const recentHistory = chatHistory.slice(-8);
     for (const msg of recentHistory) {
       if (msg.role === 'user' || msg.role === 'assistant') {
-        messages.push({ role: msg.role, content: msg.content });
+        // T3-2: Truncate individual history messages to prevent token blow-up
+        const content = String(msg.content || '').slice(0, 1200);
+        messages.push({ role: msg.role, content });
       }
     }
 
@@ -857,21 +866,32 @@ Keep concise and structured.`;
       } catch (_) { /* entity summaries unavailable — proceed without */ }
     }
 
+    // T3-3: Lean final — Conscious already reasoned with all context, so we condense
+    // the subconscious/dream/signals to brief summaries instead of full copies.
+    const leanSub = String(subconsciousOutput || '').slice(0, 600) || '(No subconscious context)';
+    const leanDream = String(dreamOutput || '').slice(0, 300) || '(No dream contribution)';
+    const signalsSummary = (() => {
+      const ts = options.turnSignals || {};
+      const parts = [];
+      if (ts.subjects?.length) parts.push('subjects: ' + ts.subjects.join(', '));
+      if (ts.emotion?.label && ts.emotion.label !== 'neutral') parts.push('emotion: ' + ts.emotion.label);
+      if (ts.tension > 0.3) parts.push('tension: ' + Number(ts.tension).toFixed(2));
+      return parts.length ? parts.join(' | ') : 'none';
+    })();
+
     const mergePrompt = `User's message: "${userMessage}"
 
 === CONSCIOUS REASONING NOTES ===
 ${consciousOutput || '(No conscious reasoning)'}
 
-=== CONTEXT USED BY CONSCIOUS ===
+=== CONTEXT SUMMARY ===
+[Subconscious (1A) — condensed]:
+${leanSub}
 
-[Subconscious (1A) — memories, emotional signal, lived experience]:
-${subconsciousOutput || '(No subconscious context)'}
+[Dream-Intuition (1D) — condensed]:
+${leanDream}
 
-[Dream-Intuition (1D) — abstract associations, lateral links, creative texture]:
-${dreamOutput || '(No dream contribution)'}
-
-[Turn Signals]:
-${JSON.stringify(options.turnSignals || {}, null, 2)}${entitySummariesBlock}
+[Turn Signals]: ${signalsSummary}${entitySummariesBlock}
 
 SYNTHESIS DIRECTIVE:
 The Conscious reasoning notes above define what to address (INTENT), which memory to draw on (MEMORY), the emotional tone (EMOTION), and how to approach it (ANGLE). Your job is to write ${this.entity?.name || 'the entity'}'s actual response from these notes.

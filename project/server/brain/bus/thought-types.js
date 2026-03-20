@@ -38,9 +38,11 @@ const ThoughtTypes = {
   CURIOSITY_TRIGGER: 'curiosity_trigger',
   CURIOSITY_QUESTION: 'curiosity_question',
   CURIOSITY_EXPLORED: 'curiosity_explored',
+  CURIOSITY_RESOLVED: 'curiosity_resolved',
 
   // Goal management
   GOAL_EMERGED: 'goal_emerged',
+  GOAL_PROGRESS: 'goal_progress',
   GOAL_FULFILLED: 'goal_fulfilled',
   GOAL_BLOCKED: 'goal_blocked',
   GOAL_REASSESSED: 'goal_reassessed',
@@ -102,7 +104,14 @@ const ThoughtTypes = {
 
   // Decay timeline events
   MEMORY_DECAY_TICK: 'memory_decay_tick',
-  BELIEF_DECAY_TICK: 'belief_decay_tick'
+  BELIEF_DECAY_TICK: 'belief_decay_tick',
+
+  // Interaction-driven mood events (Cognitive State Integration)
+  INTERACTION_POSITIVE: 'interaction_positive',
+  INTERACTION_NEGATIVE: 'interaction_negative',
+  INTERACTION_BONDING: 'interaction_bonding',
+  INTERACTION_CONFLICT: 'interaction_conflict',
+  INTERACTION_INSIGHT: 'interaction_insight'
 };
 
 /**
