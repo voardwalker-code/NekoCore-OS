@@ -1,0 +1,84 @@
+<div class="tab-content" id="tab-activity">
+    <div style="padding:var(--space-4);max-width:1100px;margin:0 auto">
+      <div class="nk-s-0014">
+        <h2 class="nk-s-0007">&#128187; Task Manager</h2>
+      </div>
+
+      <div class="tm-grid" id="taskManagerGrid">
+        <div class="tm-card">
+          <div class="tm-label">Provider / Model</div>
+          <div class="tm-value" id="tmProviderModel">Not connected</div>
+          <div class="tm-sub" id="tmProviderType">Provider idle</div>
+        </div>
+        <div class="tm-card">
+          <div class="tm-label">Pipeline Phase</div>
+          <div class="tm-value" id="tmPipelinePhase">Idle</div>
+          <div class="tm-sub" id="tmPipelineAge">No active orchestration</div>
+        </div>
+        <div class="tm-card">
+          <div class="tm-label">Total Tokens (Last Call)</div>
+          <div class="tm-value" id="tmTokensTotal">0</div>
+          <div class="tm-sub" id="tmTokensBreakdown">In: 0 • Out: 0</div>
+        </div>
+        <div class="tm-card">
+          <div class="tm-label">Brain Loop</div>
+          <div class="tm-value" id="tmBrainStatus">Idle</div>
+          <div class="tm-sub" id="tmBrainCycles">Cycle 0</div>
+        </div>
+      </div>
+
+      <div class="tm-split">
+        <div class="tm-panel">
+          <div class="tm-panel-title">Contributor Models</div>
+          <div id="tmModels" class="tm-list">
+            <div class="tm-list-row"><span>Subconscious</span><strong id="tmModelSub">—</strong></div>
+            <div class="tm-list-row"><span>Dream</span><strong id="tmModelDream">—</strong></div>
+            <div class="tm-list-row"><span>Conscious</span><strong id="tmModelConscious">—</strong></div>
+            <div class="tm-list-row"><span>Orchestrator</span><strong id="tmModelOrchestrator">—</strong></div>
+          </div>
+        </div>
+        <div class="tm-panel">
+          <div class="tm-panel-title">Window / Runtime</div>
+          <div class="tm-list">
+            <div class="tm-list-row"><span>Open Windows</span><strong id="tmOpenWindows">0</strong></div>
+            <div class="tm-list-row"><span>Pinned Apps</span><strong id="tmPinnedApps">0</strong></div>
+            <div class="tm-list-row"><span>Layout Save</span><strong>localStorage</strong></div>
+            <div class="tm-list-row"><span>Theme</span><strong id="tmThemeName">Neko Default</strong></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tm-panel nk-s-0008">
+        <div class="tm-panel-title">&#127760; Browser Status</div>
+        <div class="tm-list">
+          <div class="tm-list-row"><span>Open Tabs</span><strong id="tmBrowserTabCount">0</strong></div>
+          <div class="tm-list-row"><span>Active URL</span><strong id="tmBrowserActiveUrl" style="font-size:var(--text-xs);max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">No active tab</strong></div>
+          <div class="tm-list-row"><span>Status</span><strong id="tmBrowserStatus">Idle</strong></div>
+        </div>
+      </div>
+
+      <div class="tm-panel nk-s-0008">
+        <div class="tm-panel-title">App Performance</div>
+        <div id="tmAppMetricsGrid" class="tm-app-metrics-grid">
+          <div class="tm-metric-empty">Open or pin apps to see live app telemetry.</div>
+        </div>
+      </div>
+
+      <!-- T-7: Active task section -->
+      <div class="tm-panel nk-s-0008">
+        <div class="tm-panel-title">Active Task</div>
+        <div id="tmActiveTaskSection" class="tm-task-section">
+          <div class="tm-task-empty">No active task.</div>
+        </div>
+      </div>
+
+      <div class="tm-panel nk-s-0008">
+        <div class="tm-panel-title">Recent Runtime Events</div>
+        <div id="tmEventFeed" class="tm-event-feed">
+          <div class="tm-event">Waiting for pipeline events...</div>
+        </div>
+      </div>
+
+      <div id="activityFeed" style="display:none"></div>
+    </div>
+  </div>

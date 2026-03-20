@@ -1,0 +1,151 @@
+<style>
+/* ── Login overlay: scoped light-card overrides ──
+   All styles are scoped to #loginOverlay so they never affect
+   the rest of the OS shell. These override dark-theme variables
+   and UiV2 !important rules that would otherwise make the
+   white login card illegible. */
+
+/* ── Form field containers: force vertical stack ── */
+#loginOverlay .nk-s-0010,
+#loginOverlay .nk-s-0029 {
+  display: flex !important;
+  flex-direction: column !important;
+  margin-bottom: .85rem;
+}
+
+/* ── Labels ── */
+#loginOverlay label,
+#loginOverlay .nk-s-0002 {
+  display: block !important;
+  font-size: .72rem !important;
+  color: #6b7280 !important;
+  margin-bottom: .3rem !important;
+  line-height: 1.4 !important;
+}
+
+/* ── Inputs: override dark-theme .inp !important rules ── */
+#loginOverlay input,
+#loginOverlay .inp {
+  display: block !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  background: #ffffff !important;
+  color: #111111 !important;
+  -webkit-text-fill-color: #111111 !important;
+  caret-color: #111111 !important;
+  border: 1px solid #c0c0c8 !important;
+  border-radius: 6px !important;
+  padding: .5rem .75rem !important;
+  font-size: .88rem !important;
+  font-family: inherit !important;
+}
+#loginOverlay input::placeholder,
+#loginOverlay .inp::placeholder {
+  color: #9ca3af !important;
+  -webkit-text-fill-color: #9ca3af !important;
+}
+#loginOverlay input:focus,
+#loginOverlay .inp:focus {
+  border-color: #4f46e5 !important;
+  box-shadow: 0 0 0 3px rgba(79,70,229,.12) !important;
+  outline: none !important;
+}
+
+/* ── Tab switcher buttons ── */
+#loginOverlay .btn.bp {
+  background: #1a1a2e !important;
+  color: #fff !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,.18) !important;
+}
+#loginOverlay .btn.bp:hover {
+  background: #2a2a4e !important;
+  color: #fff !important;
+}
+/* Inactive tab — neutral ghost, override the danger (bd) class */
+#loginOverlay .btn.bd {
+  background: transparent !important;
+  color: #555 !important;
+  border: 1px solid #d0d0d8 !important;
+}
+#loginOverlay .btn.bd:hover {
+  background: #f3f3f6 !important;
+  color: #111 !important;
+  border-color: #b0b0b8 !important;
+}
+
+/* ── Submit buttons (full-width) ── */
+#loginOverlay .nk-s-0030 {
+  width: 100% !important;
+  justify-content: center !important;
+  margin-top: .25rem !important;
+}
+</style>
+<div id="bootOverlay" style="display:flex;position:fixed;inset:0;z-index:9998;background:radial-gradient(circle at top, rgba(92,255,180,.14), transparent 42%),linear-gradient(180deg, rgba(7,10,18,.94), rgba(4,6,12,.98));align-items:center;justify-content:center;flex-direction:column;gap:1rem;backdrop-filter:blur(10px);">
+  <div style="width:min(560px,92vw);padding:2rem 2rem 1.6rem;border-radius:1.2rem;border:1px solid rgba(140,255,208,.18);background:rgba(12,18,28,.88);box-shadow:0 28px 80px rgba(0,0,0,.45);">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;">
+      <div>
+        <div style="font-size:.78rem;letter-spacing:.22em;text-transform:uppercase;color:rgba(170,255,220,.72);">NekoCore OS</div>
+        <div id="bootTitle" style="margin-top:.4rem;font-size:1.9rem;font-weight:800;letter-spacing:-.04em;color:#f5fff9;">Welcome to NekoCore</div>
+      </div>
+      <div style="padding:.45rem .75rem;border-radius:999px;border:1px solid rgba(140,255,208,.18);font-size:.72rem;color:rgba(201,255,228,.78);background:rgba(15,25,38,.64);">Boot Sequence</div>
+    </div>
+    <div id="bootDetail" style="margin-top:.9rem;font-size:.95rem;line-height:1.6;color:rgba(218,237,228,.82);">Loading desktop shell�</div>
+    <div style="margin-top:1.25rem;height:10px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden;">
+      <div id="bootProgressBar" style="height:100%;width:8%;border-radius:999px;background:linear-gradient(90deg,#7cf7c3,#b9fff0);box-shadow:0 0 24px rgba(124,247,195,.45);transition:width .35s ease;"></div>
+    </div>
+    <div style="margin-top:.7rem;display:flex;justify-content:space-between;font-size:.72rem;color:rgba(180,207,197,.64);">
+      <span id="bootPhaseLabel">Initializing</span>
+      <span id="bootPercentLabel">8%</span>
+    </div>
+  </div>
+</div>
+<div id="loginOverlay" style="display:none;position:fixed;inset:0;z-index:10000;background:#e8e8ec;align-items:center;justify-content:center;flex-direction:column;">
+  <div style="background:#ffffff;border:1px solid #d0d0d8;border-radius:1rem;padding:2rem;width:min(420px,92vw);box-shadow:0 8px 32px rgba(0,0,0,0.12);">
+    <div style="text-align:center;margin-bottom:1.5rem;">
+      <div style="font-size:1.6rem;font-weight:800;letter-spacing:-.03em;color:#111;">NekoCore OS</div>
+      <div style="font-size:.78rem;color:#555;margin-top:.25rem;">Cognitive WebOS</div>
+    </div>
+
+    <!-- Tab buttons -->
+    <div style="display:flex;gap:.5rem;margin-bottom:1.5rem;">
+      <button class="btn bp flex-1" id="authTabLoginBtn" onclick="switchLoginTab('login')">Sign In</button>
+      <button class="btn bd flex-1"  id="authTabRegBtn"   onclick="switchLoginTab('register')">Create Account</button>
+    </div>
+
+    <!-- Sign-in form -->
+    <div id="authLoginTab">
+      <div class="nk-s-0010">
+        <label class="nk-s-0002">Username</label>
+        <input id="authLoginUsername" class="inp nk-s-0003" type="text" placeholder="your username" autocomplete="username">
+      </div>
+      <div class="nk-s-0029">
+        <label class="nk-s-0002">Password</label>
+        <input id="authLoginPassword" class="inp nk-s-0003" type="password" placeholder="password" autocomplete="current-password">
+      </div>
+      <button class="btn bp nk-s-0030" onclick="handleLogin()">Sign In</button>
+      <div id="authLoginError" style="display:none;color:#c00;font-size:.73rem;margin-top:.75rem;text-align:center;"></div>
+    </div>
+
+    <!-- Register form -->
+    <div id="authRegisterTab" style="display:none;">
+      <div class="nk-s-0010">
+        <label class="nk-s-0002">What should we call you? <span style="color:#c00">*</span></label>
+        <input id="authRegDisplayName" class="inp nk-s-0003" type="text" placeholder="Your name or nickname" autocomplete="nickname">
+      </div>
+      <div class="nk-s-0010">
+        <label class="nk-s-0002">A little about you <span style="font-style:italic;opacity:.6">(optional)</span></label>
+        <input id="authRegInfo" class="inp nk-s-0003" type="text" placeholder="e.g. hobbies, interests, anything..." autocomplete="off">
+      </div>
+      <div class="nk-s-0010">
+        <label class="nk-s-0002">Choose a username</label>
+        <input id="authRegUsername" class="inp nk-s-0003" type="text" placeholder="username (letters, numbers, _ - .)" autocomplete="username">
+      </div>
+      <div class="nk-s-0029">
+        <label class="nk-s-0002">Choose a password</label>
+        <input id="authRegPassword" class="inp nk-s-0003" type="password" placeholder="password (min 3 chars)" autocomplete="new-password">
+      </div>
+      <button class="btn bp nk-s-0030" onclick="handleRegister()">Create Account</button>
+      <div id="authRegisterError" style="display:none;color:#c00;font-size:.73rem;margin-top:.75rem;text-align:center;"></div>
+    </div>
+  </div>
+</div>

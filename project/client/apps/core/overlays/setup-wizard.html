@@ -1,0 +1,91 @@
+<div class="setup-overlay" id="setupOverlay">
+      <div class="setup-card">
+    <div class="setup-logo">NKO</div>
+    <h1 class="setup-title">NekoCore OS</h1>
+    <p class="setup-subtitle">Cognitive WebOS runtime powered by the REM architecture (MA v1).</p>
+
+    <div class="setup-steps-bar">
+      <div class="setup-step active" id="setupStep1">1</div>
+      <div class="setup-step-line"></div>
+      <div class="setup-step" id="setupStep2">2</div>
+    </div>
+
+    <!-- Step 1: Configure Main LLM (Conscious Mind) -->
+    <div class="setup-panel" id="setupPanel1">
+      <h2 class="setup-panel-title">Main Mind (Conscious)</h2>
+      <p class="text-secondary-c text-sm-c mb-4">Your primary conversational AI that interacts directly with the user.</p>
+      <div class="setup-provider-options">
+        <button class="setup-provider-btn" onclick="setupSelectProviderForAspect('main', 'openrouter')">
+          <div class="setup-provider-icon">&#9729;</div>
+          <div class="setup-provider-name">OpenRouter</div>
+          <div class="setup-provider-desc">Cloud LLMs via API key</div>
+        </button>
+        <button class="setup-provider-btn" onclick="setupSelectProviderForAspect('main', 'ollama')">
+          <div class="setup-provider-icon">&#129302;</div>
+          <div class="setup-provider-name">Ollama</div>
+          <div class="setup-provider-desc">Local LLMs on your machine</div>
+        </button>
+      </div>
+      <div class="setup-config-section" style="display:none;margin-top:1.5rem">
+        <div id="setupOpenrouter" style="display:none">
+          <div class="fl mb-3">
+            <label>API Key</label>
+            <input type="password" id="setupOrKey" placeholder="sk-or-..." autocomplete="off" data-lpignore="true" spellcheck="false" style="background:#ffffff;color:#111111;-webkit-text-fill-color:#111111;caret-color:#111111;">
+          </div>
+          <p class="text-xs-c text-secondary-c" style="margin:-.2rem 0 .75rem">
+            Need an API key? <a href="https://openrouter.ai" target="_blank" rel="noopener noreferrer">Sign up here ?</a>
+          </p>
+          <div class="fl mb-3">
+            <label>Model</label>
+            <input type="text" id="setupOrModel" list="setupOrModelList" placeholder="openai/gpt-4o, anthropic/claude-sonnet-4, ...">
+            <datalist id="setupOrModelList">
+              <option value="openai/gpt-4o"></option>
+              <option value="anthropic/claude-sonnet-4.6"></option>
+              <option value="anthropic/claude-sonnet-4"></option>
+              <option value="google/gemini-2.5-flash"></option>
+              <option value="meta-llama/llama-3.3-70b-instruct"></option>
+              <option value="deepseek/deepseek-chat-v3-0324"></option>
+            </datalist>
+          </div>
+          <p class="text-xs-c text-secondary-c" style="margin-top:-.15rem">
+            BYOK is supported: in Settings, you can point endpoint/key/model to any OpenAI-compatible provider.
+          </p>
+        </div>
+        <div id="setupOllama" style="display:none">
+          <div class="fl mb-3">
+            <label>Ollama URL</label>
+            <input type="text" id="setupOllamaUrl" value="http://localhost:11434">
+          </div>
+          <div class="fl mb-3">
+            <label>Model</label>
+            <input type="text" id="setupOllamaModel" value="llama3" placeholder="llama3, mistral, etc.">
+          </div>
+        </div>
+        <button class="btn bp w-full mt-2" onclick="setupTestConnectionForAspect()">Test &amp; Continue</button>
+      </div>
+    </div>
+
+    <!-- Step 2: Ready to Go -->
+    <div class="setup-panel" id="setupPanel2" style="display:none">
+      <h2 class="setup-panel-title">Ready to Go</h2>
+      <p class="text-secondary-c text-sm-c mb-5">Your Main Mind is connected. The other cognitive roles will inherit this runtime until you customize them later in Settings.</p>
+      <p class="text-xs-c text-secondary-c" style="margin-top:-1rem;margin-bottom:1.1rem">
+        Pipeline tip: avoid using one model for both Main Mind and Orchestrator. Mercury 2 + Claude Sonnet 4/4.6 tends to preserve character consistency better.
+      </p>
+      <div class="summary-card">
+        <div class="summary-row" style="margin-bottom:.5rem"><strong>Configuration Summary:</strong></div>
+        <div class="summary-row">Main Mind: <span id="setupSummaryMain">Configured</span></div>
+      </div>
+      <div class="summary-card" style="margin-top:.75rem">
+        <div class="summary-row" style="margin-bottom:.4rem"><strong>Skills (Safe Default):</strong></div>
+        <p class="text-xs-c text-secondary-c" style="margin:0 0 .55rem">
+          Skills start disabled by default. Optionally select skills to enable now, or leave all off and enable later in NekoCore OS.
+        </p>
+        <div id="setupSkillSummary" class="text-xs-c text-secondary-c">Loading available skills...</div>
+      </div>
+      <button class="btn bp w-full" onclick="setupFinish()">Save &amp; Open NekoCore OS</button>
+    </div>
+
+    <div class="setup-status" id="setupStatus"></div>
+  </div>
+</div>

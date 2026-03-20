@@ -1,0 +1,175 @@
+<div class="tab-content" id="tab-settings">
+    <div class="settings-container">
+
+      <!-- Entity management UI removed: now in nav sidebar. JS refs kept hidden. -->
+      <div style="display:none">
+        <div class="entity-display" id="entityDisplay"></div>
+        <button id="deleteEntityBtn"></button>
+      </div>
+
+      <!-- LLM Provider Section -->
+      <div class="settings-section">
+        <div class="settings-section-header">
+          <h2>LLM Provider</h2>
+          <p>Pick a provider and model. This applies to all pipeline stages.</p>
+        </div>
+
+        <!-- Provider picker -->
+        <div class="flex gap-3 mb-4">
+          <button class="provider-btn on nk-s-0027" id="simpleProviderBtn-openrouter" onclick="simplePickProvider('openrouter')">&#9729; OpenRouter</button>
+          <button class="provider-btn nk-s-0027" id="simpleProviderBtn-ollama" onclick="simplePickProvider('ollama')">&#128302; Ollama (Local)</button>
+        </div>
+
+        <!-- OpenRouter panel -->
+        <div id="simplePanel-openrouter" class="config-card">
+          <div class="fl">
+            <label>API Key</label>
+            <input type="password" id="simpleOrKey" placeholder="sk-or-v1-...">
+          </div>
+          <p class="text-xs-c text-secondary-c" style="margin:.55rem 0 0">
+            New to OpenRouter? <a href="https://openrouter.ai" target="_blank" rel="noopener noreferrer">Sign up here &#8599;</a>
+          </p>
+          <div class="fl">
+            <label>Model <span class="text-xs-c text-secondary-c">(pick or paste any OpenRouter model ID)</span></label>
+            <input type="text" id="simpleOrModel" list="simpleOrModelList" placeholder="anthropic/claude-sonnet-4">
+            <datalist id="simpleOrModelList"></datalist>
+          </div>
+          <p class="text-xs-c text-secondary-c" style="margin:.65rem 0 0">
+            BYOK supported: any OpenAI-compatible provider works. In Advanced settings, set endpoint + key + model.
+            Example: <code>https://api.groq.com/openai/v1/chat/completions</code>
+          </p>
+          <div class="flex gap-2 mt-2" style="flex-wrap:wrap">
+            <button class="provider-btn text-xs-c nk-s-0012" id="simplePresetBtn-best" onclick="simpleApplyPreset('best')">Best Quality</button>
+            <button class="provider-btn text-xs-c nk-s-0012" id="simplePresetBtn-fast" onclick="simpleApplyPreset('fast')">Fastest</button>
+            <button class="provider-btn text-xs-c nk-s-0012" id="simplePresetBtn-cheap" onclick="simpleApplyPreset('cheap')">Cheapest</button>
+            <button class="provider-btn text-xs-c nk-s-0012" id="simplePresetBtn-hybrid" onclick="simpleApplyPreset('hybrid')">Balanced</button>
+          </div>
+          <div class="flex gap-2 mt-4">
+            <button class="btn bp" onclick="simpleSaveConfig()">Save &amp; Connect</button>
+            <span id="simpleOrStatus" class="text-sm-c nk-s-0011"></span>
+          </div>
+        </div>
+
+        <!-- Ollama panel -->
+        <div id="simplePanel-ollama" class="config-card" style="display:none">
+          <div class="fl">
+            <label>Ollama Address</label>
+            <input type="text" id="simpleOllamaUrl" value="http://localhost:11434" placeholder="http://localhost:11434">
+          </div>
+          <div class="flex gap-2 mt-1">
+            <button class="btn bg" onclick="simpleFetchOllamaModels()" style="font-size:.8rem;padding:.35rem .8rem">Fetch Models</button>
+            <span id="simpleOllamaFetchStatus" class="text-xs-c text-secondary-c nk-s-0011"></span>
+          </div>
+          <div class="fl mt-3">
+            <label>Model</label>
+            <select id="simpleOllamaModel" style="width:100%;padding:.45rem;border-radius:var(--radius-sm);border:1px solid var(--border-default);background:var(--surface-1);color:var(--text-primary)">
+              <option value="">-- fetch models first --</option>
+            </select>
+          </div>
+          <div class="flex gap-2 mt-4">
+            <button class="btn bp" onclick="simpleSaveConfig()">Save &amp; Connect</button>
+            <span id="simpleOllamaStatus" class="text-sm-c nk-s-0011"></span>
+          </div>
+        </div>
+
+        <!-- Advanced per-aspect overrides (collapsed by default) -->
+        <details id="simpleAdvancedToggle" class="mt-4" style="border:1px solid var(--border-default);border-radius:var(--radius-lg);padding:.5rem 1rem">
+          <summary style="cursor:pointer;font-size:.85rem;color:var(--text-secondary);user-select:none;padding:.4rem 0">&#9881; Advanced - per-stage model overrides</summary>
+          <div class="text-xs-c text-secondary-c mt-2 mb-3">Leave blank to use the main model for all stages. Only set these if you want different models per pipeline stage.</div>
+          <div class="text-xs-c" style="margin:-.35rem 0 .8rem;color:var(--warning,#f59e0b)">
+            Recommendation: avoid using the same model for both Main Mind and Orchestrator. For Mercury 2, best observed pairing is Mercury 2 (Main) + Claude Sonnet 4/4.6 (Orchestrator).
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
+            <div class="fl">
+              <label class="text-xs-c">Subconscious <span class="text-secondary-c">(memory/background)</span></label>
+              <input type="text" id="simpleAdvSub" list="simpleOrModelList" placeholder="(same as main)">
+            </div>
+            <div class="fl">
+              <label class="text-xs-c">Dream Engine <span class="text-secondary-c">(sleep/consolidation)</span></label>
+              <input type="text" id="simpleAdvDream" list="simpleOrModelList" placeholder="(same as main)">
+            </div>
+            <div class="fl">
+              <label class="text-xs-c">Orchestrator <span class="text-secondary-c">(final synthesis)</span></label>
+              <input type="text" id="simpleAdvOrch" list="simpleOrModelList" placeholder="(same as main)">
+            </div>
+          </div>
+        </details>
+
+        <!-- Connection status -->
+        <div id="simpleLlmStatus" class="mt-3" style="display:none;padding:.75rem 1rem;border-radius:var(--radius-lg);font-size:.85rem"></div>
+      </div>
+
+      <!-- NekoCore OS Section -->
+      <div class="settings-section">
+        <div class="settings-section-header">
+          <h2>&#129302; NekoCore OS</h2>
+          <p>Dedicated LLM for the NekoCore operating layer. Separate from entity configs. NekoCore uses this model to manage entities, monitor model health, and route governance decisions.</p>
+        </div>
+
+        <div class="config-card" style="border-left:3px solid var(--accent-blue,#4a9eff)">
+          <div class="fl">
+            <label>API Endpoint</label>
+            <input type="text" id="apikeyEndpoint-nekocore" value="https://openrouter.ai/api/v1/chat/completions" placeholder="https://openrouter.ai/api/v1/chat/completions">
+          </div>
+          <div class="fl">
+            <label>API Key</label>
+            <input type="password" id="nekocoreApiKey" placeholder="sk-or-v1-...">
+          </div>
+          <div class="fl">
+            <label>Model <span class="text-xs-c text-secondary-c">(reasoning-capable model recommended)</span></label>
+            <input type="text" id="nekocoreModel" list="simpleOrModelList" placeholder="openai/o3-mini">
+          </div>
+          <div class="flex gap-2 mt-4">
+            <button class="btn bp" onclick="saveNekocoreConfig()">Save NekoCore OS Config</button>
+            <span id="nekocoreConfigStatus" class="text-sm-c nk-s-0011"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- System Health Section -->
+      <div class="settings-section">
+        <div class="settings-section-header">
+          <h2>System Health</h2>
+          <p>Maintenance and diagnostic tools</p>
+        </div>
+
+        <div class="health-tools">
+          <div class="health-card">
+            <div class="health-title">&#129520; Memory Log Self-Healing</div>
+            <div class="health-desc">Automatically detect and repair corrupted memory log files</div>
+            <button class="btn bp" onclick="repairMemoryLogs()">Run Self-Heal</button>
+            <div id="healStatus" class="status-toast" style="margin-top:.75rem;display:none"></div>
+          </div>
+          
+          <div class="health-card">
+            <div class="health-title">&#128202; Memory Statistics</div>
+            <div class="health-desc">View memory usage and compression statistics</div>
+            <button class="btn bg" onclick="showMemoryStats()">View Stats</button>
+          </div>
+
+          <div class="health-card">
+            <div class="health-title">&#128257; Rebuild Trace Graph</div>
+            <div class="health-desc">Rebuild semantic connections in memory graph</div>
+            <button class="btn bg" onclick="rebuildTraceGraph()">Rebuild</button>
+          </div>
+
+          <div class="health-card">
+            <div class="health-title">&#128190; Full Backup</div>
+            <div class="health-desc">Save config, runtime data, entities, and memories to a backup folder</div>
+            <input id="backupTargetFolder" type="text" placeholder="C:/Backups" class="nk-s-0025">
+            <button class="btn bp" onclick="runSystemBackup(this)">Create Backup</button>
+            <div id="backupStatus" class="status-toast" style="margin-top:.75rem;display:none"></div>
+          </div>
+
+          <div class="health-card">
+            <div class="health-title">&#128194; Restore Backup</div>
+            <div class="health-desc">Restore config, runtime data, entities, and memories from a backup folder</div>
+            <input id="restoreSourceFolder" type="text" placeholder="C:/Backups/NekoCore-backup-YYYYMMDD-HHMMSS" class="nk-s-0025">
+            <button class="btn bg" onclick="runSystemRestore(this)">Restore Backup</button>
+            <div id="restoreStatus" class="status-toast" style="margin-top:.75rem;display:none"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>

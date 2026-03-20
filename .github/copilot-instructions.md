@@ -81,6 +81,7 @@ Any multi-step work must follow the structure in `Documents/current/PHASE-PLAN-T
 | Internal support-doc archive | `Documents/current/support-docs/INDEX.md` |
 | Public architecture and system docs | `docs/ARCHITECTURE-OVERVIEW.md`, `docs/PIPELINE-AND-ORCHESTRATION.md`, `docs/MEMORY-SYSTEM.md`, `docs/ENTITY-AND-IDENTITY.md` |
 | Data shapes and contracts | `docs/CONTRACTS-AND-SCHEMAS.md` |
+| CSS/HTML agent rules and checklist | `.github/copilot-instructions.md` Section 8 |
 | Implementation/behaviour truth | `server/**` and `tests/**` |
 
 If a doc disagrees with the code, the code wins — and the doc needs updating.
@@ -116,3 +117,98 @@ If any of these appear in `git status` as untracked or modified, do NOT stage or
 - Create new markdown files unless explicitly asked
 - Skip the WORKLOG check because the request seems small
 - Proceed with new feature work if the cleanup gate is open
+
+---
+
+## 8. Code Standards
+
+### CSS Class System
+
+**The Golden Rule**: `css/system-shared.css` is the SINGLE source of truth for all shared styles. Numbers are FROZEN. Gaps are INTENTIONAL. Never renumber, never compact.
+
+**Before adding any style:**
+1. Search the `/* BEGIN GENERATED INLINE STYLE CLASSES */` block first
+2. If a matching rule exists — use that class number, do not create a new one
+3. Only mint a new class if NO match exists
+4. New classes append at the END only, continuing the sequence
+5. Never create a new namespace — there is ONE namespace: `sys-inline-XXXX`
+   (No `nk-s-`, no `app-s-`, no `tab-s-`)
+
+**Never extract these inline styles to classes:**
+- `display:none` — JavaScript toggles this directly at runtime
+- `display:none;...` — any compound style containing display:none
+- `width:0%` — JS animation start state
+- `opacity:0` — JS fade start state
+- Any value set inside a `setTimeout`, event handler, or `.style.` assignment
+
+### HTML Structure
+
+**Tab content lives in files, never in index.html.** index.html contains ONLY shell chrome — slots, not content.
+
+Shell chrome that stays in index.html: header (`hdr`), nav sidebar (`nav-sidebar`), taskbar (`os-taskbar`), start menu (`os-start-menu`), snap dock (`wm-snap-dock`), context menu (`ctx-menu`), desktop home section (`os-home`), overlay slots.
+
+```html
+<!-- CORRECT -->
+<div id="core-tab-slot-mytab" data-core-tab="mytab"></div>
+
+<!-- WRONG — never put tab content directly in index.html -->
+<div class="tab-content" id="tab-mytab">...</div>
+```
+
+**Adding a new core tab:**
+1. Create `apps/core/tab-mytab.html` with the full tab content
+2. Add a slot div in index.html in the correct position
+3. Register it in `js/apps/core-html-loader.js`
+4. Do not add `<link>` or `<style>` tags inside the tab HTML file
+
+**Adding a new non-core tab:**
+1. Create `apps/non-core/core/tab-mytab.html`
+2. Add an entry to `apps/non-core/non-core-apps.manifest.json`
+3. The loader handles everything else — do not touch index.html
+
+### JavaScript Loaders
+
+`non-core-html-loader.js` and `core-html-loader.js` use `Promise.all()` for parallel async fetching — **never revert to sync XHR**.
+
+The installer comment markers in `non-core-html-loader.js` are parsed by the installer — **never remove or reformat them:**
+```javascript
+  //Open Next json entry id
+  //JsonEntryId: "my-app-001"
+      manifest.nonCoreApps.push({...});
+  //Close "
+```
+
+### Where Files Live
+
+| Location | Purpose |
+|---|---|
+| `css/system-shared.css` | All shared utility classes — single source of truth |
+| `css/ui-v2.css` | Core UI component styles |
+| `themes/core/` | Theme overrides |
+| `apps/core/tab-*.html` | Core tab content |
+| `apps/non-core/core/tab-*.html` | Non-core/optional tab content |
+| `apps/core/overlays/` | Boot, login, setup wizard, sleep overlays |
+
+### Agent Checklist (CSS/HTML)
+
+Before making any CSS or HTML changes, confirm:
+
+- [ ] Searched existing `sys-inline-XXXX` classes before creating new ones
+- [ ] Not renumbering or compacting the class sequence
+- [ ] Not extracting `display:none` or other JS-controlled styles
+- [ ] Not putting tab content directly into index.html
+- [ ] Not adding `<link>` or `<style>` tags to tab HTML files
+- [ ] Not reverting async loaders to sync XHR
+- [ ] Not touching the installer comment markers in non-core-html-loader.js
+- [ ] New CSS entries append at the END of the generated block only
+
+### Safety Scripts
+
+Run after any agent CSS or HTML session:
+
+```
+node scripts/dedup-styles.js      # finds/removes duplicate sys-inline classes
+node scripts/orphan-audit.js      # finds unreferenced JS, HTML, CSS files
+```
+
+Both scripts are idempotent — safe to run multiple times. If clean, they report and exit without modifying files.

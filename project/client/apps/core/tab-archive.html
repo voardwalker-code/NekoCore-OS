@@ -1,0 +1,93 @@
+<div class="tab-content" id="tab-archive">
+    <div class="nk-s-0028">
+      <div class="nk-s-0014">
+        <h2 class="nk-s-0007">&#x1F5C4;&#xFE0F; Archive</h2>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:var(--space-4)">
+
+        <!-- Search -->
+        <section class="settings-section nk-s-0009">
+          <div class="settings-section-header nk-s-0004">
+            <h2 class="nk-s-0005">Search Archive</h2>
+            <p id="archiveSearchStatus">Enter a query to search the entity archive.</p>
+          </div>
+
+          <div class="nk-s-0024">
+            <input type="text" id="archiveSearchQuery" placeholder="Search topics, memories, docs�"
+              style="flex:1;padding:var(--space-3);background:var(--surface-2);border:1px solid var(--border-default);border-radius:var(--radius-md);color:var(--text-primary);font-size:var(--text-sm);outline:none;font-family:inherit">
+            <button class="btn bp text-xs-c" id="archiveSearchBtn" type="button">Search</button>
+          </div>
+
+          <div style="display:flex;gap:var(--space-2);flex-wrap:wrap;margin-bottom:var(--space-3);align-items:center">
+            <label class="nk-s-0001 nk-s-0001">After:
+              <input type="date" id="archiveYearStart" class="nk-s-0017">
+            </label>
+            <label class="nk-s-0001 nk-s-0001">Before:
+              <input type="date" id="archiveYearEnd" class="nk-s-0017">
+            </label>
+            <label class="nk-s-0001 nk-s-0001">Limit:
+              <select id="archiveSearchLimit" class="nk-s-0016">
+                <option value="5">5</option>
+                <option value="10" selected>10</option>
+                <option value="20">20</option>
+              </select>
+            </label>
+            <label class="nk-s-0001 nk-s-0001">Types:
+              <select id="archiveSearchTypes" class="nk-s-0016">
+                <option value="all" selected>All</option>
+                <option value="doc">Documents</option>
+                <option value="semantic_knowledge">Semantic</option>
+                <option value="episodic">Episodic</option>
+              </select>
+            </label>
+            <label class="nk-s-0001 nk-s-0001">Month:
+              <input type="month" id="archiveSearchMonth" class="nk-s-0017">
+            </label>
+            <label class="nk-s-0001 nk-s-0001">Subject:
+              <input type="text" id="archiveSearchSubject" placeholder="e.g. identity" style="margin-left:var(--space-1);width:100px;background:var(--surface-2);border:1px solid var(--border-default);border-radius:var(--radius-sm);color:var(--text-primary);font-size:var(--text-xs);padding:2px 6px">
+            </label>
+          </div>
+
+          <div id="archiveSearchResults" class="file-browser" style="max-height:52vh;overflow:auto">
+            <div class="placeholder-content">No search run yet.</div>
+          </div>
+        </section>
+
+        <!-- Corpus Ingest -->
+        <section class="settings-section nk-s-0009">
+          <div class="settings-section-header nk-s-0004">
+            <h2 class="nk-s-0005">Corpus Ingest</h2>
+            <p id="archiveIngestStatus">Stream a text file into the entity archive.</p>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:var(--space-2);margin-bottom:var(--space-3)">
+            <label class="nk-s-0001 nk-s-0001">File path (absolute)
+              <input type="text" id="archiveIngestFile" placeholder="/absolute/path/to/corpus.txt"
+                style="display:block;width:100%;box-sizing:border-box;margin-top:var(--space-1);padding:var(--space-2) var(--space-3);background:var(--surface-2);border:1px solid var(--border-default);border-radius:var(--radius-md);color:var(--text-primary);font-size:var(--text-sm);outline:none;font-family:var(--font-mono)">
+            </label>
+            <label class="nk-s-0001 nk-s-0001">Doc ID (optional � defaults to filename)
+              <input type="text" id="archiveIngestDocId" placeholder="e.g. wikipedia_neuroscience"
+                style="display:block;width:100%;box-sizing:border-box;margin-top:var(--space-1);padding:var(--space-2) var(--space-3);background:var(--surface-2);border:1px solid var(--border-default);border-radius:var(--radius-md);color:var(--text-primary);font-size:var(--text-sm);outline:none;font-family:inherit">
+            </label>
+            <div style="display:flex;gap:var(--space-3);flex-wrap:wrap">
+              <label class="nk-s-0001 nk-s-0001">Type:
+                <select id="archiveIngestType" class="nk-s-0016">
+                  <option value="doc" selected>doc</option>
+                  <option value="semantic_knowledge">semantic_knowledge</option>
+                </select>
+              </label>
+            </div>
+          </div>
+
+          <div class="nk-s-0024">
+            <button class="btn bp text-xs-c" id="archiveIngestRunBtn" type="button">Start Ingest</button>
+            <button class="btn bd text-xs-c" id="archiveIngestAbortBtn" type="button" style="display:none">Abort</button>
+          </div>
+
+          <progress id="archiveIngestProgress" value="0" max="100" style="display:none;width:100%;height:6px;accent-color:var(--accent-pink)"></progress>
+        </section>
+
+      </div>
+    </div>
+  </div>

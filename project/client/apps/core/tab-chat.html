@@ -1,0 +1,112 @@
+<div class="tab-content on" id="tab-chat">
+    <div class="chat-layout">
+
+    <!-- LEFT: Chat area -->
+    <div class="chat-main">
+    <div class="chat-view">
+      <div class="chat-bar">
+        <div class="chat-bar-l">
+          <svg width="16" height="16" fill="none" stroke="var(--em)" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+          <span class="chat-bar-title">Context Chat</span>
+          <span class="chat-bar-model" id="chatModelLabel"></span>
+        </div>
+        <div class="chat-bar-r">
+          <div class="sub-indicator" id="subIndicator" title="Subconscious memory compression">
+            <span class="sub-brain">&#129504;</span>
+            <div class="sub-bar"><div class="sub-fill" id="subFill" style="width:0%"></div></div>
+            <span id="subPct" class="font-mono text-xs-c">0%</span>
+          </div>
+          <!-- User Switcher -->
+          <div style="position:relative">
+            <button class="btn bg text-xs-c" id="userSwitcherBtn" onclick="toggleUserPanel()" title="Switch chat user" style="display:none;gap:3px;align-items:center">
+              <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              <span id="activeUserLabel">User</span>
+            </button>
+            <div id="userPanel" style="display:none;position:absolute;right:0;top:calc(100% + 6px);z-index:1200;background:var(--surface-2);border:1px solid var(--border-default);border-radius:8px;padding:12px;min-width:260px;max-width:300px;box-shadow:0 8px 32px rgba(0,0,0,.5)">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+                <span style="font-weight:600;font-size:.8rem;color:var(--text-primary)">Chat Users</span>
+                <button onclick="closeUserPanel()" style="background:none;border:none;color:var(--text-tertiary);font-size:1.2rem;cursor:pointer;line-height:1;padding:0 2px">&times;</button>
+              </div>
+              <div id="userPanelList" style="margin-bottom:10px;max-height:200px;overflow-y:auto"></div>
+              <div style="border-top:1px solid var(--border-default);padding-top:10px">
+                <div style="font-size:.65rem;text-transform:uppercase;letter-spacing:.07em;color:var(--text-tertiary);margin-bottom:6px">Add New User</div>
+                <input type="text" id="newUserName" placeholder="Name..." autocomplete="off" style="width:100%;box-sizing:border-box;background:var(--surface-3);border:1px solid var(--border-default);color:var(--text-primary);padding:5px 8px;border-radius:4px;font-size:.8rem;margin-bottom:5px">
+                <input type="text" id="newUserInfo" placeholder="About them (optional)..." autocomplete="off" style="width:100%;box-sizing:border-box;background:var(--surface-3);border:1px solid var(--border-default);color:var(--text-primary);padding:5px 8px;border-radius:4px;font-size:.8rem;margin-bottom:8px">
+                <button class="btn bp text-xs-c" style="width:100%;justify-content:center" onclick="addAndSwitchUser()">+ Add &amp; Switch</button>
+              </div>
+            </div>
+          </div>
+          <!-- T-7: Task status badge � updated live by task-ui.js via SSE events -->
+          <div id="taskStatusBadge" class="task-badge" style="display:none" title="Active task status � click for history">
+            <span class="task-badge-label" onclick="openTaskHistory()">? task</span>
+            <span class="task-badge-step">Step 0</span>
+            <button class="task-badge-cancel" onclick="cancelActiveTask()" title="Cancel task">?</button>
+          </div>
+          <button class="btn bg text-xs-c" onclick="startSleep()" id="sleepBtn" title="Sleep: replay memories and update personality">&#127769; Sleep</button>
+          <button class="btn bg text-xs-c" onclick="compressChat()" id="compressChatBtn" title="Save compressed chat">&#128230; Compress &amp; Save</button>
+          <button class="btn bg text-xs-c" id="chatReleaseEntityBtn" onclick="releaseActiveEntity()" style="display:none" title="Release active entity">Release</button>
+          <button class="btn bg text-xs-c" onclick="clearChat()">&#128465; Clear</button>
+        </div>
+      </div>
+
+      <!-- Subconscious auto-archive settings -->
+      <div class="sub-settings">
+        <div class="sub-toggle on" id="subToggle" onclick="toggleSubconscious()" title="Enable/disable auto-archiving"></div>
+        <label>Auto-archive</label>
+        <span class="text-tertiary-c">|</span>
+        <div class="sub-toggle" id="thoughtsToggle" onclick="toggleThoughtsInChat()" title="Show/hide thought process in chat"></div>
+        <label>Thoughts</label>
+        <span class="text-tertiary-c">|</span>
+        <label>Threshold:</label>
+        <input type="range" id="subThreshold" min="4" max="50" value="35" step="1" oninput="updateThresholdDisplay()">
+        <span class="sub-val" id="subThresholdVal">35K</span>
+        <span class="text-tertiary-c text-xs-c">chars</span>
+      </div>
+
+      <!-- Memory toggles (single-LLM mode only) -->
+      <div id="memoryToggleRow" class="memory-toggle-row" style="display:none">
+        <button id="memoryRecallBtn" class="mem-toggle-btn" onclick="toggleMemoryRecall()" title="Recall: inject stored memories into each turn">&#128190; Recall OFF</button>
+        <button id="memorySaveBtn" class="mem-toggle-btn" onclick="toggleMemorySave()" title="Save: store each exchange as a memory">&#128229; Save OFF</button>
+      </div>
+
+      <!-- Chat messages -->
+      <div class="chat-messages" id="chatMessages" ondragover="chatDragOver(event)" ondragleave="chatDragLeave(event)" ondrop="chatDrop(event)">
+        <div class="chat-drop-overlay" id="chatDropOverlay"><span>&#128230; Drop archive files here</span></div>
+        <div class="chat-empty">
+          <div class="chat-empty-icon">&#128172;</div>
+          <div class="chat-empty-text">Load an entity or drag & drop memory archives to get started.</div>
+        </div>
+      </div>
+
+      <!-- Chat input -->
+      <div class="chat-input-row">
+        <textarea class="chat-input" id="chatInput" placeholder="Chat with the entity..." rows="1" onkeydown="chatKeyDown(event)"></textarea>
+        <button class="chat-send" id="chatSendBtn" onclick="sendChatMessage()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 2L11 13"/><path d="M22 2L15 22L11 13L2 9L22 2Z"/></svg>
+        </button>
+      </div>
+    </div>
+
+    </div><!-- end chat-main -->
+
+    <!-- T-7: Task History Panel (hidden overlay, opened by task-ui.js) -->
+    <div id="taskHistoryPanel" class="task-panel" style="display:none" role="dialog" aria-label="Task History">
+      <div class="task-panel-header">
+        <span>?? Task History</span>
+        <button class="task-panel-close" onclick="closeTaskHistory()" title="Close">&#10005;</button>
+      </div>
+      <div id="taskHistoryList" class="task-history-list"></div>
+    </div>
+
+    <!-- T-7: Task Detail Panel (hidden overlay, opened by task-ui.js) -->
+    <div id="taskDetailPanel" class="task-panel task-detail-panel" style="display:none" role="dialog" aria-label="Task Detail">
+      <div class="task-panel-header">
+        <button class="task-panel-back" onclick="closeTaskDetail()" title="Back to history">&#8592; Back</button>
+        <button class="task-panel-close" onclick="closeTaskDetail()" title="Close">&#10005;</button>
+      </div>
+      <div id="taskDetailContent" class="task-detail-content"></div>
+    </div>
+
+    </div><!-- end chat-layout -->
+
+  </div>

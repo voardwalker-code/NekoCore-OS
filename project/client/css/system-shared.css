@@ -1,0 +1,111 @@
+﻿/* ============================================================
+   NekoCore OS â€” System Shared CSS
+   Utility classes extracted from app HTML <style> blocks.
+   Loaded globally alongside ui-v2.css.
+
+   GOVERNANCE RULES (read before editing):
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   â€¢ Before adding a class: search between BEGIN and END below
+     for an existing rule that matches. Reuse it; do NOT add a
+     duplicate.
+   â€¢ Class numbers are 4-digit zero-padded (e.g. .nk-s-0001).
+   â€¢ Existing numbers are FROZEN â€” never renumber them.
+   â€¢ Gaps in the sequence (e.g. 0002 â†’ 0016) are intentional.
+     Do NOT fill gaps or compact the sequence.
+   â€¢ Append new entries at the END of the block only.
+   ============================================================ */
+
+/* BEGIN GENERATED INLINE STYLE CLASSES */
+
+/* 0001 â€” filter/label text: xs size + secondary colour (9 uses in archive) */
+.nk-s-0001 { font-size: var(--text-xs); color: var(--text-secondary); }
+
+/* 0002 â€” login/register form label (6 uses) */
+.nk-s-0002 { display: block; font-size: .72rem; color: #444; margin-bottom: .3rem; }
+
+/* 0003 â€” login/register light-bg input override (6 uses) */
+.nk-s-0003 { width: 100%; background: #fff; color: #111; border-color: #bbb; }
+
+/* 0004 â€” settings-section-header padding-bottom override (4 uses: archive, debug) */
+.nk-s-0004 { padding-bottom: var(--space-2); }
+
+/* 0005 â€” subsection h2: md size, no margin (4 uses: archive subsections, debug) */
+.nk-s-0005 { font-size: var(--text-md); margin: 0; }
+
+/* 0006 â€” settings-section-header advanced-tab divider strip (4 uses) */
+.nk-s-0006 { margin-bottom: var(--space-4); border-bottom: 1px solid var(--border-default); padding-bottom: var(--space-3); }
+
+/* 0007 â€” tab hero h2: lg size, no margin (4 uses: activity, archive, obs, debug) */
+.nk-s-0007 { font-size: var(--text-lg); margin: 0; }
+
+/* 0008 â€” tm-panel top-margin spacer (4 uses in task-manager) */
+.nk-s-0008 { margin-top: var(--space-4); }
+
+/* 0009 â€” settings-section margin reset (4 uses: archive, debug sections) */
+.nk-s-0009 { margin: 0; }
+
+/* 0010 â€” login form field row bottom margin (4 uses) */
+.nk-s-0010 { margin-bottom: .75rem; }
+
+/* 0011 â€” flex align-self center for inline status spans (4 uses) */
+.nk-s-0011 { align-self: center; }
+
+/* 0012 â€” provider preset button padding (4 uses) */
+.nk-s-0012 { padding: .35rem .7rem; }
+
+/* 0013 â€” advanced-tab section h2: base size (4 uses) */
+.nk-s-0013 { font-size: var(--text-base); }
+
+/* 0014 â€” tab header flex row with gap + bottom margin (3 uses) */
+.nk-s-0014 { display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-4); }
+
+/* 0015 â€” card/header margin-bottom space-4 (3 uses: sidebar, settings-header, config-card) */
+.nk-s-0015 { margin-bottom: var(--space-4); }
+
+/* 0016 â€” archive inline select control (3 uses) */
+.nk-s-0016 { margin-left: var(--space-1); background: var(--surface-2); border: 1px solid var(--border-default); border-radius: var(--radius-sm); color: var(--text-primary); font-size: var(--text-xs); padding: 2px 4px; }
+
+/* 0017 â€” archive inline date/month input (3 uses) */
+.nk-s-0017 { margin-left: var(--space-1); background: var(--surface-2); border: 1px solid var(--border-default); border-radius: var(--radius-sm); color: var(--text-primary); font-size: var(--text-xs); padding: 2px 6px; }
+
+/* 0018 â€” advanced-tab settings-section strip with top border (3 uses) */
+.nk-s-0018 { margin: 0; border: none; background: transparent; padding: var(--space-4); border-top: 1px solid var(--border-default); }
+
+/* 0019 â€” config-card-title info colour (2 uses) */
+.nk-s-0019 { color: var(--info); }
+
+/* 0020 â€” config-card-title warning colour (2 uses) */
+.nk-s-0020 { color: var(--warning); }
+
+/* 0021 â€” grid grid-2 gap override to space-4 (2 uses) */
+.nk-s-0021 { gap: var(--space-4); }
+
+/* 0022 â€” setup modal button min-width (2 uses) */
+.nk-s-0022 { min-width: 150px; }
+
+/* 0023 â€” debug-core scrollable mono panel (2 uses) */
+.nk-s-0023 { max-height: 44vh; overflow: auto; font-family: var(--font-mono); font-size: var(--text-xs); }
+
+/* 0024 â€” archive action row: flex + gap-2 + mb-3 (2 uses) */
+.nk-s-0024 { display: flex; gap: var(--space-2); margin-bottom: var(--space-3); }
+
+/* 0025 â€” health-card full-width text input (2 uses: backup, restore) */
+.nk-s-0025 { width: 100%; margin: .5rem 0; padding: .5rem; border-radius: 8px; border: 1px solid var(--border-default); background: var(--bg-secondary); color: var(--text-primary); }
+
+/* 0026 â€” config-card-title accent-green colour (2 uses) */
+.nk-s-0026 { color: var(--accent-green); }
+
+/* 0027 â€” primary provider toggle button sizing (2 uses) */
+.nk-s-0027 { flex: 1; padding: .75rem; font-size: 1rem; }
+
+/* 0028 â€” archive / debug-core outer tab wrapper (2 uses) */
+.nk-s-0028 { padding: var(--space-4); max-width: 1080px; margin: 0 auto; }
+
+/* 0029 â€” login form password-field row bottom margin (2 uses) */
+.nk-s-0029 { margin-bottom: 1.25rem; }
+
+/* 0030 â€” full-width login/register submit button (2 uses) */
+.nk-s-0030 { width: 100%; }
+
+
+/* END GENERATED INLINE STYLE CLASSES */

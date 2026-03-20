@@ -1,0 +1,35 @@
+<div class="tab-content" id="tab-debugcore">
+    <div class="nk-s-0028">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:var(--space-3);margin-bottom:var(--space-4);flex-wrap:wrap">
+        <h2 class="nk-s-0007">Debug Core</h2>
+        <div style="display:flex;gap:var(--space-2);flex-wrap:wrap">
+          <button class="btn bg text-xs-c" id="debugCoreRefreshBtn" type="button">Refresh</button>
+          <button class="btn bp text-xs-c" id="debugCoreDumpBtn" type="button">Dump State</button>
+          <button class="btn bg text-xs-c" id="debugCoreResetWindowsBtn" type="button">Reset Windows</button>
+          <button class="btn bg text-xs-c" id="debugCoreClearBtn" type="button">Clear Local Buffer</button>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:var(--space-4)">
+        <section class="settings-section nk-s-0009">
+          <div class="settings-section-header nk-s-0004">
+            <h2 class="nk-s-0005">Timeline Stream</h2>
+            <p id="debugCoreStatus">Idle</p>
+          </div>
+          <div id="debugCoreTimeline" class="file-browser nk-s-0023">
+            <div class="placeholder-content">No timeline events loaded yet.</div>
+          </div>
+        </section>
+
+        <section class="settings-section nk-s-0009">
+          <div class="settings-section-header nk-s-0004">
+            <h2 class="nk-s-0005">Client Buffer</h2>
+            <p id="debugCoreBufferStatus">Waiting for client events</p>
+          </div>
+          <div id="debugCoreClientBuffer" class="file-browser nk-s-0023">
+            <div class="placeholder-content">No local debug entries yet.</div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>

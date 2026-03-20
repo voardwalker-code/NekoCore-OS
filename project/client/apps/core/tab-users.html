@@ -1,0 +1,32 @@
+<div class="tab-content" id="tab-users">
+    <div style="padding:var(--space-4);max-width:760px;margin:0 auto">
+      <div class="settings-section" style="padding:var(--space-4)">
+        <div class="settings-section-header nk-s-0015">
+          <h2>User Profiles</h2>
+          <p>Manage chat users for the currently active entity.</p>
+        </div>
+
+        <div class="config-card nk-s-0015">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Name</label>
+              <input type="text" id="usersAppNewName" placeholder="e.g., Alex">
+            </div>
+            <div class="form-group">
+              <label>About <span class="text-secondary-c text-xs-c">(optional)</span></label>
+              <input type="text" id="usersAppNewInfo" placeholder="e.g., Full-stack dev, likes robotics">
+            </div>
+          </div>
+          <div class="flex gap-2" style="justify-content:flex-end">
+            <button class="btn bp" onclick="usersAppCreateUser()">Add User</button>
+            <button class="btn bg" onclick="usersAppRefresh()">Refresh</button>
+            <button class="btn bg" onclick="usersAppClearActive()">Clear Active</button>
+            <button class="btn bd" onclick="handleLogout()">Logout</button>
+          </div>
+        </div>
+
+        <div id="usersAppStatus" class="text-sm-c text-secondary-c" style="margin-bottom:var(--space-3)">Loading...</div>
+        <div id="usersAppList" style="display:flex;flex-direction:column;gap:8px"></div>
+      </div>
+    </div>
+  </div>
