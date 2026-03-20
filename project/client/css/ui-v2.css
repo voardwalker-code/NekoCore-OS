@@ -7172,17 +7172,21 @@ body.popout-mode .app {
   gap: var(--space-3);
 }
 .chat-input {
-  background: rgba(4, 6, 13, 0.5);
-  border: 1px solid rgba(52, 211, 153, 0.12);
+  background: #ffffff;
+  color: #1a1a1a;
+  caret-color: #1a1a1a;
+  border: 1px solid rgba(52, 211, 153, 0.35);
   border-radius: 14px;
   font-size: var(--text-base);
   padding: var(--space-3) var(--space-5);
   transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
 }
+.chat-input::placeholder { color: #7a8a9a; }
 .chat-input:focus {
   border-color: #34d399;
-  box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.1), 0 0 24px rgba(52, 211, 153, 0.06);
-  background: rgba(4, 6, 13, 0.7);
+  box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.15), 0 0 24px rgba(52, 211, 153, 0.06);
+  background: #ffffff;
+  color: #1a1a1a;
 }
 .chat-send {
   background: linear-gradient(135deg, #34d399, #10b981);
@@ -8230,4 +8234,204 @@ body.popout-mode .app {
   padding: 8px 10px;
   font-size: var(--text-xs);
   color: var(--text-tertiary);
+}
+
+
+/* -- Slash Command System ------------------------------------------------------ */
+
+/* Wrapper gives the picker an anchor for absolute positioning */
+.chat-input-wrap {
+  position: relative;
+}
+
+/* Picker dropdown � appears above the input row */
+.slash-picker {
+  position: absolute;
+  bottom: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: var(--surface-2);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md, 8px);
+  overflow: hidden;
+  box-shadow: 0 -4px 24px rgba(0,0,0,.45);
+  z-index: 500;
+  max-height: 260px;
+  overflow-y: auto;
+}
+.slash-picker-item {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 9px 14px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border-dim);
+  transition: background .1s;
+}
+.slash-picker-item:last-child { border-bottom: none; }
+.slash-picker-item.active,
+.slash-picker-item:hover { background: var(--surface-3); }
+.slash-picker-cmd {
+  font-family: var(--font-mono, monospace);
+  font-size: .78rem;
+  font-weight: 700;
+  color: #60a5fa;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.slash-picker-args {
+  font-family: var(--font-mono, monospace);
+  font-size: .68rem;
+  color: var(--text-tertiary);
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.slash-picker-desc {
+  font-size: .72rem;
+  color: var(--text-secondary);
+  flex: 1;
+  text-align: right;
+}
+
+/* System messages injected by slash commands */
+.chat-slash-msg {
+  padding: 7px 14px;
+  margin: 4px 8px;
+  background: var(--surface-2);
+  border-left: 3px solid #60a5fa;
+  border-radius: 0 var(--radius-sm, 4px) var(--radius-sm, 4px) 0;
+  font-size: .78rem;
+  color: var(--text-secondary);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* -- Task / Project Wizard ----------------------------------------------------- */
+
+/* Full-screen overlay � fixed so it covers everything */
+.task-wizard {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.65);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 9100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.task-wizard-card {
+  background: var(--surface-2);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg, 12px);
+  padding: 28px 28px 22px;
+  width: 100%;
+  max-width: 560px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 80px rgba(0,0,0,.7);
+}
+.tw-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 22px;
+}
+.tw-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+.tw-close {
+  background: none;
+  border: none;
+  color: var(--text-tertiary);
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: background .15s, color .15s;
+}
+.tw-close:hover { background: var(--surface-3); color: var(--text-primary); }
+.tw-field { margin-bottom: 16px; }
+.tw-label {
+  display: block;
+  font-size: .68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: var(--text-tertiary);
+  margin-bottom: 6px;
+}
+.tw-hint {
+  font-size: .74rem;
+  color: var(--text-tertiary);
+  margin: 0 0 8px;
+  line-height: 1.5;
+}
+.tw-desc {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 88px;
+  resize: vertical;
+  background: var(--surface-3);
+  border: 1px solid var(--border-default);
+  color: var(--text-primary);
+  border-radius: var(--radius-sm, 4px);
+  padding: 9px 11px;
+  font-size: .85rem;
+  line-height: 1.55;
+  font-family: inherit;
+}
+.tw-desc:focus { outline: none; border-color: #60a5fa; }
+.tw-select {
+  width: 100%;
+  background: var(--surface-3);
+  border: 1px solid var(--border-default);
+  color: var(--text-primary);
+  border-radius: var(--radius-sm, 4px);
+  padding: 7px 10px;
+  font-size: .82rem;
+  font-family: inherit;
+}
+.tw-schedule-radios {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.tw-schedule-radio {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: .82rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+.tw-inline-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-left: 22px;
+  flex-wrap: wrap;
+}
+.tw-num {
+  width: 72px;
+  background: var(--surface-3);
+  border: 1px solid var(--border-default);
+  color: var(--text-primary);
+  border-radius: var(--radius-sm, 4px);
+  padding: 6px 8px;
+  font-size: .82rem;
+  text-align: center;
+  font-family: inherit;
+}
+.tw-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 22px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-dim);
 }

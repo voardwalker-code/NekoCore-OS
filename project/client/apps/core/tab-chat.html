@@ -79,11 +79,14 @@
       </div>
 
       <!-- Chat input -->
-      <div class="chat-input-row">
-        <textarea class="chat-input" id="chatInput" placeholder="Chat with the entity..." rows="1" onkeydown="chatKeyDown(event)"></textarea>
-        <button class="chat-send" id="chatSendBtn" onclick="sendChatMessage()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 2L11 13"/><path d="M22 2L15 22L11 13L2 9L22 2Z"/></svg>
-        </button>
+      <div class="chat-input-wrap">
+        <div class="slash-picker" id="slashPicker" aria-hidden="true" role="listbox"></div>
+        <div class="chat-input-row">
+          <textarea class="chat-input" id="chatInput" placeholder="Chat with the entity… (type / for commands)" rows="1" onkeydown="chatKeyDown(event)"></textarea>
+          <button class="chat-send" id="chatSendBtn" onclick="sendChatMessage()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 2L11 13"/><path d="M22 2L15 22L11 13L2 9L22 2Z"/></svg>
+          </button>
+        </div>
       </div>
     </div>
 
@@ -108,5 +111,90 @@
     </div>
 
     </div><!-- end chat-layout -->
+
+    <!-- ===== TASK / PROJECT WIZARD ===== -->
+    <div class="task-wizard" id="taskWizard" style="display:none" role="dialog" aria-modal="true" aria-labelledby="taskWizardTitle">
+      <div class="task-wizard-card">
+        <div class="tw-header">
+          <h3 class="tw-title" id="taskWizardTitle">⚡ New Task</h3>
+          <button class="tw-close" onclick="window.SlashCommands.closeTaskWizard()" aria-label="Close wizard">&#10005;</button>
+        </div>
+
+        <!-- hidden mode flag -->
+        <input type="hidden" id="taskWizardIsProject" value="0">
+
+        <!-- Description -->
+        <div class="tw-field">
+          <label class="tw-label" for="taskWizardDesc">Description</label>
+          <p class="tw-hint" id="taskWizardDescHint">Describe what you want done. NekoCore will classify and run it.</p>
+          <textarea class="tw-desc" id="taskWizardDesc" rows="4" placeholder="e.g. Research the latest advances in neuromorphic computing and write a summary"></textarea>
+        </div>
+
+        <!-- Task type -->
+        <div class="tw-field">
+          <label class="tw-label" for="taskWizardType">Task Type</label>
+          <select class="tw-select" id="taskWizardType">
+            <option value="">Auto-detect</option>
+            <option value="research">Research</option>
+            <option value="writing">Writing</option>
+            <option value="code">Code</option>
+            <option value="analysis">Analysis</option>
+            <option value="planning">Planning</option>
+            <option value="memory_query">Memory Query</option>
+          </select>
+        </div>
+
+        <!-- Skill -->
+        <div class="tw-field">
+          <label class="tw-label" for="taskWizardSkill">Skill</label>
+          <select class="tw-select" id="taskWizardSkill"><option value="">Auto-detect</option></select>
+        </div>
+
+        <!-- Schedule -->
+        <div class="tw-field">
+          <label class="tw-label">Schedule</label>
+          <div class="tw-schedule-radios">
+            <label class="tw-schedule-radio">
+              <input type="radio" name="twSchedule" value="once" checked onchange="window.SlashCommands.updateScheduleFields()">
+              Run once
+            </label>
+            <label class="tw-schedule-radio">
+              <input type="radio" name="twSchedule" value="interval" onchange="window.SlashCommands.updateScheduleFields()">
+              Repeat every…
+            </label>
+            <div class="tw-inline-row" id="twIntervalRow" style="display:none">
+              <input class="tw-num" type="number" id="twIntervalVal" value="30" min="1" max="9999">
+              <select class="tw-select" id="twIntervalUnit" style="width:auto">
+                <option value="minutes">minutes</option>
+                <option value="hours">hours</option>
+                <option value="days">days</option>
+              </select>
+            </div>
+            <label class="tw-schedule-radio">
+              <input type="radio" name="twSchedule" value="daily" onchange="window.SlashCommands.updateScheduleFields()">
+              Daily at a specific time
+            </label>
+            <div class="tw-inline-row" id="twDailyRow" style="display:none">
+              <input class="tw-num" style="width:90px" type="time" id="twDailyTime" value="09:00">
+            </div>
+          </div>
+        </div>
+
+        <!-- Output -->
+        <div class="tw-field">
+          <label class="tw-label" for="taskWizardOutput">Output</label>
+          <select class="tw-select" id="taskWizardOutput">
+            <option value="chat">Return in chat</option>
+            <option value="file">Save to file</option>
+            <option value="both">Both</option>
+          </select>
+        </div>
+
+        <div class="tw-actions">
+          <button class="btn bg" onclick="window.SlashCommands.closeTaskWizard()">Cancel</button>
+          <button class="btn bp" onclick="window.SlashCommands.submitTaskWizard()">Start</button>
+        </div>
+      </div>
+    </div>
 
   </div>

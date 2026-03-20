@@ -1388,7 +1388,8 @@ function syncContextChatGuard() {
   return hasEntity;
 }
 
-window.syncContextChatGuard = syncContextChatGuard;
+window.syncContextChatGuard  = syncContextChatGuard;
+window.getActiveEntityId    = () => (typeof currentEntityId !== 'undefined' ? currentEntityId : null);
 
 document.addEventListener('DOMContentLoaded', () => {
   setTimeout(() => {
@@ -1402,6 +1403,8 @@ function chatKeyDown(e) {
     e.preventDefault();
     return;
   }
+  // ── Slash picker navigation ──
+  if (window.SlashCommands?.handleKey(e)) return;
   if (e.key === 'Enter' && !e.shiftKey) {
     e.preventDefault();
     sendChatMessage();
@@ -1425,6 +1428,15 @@ async function sendChatMessage() {
 
   // Setup wizard intercept (legacy — hatch button is used instead)
   if (setupActive) {
+    return;
+  }
+
+  // ── Slash command intercept — dispatch before calling LLM ──
+  if (text[0] === '/' && window.SlashCommands?.dispatch(text)) {
+    input.value = '';
+    input.style.height = 'auto';
+    document.getElementById('chatSendBtn').disabled = false;
+    chatBusy = false;
     return;
   }
 

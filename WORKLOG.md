@@ -44,15 +44,43 @@ Emergency exception log:
 
 ---
 
-## Stop/Resume Snapshot — 2026-03-19 (Core-tab slot extraction complete)
+## Stop/Resume Snapshot — 2026-03-19 (Slash Command System A0+A1+A2 complete)
 
-- **Current phase:** `Bounded cleanup + shell modularization`
-- **Current slice:** `index.html core-tab extraction complete`
-- **Last completed work:** `Extracted 10 core tabs + 3 overlays from index.html into apps/core/; added core-html-loader.js; index.html reduced to 743 lines`
+- **Current phase:** `Phase 4 — Feature work`
+- **Current slice:** `Slash Command System — A0/A1/A2 complete; A3 (scheduler) and A4 (project wizard depth) are future`
+- **Last completed work:** `slash-commands.js (full IIFE), guard tests, chat.js wiring (3 edits), tab-chat.html picker + wizard modal, index.html script tag, ui-v2.css picker + wizard styles`
 - **In-progress item:** `none`
 - **Blocking issue:** `none`
-- **Next action on resume:** `Record/backfill Phase 4.5 exit audit details, then transition to PLAN-PREDICTIVE-MEMORY-v1.md activation`
+- **Next action on resume:** `Run guard tests to confirm pass; then backfill Phase 4.5 exit audit and activate PLAN-PREDICTIVE-MEMORY-v1.md`
+- **Active plan:** `Documents/current/PLAN-SLASH-COMMAND-SYSTEM-v1.md`
 - **Phase 5 plan:** `PLAN-PREDICTIVE-MEMORY-v1.md — HTML shadow cleanup checkpoint met; pending Phase 4.5 exit audit/backfill before activation`
+
+---
+
+## Session Ledger — 2026-03-19 (Slash Command System A0+A1+A2)
+
+Status: `Complete`
+
+- Created `Documents/current/PLAN-SLASH-COMMAND-SYSTEM-v1.md` (slices A0–A4 defined)
+- Created `project/tests/unit/slash-command-guards.test.js` (33 guard tests covering registry, security, and integration wiring)
+- Created `project/client/js/apps/core/slash-commands.js` (full IIFE — picker, command registry, task wizard, all 7 handlers)
+  - Commands: `/task`, `/skill`, `/project`, `/websearch`, `/stop`, `/list`, `/listactive`
+  - Picker: keyboard nav (↑↓ / Tab / Escape / Enter), rendered via `_renderPicker` with `_escHtml()` (XSS-safe)
+  - System messages via `.textContent` (no LLM, no chat history pollution)
+  - Schedule metadata captured (once / interval / daily) — repeat-execution loop is slice A3
+- Modified `project/client/js/apps/core/chat.js`:
+  - Exposed `window.getActiveEntityId = () => currentEntityId`
+  - Added `if (window.SlashCommands?.handleKey(e)) return;` in `chatKeyDown`
+  - Added slash intercept block at top of `sendChatMessage` (routes before LLM path)
+- Modified `project/client/apps/core/tab-chat.html`:
+  - Wrapped input in `.chat-input-wrap` with `#slashPicker` div
+  - Added full `#taskWizard` modal (type/skill/schedule/output fields)
+- Modified `project/client/index.html`: added `slash-commands.js` script tag after `chat.js`
+- Modified `project/client/css/ui-v2.css`: appended `.slash-picker*`, `.chat-slash-msg`, `.task-wizard*`, `.tw-*` styles
+- CI `.github/workflows/ci.yml` created (ubuntu-latest, `working-directory: project`, `npm ci --omit=optional`, `npm test`)
+- `README.md` fully redesigned in website style (cat SVG preserved; CI badge added; `.bat` / `booter.js` references removed)
+
+Boundary markers: [BOUNDARY_OK] [JS_OFFLOAD]
 
 ---
 
@@ -2127,3 +2155,25 @@ Validation:
 2. `require('./browser-host')` loads cleanly with all 5 submodules.
 3. Plan checklist NB-2-2 through NB-2-6 checked done; phase status set to Done.
 4. Ledger, stop/resume snapshot, CHANGELOG updated.
+---
+
+## Closing Rule For Every Agent Session
+
+After completing your changes, check this list:
+- Did you add or remove any `.js`, `.html`, or `.css` file? → run `npm run map`
+- Did you add any new function called from HTML? → run `npm run map`
+- Did you add any new API fetch call? → run `npm run map`
+- Did you add any new `localStorage` key? → run `npm run map`
+- Did you complete a Phase from `docs/project-status-audit.md`? → run `npm run map`
+
+If none of the above → skip the map regeneration.
+
+Report at the end of your session: `Map regenerated ✅` or `Map skipped — no structural changes`
+
+## When To Run Scripts
+
+```
+npm run map       — after any structural file change
+npm run validate  — after any session touching sleep, brain loop,
+                    vfs, auth, shadow-content-loader, or window-manager
+```

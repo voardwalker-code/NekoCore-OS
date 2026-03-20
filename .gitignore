@@ -56,6 +56,11 @@ project/server/data/nekocore-audit.ndjson
 project/skills/*/workspace/*
 !project/skills/*/workspace/.gitkeep
 
+# Wrangler / Cloudflare Pages deploy artifacts — not part of the project
+project/wrangler.toml
+project/.wrangler/
+project/_redirects
+
 # IDE
 .vscode/
 *.code-workspace

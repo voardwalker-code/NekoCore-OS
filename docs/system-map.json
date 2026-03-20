@@ -1,0 +1,6866 @@
+{
+  "generated": "2026-03-20T12:54:08.837Z",
+  "health": {
+    "totalJsFiles": 262,
+    "totalHtmlFiles": 33,
+    "totalCssFiles": 12,
+    "totalLines": 85217,
+    "globalFunctions": 1185,
+    "windowAssignments": 62,
+    "apiEndpoints": 117,
+    "sseEventsFound": 37,
+    "localStorageKeys": 2,
+    "sessionStorageKeys": 0,
+    "missingSlotFiles": 0,
+    "undefinedCssClasses": 0,
+    "unusedCssClasses": 0,
+    "missingScriptFiles": 0,
+    "circularDependencies": 69,
+    "warnings": 0
+  },
+  "fileInventory": [
+    {
+      "path": "client/create.html",
+      "dir": "client",
+      "lines": 21,
+      "modified": "2026-03-20",
+      "ext": ".html"
+    },
+    {
+      "path": "client/index.html",
+      "dir": "client",
+      "lines": 711,
+      "modified": "2026-03-20",
+      "ext": ".html"
+    },
+    {
+      "path": "client/nekocore.html",
+      "dir": "client",
+      "lines": 170,
+      "modified": "2026-03-20",
+      "ext": ".html"
+    },
+    {
+      "path": "client/visualizer.html",
+      "dir": "client",
+      "lines": 215,
+      "modified": "2026-03-20",
+      "ext": ".html"
+    },
+    {
+      "path": "client/apps/core/tab-activity.html",
+      "dir": "client/apps/core",
+      "lines": 85,
+      "modified": "2026-03-20",
+      "ext": ".html"
+    },
+    {
+      "path": "client/apps/core/tab-advanced.html",
+      "dir": "client/apps/core",
+      "lines": 206,
+      "modified": "2026-03-20",
+      "ext": ".html"
+    },
+    {
+      "path": "client/apps/core/tab-archive.html",
+      "dir": "client/apps/core",
+      "lines": 94,
+      "modified": "2026-03-20",
+      "ext": ".html"
+    },
+    {
+      "path": "client/apps/core/tab-chat.html",
+      "dir": "client/apps/core",
+      "lines": 201,
+      "modified": "2026-03-20",
+      "ext": ".html"
+    },
+    {
+      "path": "client/apps/core/tab-creator.html",
+      "dir": "client/apps/core",
+      "lines": 6,
+      "modified": "2026-03-20",
+      "ext": ".html"
+    },
+    {
+      "path": "client/apps/core/tab-debugcore.html",
+      "dir": "client/apps/core",
+      "lines": 36,
+      "modified": "2026-03-20",
+      "ext": ".html"
+    },
+    {
+      "path": "client/apps/core/tab-entity.html",
+      "dir": "client/apps/core",
+      "lines": 6,
+      "modified": "2026-03-20",
+      "ext": ".html"
+    },
+    {
+      "path": "client/apps/core/tab-nekocore.html",
+      "dir": "client/apps/core",
+      "lines": 4,
+      "modified": "2026-03-20",
+      "ext": ".html"
+    },
+    {
+      "path": "client/apps/core/tab-settings.html",
+      "dir": "client/apps/core",
+      "lines": 176,
+      "modified": "2026-03-20",
+      "ext": ".html"
+    },
+    {
+      "path": "client/apps/core/tab-users.html",
+      "dir": "client/apps/core",
+      "lines": 33,
+      "modified": "2026-03-20",
+      "ext": ".html"
+    },
+    {
+      "path": "client/apps/core/overlays/boot-login.html",
+      "dir": "client/apps/core/overlays",
+      "lines": 152,
+      "modified": "2026-03-20",
+      "ext": ".html"
+    },
+    {
+      "path": "client/apps/core/overlays/setup-wizard.html",
+      "dir": "client/apps/core/overlays",
+      "lines": 92,
+      "modified": "2026-03-20",
+      "ext": ".html"
+    },
+    {
+      "path": "client/apps/core/overlays/sleep.html",
+      "dir": "client/apps/core/overlays",
+      "lines": 8,
+      "modified": "2026-03-20",
+      "ext": ".html"
+    },
+    {
+      "path": "client/apps/entity-creator/entity-creator.css",
+      "dir": "client/apps/entity-creator",
+      "lines": 324,
+      "modified": "2026-03-20",
+      "ext": ".css"
+    },
+    {
+      "path": "client/apps/entity-creator/entity-creator.js",
+      "dir": "client/apps/entity-creator",
+      "lines": 15,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "client/apps/entity-creator/index.html",
+      "dir": "client/apps/entity-creator",
+      "lines": 387,
+      "modified": "2026-03-20",
+      "ext": ".html"
+    },
+    {
+      "path": "client/apps/non-core/core/tab-browser.html",
+      "dir": "client/apps/non-core/core",
+      "lines": 210,
+      "modified": "2026-03-20",
+      "ext": ".html"
+    },
+    {
+      "path": "client/apps/non-core/core/tab-documents.html",
+      "dir": "client/apps/non-core/core",
+      "lines": 53,
+      "modified": "2026-03-20",
+      "ext": ".html"
+    },
+    {
+      "path": "client/apps/non-core/core/tab-dreamdiary.html",
+      "dir": "client/apps/non-core/core",
+      "lines": 22,
+      "modified": "2026-03-20",
+      "ext": ".html"
+    },
+    {
+      "path": "client/apps/non-core/core/tab-dreamgallery.html",
+      "dir": "client/apps/non-core/core",
+      "lines": 119,
+      "modified": "2026-03-20",
+      "ext": ".html"
+    },
+    {
+      "path": "client/apps/non-core/core/tab-hello-world.html",
+      "dir": "client/apps/non-core/core",
+      "lines": 181,
+      "modified": "2026-03-20",
+      "ext": ".html"
+    },
+    {
+      "path": "client/apps/non-core/core/tab-lifediary.html",
+      "dir": "client/apps/non-core/core",
+      "lines": 22,
+      "modified": "2026-03-20",
+      "ext": ".html"
+    },
+    {
+      "path": "client/apps/non-core/core/tab-physical.html",
+      "dir": "client/apps/non-core/core",
+      "lines": 94,
+      "modified": "2026-03-20",
+      "ext": ".html"
+    },
+    {
+      "path": "client/apps/non-core/core/tab-popouts.html",
+      "dir": "client/apps/non-core/core",
+      "lines": 29,
+      "modified": "2026-03-20",
+      "ext": ".html"
+    },
+    {
+      "path": "client/apps/non-core/core/tab-skills.html",
+      "dir": "client/apps/non-core/core",
+      "lines": 214,
+      "modified": "2026-03-20",
+      "ext": ".html"
+    },
+    {
+      "path": "client/apps/non-core/core/tab-themes.html",
+      "dir": "client/apps/non-core/core",
+      "lines": 111,
+      "modified": "2026-03-20",
+      "ext": ".html"
+    },
+    {
+      "path": "client/apps/non-core/core/tab-visualizer.html",
+      "dir": "client/apps/non-core/core",
+      "lines": 6,
+      "modified": "2026-03-20",
+      "ext": ".html"
+    },
+    {
+      "path": "client/apps/non-core/core/tab-workspace.html",
+      "dir": "client/apps/non-core/core",
+      "lines": 33,
+      "modified": "2026-03-20",
+      "ext": ".html"
+    },
+    {
+      "path": "client/apps/non-core/custom/example-custom-info.html",
+      "dir": "client/apps/non-core/custom",
+      "lines": 7,
+      "modified": "2026-03-20",
+      "ext": ".html"
+    },
+    {
+      "path": "client/apps/non-core/custom/tab-custom-example.html",
+      "dir": "client/apps/non-core/custom",
+      "lines": 14,
+      "modified": "2026-03-20",
+      "ext": ".html"
+    },
+    {
+      "path": "client/assets/icons/sprite-preview.html",
+      "dir": "client/assets/icons",
+      "lines": 495,
+      "modified": "2026-03-20",
+      "ext": ".html"
+    },
+    {
+      "path": "client/css/system-shared.css",
+      "dir": "client/css",
+      "lines": 112,
+      "modified": "2026-03-20",
+      "ext": ".css"
+    },
+    {
+      "path": "client/css/theme.css",
+      "dir": "client/css",
+      "lines": 171,
+      "modified": "2026-03-20",
+      "ext": ".css"
+    },
+    {
+      "path": "client/css/ui-v2.css",
+      "dir": "client/css",
+      "lines": 8438,
+      "modified": "2026-03-20",
+      "ext": ".css"
+    },
+    {
+      "path": "client/css/visualizer.css",
+      "dir": "client/css",
+      "lines": 1015,
+      "modified": "2026-03-20",
+      "ext": ".css"
+    },
+    {
+      "path": "client/js/app-window.js",
+      "dir": "client/js",
+      "lines": 328,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "client/js/app.js",
+      "dir": "client/js",
+      "lines": 1057,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "client/js/auth.js",
+      "dir": "client/js",
+      "lines": 237,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "client/js/boot.js",
+      "dir": "client/js",
+      "lines": 53,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "client/js/context-menu.js",
+      "dir": "client/js",
+      "lines": 221,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "client/js/create.js",
+      "dir": "client/js",
+      "lines": 713,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "client/js/desktop.js",
+      "dir": "client/js",
+      "lines": 731,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "client/js/login.js",
+      "dir": "client/js",
+      "lines": 256,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "client/js/memory-ui.js",
+      "dir": "client/js",
+      "lines": 32,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "client/js/nekocore-app.js",
+      "dir": "client/js",
+      "lines": 608,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "client/js/neural-viz.js",
+      "dir": "client/js",
+      "lines": 2203,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "client/js/pipeline.js",
+      "dir": "client/js",
+      "lines": 378,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "client/js/shadow-content-loader.js",
+      "dir": "client/js",
+      "lines": 332,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "client/js/sleep.js",
+      "dir": "client/js",
+      "lines": 379,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "client/js/starfield.js",
+      "dir": "client/js",
+      "lines": 187,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "client/js/vfs.js",
+      "dir": "client/js",
+      "lines": 448,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "client/js/visualizer.js",
+      "dir": "client/js",
+      "lines": 1490,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "client/js/window-manager.js",
+      "dir": "client/js",
+      "lines": 986,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "client/js/apps/core-html-loader.js",
+      "dir": "client/js/apps",
+      "lines": 154,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "client/js/apps/non-core-html-loader.js",
+      "dir": "client/js/apps",
+      "lines": 353,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "client/js/apps/system-apps-adapter.js",
+      "dir": "client/js/apps",
+      "lines": 187,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "client/js/apps/core/archive-ui.js",
+      "dir": "client/js/apps/core",
+      "lines": 220,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "client/js/apps/core/chat.js",
+      "dir": "client/js/apps/core",
+      "lines": 1808,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "client/js/apps/core/config-profiles.js",
+      "dir": "client/js/apps/core",
+      "lines": 598,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "client/js/apps/core/debug-core-app.js",
+      "dir": "client/js/apps/core",
+      "lines": 127,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "client/js/apps/core/entity-ui.js",
+      "dir": "client/js/apps/core",
+      "lines": 739,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "client/js/apps/core/setup-ui.js",
+      "dir": "client/js/apps/core",
+      "lines": 675,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "client/js/apps/core/simple-provider.js",
+      "dir": "client/js/apps/core",
+      "lines": 287,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "client/js/apps/core/slash-commands.js",
+      "dir": "client/js/apps/core",
+      "lines": 445,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "client/js/apps/core/system-health.js",
+      "dir": "client/js/apps/core",
+      "lines": 191,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "client/js/apps/core/telemetry-ui.js",
+      "dir": "client/js/apps/core",
+      "lines": 291,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "client/js/apps/core/users-ui.js",
+      "dir": "client/js/apps/core",
+      "lines": 387,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "client/js/apps/optional/browser-app.js",
+      "dir": "client/js/apps/optional",
+      "lines": 1758,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "client/js/apps/optional/diary.js",
+      "dir": "client/js/apps/optional",
+      "lines": 166,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "client/js/apps/optional/document-digest.js",
+      "dir": "client/js/apps/optional",
+      "lines": 323,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "client/js/apps/optional/dream-gallery.js",
+      "dir": "client/js/apps/optional",
+      "lines": 332,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "client/js/apps/optional/physical-ui.js",
+      "dir": "client/js/apps/optional",
+      "lines": 285,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "client/js/apps/optional/popout-manager.js",
+      "dir": "client/js/apps/optional",
+      "lines": 276,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "client/js/apps/optional/skills-ui.js",
+      "dir": "client/js/apps/optional",
+      "lines": 1505,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "client/js/apps/optional/task-ui.js",
+      "dir": "client/js/apps/optional",
+      "lines": 321,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "client/js/apps/optional/theme-manager.js",
+      "dir": "client/js/apps/optional",
+      "lines": 712,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "client/js/apps/optional/visualizer-ui.js",
+      "dir": "client/js/apps/optional",
+      "lines": 185,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "client/js/neural-viz/data-layer.js",
+      "dir": "client/js/neural-viz",
+      "lines": 66,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "client/js/neural-viz/index.js",
+      "dir": "client/js/neural-viz",
+      "lines": 11,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "client/js/neural-viz/renderer.js",
+      "dir": "client/js/neural-viz",
+      "lines": 2135,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "client/shared/api.js",
+      "dir": "client/shared",
+      "lines": 85,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "client/shared/entity-select.js",
+      "dir": "client/shared",
+      "lines": 79,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "client/shared/notify.js",
+      "dir": "client/shared",
+      "lines": 94,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "client/shared/sse.js",
+      "dir": "client/shared",
+      "lines": 85,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "client/themes/core/frosted-orbit.css",
+      "dir": "client/themes/core",
+      "lines": 30,
+      "modified": "2026-03-20",
+      "ext": ".css"
+    },
+    {
+      "path": "client/themes/core/glass-clear.css",
+      "dir": "client/themes/core",
+      "lines": 53,
+      "modified": "2026-03-20",
+      "ext": ".css"
+    },
+    {
+      "path": "client/themes/core/light-default.css",
+      "dir": "client/themes/core",
+      "lines": 37,
+      "modified": "2026-03-20",
+      "ext": ".css"
+    },
+    {
+      "path": "client/themes/core/neko-default.css",
+      "dir": "client/themes/core",
+      "lines": 57,
+      "modified": "2026-03-20",
+      "ext": ".css"
+    },
+    {
+      "path": "client/themes/core/sunset-terminal.css",
+      "dir": "client/themes/core",
+      "lines": 30,
+      "modified": "2026-03-20",
+      "ext": ".css"
+    },
+    {
+      "path": "client/themes/custom/mac-sequoia.css",
+      "dir": "client/themes/custom",
+      "lines": 42,
+      "modified": "2026-03-20",
+      "ext": ".css"
+    },
+    {
+      "path": "client/themes/custom/ubuntu-dash.css",
+      "dir": "client/themes/custom",
+      "lines": 31,
+      "modified": "2026-03-20",
+      "ext": ".css"
+    },
+    {
+      "path": "server/api-entity-last-memory.js",
+      "dir": "server",
+      "lines": 81,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/entityPaths.js",
+      "dir": "server",
+      "lines": 247,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/server.js",
+      "dir": "server",
+      "lines": 936,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/beliefs/beliefGraph.js",
+      "dir": "server/beliefs",
+      "lines": 2,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/agent-echo.js",
+      "dir": "server/brain",
+      "lines": 210,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/archive-manager.js",
+      "dir": "server/brain",
+      "lines": 2,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/aspect-prompts.js",
+      "dir": "server/brain",
+      "lines": 2,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/attention-system.js",
+      "dir": "server/brain",
+      "lines": 2,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/boredom-engine.js",
+      "dir": "server/brain",
+      "lines": 2,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/brain-loop.js",
+      "dir": "server/brain",
+      "lines": 2,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/chapter-generator.js",
+      "dir": "server/brain",
+      "lines": 2,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/cognitive-bus.js",
+      "dir": "server/brain",
+      "lines": 2,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/conscious-engine.js",
+      "dir": "server/brain",
+      "lines": 2,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/context-consolidator.js",
+      "dir": "server/brain",
+      "lines": 2,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/core-life-generator.js",
+      "dir": "server/brain",
+      "lines": 2,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/core-memory-manager.js",
+      "dir": "server/brain",
+      "lines": 2,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/curiosity-engine.js",
+      "dir": "server/brain",
+      "lines": 2,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/dream-engine.js",
+      "dir": "server/brain",
+      "lines": 2,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/dream-visualizer.js",
+      "dir": "server/brain",
+      "lines": 2,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/entity-manager.js",
+      "dir": "server/brain",
+      "lines": 2,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/goal-generator.js",
+      "dir": "server/brain",
+      "lines": 2,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/goals-manager.js",
+      "dir": "server/brain",
+      "lines": 2,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/hatch-entity.js",
+      "dir": "server/brain",
+      "lines": 2,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/identity-manager.js",
+      "dir": "server/brain",
+      "lines": 2,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/memory-graph-builder.js",
+      "dir": "server/brain",
+      "lines": 2,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/memory-graph.js",
+      "dir": "server/brain",
+      "lines": 2,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/memory-index-cache.js",
+      "dir": "server/brain",
+      "lines": 2,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/memory-index.js",
+      "dir": "server/brain",
+      "lines": 2,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/memory-storage.js",
+      "dir": "server/brain",
+      "lines": 2,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/model-router.js",
+      "dir": "server/brain",
+      "lines": 2,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/neurochemistry.js",
+      "dir": "server/brain",
+      "lines": 2,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/orchestrator.js",
+      "dir": "server/brain",
+      "lines": 2,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/pixel-art-engine.js",
+      "dir": "server/brain",
+      "lines": 2,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/skill-manager.js",
+      "dir": "server/brain",
+      "lines": 2,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/somatic-awareness.js",
+      "dir": "server/brain",
+      "lines": 2,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/subconscious-agent.js",
+      "dir": "server/brain",
+      "lines": 2,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/synthetic-memory-generator.js",
+      "dir": "server/brain",
+      "lines": 2,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/task-runner.js",
+      "dir": "server/brain",
+      "lines": 2,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/thought-stream.js",
+      "dir": "server/brain",
+      "lines": 2,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/thought-types.js",
+      "dir": "server/brain",
+      "lines": 2,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/topic-utils.js",
+      "dir": "server/brain",
+      "lines": 2,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/trace-graph-builder.js",
+      "dir": "server/brain",
+      "lines": 2,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/trace-graph.js",
+      "dir": "server/brain",
+      "lines": 2,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/workspace-tools.js",
+      "dir": "server/brain",
+      "lines": 2,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/affect/index.js",
+      "dir": "server/brain/affect",
+      "lines": 5,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/affect/neurochemistry.js",
+      "dir": "server/brain/affect",
+      "lines": 651,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/affect/somatic-awareness.js",
+      "dir": "server/brain/affect",
+      "lines": 624,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/bus/cognitive-bus.js",
+      "dir": "server/brain/bus",
+      "lines": 120,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/bus/index.js",
+      "dir": "server/brain/bus",
+      "lines": 6,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/bus/thought-stream.js",
+      "dir": "server/brain/bus",
+      "lines": 228,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/bus/thought-types.js",
+      "dir": "server/brain/bus",
+      "lines": 127,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/cognition/attention-system.js",
+      "dir": "server/brain/cognition",
+      "lines": 239,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/cognition/boredom-engine.js",
+      "dir": "server/brain/cognition",
+      "lines": 320,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/cognition/brain-loop.js",
+      "dir": "server/brain/cognition",
+      "lines": 507,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/cognition/cognitive-pulse.js",
+      "dir": "server/brain/cognition",
+      "lines": 546,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/cognition/curiosity-engine.js",
+      "dir": "server/brain/cognition",
+      "lines": 281,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/cognition/dream-engine.js",
+      "dir": "server/brain/cognition",
+      "lines": 446,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/cognition/dream-intuition-adapter.js",
+      "dir": "server/brain/cognition",
+      "lines": 43,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/cognition/dream-maintenance-selector.js",
+      "dir": "server/brain/cognition",
+      "lines": 218,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/cognition/dream-seed-pool.js",
+      "dir": "server/brain/cognition",
+      "lines": 58,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/cognition/dream-visualizer.js",
+      "dir": "server/brain/cognition",
+      "lines": 419,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/cognition/index.js",
+      "dir": "server/brain/cognition",
+      "lines": 9,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/cognition/phases/index.js",
+      "dir": "server/brain/cognition/phases",
+      "lines": 23,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/cognition/phases/phase-archive-index.js",
+      "dir": "server/brain/cognition/phases",
+      "lines": 47,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/cognition/phases/phase-archive.js",
+      "dir": "server/brain/cognition/phases",
+      "lines": 216,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/cognition/phases/phase-beliefs.js",
+      "dir": "server/brain/cognition/phases",
+      "lines": 116,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/cognition/phases/phase-boredom.js",
+      "dir": "server/brain/cognition/phases",
+      "lines": 86,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/cognition/phases/phase-conscious-stm.js",
+      "dir": "server/brain/cognition/phases",
+      "lines": 17,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/cognition/phases/phase-consolidation.js",
+      "dir": "server/brain/cognition/phases",
+      "lines": 23,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/cognition/phases/phase-decay.js",
+      "dir": "server/brain/cognition/phases",
+      "lines": 66,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/cognition/phases/phase-deep-sleep.js",
+      "dir": "server/brain/cognition/phases",
+      "lines": 123,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/cognition/phases/phase-dreams.js",
+      "dir": "server/brain/cognition/phases",
+      "lines": 290,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/cognition/phases/phase-goals.js",
+      "dir": "server/brain/cognition/phases",
+      "lines": 25,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/cognition/phases/phase-hebbian.js",
+      "dir": "server/brain/cognition/phases",
+      "lines": 15,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/cognition/phases/phase-identity.js",
+      "dir": "server/brain/cognition/phases",
+      "lines": 218,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/cognition/phases/phase-neurochemistry.js",
+      "dir": "server/brain/cognition/phases",
+      "lines": 12,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/cognition/phases/phase-pruning.js",
+      "dir": "server/brain/cognition/phases",
+      "lines": 16,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/cognition/phases/phase-somatic.js",
+      "dir": "server/brain/cognition/phases",
+      "lines": 13,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/cognition/phases/phase-traces.js",
+      "dir": "server/brain/cognition/phases",
+      "lines": 22,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/core/conscious-engine.js",
+      "dir": "server/brain/core",
+      "lines": 211,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/core/index.js",
+      "dir": "server/brain/core",
+      "lines": 6,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/core/orchestration-policy.js",
+      "dir": "server/brain/core",
+      "lines": 108,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/core/orchestrator.js",
+      "dir": "server/brain/core",
+      "lines": 1095,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/core/subconscious-agent.js",
+      "dir": "server/brain/core",
+      "lines": 228,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/core/worker-dispatcher.js",
+      "dir": "server/brain/core",
+      "lines": 151,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/core/worker-registry.js",
+      "dir": "server/brain/core",
+      "lines": 69,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/generation/aspect-prompts.js",
+      "dir": "server/brain/generation",
+      "lines": 473,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/generation/chapter-generator.js",
+      "dir": "server/brain/generation",
+      "lines": 235,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/generation/context-consolidator.js",
+      "dir": "server/brain/generation",
+      "lines": 256,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/generation/core-life-generator.js",
+      "dir": "server/brain/generation",
+      "lines": 315,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/generation/diary-prompts.js",
+      "dir": "server/brain/generation",
+      "lines": 170,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/generation/humanize-filter.js",
+      "dir": "server/brain/generation",
+      "lines": 122,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/generation/image-generator.js",
+      "dir": "server/brain/generation",
+      "lines": 105,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/generation/index.js",
+      "dir": "server/brain/generation",
+      "lines": 9,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/generation/message-chunker.js",
+      "dir": "server/brain/generation",
+      "lines": 76,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/generation/pixel-art-engine.js",
+      "dir": "server/brain/generation",
+      "lines": 1282,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/generation/synthetic-memory-generator.js",
+      "dir": "server/brain/generation",
+      "lines": 356,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/identity/core-memory-manager.js",
+      "dir": "server/brain/identity",
+      "lines": 335,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/identity/dream-diary.js",
+      "dir": "server/brain/identity",
+      "lines": 111,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/identity/goal-generator.js",
+      "dir": "server/brain/identity",
+      "lines": 475,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/identity/goals-manager.js",
+      "dir": "server/brain/identity",
+      "lines": 345,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/identity/hatch-entity.js",
+      "dir": "server/brain/identity",
+      "lines": 494,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/identity/identity-manager.js",
+      "dir": "server/brain/identity",
+      "lines": 469,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/identity/index.js",
+      "dir": "server/brain/identity",
+      "lines": 8,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/identity/life-diary.js",
+      "dir": "server/brain/identity",
+      "lines": 160,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/identity/onboarding.js",
+      "dir": "server/brain/identity",
+      "lines": 262,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/knowledge/beliefGraph.js",
+      "dir": "server/brain/knowledge",
+      "lines": 693,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/knowledge/dream-link-writer.js",
+      "dir": "server/brain/knowledge",
+      "lines": 82,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/knowledge/index.js",
+      "dir": "server/brain/knowledge",
+      "lines": 6,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/knowledge/trace-graph-builder.js",
+      "dir": "server/brain/knowledge",
+      "lines": 415,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/knowledge/trace-graph.js",
+      "dir": "server/brain/knowledge",
+      "lines": 339,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/memory/archive-manager.js",
+      "dir": "server/brain/memory",
+      "lines": 296,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/memory/conscious-memory.js",
+      "dir": "server/brain/memory",
+      "lines": 366,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/memory/dream-memory.js",
+      "dir": "server/brain/memory",
+      "lines": 326,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/memory/index.js",
+      "dir": "server/brain/memory",
+      "lines": 10,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/memory/memory-graph-builder.js",
+      "dir": "server/brain/memory",
+      "lines": 295,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/memory/memory-graph.js",
+      "dir": "server/brain/memory",
+      "lines": 341,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/memory/memory-images.js",
+      "dir": "server/brain/memory",
+      "lines": 63,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/memory/memory-index-cache.js",
+      "dir": "server/brain/memory",
+      "lines": 365,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/memory/memory-index.js",
+      "dir": "server/brain/memory",
+      "lines": 206,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/memory/memory-storage.js",
+      "dir": "server/brain/memory",
+      "lines": 657,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/nekocore/audit.js",
+      "dir": "server/brain/nekocore",
+      "lines": 60,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/nekocore/bootstrap.js",
+      "dir": "server/brain/nekocore",
+      "lines": 115,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/nekocore/doc-ingestion.js",
+      "dir": "server/brain/nekocore",
+      "lines": 240,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/nekocore/knowledge-retrieval.js",
+      "dir": "server/brain/nekocore",
+      "lines": 306,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/nekocore/model-intelligence.js",
+      "dir": "server/brain/nekocore",
+      "lines": 378,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/nekocore/persona-profile.js",
+      "dir": "server/brain/nekocore",
+      "lines": 173,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/nekocore/reset-runtime.js",
+      "dir": "server/brain/nekocore",
+      "lines": 97,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/skills/index.js",
+      "dir": "server/brain/skills",
+      "lines": 6,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/skills/skill-manager.js",
+      "dir": "server/brain/skills",
+      "lines": 1084,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/skills/task-runner.js",
+      "dir": "server/brain/skills",
+      "lines": 454,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/skills/workspace-tools.js",
+      "dir": "server/brain/skills",
+      "lines": 412,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/tasks/entity-chat-manager.js",
+      "dir": "server/brain/tasks",
+      "lines": 94,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/tasks/entity-network-registry.js",
+      "dir": "server/brain/tasks",
+      "lines": 153,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/tasks/intent-classifier.js",
+      "dir": "server/brain/tasks",
+      "lines": 213,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/tasks/task-archive-reader.js",
+      "dir": "server/brain/tasks",
+      "lines": 107,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/tasks/task-archive-writer.js",
+      "dir": "server/brain/tasks",
+      "lines": 197,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/tasks/task-classifier-rules.js",
+      "dir": "server/brain/tasks",
+      "lines": 264,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/tasks/task-context-gatherer.js",
+      "dir": "server/brain/tasks",
+      "lines": 138,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/tasks/task-context-strategies.js",
+      "dir": "server/brain/tasks",
+      "lines": 260,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/tasks/task-event-bus.js",
+      "dir": "server/brain/tasks",
+      "lines": 100,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/tasks/task-executor.js",
+      "dir": "server/brain/tasks",
+      "lines": 290,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/tasks/task-frontman.js",
+      "dir": "server/brain/tasks",
+      "lines": 180,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/tasks/task-module-registry.js",
+      "dir": "server/brain/tasks",
+      "lines": 111,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/tasks/task-pipeline-bridge.js",
+      "dir": "server/brain/tasks",
+      "lines": 253,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/tasks/task-project-store.js",
+      "dir": "server/brain/tasks",
+      "lines": 188,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/tasks/task-session.js",
+      "dir": "server/brain/tasks",
+      "lines": 238,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/tasks/task-types.js",
+      "dir": "server/brain/tasks",
+      "lines": 97,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/utils/archive-directory.js",
+      "dir": "server/brain/utils",
+      "lines": 161,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/utils/archive-index.js",
+      "dir": "server/brain/utils",
+      "lines": 381,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/utils/archive-indexes.js",
+      "dir": "server/brain/utils",
+      "lines": 397,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/utils/archive-router.js",
+      "dir": "server/brain/utils",
+      "lines": 159,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/utils/bm25.js",
+      "dir": "server/brain/utils",
+      "lines": 98,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/utils/bulk-ingest.js",
+      "dir": "server/brain/utils",
+      "lines": 298,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/utils/entity-manager.js",
+      "dir": "server/brain/utils",
+      "lines": 316,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/utils/index.js",
+      "dir": "server/brain/utils",
+      "lines": 6,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/utils/model-router.js",
+      "dir": "server/brain/utils",
+      "lines": 322,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/utils/rake.js",
+      "dir": "server/brain/utils",
+      "lines": 173,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/utils/textrank.js",
+      "dir": "server/brain/utils",
+      "lines": 213,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/utils/topic-utils.js",
+      "dir": "server/brain/utils",
+      "lines": 257,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/brain/utils/turn-signals.js",
+      "dir": "server/brain/utils",
+      "lines": 107,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/contracts/contributor-contracts.js",
+      "dir": "server/contracts",
+      "lines": 42,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/contracts/memory-schema.js",
+      "dir": "server/contracts",
+      "lines": 44,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/contracts/response-contracts.js",
+      "dir": "server/contracts",
+      "lines": 68,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/contracts/worker-output-contract.js",
+      "dir": "server/contracts",
+      "lines": 79,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/integrations/telegram.js",
+      "dir": "server/integrations",
+      "lines": 544,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/integrations/web-fetch.js",
+      "dir": "server/integrations",
+      "lines": 352,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/routes/archive-routes.js",
+      "dir": "server/routes",
+      "lines": 225,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/routes/auth-routes.js",
+      "dir": "server/routes",
+      "lines": 138,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/routes/brain-routes.js",
+      "dir": "server/routes",
+      "lines": 572,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/routes/browser-routes.js",
+      "dir": "server/routes",
+      "lines": 577,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/routes/chat-routes.js",
+      "dir": "server/routes",
+      "lines": 268,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/routes/cognitive-routes.js",
+      "dir": "server/routes",
+      "lines": 611,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/routes/config-routes.js",
+      "dir": "server/routes",
+      "lines": 705,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/routes/document-routes.js",
+      "dir": "server/routes",
+      "lines": 373,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/routes/entity-chat-routes.js",
+      "dir": "server/routes",
+      "lines": 143,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/routes/entity-routes.js",
+      "dir": "server/routes",
+      "lines": 1297,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/routes/memory-routes.js",
+      "dir": "server/routes",
+      "lines": 790,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/routes/nekocore-routes.js",
+      "dir": "server/routes",
+      "lines": 673,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/routes/skills-routes.js",
+      "dir": "server/routes",
+      "lines": 298,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/routes/sse-routes.js",
+      "dir": "server/routes",
+      "lines": 25,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/routes/task-routes.js",
+      "dir": "server/routes",
+      "lines": 292,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/routes/vfs-routes.js",
+      "dir": "server/routes",
+      "lines": 409,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/services/auth-service.js",
+      "dir": "server/services",
+      "lines": 197,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/services/auto-open-browser.js",
+      "dir": "server/services",
+      "lines": 582,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/services/boot.js",
+      "dir": "server/services",
+      "lines": 37,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/services/chat-pipeline.js",
+      "dir": "server/services",
+      "lines": 854,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/services/config-runtime.js",
+      "dir": "server/services",
+      "lines": 234,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/services/config-service.js",
+      "dir": "server/services",
+      "lines": 321,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/services/entity-checkout.js",
+      "dir": "server/services",
+      "lines": 168,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/services/entity-memory-compat.js",
+      "dir": "server/services",
+      "lines": 37,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/services/entity-runtime.js",
+      "dir": "server/services",
+      "lines": 208,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/services/llm-interface.js",
+      "dir": "server/services",
+      "lines": 235,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/services/llm-runtime-utils.js",
+      "dir": "server/services",
+      "lines": 64,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/services/llm-service.js",
+      "dir": "server/services",
+      "lines": 244,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/services/memory-operations.js",
+      "dir": "server/services",
+      "lines": 281,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/services/memory-retrieval.js",
+      "dir": "server/services",
+      "lines": 636,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/services/memory-service.js",
+      "dir": "server/services",
+      "lines": 147,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/services/nekocore-memory.js",
+      "dir": "server/services",
+      "lines": 67,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/services/nekocore-pipeline.js",
+      "dir": "server/services",
+      "lines": 348,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/services/post-response-memory.js",
+      "dir": "server/services",
+      "lines": 289,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/services/relationship-service.js",
+      "dir": "server/services",
+      "lines": 329,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/services/response-postprocess.js",
+      "dir": "server/services",
+      "lines": 77,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/services/runtime-lifecycle.js",
+      "dir": "server/services",
+      "lines": 263,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/services/startup-preflight.js",
+      "dir": "server/services",
+      "lines": 193,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/services/timeline-logger.js",
+      "dir": "server/services",
+      "lines": 148,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/services/user-profiles.js",
+      "dir": "server/services",
+      "lines": 180,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/services/voice-profile.js",
+      "dir": "server/services",
+      "lines": 204,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/tools/audit-legacy-memory-records.js",
+      "dir": "server/tools",
+      "lines": 173,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/tools/backfill-legacy-document-chunks.js",
+      "dir": "server/tools",
+      "lines": 245,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/tools/installer-cli.js",
+      "dir": "server/tools",
+      "lines": 380,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    },
+    {
+      "path": "server/tools/installer-marker-engine.js",
+      "dir": "server/tools",
+      "lines": 253,
+      "modified": "2026-03-20",
+      "ext": ".js"
+    }
+  ],
+  "windowAssignments": [
+    {
+      "name": "__appWindowRegistry",
+      "file": "client/js/app-window.js",
+      "line": 302,
+      "snippet": "window.__appWindowRegistry = window.__appWindowRegistry || new Map();"
+    },
+    {
+      "name": "__systemAppsCompatStatus",
+      "file": "client/js/app.js",
+      "line": 229,
+      "snippet": "window.__systemAppsCompatStatus = systemAppsCompatStatus;"
+    },
+    {
+      "name": "getShellWindowApps",
+      "file": "client/js/app.js",
+      "line": 242,
+      "snippet": "window.getShellWindowApps = getShellWindowApps;"
+    },
+    {
+      "name": "adjustTaskbarScale",
+      "file": "client/js/app.js",
+      "line": 1050,
+      "snippet": "window.adjustTaskbarScale = window.adjustTaskbarScale || function () {};"
+    },
+    {
+      "name": "adjustTaskbarIconScale",
+      "file": "client/js/app.js",
+      "line": 1051,
+      "snippet": "window.adjustTaskbarIconScale = window.adjustTaskbarIconScale || function () {};"
+    },
+    {
+      "name": "stopTaskbarEditMode",
+      "file": "client/js/app.js",
+      "line": 1052,
+      "snippet": "window.stopTaskbarEditMode = window.stopTaskbarEditMode || function () {};"
+    },
+    {
+      "name": "initArchiveApp",
+      "file": "client/js/apps/core/archive-ui.js",
+      "line": 210,
+      "snippet": "window.initArchiveApp = function initArchiveApp() {"
+    },
+    {
+      "name": "_currentEntityMode",
+      "file": "client/js/apps/core/chat.js",
+      "line": 52,
+      "snippet": "window._currentEntityMode = window._currentEntityMode || null;"
+    },
+    {
+      "name": "_currentEntityMode",
+      "file": "client/js/apps/core/chat.js",
+      "line": 55,
+      "snippet": "return window._currentEntityMode === 'single-llm';"
+    },
+    {
+      "name": "_currentEntityMode",
+      "file": "client/js/apps/core/chat.js",
+      "line": 92,
+      "snippet": "window._currentEntityMode = entityMode === 'single-llm' ? 'single-llm' : null;"
+    },
+    {
+      "name": "toggleMemoryRecall",
+      "file": "client/js/apps/core/chat.js",
+      "line": 102,
+      "snippet": "window.toggleMemoryRecall = toggleMemoryRecall;"
+    },
+    {
+      "name": "toggleMemorySave",
+      "file": "client/js/apps/core/chat.js",
+      "line": 103,
+      "snippet": "window.toggleMemorySave = toggleMemorySave;"
+    },
+    {
+      "name": "setChatEntityMode",
+      "file": "client/js/apps/core/chat.js",
+      "line": 104,
+      "snippet": "window.setChatEntityMode = setChatEntityMode;"
+    },
+    {
+      "name": "handleTaskSSEEvent",
+      "file": "client/js/apps/core/chat.js",
+      "line": 263,
+      "snippet": "if (typeof window.handleTaskSSEEvent === 'function') window.handleTaskSSEEvent(e"
+    },
+    {
+      "name": "__remBannerShownInPage",
+      "file": "client/js/apps/core/chat.js",
+      "line": 999,
+      "snippet": "window.__remBannerShownInPage = true;"
+    },
+    {
+      "name": "syncContextChatGuard",
+      "file": "client/js/apps/core/chat.js",
+      "line": 1391,
+      "snippet": "window.syncContextChatGuard  = syncContextChatGuard;"
+    },
+    {
+      "name": "getActiveEntityId",
+      "file": "client/js/apps/core/chat.js",
+      "line": 1392,
+      "snippet": "window.getActiveEntityId    = () => (typeof currentEntityId !== 'undefined' ? cu"
+    },
+    {
+      "name": "resetWindowLayout",
+      "file": "client/js/apps/core/debug-core-app.js",
+      "line": 95,
+      "snippet": "if (typeof window.resetWindowLayout === 'function') {"
+    },
+    {
+      "name": "initCoreDebugApp",
+      "file": "client/js/apps/core/debug-core-app.js",
+      "line": 113,
+      "snippet": "window.initCoreDebugApp = function initCoreDebugApp() {"
+    },
+    {
+      "name": "cancelActiveTask",
+      "file": "client/js/apps/core/slash-commands.js",
+      "line": 239,
+      "snippet": "} else if (typeof window.cancelActiveTask === 'function') {"
+    },
+    {
+      "name": "openTaskHistory",
+      "file": "client/js/apps/core/slash-commands.js",
+      "line": 249,
+      "snippet": "if (typeof window.openTaskHistory === 'function') {"
+    },
+    {
+      "name": "sendChatMessage",
+      "file": "client/js/apps/core/slash-commands.js",
+      "line": 352,
+      "snippet": "if (typeof window.sendChatMessage === 'function') window.sendChatMessage();"
+    },
+    {
+      "name": "getActiveEntityId",
+      "file": "client/js/apps/core/slash-commands.js",
+      "line": 381,
+      "snippet": "return typeof window.getActiveEntityId === 'function'"
+    },
+    {
+      "name": "SlashCommands",
+      "file": "client/js/apps/core/slash-commands.js",
+      "line": 432,
+      "snippet": "window.SlashCommands = {"
+    },
+    {
+      "name": "reportPipelinePhase",
+      "file": "client/js/apps/core/telemetry-ui.js",
+      "line": 289,
+      "snippet": "window.reportPipelinePhase = reportPipelinePhase;"
+    },
+    {
+      "name": "reportOrchestrationMetrics",
+      "file": "client/js/apps/core/telemetry-ui.js",
+      "line": 290,
+      "snippet": "window.reportOrchestrationMetrics = reportOrchestrationMetrics;"
+    },
+    {
+      "name": "__nonCoreHtmlReady",
+      "file": "client/js/apps/core-html-loader.js",
+      "line": 149,
+      "snippet": "window.__nonCoreHtmlReady = (prior && typeof prior.then === 'function')"
+    },
+    {
+      "name": "__nonCoreHtmlReady",
+      "file": "client/js/apps/non-core-html-loader.js",
+      "line": 351,
+      "snippet": "window.__nonCoreHtmlReady = Promise.resolve(loadNonCoreAppHtml());"
+    },
+    {
+      "name": "_browserSSERegistered",
+      "file": "client/js/apps/optional/browser-app.js",
+      "line": 1700,
+      "snippet": "if (typeof window._browserSSERegistered === 'undefined') {"
+    },
+    {
+      "name": "_browserSSERegistered",
+      "file": "client/js/apps/optional/browser-app.js",
+      "line": 1701,
+      "snippet": "window._browserSSERegistered = true;"
+    },
+    {
+      "name": "_sseOnMessage",
+      "file": "client/js/apps/optional/browser-app.js",
+      "line": 1703,
+      "snippet": "window._sseOnMessage = function(eventType, data) {"
+    },
+    {
+      "name": "requestPopoutClose",
+      "file": "client/js/apps/optional/popout-manager.js",
+      "line": 262,
+      "snippet": "window.requestPopoutClose = requestPopoutClose;"
+    },
+    {
+      "name": "closeAllPopouts",
+      "file": "client/js/apps/optional/popout-manager.js",
+      "line": 263,
+      "snippet": "window.closeAllPopouts = closeAllPopouts;"
+    },
+    {
+      "name": "isPopoutOpen",
+      "file": "client/js/apps/optional/popout-manager.js",
+      "line": 264,
+      "snippet": "window.isPopoutOpen = isPopoutOpen;"
+    },
+    {
+      "name": "focusDetachedPopout",
+      "file": "client/js/apps/optional/popout-manager.js",
+      "line": 265,
+      "snippet": "window.focusDetachedPopout = focusDetachedPopout;"
+    },
+    {
+      "name": "getPopoutRegistrySnapshot",
+      "file": "client/js/apps/optional/popout-manager.js",
+      "line": 266,
+      "snippet": "window.getPopoutRegistrySnapshot = getPopoutRegistrySnapshot;"
+    },
+    {
+      "name": "refreshPopoutManagerView",
+      "file": "client/js/apps/optional/popout-manager.js",
+      "line": 267,
+      "snippet": "window.refreshPopoutManagerView = refreshPopoutManagerView;"
+    },
+    {
+      "name": "handleTaskSSEEvent",
+      "file": "client/js/apps/optional/task-ui.js",
+      "line": 31,
+      "snippet": "window.handleTaskSSEEvent = function handleTaskSSEEvent(eventName, data) {"
+    },
+    {
+      "name": "openTaskHistory",
+      "file": "client/js/apps/optional/task-ui.js",
+      "line": 316,
+      "snippet": "window.openTaskHistory = openTaskHistory;"
+    },
+    {
+      "name": "closeTaskHistory",
+      "file": "client/js/apps/optional/task-ui.js",
+      "line": 317,
+      "snippet": "window.closeTaskHistory = closeTaskHistory;"
+    },
+    {
+      "name": "openTaskSessionDetail",
+      "file": "client/js/apps/optional/task-ui.js",
+      "line": 318,
+      "snippet": "window.openTaskSessionDetail = openTaskSessionDetail;"
+    },
+    {
+      "name": "closeTaskDetail",
+      "file": "client/js/apps/optional/task-ui.js",
+      "line": 319,
+      "snippet": "window.closeTaskDetail = closeTaskDetail;"
+    },
+    {
+      "name": "cancelActiveTask",
+      "file": "client/js/apps/optional/task-ui.js",
+      "line": 320,
+      "snippet": "window.cancelActiveTask = cancelActiveTask;"
+    },
+    {
+      "name": "onNeuralNodeSelected",
+      "file": "client/js/apps/optional/visualizer-ui.js",
+      "line": 180,
+      "snippet": "window.onNeuralNodeSelected = function(memId) {"
+    },
+    {
+      "name": "updateEmptyEntityModeForm",
+      "file": "client/js/create.js",
+      "line": 180,
+      "snippet": "window.updateEmptyEntityModeForm = updateEmptyEntityModeForm;"
+    },
+    {
+      "name": "parent",
+      "file": "client/js/create.js",
+      "line": 262,
+      "snippet": "if (!window.parent || window.parent === window) return;"
+    },
+    {
+      "name": "resetCreatorFlow",
+      "file": "client/js/create.js",
+      "line": 689,
+      "snippet": "window.resetCreatorFlow = resetCreatorFlow;"
+    },
+    {
+      "name": "App",
+      "file": "client/js/nekocore-app.js",
+      "line": 605,
+      "snippet": "window.App  = App;"
+    },
+    {
+      "name": "Chat",
+      "file": "client/js/nekocore-app.js",
+      "line": 606,
+      "snippet": "window.Chat = Chat;"
+    },
+    {
+      "name": "_NVR",
+      "file": "client/js/neural-viz/renderer.js",
+      "line": 6,
+      "snippet": "window._NVR = (() => {"
+    },
+    {
+      "name": "onNeuralNodeSelected",
+      "file": "client/js/neural-viz/renderer.js",
+      "line": 1069,
+      "snippet": "if (typeof window.onNeuralNodeSelected === 'function') {"
+    },
+    {
+      "name": "NeuralVizPopout",
+      "file": "client/js/neural-viz/renderer.js",
+      "line": 1961,
+      "snippet": "window.NeuralVizPopout = {"
+    },
+    {
+      "name": "onNeuralNodeSelected",
+      "file": "client/js/neural-viz.js",
+      "line": 1144,
+      "snippet": "if (typeof window.onNeuralNodeSelected === 'function') {"
+    },
+    {
+      "name": "NeuralVizPopout",
+      "file": "client/js/neural-viz.js",
+      "line": 2048,
+      "snippet": "window.NeuralVizPopout = {"
+    },
+    {
+      "name": "__shadowLoaderRegistry",
+      "file": "client/js/shadow-content-loader.js",
+      "line": 299,
+      "snippet": "window.__shadowLoaderRegistry = window.__shadowLoaderRegistry || new Map();"
+    },
+    {
+      "name": "_vizSelectMemory",
+      "file": "client/js/visualizer.js",
+      "line": 962,
+      "snippet": "window._vizSelectMemory = selectMemory;"
+    },
+    {
+      "name": "onNeuralNodeSelected",
+      "file": "client/js/visualizer.js",
+      "line": 1420,
+      "snippet": "window.onNeuralNodeSelected = function(/* memId */) {"
+    },
+    {
+      "name": "getShadowLoader",
+      "file": "client/js/window-manager.js",
+      "line": 354,
+      "snippet": "if (typeof window.getShadowLoader === 'function') {"
+    },
+    {
+      "name": "RemAPI",
+      "file": "client/shared/api.js",
+      "line": 8,
+      "snippet": "window.RemAPI = (function () {"
+    },
+    {
+      "name": "EntitySelect",
+      "file": "client/shared/entity-select.js",
+      "line": 10,
+      "snippet": "window.EntitySelect = (function () {"
+    },
+    {
+      "name": "notify",
+      "file": "client/shared/notify.js",
+      "line": 13,
+      "snippet": "window.notify = (function () {"
+    },
+    {
+      "name": "RemSSE",
+      "file": "client/shared/sse.js",
+      "line": 13,
+      "snippet": "window.RemSSE = (function () {"
+    }
+  ],
+  "inlineFuncRegistry": [
+    {
+      "name": "_bmFilterChanged",
+      "definedIn": "client/js/apps/optional/browser-app.js",
+      "defLine": 833,
+      "calledFrom": "client/apps/non-core/core/tab-browser.html:94"
+    },
+    {
+      "name": "_bmFolderChanged",
+      "definedIn": "client/js/apps/optional/browser-app.js",
+      "defLine": 839,
+      "calledFrom": "client/apps/non-core/core/tab-browser.html:95"
+    },
+    {
+      "name": "_browserShowHomeView",
+      "definedIn": "client/js/apps/optional/browser-app.js",
+      "defLine": 417,
+      "calledFrom": "client/apps/non-core/core/tab-browser.html:65"
+    },
+    {
+      "name": "_browserShowPageView",
+      "definedIn": "client/js/apps/optional/browser-app.js",
+      "defLine": 427,
+      "calledFrom": "client/apps/non-core/core/tab-browser.html:64"
+    },
+    {
+      "name": "_histFilterChanged",
+      "definedIn": "client/js/apps/optional/browser-app.js",
+      "defLine": 959,
+      "calledFrom": "client/apps/non-core/core/tab-browser.html:120"
+    },
+    {
+      "name": "_llmClearOutput",
+      "definedIn": "client/js/apps/optional/browser-app.js",
+      "defLine": 1663,
+      "calledFrom": "client/apps/non-core/core/tab-browser.html:172"
+    },
+    {
+      "name": "addAndSwitchUser",
+      "definedIn": "client/js/apps/core/users-ui.js",
+      "defLine": 159,
+      "calledFrom": "client/apps/core/tab-chat.html:35"
+    },
+    {
+      "name": "backToModeSelection",
+      "definedIn": "client/js/app.js",
+      "defLine": 870,
+      "calledFrom": "client/apps/entity-creator/index.html:89, client/apps/entity-creator/index.html:135, client/apps/entity-creator/index.html:169, client/apps/entity-creator/index.html:204"
+    },
+    {
+      "name": "bmAddBookmarkFromManager",
+      "definedIn": "client/js/apps/optional/browser-app.js",
+      "defLine": 879,
+      "calledFrom": "client/apps/non-core/core/tab-browser.html:103"
+    },
+    {
+      "name": "browserAskPage",
+      "definedIn": "client/js/apps/optional/browser-app.js",
+      "defLine": 1391,
+      "calledFrom": "client/apps/non-core/core/tab-browser.html:160"
+    },
+    {
+      "name": "browserCancelSave",
+      "definedIn": "client/js/apps/optional/browser-app.js",
+      "defLine": 1584,
+      "calledFrom": "client/apps/non-core/core/tab-browser.html:189"
+    },
+    {
+      "name": "browserClearBookmarks",
+      "definedIn": "client/js/apps/optional/browser-app.js",
+      "defLine": 752,
+      "calledFrom": "client/apps/core/tab-advanced.html:179"
+    },
+    {
+      "name": "browserClearHistory",
+      "definedIn": "client/js/apps/optional/browser-app.js",
+      "defLine": 745,
+      "calledFrom": "client/apps/core/tab-advanced.html:178"
+    },
+    {
+      "name": "browserCloseBookmarkManager",
+      "definedIn": "client/js/apps/optional/browser-app.js",
+      "defLine": 774,
+      "calledFrom": "client/apps/non-core/core/tab-browser.html:90"
+    },
+    {
+      "name": "browserCloseHistoryManager",
+      "definedIn": "client/js/apps/optional/browser-app.js",
+      "defLine": 908,
+      "calledFrom": "client/apps/non-core/core/tab-browser.html:116"
+    },
+    {
+      "name": "browserConfirmSave",
+      "definedIn": "client/js/apps/optional/browser-app.js",
+      "defLine": 1557,
+      "calledFrom": "client/apps/non-core/core/tab-browser.html:188"
+    },
+    {
+      "name": "browserExportBookmarks",
+      "definedIn": "client/js/apps/optional/browser-app.js",
+      "defLine": 989,
+      "calledFrom": "client/apps/core/tab-advanced.html:172, client/apps/non-core/core/tab-browser.html:88"
+    },
+    {
+      "name": "browserExportHistory",
+      "definedIn": "client/js/apps/optional/browser-app.js",
+      "defLine": 1063,
+      "calledFrom": "client/apps/non-core/core/tab-browser.html:113"
+    },
+    {
+      "name": "browserExportSettings",
+      "definedIn": "client/js/apps/optional/browser-app.js",
+      "defLine": 1027,
+      "calledFrom": "client/apps/core/tab-advanced.html:174"
+    },
+    {
+      "name": "browserExtractPage",
+      "definedIn": "client/js/apps/optional/browser-app.js",
+      "defLine": 1327,
+      "calledFrom": "client/apps/non-core/core/tab-browser.html:143"
+    },
+    {
+      "name": "browserExtractStructured",
+      "definedIn": "client/js/apps/optional/browser-app.js",
+      "defLine": 1456,
+      "calledFrom": "client/apps/non-core/core/tab-browser.html:149, client/apps/non-core/core/tab-browser.html:150, client/apps/non-core/core/tab-browser.html:151, client/apps/non-core/core/tab-browser.html:152"
+    },
+    {
+      "name": "browserGoBack",
+      "definedIn": "client/js/apps/optional/browser-app.js",
+      "defLine": 308,
+      "calledFrom": "client/apps/non-core/core/tab-browser.html:12"
+    },
+    {
+      "name": "browserGoForward",
+      "definedIn": "client/js/apps/optional/browser-app.js",
+      "defLine": 315,
+      "calledFrom": "client/apps/non-core/core/tab-browser.html:13"
+    },
+    {
+      "name": "browserImportBookmarks",
+      "definedIn": "client/js/apps/optional/browser-app.js",
+      "defLine": 1003,
+      "calledFrom": "client/apps/core/tab-advanced.html:173, client/apps/non-core/core/tab-browser.html:89"
+    },
+    {
+      "name": "browserImportSettings",
+      "definedIn": "client/js/apps/optional/browser-app.js",
+      "defLine": 1041,
+      "calledFrom": "client/apps/core/tab-advanced.html:175"
+    },
+    {
+      "name": "browserNewResearchSession",
+      "definedIn": "client/js/apps/optional/browser-app.js",
+      "defLine": 1602,
+      "calledFrom": "client/apps/non-core/core/tab-browser.html:132"
+    },
+    {
+      "name": "browserNewTab",
+      "definedIn": "client/js/apps/optional/browser-app.js",
+      "defLine": 101,
+      "calledFrom": "client/apps/non-core/core/tab-browser.html:6"
+    },
+    {
+      "name": "browserOpenBookmarkManager",
+      "definedIn": "client/js/apps/optional/browser-app.js",
+      "defLine": 766,
+      "calledFrom": "client/apps/non-core/core/tab-browser.html:22"
+    },
+    {
+      "name": "browserOpenExternal",
+      "definedIn": "client/js/apps/optional/browser-app.js",
+      "defLine": 339,
+      "calledFrom": "client/apps/non-core/core/tab-browser.html:25"
+    },
+    {
+      "name": "browserOpenHistoryManager",
+      "definedIn": "client/js/apps/optional/browser-app.js",
+      "defLine": 901,
+      "calledFrom": "client/apps/non-core/core/tab-browser.html:23"
+    },
+    {
+      "name": "browserReload",
+      "definedIn": "client/js/apps/optional/browser-app.js",
+      "defLine": 322,
+      "calledFrom": "client/apps/non-core/core/tab-browser.html:14"
+    },
+    {
+      "name": "browserResetSettings",
+      "definedIn": "client/js/apps/optional/browser-app.js",
+      "defLine": 712,
+      "calledFrom": "client/apps/core/tab-advanced.html:180"
+    },
+    {
+      "name": "browserSaveSettingsFromUI",
+      "definedIn": "client/js/apps/optional/browser-app.js",
+      "defLine": 737,
+      "calledFrom": "client/apps/core/tab-advanced.html:181"
+    },
+    {
+      "name": "browserSaveToMemory",
+      "definedIn": "client/js/apps/optional/browser-app.js",
+      "defLine": 1542,
+      "calledFrom": "client/apps/non-core/core/tab-browser.html:171"
+    },
+    {
+      "name": "browserSummarizePage",
+      "definedIn": "client/js/apps/optional/browser-app.js",
+      "defLine": 1363,
+      "calledFrom": "client/apps/non-core/core/tab-browser.html:148"
+    },
+    {
+      "name": "browserToggleBookmark",
+      "definedIn": "client/js/apps/optional/browser-app.js",
+      "defLine": 355,
+      "calledFrom": "client/apps/non-core/core/tab-browser.html:21"
+    },
+    {
+      "name": "browserToggleDownloads",
+      "definedIn": "client/js/apps/optional/browser-app.js",
+      "defLine": 380,
+      "calledFrom": "client/apps/non-core/core/tab-browser.html:24, client/apps/non-core/core/tab-browser.html:78"
+    },
+    {
+      "name": "browserToggleEphemeral",
+      "definedIn": "client/js/apps/optional/browser-app.js",
+      "defLine": 1590,
+      "calledFrom": "client/apps/non-core/core/tab-browser.html:131"
+    },
+    {
+      "name": "browserToggleLLMMode",
+      "definedIn": "client/js/apps/optional/browser-app.js",
+      "defLine": 1304,
+      "calledFrom": "client/apps/non-core/core/tab-browser.html:26, client/apps/non-core/core/tab-browser.html:133"
+    },
+    {
+      "name": "cancelActiveTask",
+      "definedIn": "client/js/apps/optional/task-ui.js",
+      "defLine": 298,
+      "calledFrom": "client/apps/core/tab-chat.html:43"
+    },
+    {
+      "name": "chatKeyDown",
+      "definedIn": "client/js/apps/core/chat.js",
+      "defLine": 1401,
+      "calledFrom": "client/apps/core/tab-chat.html:85"
+    },
+    {
+      "name": "clear",
+      "definedIn": "⚠ not found",
+      "defLine": "",
+      "calledFrom": "client/nekocore.html:155"
+    },
+    {
+      "name": "clearChat",
+      "definedIn": "client/js/apps/core/chat.js",
+      "defLine": 867,
+      "calledFrom": "client/apps/core/tab-chat.html:48"
+    },
+    {
+      "name": "closeCreateSkillDialog",
+      "definedIn": "client/js/apps/optional/skills-ui.js",
+      "defLine": 582,
+      "calledFrom": "client/apps/non-core/core/tab-skills.html:156, client/apps/non-core/core/tab-skills.html:203"
+    },
+    {
+      "name": "closeFileEditor",
+      "definedIn": "client/js/apps/optional/skills-ui.js",
+      "defLine": 315,
+      "calledFrom": "client/apps/non-core/core/tab-skills.html:144"
+    },
+    {
+      "name": "closeSkillDetail",
+      "definedIn": "client/js/apps/optional/skills-ui.js",
+      "defLine": 216,
+      "calledFrom": "client/apps/non-core/core/tab-skills.html:96"
+    },
+    {
+      "name": "closeStartMenu",
+      "definedIn": "client/js/desktop.js",
+      "defLine": 5,
+      "calledFrom": "client/index.html:279, client/index.html:287, client/index.html:586"
+    },
+    {
+      "name": "closeTaskDetail",
+      "definedIn": "client/js/apps/optional/task-ui.js",
+      "defLine": 287,
+      "calledFrom": "client/apps/core/tab-chat.html:107, client/apps/core/tab-chat.html:108"
+    },
+    {
+      "name": "closeTaskHistory",
+      "definedIn": "client/js/apps/optional/task-ui.js",
+      "defLine": 221,
+      "calledFrom": "client/apps/core/tab-chat.html:99"
+    },
+    {
+      "name": "closeTaskWizard",
+      "definedIn": "⚠ not found",
+      "defLine": "",
+      "calledFrom": "client/apps/core/tab-chat.html:120, client/apps/core/tab-chat.html:194"
+    },
+    {
+      "name": "closeUserPanel",
+      "definedIn": "client/js/apps/core/users-ui.js",
+      "defLine": 38,
+      "calledFrom": "client/apps/core/tab-chat.html:28"
+    },
+    {
+      "name": "compressChat",
+      "definedIn": "client/js/apps/core/chat.js",
+      "defLine": 1620,
+      "calledFrom": "client/apps/core/tab-chat.html:46"
+    },
+    {
+      "name": "creatorContinueToModeSelection",
+      "definedIn": "client/js/app.js",
+      "defLine": 869,
+      "calledFrom": "client/apps/entity-creator/index.html:55"
+    },
+    {
+      "name": "executeCreateSkill",
+      "definedIn": "client/js/apps/optional/skills-ui.js",
+      "defLine": 622,
+      "calledFrom": "client/apps/non-core/core/tab-skills.html:204"
+    },
+    {
+      "name": "executeEntityCreation",
+      "definedIn": "client/js/app.js",
+      "defLine": 871,
+      "calledFrom": "client/apps/entity-creator/index.html:337"
+    },
+    {
+      "name": "executeWebFetch",
+      "definedIn": "client/js/apps/optional/skills-ui.js",
+      "defLine": 691,
+      "calledFrom": "client/apps/non-core/core/tab-skills.html:24"
+    },
+    {
+      "name": "executeWebSearch",
+      "definedIn": "client/js/apps/optional/skills-ui.js",
+      "defLine": 657,
+      "calledFrom": "client/apps/non-core/core/tab-skills.html:14"
+    },
+    {
+      "name": "feEditorClose",
+      "definedIn": "client/js/apps/optional/skills-ui.js",
+      "defLine": 1288,
+      "calledFrom": "client/apps/non-core/core/tab-workspace.html:23"
+    },
+    {
+      "name": "feEditorSave",
+      "definedIn": "client/js/apps/optional/skills-ui.js",
+      "defLine": 1275,
+      "calledFrom": "client/apps/non-core/core/tab-workspace.html:22"
+    },
+    {
+      "name": "feGoBack",
+      "definedIn": "client/js/apps/optional/skills-ui.js",
+      "defLine": 1133,
+      "calledFrom": "client/apps/non-core/core/tab-workspace.html:4"
+    },
+    {
+      "name": "feNavigate",
+      "definedIn": "client/js/apps/optional/skills-ui.js",
+      "defLine": 1120,
+      "calledFrom": "client/apps/non-core/core/tab-workspace.html:8"
+    },
+    {
+      "name": "feNewFile",
+      "definedIn": "client/js/apps/optional/skills-ui.js",
+      "defLine": 1368,
+      "calledFrom": "client/apps/non-core/core/tab-workspace.html:11"
+    },
+    {
+      "name": "feNewFolder",
+      "definedIn": "client/js/apps/optional/skills-ui.js",
+      "defLine": 1347,
+      "calledFrom": "client/apps/non-core/core/tab-workspace.html:10"
+    },
+    {
+      "name": "feRefresh",
+      "definedIn": "client/js/apps/optional/skills-ui.js",
+      "defLine": 1140,
+      "calledFrom": "client/apps/non-core/core/tab-workspace.html:12"
+    },
+    {
+      "name": "fillSkillTemplate",
+      "definedIn": "client/js/apps/optional/skills-ui.js",
+      "defLine": 586,
+      "calledFrom": "client/apps/non-core/core/tab-skills.html:198"
+    },
+    {
+      "name": "generateMemoryArt",
+      "definedIn": "client/js/apps/optional/dream-gallery.js",
+      "defLine": 94,
+      "calledFrom": "client/apps/non-core/core/tab-dreamgallery.html:7"
+    },
+    {
+      "name": "getElementById",
+      "definedIn": "⚠ not found",
+      "defLine": "",
+      "calledFrom": "client/apps/core/tab-advanced.html:100, client/apps/core/tab-advanced.html:110, client/apps/non-core/core/tab-dreamgallery.html:101, client/apps/non-core/core/tab-skills.html:15, client/apps/non-core/core/tab-skills.html:25"
+    },
+    {
+      "name": "goToMain",
+      "definedIn": "client/js/create.js",
+      "defLine": 252,
+      "calledFrom": "client/apps/entity-creator/index.html:329"
+    },
+    {
+      "name": "goToSetupTab",
+      "definedIn": "client/js/apps/core/setup-ui.js",
+      "defLine": 40,
+      "calledFrom": "client/index.html:188, client/index.html:191"
+    },
+    {
+      "name": "handleLogin",
+      "definedIn": "client/js/login.js",
+      "defLine": 135,
+      "calledFrom": "client/apps/core/overlays/boot-login.html:125"
+    },
+    {
+      "name": "handleLogout",
+      "definedIn": "client/js/login.js",
+      "defLine": 197,
+      "calledFrom": "client/apps/core/tab-users.html:24, client/index.html:370"
+    },
+    {
+      "name": "handleRegister",
+      "definedIn": "client/js/login.js",
+      "defLine": 163,
+      "calledFrom": "client/apps/core/overlays/boot-login.html:147"
+    },
+    {
+      "name": "histClearAll",
+      "definedIn": "client/js/apps/optional/browser-app.js",
+      "defLine": 971,
+      "calledFrom": "client/apps/non-core/core/tab-browser.html:115"
+    },
+    {
+      "name": "histDeleteToday",
+      "definedIn": "client/js/apps/optional/browser-app.js",
+      "defLine": 979,
+      "calledFrom": "client/apps/non-core/core/tab-browser.html:114"
+    },
+    {
+      "name": "if",
+      "definedIn": "⚠ not found",
+      "defLine": "",
+      "calledFrom": "client/apps/core/tab-advanced.html:110, client/apps/non-core/core/tab-browser.html:18, client/apps/non-core/core/tab-browser.html:159, client/apps/non-core/core/tab-popouts.html:16, client/apps/non-core/core/tab-popouts.html:17"
+    },
+    {
+      "name": "loadDreamDiary",
+      "definedIn": "client/js/apps/optional/diary.js",
+      "defLine": 136,
+      "calledFrom": "client/apps/non-core/core/tab-dreamdiary.html:6"
+    },
+    {
+      "name": "loadDreamGallery",
+      "definedIn": "client/js/apps/optional/dream-gallery.js",
+      "defLine": 9,
+      "calledFrom": "client/apps/non-core/core/tab-dreamgallery.html:6"
+    },
+    {
+      "name": "loadLifeDiary",
+      "definedIn": "client/js/apps/optional/diary.js",
+      "defLine": 102,
+      "calledFrom": "client/apps/non-core/core/tab-lifediary.html:6"
+    },
+    {
+      "name": "loadSkillsList",
+      "definedIn": "client/js/apps/optional/skills-ui.js",
+      "defLine": 58,
+      "calledFrom": "client/apps/non-core/core/tab-skills.html:81"
+    },
+    {
+      "name": "loadSleepConfig",
+      "definedIn": "client/js/apps/optional/skills-ui.js",
+      "defLine": 717,
+      "calledFrom": "client/apps/core/tab-advanced.html:84"
+    },
+    {
+      "name": "onImageGenModeChange",
+      "definedIn": "client/js/apps/optional/dream-gallery.js",
+      "defLine": 217,
+      "calledFrom": "client/apps/non-core/core/tab-dreamgallery.html:19"
+    },
+    {
+      "name": "openNekoCoreWithMessage",
+      "definedIn": "client/js/window-manager.js",
+      "defLine": 141,
+      "calledFrom": "client/index.html:606"
+    },
+    {
+      "name": "openTaskHistory",
+      "definedIn": "client/js/apps/optional/task-ui.js",
+      "defLine": 164,
+      "calledFrom": "client/apps/core/tab-chat.html:41"
+    },
+    {
+      "name": "openVisualizer",
+      "definedIn": "client/js/apps/core/chat.js",
+      "defLine": 12,
+      "calledFrom": "client/index.html:365"
+    },
+    {
+      "name": "parseInt",
+      "definedIn": "⚠ not found",
+      "defLine": "",
+      "calledFrom": "client/apps/core/tab-advanced.html:110"
+    },
+    {
+      "name": "rebuildTraceGraph",
+      "definedIn": "client/js/apps/core/system-health.js",
+      "defLine": 59,
+      "calledFrom": "client/apps/core/tab-settings.html:153"
+    },
+    {
+      "name": "refresh",
+      "definedIn": "⚠ not found",
+      "defLine": "",
+      "calledFrom": "client/nekocore.html:141"
+    },
+    {
+      "name": "refreshEntityWorkspace",
+      "definedIn": "client/js/apps/optional/skills-ui.js",
+      "defLine": 989,
+      "calledFrom": "client/apps/non-core/core/tab-skills.html:49"
+    },
+    {
+      "name": "refreshWorkspaceFiles",
+      "definedIn": "client/js/apps/optional/skills-ui.js",
+      "defLine": 226,
+      "calledFrom": "client/apps/non-core/core/tab-skills.html:129"
+    },
+    {
+      "name": "releaseActiveEntity",
+      "definedIn": "client/js/apps/core/entity-ui.js",
+      "defLine": 572,
+      "calledFrom": "client/apps/core/tab-chat.html:47, client/index.html:310, client/index.html:390"
+    },
+    {
+      "name": "repairMemoryLogs",
+      "definedIn": "client/js/apps/core/system-health.js",
+      "defLine": 13,
+      "calledFrom": "client/apps/core/tab-settings.html:140"
+    },
+    {
+      "name": "resetAll",
+      "definedIn": "client/js/app.js",
+      "defLine": 538,
+      "calledFrom": "client/index.html:364"
+    },
+    {
+      "name": "resetCreatorFlow",
+      "definedIn": "client/js/create.js",
+      "defLine": 182,
+      "calledFrom": "client/apps/entity-creator/index.html:328"
+    },
+    {
+      "name": "resetTokenLimits",
+      "definedIn": "client/js/apps/optional/skills-ui.js",
+      "defLine": 900,
+      "calledFrom": "client/apps/core/tab-advanced.html:198"
+    },
+    {
+      "name": "restartShellUI",
+      "definedIn": "client/js/desktop.js",
+      "defLine": 55,
+      "calledFrom": "client/index.html:587"
+    },
+    {
+      "name": "runSystemBackup",
+      "definedIn": "client/js/apps/core/system-health.js",
+      "defLine": 81,
+      "calledFrom": "client/apps/core/tab-settings.html:160"
+    },
+    {
+      "name": "runSystemRestore",
+      "definedIn": "client/js/apps/core/system-health.js",
+      "defLine": 131,
+      "calledFrom": "client/apps/core/tab-settings.html:168"
+    },
+    {
+      "name": "saveDeepSleepInterval",
+      "definedIn": "client/js/apps/optional/physical-ui.js",
+      "defLine": 276,
+      "calledFrom": "client/apps/non-core/core/tab-physical.html:85"
+    },
+    {
+      "name": "saveEntityWorkspacePath",
+      "definedIn": "client/js/apps/optional/skills-ui.js",
+      "defLine": 956,
+      "calledFrom": "client/apps/non-core/core/tab-skills.html:41"
+    },
+    {
+      "name": "saveEntityWsFile",
+      "definedIn": "client/js/apps/optional/skills-ui.js",
+      "defLine": 1060,
+      "calledFrom": "client/apps/non-core/core/tab-skills.html:62"
+    },
+    {
+      "name": "saveImageGenSettings",
+      "definedIn": "client/js/apps/optional/dream-gallery.js",
+      "defLine": 269,
+      "calledFrom": "client/apps/non-core/core/tab-dreamgallery.html:57"
+    },
+    {
+      "name": "saveMaxTokensConfig",
+      "definedIn": "client/js/apps/optional/skills-ui.js",
+      "defLine": 804,
+      "calledFrom": "client/apps/core/tab-advanced.html:112"
+    },
+    {
+      "name": "saveNekocoreConfig",
+      "definedIn": "client/js/auth.js",
+      "defLine": 153,
+      "calledFrom": "client/apps/core/tab-settings.html:123"
+    },
+    {
+      "name": "saveSleepConfig",
+      "definedIn": "client/js/apps/optional/skills-ui.js",
+      "defLine": 746,
+      "calledFrom": "client/apps/core/tab-advanced.html:85"
+    },
+    {
+      "name": "saveTokenLimits",
+      "definedIn": "client/js/apps/optional/skills-ui.js",
+      "defLine": 868,
+      "calledFrom": "client/apps/core/tab-advanced.html:197"
+    },
+    {
+      "name": "saveUserName",
+      "definedIn": "client/js/apps/core/setup-ui.js",
+      "defLine": 632,
+      "calledFrom": "client/index.html:645"
+    },
+    {
+      "name": "saveWorkspaceFile",
+      "definedIn": "client/js/apps/optional/skills-ui.js",
+      "defLine": 297,
+      "calledFrom": "client/apps/non-core/core/tab-skills.html:143"
+    },
+    {
+      "name": "selectEntityMode",
+      "definedIn": "client/js/app.js",
+      "defLine": 868,
+      "calledFrom": "client/apps/entity-creator/index.html:63, client/apps/entity-creator/index.html:68, client/apps/entity-creator/index.html:73, client/apps/entity-creator/index.html:78"
+    },
+    {
+      "name": "send",
+      "definedIn": "⚠ not found",
+      "defLine": "",
+      "calledFrom": "client/nekocore.html:161"
+    },
+    {
+      "name": "sendChatMessage",
+      "definedIn": "client/js/apps/core/chat.js",
+      "defLine": 1419,
+      "calledFrom": "client/apps/core/tab-chat.html:86"
+    },
+    {
+      "name": "setupFinish",
+      "definedIn": "client/js/apps/core/setup-ui.js",
+      "defLine": 472,
+      "calledFrom": "client/apps/core/overlays/setup-wizard.html:86"
+    },
+    {
+      "name": "setupSelectProviderForAspect",
+      "definedIn": "client/js/apps/core/setup-ui.js",
+      "defLine": 175,
+      "calledFrom": "client/apps/core/overlays/setup-wizard.html:18, client/apps/core/overlays/setup-wizard.html:23"
+    },
+    {
+      "name": "setupTestConnectionForAspect",
+      "definedIn": "client/js/apps/core/setup-ui.js",
+      "defLine": 215,
+      "calledFrom": "client/apps/core/overlays/setup-wizard.html:64"
+    },
+    {
+      "name": "showCreateSkillDialog",
+      "definedIn": "client/js/apps/optional/skills-ui.js",
+      "defLine": 578,
+      "calledFrom": "client/apps/non-core/core/tab-skills.html:82"
+    },
+    {
+      "name": "showEntityWsNewFile",
+      "definedIn": "client/js/apps/optional/skills-ui.js",
+      "defLine": 1080,
+      "calledFrom": "client/apps/non-core/core/tab-skills.html:50"
+    },
+    {
+      "name": "showMemoryStats",
+      "definedIn": "client/js/apps/core/system-health.js",
+      "defLine": 42,
+      "calledFrom": "client/apps/core/tab-settings.html:147"
+    },
+    {
+      "name": "showSetupWizard",
+      "definedIn": "client/js/apps/core/setup-ui.js",
+      "defLine": 142,
+      "calledFrom": "client/index.html:470"
+    },
+    {
+      "name": "showWorkspaceNewFile",
+      "definedIn": "client/js/apps/optional/skills-ui.js",
+      "defLine": 319,
+      "calledFrom": "client/apps/non-core/core/tab-skills.html:130"
+    },
+    {
+      "name": "shutdownServer",
+      "definedIn": "client/js/app.js",
+      "defLine": 552,
+      "calledFrom": "client/index.html:366, client/index.html:451, client/index.html:589"
+    },
+    {
+      "name": "simpleApplyPreset",
+      "definedIn": "client/js/apps/core/simple-provider.js",
+      "defLine": 122,
+      "calledFrom": "client/apps/core/tab-settings.html:42, client/apps/core/tab-settings.html:43, client/apps/core/tab-settings.html:44, client/apps/core/tab-settings.html:45"
+    },
+    {
+      "name": "simpleFetchOllamaModels",
+      "definedIn": "client/js/apps/core/simple-provider.js",
+      "defLine": 146,
+      "calledFrom": "client/apps/core/tab-settings.html:60"
+    },
+    {
+      "name": "simplePickProvider",
+      "definedIn": "client/js/apps/core/simple-provider.js",
+      "defLine": 110,
+      "calledFrom": "client/apps/core/tab-settings.html:19, client/apps/core/tab-settings.html:20"
+    },
+    {
+      "name": "simpleSaveConfig",
+      "definedIn": "client/js/apps/core/simple-provider.js",
+      "defLine": 179,
+      "calledFrom": "client/apps/core/tab-settings.html:48, client/apps/core/tab-settings.html:70"
+    },
+    {
+      "name": "skipUserName",
+      "definedIn": "client/js/apps/core/setup-ui.js",
+      "defLine": 671,
+      "calledFrom": "client/index.html:644"
+    },
+    {
+      "name": "startSleep",
+      "definedIn": "client/js/sleep.js",
+      "defLine": 152,
+      "calledFrom": "client/apps/core/tab-chat.html:45"
+    },
+    {
+      "name": "submitGenerateArt",
+      "definedIn": "client/js/apps/optional/dream-gallery.js",
+      "defLine": 104,
+      "calledFrom": "client/apps/non-core/core/tab-dreamgallery.html:100"
+    },
+    {
+      "name": "submitTaskWizard",
+      "definedIn": "⚠ not found",
+      "defLine": "",
+      "calledFrom": "client/apps/core/tab-chat.html:195"
+    },
+    {
+      "name": "switchLoginTab",
+      "definedIn": "client/js/login.js",
+      "defLine": 36,
+      "calledFrom": "client/apps/core/overlays/boot-login.html:111, client/apps/core/overlays/boot-login.html:112"
+    },
+    {
+      "name": "switchMainTab",
+      "definedIn": "client/js/app.js",
+      "defLine": 638,
+      "calledFrom": "client/index.html:210, client/index.html:217, client/index.html:224, client/index.html:231, client/index.html:267"
+    },
+    {
+      "name": "toggleAdvancedMenu",
+      "definedIn": "client/js/app.js",
+      "defLine": 740,
+      "calledFrom": "client/index.html:527"
+    },
+    {
+      "name": "toggleImageGenSettings",
+      "definedIn": "client/js/apps/optional/dream-gallery.js",
+      "defLine": 209,
+      "calledFrom": "client/apps/non-core/core/tab-dreamgallery.html:8, client/apps/non-core/core/tab-dreamgallery.html:58"
+    },
+    {
+      "name": "toggleMemoryRecall",
+      "definedIn": "client/js/apps/core/chat.js",
+      "defLine": 79,
+      "calledFrom": "client/apps/core/tab-chat.html:68"
+    },
+    {
+      "name": "toggleMemorySave",
+      "definedIn": "client/js/apps/core/chat.js",
+      "defLine": 85,
+      "calledFrom": "client/apps/core/tab-chat.html:69"
+    },
+    {
+      "name": "toggleNavSidebar",
+      "definedIn": "client/js/app.js",
+      "defLine": 673,
+      "calledFrom": "client/index.html:379"
+    },
+    {
+      "name": "toggleSleepAuto",
+      "definedIn": "client/js/apps/optional/skills-ui.js",
+      "defLine": 779,
+      "calledFrom": "client/apps/core/tab-advanced.html:16"
+    },
+    {
+      "name": "toggleStartMenu",
+      "definedIn": "client/js/desktop.js",
+      "defLine": 60,
+      "calledFrom": "client/index.html:269, client/index.html:594"
+    },
+    {
+      "name": "toggleStartPowerMenu",
+      "definedIn": "client/js/desktop.js",
+      "defLine": 45,
+      "calledFrom": "client/index.html:584"
+    },
+    {
+      "name": "toggleSubconscious",
+      "definedIn": "client/js/sleep.js",
+      "defLine": 10,
+      "calledFrom": "client/apps/core/tab-chat.html:54"
+    },
+    {
+      "name": "toggleThoughtsInChat",
+      "definedIn": "client/js/sleep.js",
+      "defLine": 16,
+      "calledFrom": "client/apps/core/tab-chat.html:57"
+    },
+    {
+      "name": "toggleUserPanel",
+      "definedIn": "client/js/apps/core/users-ui.js",
+      "defLine": 8,
+      "calledFrom": "client/apps/core/tab-chat.html:21"
+    },
+    {
+      "name": "updateDeepSleepIntervalLabel",
+      "definedIn": "client/js/apps/optional/physical-ui.js",
+      "defLine": 258,
+      "calledFrom": "client/apps/non-core/core/tab-physical.html:85"
+    },
+    {
+      "name": "updateEmptyEntityModeForm",
+      "definedIn": "client/js/create.js",
+      "defLine": 172,
+      "calledFrom": "client/apps/entity-creator/index.html:112"
+    },
+    {
+      "name": "updateGuidedBackstoryDepth",
+      "definedIn": "client/js/create.js",
+      "defLine": 289,
+      "calledFrom": "client/apps/entity-creator/index.html:241"
+    },
+    {
+      "name": "updateRandomBackstoryDepth",
+      "definedIn": "client/js/create.js",
+      "defLine": 306,
+      "calledFrom": "client/apps/entity-creator/index.html:160"
+    },
+    {
+      "name": "updateScheduleFields",
+      "definedIn": "⚠ not found",
+      "defLine": "",
+      "calledFrom": "client/apps/core/tab-chat.html:158, client/apps/core/tab-chat.html:162, client/apps/core/tab-chat.html:174"
+    },
+    {
+      "name": "updateThresholdDisplay",
+      "definedIn": "client/js/sleep.js",
+      "defLine": 23,
+      "calledFrom": "client/apps/core/tab-chat.html:61"
+    },
+    {
+      "name": "usersAppClearActive",
+      "definedIn": "client/js/apps/core/users-ui.js",
+      "defLine": 361,
+      "calledFrom": "client/apps/core/tab-users.html:23"
+    },
+    {
+      "name": "usersAppCreateUser",
+      "definedIn": "client/js/apps/core/users-ui.js",
+      "defLine": 307,
+      "calledFrom": "client/apps/core/tab-users.html:21"
+    },
+    {
+      "name": "usersAppRefresh",
+      "definedIn": "client/js/apps/core/users-ui.js",
+      "defLine": 254,
+      "calledFrom": "client/apps/core/tab-users.html:22"
+    }
+  ],
+  "scriptLoadOrder": [
+    {
+      "src": "https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js",
+      "line": 658,
+      "isExternal": true,
+      "exists": null
+    },
+    {
+      "src": "https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js",
+      "line": 659,
+      "isExternal": true,
+      "exists": null
+    },
+    {
+      "src": "shared/sse.js",
+      "line": 661,
+      "isExternal": false,
+      "exists": true
+    },
+    {
+      "src": "shared/api.js",
+      "line": 662,
+      "isExternal": false,
+      "exists": true
+    },
+    {
+      "src": "shared/entity-select.js",
+      "line": 663,
+      "isExternal": false,
+      "exists": true
+    },
+    {
+      "src": "shared/notify.js",
+      "line": 664,
+      "isExternal": false,
+      "exists": true
+    },
+    {
+      "src": "js/login.js",
+      "line": 666,
+      "isExternal": false,
+      "exists": true
+    },
+    {
+      "src": "js/apps/non-core-html-loader.js",
+      "line": 667,
+      "isExternal": false,
+      "exists": true
+    },
+    {
+      "src": "js/apps/core-html-loader.js",
+      "line": 668,
+      "isExternal": false,
+      "exists": true
+    },
+    {
+      "src": "js/apps/system-apps-adapter.js",
+      "line": 669,
+      "isExternal": false,
+      "exists": true
+    },
+    {
+      "src": "js/app.js",
+      "line": 670,
+      "isExternal": false,
+      "exists": true
+    },
+    {
+      "src": "js/desktop.js",
+      "line": 671,
+      "isExternal": false,
+      "exists": true
+    },
+    {
+      "src": "js/window-manager.js",
+      "line": 672,
+      "isExternal": false,
+      "exists": true
+    },
+    {
+      "src": "js/app-window.js",
+      "line": 673,
+      "isExternal": false,
+      "exists": true
+    },
+    {
+      "src": "js/shadow-content-loader.js",
+      "line": 674,
+      "isExternal": false,
+      "exists": true
+    },
+    {
+      "src": "js/vfs.js",
+      "line": 675,
+      "isExternal": false,
+      "exists": true
+    },
+    {
+      "src": "js/context-menu.js",
+      "line": 676,
+      "isExternal": false,
+      "exists": true
+    },
+    {
+      "src": "js/auth.js",
+      "line": 677,
+      "isExternal": false,
+      "exists": true
+    },
+    {
+      "src": "js/pipeline.js",
+      "line": 678,
+      "isExternal": false,
+      "exists": true
+    },
+    {
+      "src": "js/apps/core/chat.js",
+      "line": 679,
+      "isExternal": false,
+      "exists": true
+    },
+    {
+      "src": "js/apps/core/slash-commands.js",
+      "line": 680,
+      "isExternal": false,
+      "exists": true
+    },
+    {
+      "src": "js/memory-ui.js",
+      "line": 681,
+      "isExternal": false,
+      "exists": true
+    },
+    {
+      "src": "js/sleep.js",
+      "line": 682,
+      "isExternal": false,
+      "exists": true
+    },
+    {
+      "src": "js/apps/optional/physical-ui.js",
+      "line": 683,
+      "isExternal": false,
+      "exists": true
+    },
+    {
+      "src": "js/apps/core/users-ui.js",
+      "line": 684,
+      "isExternal": false,
+      "exists": true
+    },
+    {
+      "src": "js/apps/core/setup-ui.js",
+      "line": 685,
+      "isExternal": false,
+      "exists": true
+    },
+    {
+      "src": "js/apps/core/entity-ui.js",
+      "line": 686,
+      "isExternal": false,
+      "exists": true
+    },
+    {
+      "src": "js/apps/core/system-health.js",
+      "line": 687,
+      "isExternal": false,
+      "exists": true
+    },
+    {
+      "src": "js/apps/core/config-profiles.js",
+      "line": 688,
+      "isExternal": false,
+      "exists": true
+    },
+    {
+      "src": "js/apps/core/simple-provider.js",
+      "line": 689,
+      "isExternal": false,
+      "exists": true
+    },
+    {
+      "src": "js/apps/optional/theme-manager.js",
+      "line": 690,
+      "isExternal": false,
+      "exists": true
+    },
+    {
+      "src": "js/apps/core/telemetry-ui.js",
+      "line": 691,
+      "isExternal": false,
+      "exists": true
+    },
+    {
+      "src": "js/apps/optional/skills-ui.js",
+      "line": 692,
+      "isExternal": false,
+      "exists": true
+    },
+    {
+      "src": "js/neural-viz/renderer.js",
+      "line": 694,
+      "isExternal": false,
+      "exists": true
+    },
+    {
+      "src": "js/neural-viz/data-layer.js",
+      "line": 695,
+      "isExternal": false,
+      "exists": true
+    },
+    {
+      "src": "js/neural-viz/index.js",
+      "line": 696,
+      "isExternal": false,
+      "exists": true
+    },
+    {
+      "src": "js/apps/optional/visualizer-ui.js",
+      "line": 697,
+      "isExternal": false,
+      "exists": true
+    },
+    {
+      "src": "js/apps/optional/dream-gallery.js",
+      "line": 698,
+      "isExternal": false,
+      "exists": true
+    },
+    {
+      "src": "js/apps/optional/diary.js",
+      "line": 699,
+      "isExternal": false,
+      "exists": true
+    },
+    {
+      "src": "js/apps/optional/document-digest.js",
+      "line": 700,
+      "isExternal": false,
+      "exists": true
+    },
+    {
+      "src": "js/apps/optional/browser-app.js",
+      "line": 701,
+      "isExternal": false,
+      "exists": true
+    },
+    {
+      "src": "js/apps/optional/task-ui.js",
+      "line": 702,
+      "isExternal": false,
+      "exists": true
+    },
+    {
+      "src": "js/apps/optional/popout-manager.js",
+      "line": 703,
+      "isExternal": false,
+      "exists": true
+    },
+    {
+      "src": "js/apps/core/debug-core-app.js",
+      "line": 704,
+      "isExternal": false,
+      "exists": true
+    },
+    {
+      "src": "js/apps/core/archive-ui.js",
+      "line": 705,
+      "isExternal": false,
+      "exists": true
+    },
+    {
+      "src": "js/boot.js",
+      "line": 706,
+      "isExternal": false,
+      "exists": true
+    }
+  ],
+  "slotRegistry": [
+    {
+      "type": "core-tab",
+      "id": "chat",
+      "slotId": "core-tab-slot-chat",
+      "expectedFile": "apps/core/tab-chat.html",
+      "exists": true
+    },
+    {
+      "type": "core-tab",
+      "id": "activity",
+      "slotId": "core-tab-slot-activity",
+      "expectedFile": "apps/core/tab-activity.html",
+      "exists": true
+    },
+    {
+      "type": "core-tab",
+      "id": "archive",
+      "slotId": "core-tab-slot-archive",
+      "expectedFile": "apps/core/tab-archive.html",
+      "exists": true
+    },
+    {
+      "type": "core-tab",
+      "id": "debugcore",
+      "slotId": "core-tab-slot-debugcore",
+      "expectedFile": "apps/core/tab-debugcore.html",
+      "exists": true
+    },
+    {
+      "type": "core-tab",
+      "id": "settings",
+      "slotId": "core-tab-slot-settings",
+      "expectedFile": "apps/core/tab-settings.html",
+      "exists": true
+    },
+    {
+      "type": "core-tab",
+      "id": "advanced",
+      "slotId": "core-tab-slot-advanced",
+      "expectedFile": "apps/core/tab-advanced.html",
+      "exists": true
+    },
+    {
+      "type": "core-tab",
+      "id": "creator",
+      "slotId": "core-tab-slot-creator",
+      "expectedFile": "apps/core/tab-creator.html",
+      "exists": true
+    },
+    {
+      "type": "core-tab",
+      "id": "users",
+      "slotId": "core-tab-slot-users",
+      "expectedFile": "apps/core/tab-users.html",
+      "exists": true
+    },
+    {
+      "type": "core-tab",
+      "id": "entity",
+      "slotId": "core-tab-slot-entity",
+      "expectedFile": "apps/core/tab-entity.html",
+      "exists": true
+    },
+    {
+      "type": "core-tab",
+      "id": "nekocore",
+      "slotId": "core-tab-slot-nekocore",
+      "expectedFile": "apps/core/tab-nekocore.html",
+      "exists": true
+    },
+    {
+      "type": "optional-tab",
+      "id": "workspace",
+      "slotId": "optional-tab-slot-workspace",
+      "expectedFile": "apps/non-core/core/tab-workspace.html",
+      "exists": true
+    },
+    {
+      "type": "optional-tab",
+      "id": "skills",
+      "slotId": "optional-tab-slot-skills",
+      "expectedFile": "apps/non-core/core/tab-skills.html",
+      "exists": true
+    },
+    {
+      "type": "optional-tab",
+      "id": "themes",
+      "slotId": "optional-tab-slot-themes",
+      "expectedFile": "apps/non-core/core/tab-themes.html",
+      "exists": true
+    },
+    {
+      "type": "optional-tab",
+      "id": "visualizer",
+      "slotId": "optional-tab-slot-visualizer",
+      "expectedFile": "apps/non-core/core/tab-visualizer.html",
+      "exists": true
+    },
+    {
+      "type": "optional-tab",
+      "id": "physical",
+      "slotId": "optional-tab-slot-physical",
+      "expectedFile": "apps/non-core/core/tab-physical.html",
+      "exists": true
+    },
+    {
+      "type": "optional-tab",
+      "id": "dreamgallery",
+      "slotId": "optional-tab-slot-dreamgallery",
+      "expectedFile": "apps/non-core/core/tab-dreamgallery.html",
+      "exists": true
+    },
+    {
+      "type": "optional-tab",
+      "id": "lifediary",
+      "slotId": "optional-tab-slot-lifediary",
+      "expectedFile": "apps/non-core/core/tab-lifediary.html",
+      "exists": true
+    },
+    {
+      "type": "optional-tab",
+      "id": "dreamdiary",
+      "slotId": "optional-tab-slot-dreamdiary",
+      "expectedFile": "apps/non-core/core/tab-dreamdiary.html",
+      "exists": true
+    },
+    {
+      "type": "optional-tab",
+      "id": "documents",
+      "slotId": "optional-tab-slot-documents",
+      "expectedFile": "apps/non-core/core/tab-documents.html",
+      "exists": true
+    },
+    {
+      "type": "optional-tab",
+      "id": "browser",
+      "slotId": "optional-tab-slot-browser",
+      "expectedFile": "apps/non-core/core/tab-browser.html",
+      "exists": true
+    },
+    {
+      "type": "core-overlay",
+      "id": "boot-login",
+      "slotId": "core-overlay-slot-boot-login",
+      "expectedFile": "apps/core/overlays/boot-login.html",
+      "exists": true
+    },
+    {
+      "type": "core-overlay",
+      "id": "setup-wizard",
+      "slotId": "core-overlay-slot-setup-wizard",
+      "expectedFile": "apps/core/overlays/setup-wizard.html",
+      "exists": true
+    },
+    {
+      "type": "core-overlay",
+      "id": "sleep",
+      "slotId": "core-overlay-slot-sleep",
+      "expectedFile": "apps/core/overlays/sleep.html",
+      "exists": true
+    }
+  ],
+  "apiEndpoints": [
+    {
+      "endpoint": "/api/auth/bootstrap",
+      "calls": [
+        {
+          "endpoint": "/api/auth/bootstrap",
+          "method": "GET",
+          "file": "client/js/login.js",
+          "line": 116
+        }
+      ],
+      "multipleCallers": false
+    },
+    {
+      "endpoint": "/api/auth/login",
+      "calls": [
+        {
+          "endpoint": "/api/auth/login",
+          "method": "POST",
+          "file": "client/js/login.js",
+          "line": 146
+        }
+      ],
+      "multipleCallers": false
+    },
+    {
+      "endpoint": "/api/auth/logout",
+      "calls": [
+        {
+          "endpoint": "/api/auth/logout",
+          "method": "POST",
+          "file": "client/js/login.js",
+          "line": 199
+        }
+      ],
+      "multipleCallers": false
+    },
+    {
+      "endpoint": "/api/auth/me",
+      "calls": [
+        {
+          "endpoint": "/api/auth/me",
+          "method": "GET",
+          "file": "client/js/login.js",
+          "line": 222
+        }
+      ],
+      "multipleCallers": false
+    },
+    {
+      "endpoint": "/api/auth/register",
+      "calls": [
+        {
+          "endpoint": "/api/auth/register",
+          "method": "POST",
+          "file": "client/js/login.js",
+          "line": 180
+        }
+      ],
+      "multipleCallers": false
+    },
+    {
+      "endpoint": "/api/belief-graph/nodes",
+      "calls": [
+        {
+          "endpoint": "/api/belief-graph/nodes",
+          "method": "GET",
+          "file": "client/js/neural-viz/renderer.js",
+          "line": 1618
+        },
+        {
+          "endpoint": "/api/belief-graph/nodes",
+          "method": "GET",
+          "file": "client/js/neural-viz.js",
+          "line": 375
+        },
+        {
+          "endpoint": "/api/belief-graph/nodes",
+          "method": "GET",
+          "file": "client/js/neural-viz.js",
+          "line": 1689
+        },
+        {
+          "endpoint": "/api/belief-graph/nodes",
+          "method": "GET",
+          "file": "client/js/neural-viz.js",
+          "line": 2151
+        }
+      ],
+      "multipleCallers": true
+    },
+    {
+      "endpoint": "/api/brain/bootstrap",
+      "calls": [
+        {
+          "endpoint": "/api/brain/bootstrap",
+          "method": "POST",
+          "file": "client/js/apps/core/chat.js",
+          "line": 829
+        }
+      ],
+      "multipleCallers": false
+    },
+    {
+      "endpoint": "/api/brain/deep-sleep-interval",
+      "calls": [
+        {
+          "endpoint": "/api/brain/deep-sleep-interval",
+          "method": "GET",
+          "file": "client/js/apps/optional/physical-ui.js",
+          "line": 265
+        },
+        {
+          "endpoint": "/api/brain/deep-sleep-interval",
+          "method": "POST",
+          "file": "client/js/apps/optional/physical-ui.js",
+          "line": 278
+        }
+      ],
+      "multipleCallers": true
+    },
+    {
+      "endpoint": "/api/brain/dream-cycle",
+      "calls": [
+        {
+          "endpoint": "/api/brain/dream-cycle",
+          "method": "POST",
+          "file": "client/js/sleep.js",
+          "line": 134
+        }
+      ],
+      "multipleCallers": false
+    },
+    {
+      "endpoint": "/api/brain/ingest",
+      "calls": [
+        {
+          "endpoint": "/api/brain/ingest",
+          "method": "POST",
+          "file": "client/js/apps/core/chat.js",
+          "line": 1576
+        }
+      ],
+      "multipleCallers": false
+    },
+    {
+      "endpoint": "/api/brain/ltm",
+      "calls": [
+        {
+          "endpoint": "/api/brain/ltm",
+          "method": "POST",
+          "file": "client/js/apps/core/chat.js",
+          "line": 1678
+        },
+        {
+          "endpoint": "/api/brain/ltm",
+          "method": "POST",
+          "file": "client/js/sleep.js",
+          "line": 209
+        }
+      ],
+      "multipleCallers": true
+    },
+    {
+      "endpoint": "/api/brain/pixel-art",
+      "calls": [
+        {
+          "endpoint": "/api/brain/pixel-art",
+          "method": "GET",
+          "file": "client/js/apps/optional/dream-gallery.js",
+          "line": 16
+        }
+      ],
+      "multipleCallers": false
+    },
+    {
+      "endpoint": "/api/brain/pixel-art/deps",
+      "calls": [
+        {
+          "endpoint": "/api/brain/pixel-art/deps",
+          "method": "GET",
+          "file": "client/js/apps/optional/dream-gallery.js",
+          "line": 235
+        },
+        {
+          "endpoint": "/api/brain/pixel-art/deps",
+          "method": "GET",
+          "file": "client/js/apps/optional/dream-gallery.js",
+          "line": 279
+        }
+      ],
+      "multipleCallers": true
+    },
+    {
+      "endpoint": "/api/brain/pixel-art/generate",
+      "calls": [
+        {
+          "endpoint": "/api/brain/pixel-art/generate",
+          "method": "POST",
+          "file": "client/js/apps/optional/dream-gallery.js",
+          "line": 126
+        }
+      ],
+      "multipleCallers": false
+    },
+    {
+      "endpoint": "/api/brain/sleep",
+      "calls": [
+        {
+          "endpoint": "/api/brain/sleep",
+          "method": "POST",
+          "file": "client/js/sleep.js",
+          "line": 238
+        }
+      ],
+      "multipleCallers": false
+    },
+    {
+      "endpoint": "/api/brain/status",
+      "calls": [
+        {
+          "endpoint": "/api/brain/status",
+          "method": "GET",
+          "file": "client/js/app.js",
+          "line": 1023
+        }
+      ],
+      "multipleCallers": false
+    },
+    {
+      "endpoint": "/api/brain/subconscious-context",
+      "calls": [
+        {
+          "endpoint": "/api/brain/subconscious-context",
+          "method": "POST",
+          "file": "client/js/apps/core/chat.js",
+          "line": 850
+        }
+      ],
+      "multipleCallers": false
+    },
+    {
+      "endpoint": "/api/chat",
+      "calls": [
+        {
+          "endpoint": "/api/chat",
+          "method": "POST",
+          "file": "client/js/apps/core/chat.js",
+          "line": 1782
+        },
+        {
+          "endpoint": "/api/chat",
+          "method": "POST",
+          "file": "client/js/pipeline.js",
+          "line": 205
+        }
+      ],
+      "multipleCallers": true
+    },
+    {
+      "endpoint": "/api/chat/skill-approval",
+      "calls": [
+        {
+          "endpoint": "/api/chat/skill-approval",
+          "method": "POST",
+          "file": "client/js/apps/core/chat.js",
+          "line": 687
+        }
+      ],
+      "multipleCallers": false
+    },
+    {
+      "endpoint": "/api/config/max-tokens",
+      "calls": [
+        {
+          "endpoint": "/api/config/max-tokens",
+          "method": "GET",
+          "file": "client/js/apps/optional/skills-ui.js",
+          "line": 792
+        },
+        {
+          "endpoint": "/api/config/max-tokens",
+          "method": "POST",
+          "file": "client/js/apps/optional/skills-ui.js",
+          "line": 815
+        }
+      ],
+      "multipleCallers": true
+    },
+    {
+      "endpoint": "/api/config/token-limits",
+      "calls": [
+        {
+          "endpoint": "/api/config/token-limits",
+          "method": "GET",
+          "file": "client/js/apps/optional/skills-ui.js",
+          "line": 842
+        },
+        {
+          "endpoint": "/api/config/token-limits",
+          "method": "POST",
+          "file": "client/js/apps/optional/skills-ui.js",
+          "line": 880
+        }
+      ],
+      "multipleCallers": true
+    },
+    {
+      "endpoint": "/api/config/token-limits/reset",
+      "calls": [
+        {
+          "endpoint": "/api/config/token-limits/reset",
+          "method": "POST",
+          "file": "client/js/apps/optional/skills-ui.js",
+          "line": 903
+        }
+      ],
+      "multipleCallers": false
+    },
+    {
+      "endpoint": "/api/diary/dream",
+      "calls": [
+        {
+          "endpoint": "/api/diary/dream",
+          "method": "GET",
+          "file": "client/js/apps/optional/diary.js",
+          "line": 143
+        }
+      ],
+      "multipleCallers": false
+    },
+    {
+      "endpoint": "/api/diary/life",
+      "calls": [
+        {
+          "endpoint": "/api/diary/life",
+          "method": "GET",
+          "file": "client/js/apps/optional/diary.js",
+          "line": 109
+        }
+      ],
+      "multipleCallers": false
+    },
+    {
+      "endpoint": "/api/document/ingest",
+      "calls": [
+        {
+          "endpoint": "/api/document/ingest",
+          "method": "POST",
+          "file": "client/js/apps/optional/document-digest.js",
+          "line": 262
+        },
+        {
+          "endpoint": "/api/document/ingest",
+          "method": "POST",
+          "file": "client/js/create.js",
+          "line": 651
+        }
+      ],
+      "multipleCallers": true
+    },
+    {
+      "endpoint": "/api/entities",
+      "calls": [
+        {
+          "endpoint": "/api/entities",
+          "method": "GET",
+          "file": "client/js/apps/core/entity-ui.js",
+          "line": 189
+        },
+        {
+          "endpoint": "/api/entities",
+          "method": "GET",
+          "file": "client/js/apps/core/entity-ui.js",
+          "line": 245
+        },
+        {
+          "endpoint": "/api/entities",
+          "method": "GET",
+          "file": "client/js/apps/core/entity-ui.js",
+          "line": 682
+        },
+        {
+          "endpoint": "/api/entities",
+          "method": "GET",
+          "file": "client/js/visualizer.js",
+          "line": 110
+        },
+        {
+          "endpoint": "/api/entities",
+          "method": "GET",
+          "file": "client/js/visualizer.js",
+          "line": 151
+        },
+        {
+          "endpoint": "/api/entities",
+          "method": "GET",
+          "file": "client/shared/entity-select.js",
+          "line": 24
+        }
+      ],
+      "multipleCallers": true
+    },
+    {
+      "endpoint": "/api/entities/create",
+      "calls": [
+        {
+          "endpoint": "/api/entities/create",
+          "method": "POST",
+          "file": "client/js/create.js",
+          "line": 489
+        }
+      ],
+      "multipleCallers": false
+    },
+    {
+      "endpoint": "/api/entities/create-character",
+      "calls": [
+        {
+          "endpoint": "/api/entities/create-character",
+          "method": "POST",
+          "file": "client/js/create.js",
+          "line": 560
+        }
+      ],
+      "multipleCallers": false
+    },
+    {
+      "endpoint": "/api/entities/create-guided",
+      "calls": [
+        {
+          "endpoint": "/api/entities/create-guided",
+          "method": "POST",
+          "file": "client/js/create.js",
+          "line": 619
+        }
+      ],
+      "multipleCallers": false
+    },
+    {
+      "endpoint": "/api/entities/create-hatch",
+      "calls": [
+        {
+          "endpoint": "/api/entities/create-hatch",
+          "method": "POST",
+          "file": "client/js/create.js",
+          "line": 518
+        }
+      ],
+      "multipleCallers": false
+    },
+    {
+      "endpoint": "/api/entities/current",
+      "calls": [
+        {
+          "endpoint": "/api/entities/current",
+          "method": "GET",
+          "file": "client/js/apps/core/entity-ui.js",
+          "line": 224
+        },
+        {
+          "endpoint": "/api/entities/current",
+          "method": "GET",
+          "file": "client/js/apps/core/entity-ui.js",
+          "line": 576
+        },
+        {
+          "endpoint": "/api/entities/current",
+          "method": "GET",
+          "file": "client/js/visualizer.js",
+          "line": 111
+        },
+        {
+          "endpoint": "/api/entities/current",
+          "method": "GET",
+          "file": "client/js/visualizer.js",
+          "line": 152
+        }
+      ],
+      "multipleCallers": true
+    },
+    {
+      "endpoint": "/api/entities/delete",
+      "calls": [
+        {
+          "endpoint": "/api/entities/delete",
+          "method": "POST",
+          "file": "client/js/apps/core/entity-ui.js",
+          "line": 634
+        }
+      ],
+      "multipleCallers": false
+    },
+    {
+      "endpoint": "/api/entities/heal",
+      "calls": [
+        {
+          "endpoint": "/api/entities/heal",
+          "method": "POST",
+          "file": "client/js/apps/core/system-health.js",
+          "line": 23
+        }
+      ],
+      "multipleCallers": false
+    },
+    {
+      "endpoint": "/api/entities/load",
+      "calls": [
+        {
+          "endpoint": "/api/entities/load",
+          "method": "POST",
+          "file": "client/js/apps/core/entity-ui.js",
+          "line": 326
+        },
+        {
+          "endpoint": "/api/entities/load",
+          "method": "POST",
+          "file": "client/js/visualizer.js",
+          "line": 225
+        },
+        {
+          "endpoint": "/api/entities/load",
+          "method": "POST",
+          "file": "client/shared/entity-select.js",
+          "line": 48
+        }
+      ],
+      "multipleCallers": true
+    },
+    {
+      "endpoint": "/api/entities/onboarding-seed",
+      "calls": [
+        {
+          "endpoint": "/api/entities/onboarding-seed",
+          "method": "POST",
+          "file": "client/js/create.js",
+          "line": 348
+        }
+      ],
+      "multipleCallers": false
+    },
+    {
+      "endpoint": "/api/entities/preview",
+      "calls": [
+        {
+          "endpoint": "/api/entities/preview",
+          "method": "GET",
+          "file": "client/js/apps/core/entity-ui.js",
+          "line": 312
+        }
+      ],
+      "multipleCallers": false
+    },
+    {
+      "endpoint": "/api/entities/release",
+      "calls": [
+        {
+          "endpoint": "/api/entities/release",
+          "method": "POST",
+          "file": "client/js/apps/core/entity-ui.js",
+          "line": 592
+        }
+      ],
+      "multipleCallers": false
+    },
+    {
+      "endpoint": "/api/entities/visibility",
+      "calls": [
+        {
+          "endpoint": "/api/entities/visibility",
+          "method": "POST",
+          "file": "client/js/apps/core/entity-ui.js",
+          "line": 116
+        }
+      ],
+      "multipleCallers": false
+    },
+    {
+      "endpoint": "/api/entity",
+      "calls": [
+        {
+          "endpoint": "/api/entity",
+          "method": "GET",
+          "file": "client/js/apps/core/entity-ui.js",
+          "line": 237
+        }
+      ],
+      "multipleCallers": false
+    },
+    {
+      "endpoint": "/api/entity-config",
+      "calls": [
+        {
+          "endpoint": "/api/entity-config",
+          "method": "POST",
+          "file": "client/js/app.js",
+          "line": 889
+        },
+        {
+          "endpoint": "/api/entity-config",
+          "method": "POST",
+          "file": "client/js/app.js",
+          "line": 929
+        },
+        {
+          "endpoint": "/api/entity-config",
+          "method": "POST",
+          "file": "client/js/app.js",
+          "line": 962
+        },
+        {
+          "endpoint": "/api/entity-config",
+          "method": "GET",
+          "file": "client/js/apps/core/chat.js",
+          "line": 705
+        },
+        {
+          "endpoint": "/api/entity-config",
+          "method": "POST",
+          "file": "client/js/apps/core/simple-provider.js",
+          "line": 217
+        },
+        {
+          "endpoint": "/api/entity-config",
+          "method": "POST",
+          "file": "client/js/apps/core/simple-provider.js",
+          "line": 252
+        },
+        {
+          "endpoint": "/api/entity-config",
+          "method": "POST",
+          "file": "client/js/auth.js",
+          "line": 49
+        },
+        {
+          "endpoint": "/api/entity-config",
+          "method": "POST",
+          "file": "client/js/auth.js",
+          "line": 141
+        },
+        {
+          "endpoint": "/api/entity-config",
+          "method": "GET",
+          "file": "client/js/auth.js",
+          "line": 167
+        },
+        {
+          "endpoint": "/api/entity-config",
+          "method": "POST",
+          "file": "client/js/auth.js",
+          "line": 179
+        },
+        {
+          "endpoint": "/api/entity-config",
+          "method": "GET",
+          "file": "client/js/auth.js",
+          "line": 199
+        },
+        {
+          "endpoint": "/api/entity-config",
+          "method": "GET",
+          "file": "client/js/sleep.js",
+          "line": 80
+        }
+      ],
+      "multipleCallers": true
+    },
+    {
+      "endpoint": "/api/entity-last-memory",
+      "calls": [
+        {
+          "endpoint": "/api/entity-last-memory",
+          "method": "POST",
+          "file": "client/js/app.js",
+          "line": 818
+        }
+      ],
+      "multipleCallers": false
+    },
+    {
+      "endpoint": "/api/entity/profile",
+      "calls": [
+        {
+          "endpoint": "/api/entity/profile",
+          "method": "GET",
+          "file": "client/js/apps/core/entity-ui.js",
+          "line": 177
+        },
+        {
+          "endpoint": "/api/entity/profile",
+          "method": "GET",
+          "file": "client/js/apps/core/entity-ui.js",
+          "line": 373
+        }
+      ],
+      "multipleCallers": true
+    },
+    {
+      "endpoint": "/api/generate",
+      "calls": [
+        {
+          "endpoint": "/api/generate",
+          "method": "POST",
+          "file": "server/brain/utils/model-router.js",
+          "line": 163
+        }
+      ],
+      "multipleCallers": false
+    },
+    {
+      "endpoint": "/api/memories",
+      "calls": [
+        {
+          "endpoint": "/api/memories",
+          "method": "POST",
+          "file": "client/js/app.js",
+          "line": 578
+        },
+        {
+          "endpoint": "/api/memories",
+          "method": "GET",
+          "file": "client/js/memory-ui.js",
+          "line": 9
+        },
+        {
+          "endpoint": "/api/memories",
+          "method": "GET",
+          "file": "client/js/sleep.js",
+          "line": 251
+        }
+      ],
+      "multipleCallers": true
+    },
+    {
+      "endpoint": "/api/memories/prewarm-doc",
+      "calls": [
+        {
+          "endpoint": "/api/memories/prewarm-doc",
+          "method": "POST",
+          "file": "client/js/app.js",
+          "line": 822
+        }
+      ],
+      "multipleCallers": false
+    },
+    {
+      "endpoint": "/api/memories/reconstruct",
+      "calls": [
+        {
+          "endpoint": "/api/memories/reconstruct",
+          "method": "POST",
+          "file": "client/js/visualizer.js",
+          "line": 910
+        },
+        {
+          "endpoint": "/api/memories/reconstruct",
+          "method": "POST",
+          "file": "client/js/visualizer.js",
+          "line": 942
+        }
+      ],
+      "multipleCallers": true
+    },
+    {
+      "endpoint": "/api/memories/search",
+      "calls": [
+        {
+          "endpoint": "/api/memories/search",
+          "method": "GET",
+          "file": "client/js/visualizer.js",
+          "line": 765
+        }
+      ],
+      "multipleCallers": false
+    },
+    {
+      "endpoint": "/api/memory-graph/nodes",
+      "calls": [
+        {
+          "endpoint": "/api/memory-graph/nodes",
+          "method": "GET",
+          "file": "client/js/neural-viz.js",
+          "line": 373
+        }
+      ],
+      "multipleCallers": false
+    },
+    {
+      "endpoint": "/api/memory-stats",
+      "calls": [
+        {
+          "endpoint": "/api/memory-stats",
+          "method": "GET",
+          "file": "client/js/apps/core/system-health.js",
+          "line": 44
+        }
+      ],
+      "multipleCallers": false
+    },
+    {
+      "endpoint": "/api/memory/detail",
+      "calls": [
+        {
+          "endpoint": "/api/memory/detail",
+          "method": "GET",
+          "file": "client/js/visualizer.js",
+          "line": 846
+        }
+      ],
+      "multipleCallers": false
+    },
+    {
+      "endpoint": "/api/memory/summary",
+      "calls": [
+        {
+          "endpoint": "/api/memory/summary",
+          "method": "GET",
+          "file": "client/js/apps/optional/visualizer-ui.js",
+          "line": 12
+        },
+        {
+          "endpoint": "/api/memory/summary",
+          "method": "GET",
+          "file": "client/js/neural-viz/renderer.js",
+          "line": 1323
+        },
+        {
+          "endpoint": "/api/memory/summary",
+          "method": "GET",
+          "file": "client/js/neural-viz.js",
+          "line": 1396
+        }
+      ],
+      "multipleCallers": true
+    },
+    {
+      "endpoint": "/api/nekocore/chat",
+      "calls": [
+        {
+          "endpoint": "/api/nekocore/chat",
+          "method": "POST",
+          "file": "client/js/nekocore-app.js",
+          "line": 526
+        }
+      ],
+      "multipleCallers": false
+    },
+    {
+      "endpoint": "/api/nekocore/docs-ingest",
+      "calls": [
+        {
+          "endpoint": "/api/nekocore/docs-ingest",
+          "method": "POST",
+          "file": "client/js/nekocore-app.js",
+          "line": 410
+        }
+      ],
+      "multipleCallers": false
+    },
+    {
+      "endpoint": "/api/nekocore/memory-stats",
+      "calls": [
+        {
+          "endpoint": "/api/nekocore/memory-stats",
+          "method": "GET",
+          "file": "client/js/nekocore-app.js",
+          "line": 379
+        }
+      ],
+      "multipleCallers": false
+    },
+    {
+      "endpoint": "/api/nekocore/model-apply",
+      "calls": [
+        {
+          "endpoint": "/api/nekocore/model-apply",
+          "method": "POST",
+          "file": "client/js/nekocore-app.js",
+          "line": 58
+        }
+      ],
+      "multipleCallers": false
+    },
+    {
+      "endpoint": "/api/nekocore/pending",
+      "calls": [
+        {
+          "endpoint": "/api/nekocore/pending",
+          "method": "POST",
+          "file": "client/js/nekocore-app.js",
+          "line": 55
+        }
+      ],
+      "multipleCallers": false
+    },
+    {
+      "endpoint": "/api/nekocore/persona",
+      "calls": [
+        {
+          "endpoint": "/api/nekocore/persona",
+          "method": "POST",
+          "file": "client/js/nekocore-app.js",
+          "line": 65
+        },
+        {
+          "endpoint": "/api/nekocore/persona",
+          "method": "POST",
+          "file": "client/js/nekocore-app.js",
+          "line": 68
+        }
+      ],
+      "multipleCallers": true
+    },
+    {
+      "endpoint": "/api/nekocore/persona/reset",
+      "calls": [
+        {
+          "endpoint": "/api/nekocore/persona/reset",
+          "method": "POST",
+          "file": "client/js/nekocore-app.js",
+          "line": 75
+        }
+      ],
+      "multipleCallers": false
+    },
+    {
+      "endpoint": "/api/nekocore/reset",
+      "calls": [
+        {
+          "endpoint": "/api/nekocore/reset",
+          "method": "POST",
+          "file": "client/js/nekocore-app.js",
+          "line": 82
+        }
+      ],
+      "multipleCallers": false
+    },
+    {
+      "endpoint": "/api/nekocore/status",
+      "calls": [
+        {
+          "endpoint": "/api/nekocore/status",
+          "method": "GET",
+          "file": "client/js/nekocore-app.js",
+          "line": 52
+        }
+      ],
+      "multipleCallers": false
+    },
+    {
+      "endpoint": "/api/nekocore/tooling",
+      "calls": [
+        {
+          "endpoint": "/api/nekocore/tooling",
+          "method": "GET",
+          "file": "client/js/apps/core/setup-ui.js",
+          "line": 404
+        },
+        {
+          "endpoint": "/api/nekocore/tooling",
+          "method": "POST",
+          "file": "client/js/nekocore-app.js",
+          "line": 89
+        }
+      ],
+      "multipleCallers": true
+    },
+    {
+      "endpoint": "/api/nekocore/tooling/approval",
+      "calls": [
+        {
+          "endpoint": "/api/nekocore/tooling/approval",
+          "method": "POST",
+          "file": "client/js/nekocore-app.js",
+          "line": 92
+        }
+      ],
+      "multipleCallers": false
+    },
+    {
+      "endpoint": "/api/nekocore/tooling/skill-toggle",
+      "calls": [
+        {
+          "endpoint": "/api/nekocore/tooling/skill-toggle",
+          "method": "POST",
+          "file": "client/js/apps/core/setup-ui.js",
+          "line": 425
+        },
+        {
+          "endpoint": "/api/nekocore/tooling/skill-toggle",
+          "method": "POST",
+          "file": "client/js/apps/core/setup-ui.js",
+          "line": 442
+        },
+        {
+          "endpoint": "/api/nekocore/tooling/skill-toggle",
+          "method": "POST",
+          "file": "client/js/nekocore-app.js",
+          "line": 99
+        }
+      ],
+      "multipleCallers": true
+    },
+    {
+      "endpoint": "/api/nekocore/tooling/workspace",
+      "calls": [
+        {
+          "endpoint": "/api/nekocore/tooling/workspace",
+          "method": "POST",
+          "file": "client/js/apps/core/setup-ui.js",
+          "line": 456
+        },
+        {
+          "endpoint": "/api/nekocore/tooling/workspace",
+          "method": "POST",
+          "file": "client/js/nekocore-app.js",
+          "line": 106
+        }
+      ],
+      "multipleCallers": true
+    },
+    {
+      "endpoint": "/api/neurochemistry",
+      "calls": [
+        {
+          "endpoint": "/api/neurochemistry",
+          "method": "GET",
+          "file": "client/js/apps/optional/physical-ui.js",
+          "line": 73
+        },
+        {
+          "endpoint": "/api/neurochemistry",
+          "method": "GET",
+          "file": "client/js/neural-viz/data-layer.js",
+          "line": 18
+        },
+        {
+          "endpoint": "/api/neurochemistry",
+          "method": "GET",
+          "file": "client/js/neural-viz.js",
+          "line": 1522
+        }
+      ],
+      "multipleCallers": true
+    },
+    {
+      "endpoint": "/api/persona",
+      "calls": [
+        {
+          "endpoint": "/api/persona",
+          "method": "GET",
+          "file": "client/js/apps/core/setup-ui.js",
+          "line": 587
+        },
+        {
+          "endpoint": "/api/persona",
+          "method": "GET",
+          "file": "client/js/apps/core/setup-ui.js",
+          "line": 643
+        },
+        {
+          "endpoint": "/api/persona",
+          "method": "POST",
+          "file": "client/js/apps/core/setup-ui.js",
+          "line": 655
+        },
+        {
+          "endpoint": "/api/persona",
+          "method": "GET",
+          "file": "client/js/sleep.js",
+          "line": 244
+        },
+        {
+          "endpoint": "/api/persona",
+          "method": "POST",
+          "file": "client/js/sleep.js",
+          "line": 332
+        }
+      ],
+      "multipleCallers": true
+    },
+    {
+      "endpoint": "/api/proxy",
+      "calls": [
+        {
+          "endpoint": "/api/proxy",
+          "method": "POST",
+          "file": "client/js/apps/core/setup-ui.js",
+          "line": 238
+        },
+        {
+          "endpoint": "/api/proxy",
+          "method": "POST",
+          "file": "client/js/pipeline.js",
+          "line": 30
+        }
+      ],
+      "multipleCallers": true
+    },
+    {
+      "endpoint": "/api/relationships",
+      "calls": [
+        {
+          "endpoint": "/api/relationships",
+          "method": "GET",
+          "file": "client/js/apps/core/users-ui.js",
+          "line": 68
+        }
+      ],
+      "multipleCallers": false
+    },
+    {
+      "endpoint": "/api/session-meta",
+      "calls": [
+        {
+          "endpoint": "/api/session-meta",
+          "method": "POST",
+          "file": "client/js/app.js",
+          "line": 596
+        }
+      ],
+      "multipleCallers": false
+    },
+    {
+      "endpoint": "/api/shutdown",
+      "calls": [
+        {
+          "endpoint": "/api/shutdown",
+          "method": "POST",
+          "file": "client/js/app.js",
+          "line": 555
+        }
+      ],
+      "multipleCallers": false
+    },
+    {
+      "endpoint": "/api/skills",
+      "calls": [
+        {
+          "endpoint": "/api/skills",
+          "method": "GET",
+          "file": "client/js/apps/optional/skills-ui.js",
+          "line": 61
+        }
+      ],
+      "multipleCallers": false
+    },
+    {
+      "endpoint": "/api/skills/approval-mode",
+      "calls": [
+        {
+          "endpoint": "/api/skills/approval-mode",
+          "method": "GET",
+          "file": "client/js/apps/optional/skills-ui.js",
+          "line": 19
+        },
+        {
+          "endpoint": "/api/skills/approval-mode",
+          "method": "POST",
+          "file": "client/js/apps/optional/skills-ui.js",
+          "line": 39
+        }
+      ],
+      "multipleCallers": true
+    },
+    {
+      "endpoint": "/api/skills/approve",
+      "calls": [
+        {
+          "endpoint": "/api/skills/approve",
+          "method": "POST",
+          "file": "client/js/apps/optional/skills-ui.js",
+          "line": 425
+        }
+      ],
+      "multipleCallers": false
+    },
+    {
+      "endpoint": "/api/skills/create",
+      "calls": [
+        {
+          "endpoint": "/api/skills/create",
+          "method": "POST",
+          "file": "client/js/apps/optional/skills-ui.js",
+          "line": 632
+        }
+      ],
+      "multipleCallers": false
+    },
+    {
+      "endpoint": "/api/skills/detail",
+      "calls": [
+        {
+          "endpoint": "/api/skills/detail",
+          "method": "GET",
+          "file": "client/js/apps/optional/skills-ui.js",
+          "line": 147
+        }
+      ],
+      "multipleCallers": false
+    },
+    {
+      "endpoint": "/api/skills/pending",
+      "calls": [
+        {
+          "endpoint": "/api/skills/pending",
+          "method": "GET",
+          "file": "client/js/apps/optional/skills-ui.js",
+          "line": 356
+        }
+      ],
+      "multipleCallers": false
+    },
+    {
+      "endpoint": "/api/skills/quarantine",
+      "calls": [
+        {
+          "endpoint": "/api/skills/quarantine",
+          "method": "GET",
+          "file": "client/js/apps/optional/skills-ui.js",
+          "line": 463
+        }
+      ],
+      "multipleCallers": false
+    },
+    {
+      "endpoint": "/api/skills/quarantine/delete",
+      "calls": [
+        {
+          "endpoint": "/api/skills/quarantine/delete",
+          "method": "POST",
+          "file": "client/js/apps/optional/skills-ui.js",
+          "line": 544
+        }
+      ],
+      "multipleCallers": false
+    },
+    {
+      "endpoint": "/api/skills/quarantine/rescan",
+      "calls": [
+        {
+          "endpoint": "/api/skills/quarantine/rescan",
+          "method": "POST",
+          "file": "client/js/apps/optional/skills-ui.js",
+          "line": 560
+        }
+      ],
+      "multipleCallers": false
+    },
+    {
+      "endpoint": "/api/skills/quarantine/vet",
+      "calls": [
+        {
+          "endpoint": "/api/skills/quarantine/vet",
+          "method": "POST",
+          "file": "client/js/apps/optional/skills-ui.js",
+          "line": 527
+        }
+      ],
+      "multipleCallers": false
+    },
+    {
+      "endpoint": "/api/skills/reject",
+      "calls": [
+        {
+          "endpoint": "/api/skills/reject",
+          "method": "POST",
+          "file": "client/js/apps/optional/skills-ui.js",
+          "line": 441
+        }
+      ],
+      "multipleCallers": false
+    },
+    {
+      "endpoint": "/api/skills/toggle",
+      "calls": [
+        {
+          "endpoint": "/api/skills/toggle",
+          "method": "POST",
+          "file": "client/js/apps/optional/skills-ui.js",
+          "line": 123
+        }
+      ],
+      "multipleCallers": false
+    },
+    {
+      "endpoint": "/api/skills/web-search/fetch",
+      "calls": [
+        {
+          "endpoint": "/api/skills/web-search/fetch",
+          "method": "POST",
+          "file": "client/js/apps/optional/skills-ui.js",
+          "line": 699
+        }
+      ],
+      "multipleCallers": false
+    },
+    {
+      "endpoint": "/api/skills/web-search/search",
+      "calls": [
+        {
+          "endpoint": "/api/skills/web-search/search",
+          "method": "POST",
+          "file": "client/js/apps/optional/browser-app.js",
+          "line": 598
+        },
+        {
+          "endpoint": "/api/skills/web-search/search",
+          "method": "POST",
+          "file": "client/js/apps/optional/skills-ui.js",
+          "line": 665
+        }
+      ],
+      "multipleCallers": true
+    },
+    {
+      "endpoint": "/api/skills/workspace/delete",
+      "calls": [
+        {
+          "endpoint": "/api/skills/workspace/delete",
+          "method": "POST",
+          "file": "client/js/apps/optional/skills-ui.js",
+          "line": 337
+        }
+      ],
+      "multipleCallers": false
+    },
+    {
+      "endpoint": "/api/skills/workspace/list",
+      "calls": [
+        {
+          "endpoint": "/api/skills/workspace/list",
+          "method": "GET",
+          "file": "client/js/apps/optional/skills-ui.js",
+          "line": 231
+        }
+      ],
+      "multipleCallers": false
+    },
+    {
+      "endpoint": "/api/skills/workspace/read",
+      "calls": [
+        {
+          "endpoint": "/api/skills/workspace/read",
+          "method": "GET",
+          "file": "client/js/apps/optional/skills-ui.js",
+          "line": 285
+        }
+      ],
+      "multipleCallers": false
+    },
+    {
+      "endpoint": "/api/skills/workspace/write",
+      "calls": [
+        {
+          "endpoint": "/api/skills/workspace/write",
+          "method": "POST",
+          "file": "client/js/apps/optional/skills-ui.js",
+          "line": 303
+        }
+      ],
+      "multipleCallers": false
+    },
+    {
+      "endpoint": "/api/sleep/config",
+      "calls": [
+        {
+          "endpoint": "/api/sleep/config",
+          "method": "GET",
+          "file": "client/js/apps/optional/dream-gallery.js",
+          "line": 247
+        },
+        {
+          "endpoint": "/api/sleep/config",
+          "method": "POST",
+          "file": "client/js/apps/optional/dream-gallery.js",
+          "line": 306
+        },
+        {
+          "endpoint": "/api/sleep/config",
+          "method": "GET",
+          "file": "client/js/apps/optional/skills-ui.js",
+          "line": 719
+        },
+        {
+          "endpoint": "/api/sleep/config",
+          "method": "POST",
+          "file": "client/js/apps/optional/skills-ui.js",
+          "line": 760
+        }
+      ],
+      "multipleCallers": true
+    },
+    {
+      "endpoint": "/api/somatic",
+      "calls": [
+        {
+          "endpoint": "/api/somatic",
+          "method": "GET",
+          "file": "client/js/apps/optional/physical-ui.js",
+          "line": 62
+        },
+        {
+          "endpoint": "/api/somatic",
+          "method": "GET",
+          "file": "client/js/apps/optional/physical-ui.js",
+          "line": 196
+        }
+      ],
+      "multipleCallers": true
+    },
+    {
+      "endpoint": "/api/somatic/toggle",
+      "calls": [
+        {
+          "endpoint": "/api/somatic/toggle",
+          "method": "POST",
+          "file": "client/js/apps/optional/physical-ui.js",
+          "line": 220
+        }
+      ],
+      "multipleCallers": false
+    },
+    {
+      "endpoint": "/api/system-prompt",
+      "calls": [
+        {
+          "endpoint": "/api/system-prompt",
+          "method": "GET",
+          "file": "client/js/apps/core/chat.js",
+          "line": 1720
+        },
+        {
+          "endpoint": "/api/system-prompt",
+          "method": "GET",
+          "file": "client/js/sleep.js",
+          "line": 271
+        }
+      ],
+      "multipleCallers": true
+    },
+    {
+      "endpoint": "/api/system/backup",
+      "calls": [
+        {
+          "endpoint": "/api/system/backup",
+          "method": "POST",
+          "file": "client/js/apps/core/system-health.js",
+          "line": 104
+        }
+      ],
+      "multipleCallers": false
+    },
+    {
+      "endpoint": "/api/system/restore",
+      "calls": [
+        {
+          "endpoint": "/api/system/restore",
+          "method": "POST",
+          "file": "client/js/apps/core/system-health.js",
+          "line": 157
+        }
+      ],
+      "multipleCallers": false
+    },
+    {
+      "endpoint": "/api/system/webui-presence",
+      "calls": [
+        {
+          "endpoint": "/api/system/webui-presence",
+          "method": "POST",
+          "file": "client/js/desktop.js",
+          "line": 385
+        }
+      ],
+      "multipleCallers": false
+    },
+    {
+      "endpoint": "/api/tags",
+      "calls": [
+        {
+          "endpoint": "/api/tags",
+          "method": "GET",
+          "file": "server/brain/utils/model-router.js",
+          "line": 271
+        },
+        {
+          "endpoint": "/api/tags",
+          "method": "GET",
+          "file": "server/brain/utils/model-router.js",
+          "line": 284
+        }
+      ],
+      "multipleCallers": true
+    },
+    {
+      "endpoint": "/api/task/cancel/",
+      "calls": [
+        {
+          "endpoint": "/api/task/cancel/",
+          "method": "POST",
+          "file": "client/js/apps/optional/task-ui.js",
+          "line": 306
+        }
+      ],
+      "multipleCallers": false
+    },
+    {
+      "endpoint": "/api/task/history/",
+      "calls": [
+        {
+          "endpoint": "/api/task/history/",
+          "method": "GET",
+          "file": "client/js/apps/optional/task-ui.js",
+          "line": 187
+        }
+      ],
+      "multipleCallers": false
+    },
+    {
+      "endpoint": "/api/task/session/",
+      "calls": [
+        {
+          "endpoint": "/api/task/session/",
+          "method": "GET",
+          "file": "client/js/apps/optional/task-ui.js",
+          "line": 243
+        }
+      ],
+      "multipleCallers": false
+    },
+    {
+      "endpoint": "/api/timeline",
+      "calls": [
+        {
+          "endpoint": "/api/timeline",
+          "method": "GET",
+          "file": "client/js/apps/core/debug-core-app.js",
+          "line": 33
+        },
+        {
+          "endpoint": "/api/timeline",
+          "method": "GET",
+          "file": "client/js/visualizer.js",
+          "line": 1032
+        }
+      ],
+      "multipleCallers": true
+    },
+    {
+      "endpoint": "/api/timeline/client-debug",
+      "calls": [
+        {
+          "endpoint": "/api/timeline/client-debug",
+          "method": "POST",
+          "file": "client/index.html",
+          "line": 43
+        }
+      ],
+      "multipleCallers": false
+    },
+    {
+      "endpoint": "/api/trace-rebuild",
+      "calls": [
+        {
+          "endpoint": "/api/trace-rebuild",
+          "method": "POST",
+          "file": "client/js/apps/core/system-health.js",
+          "line": 65
+        }
+      ],
+      "multipleCallers": false
+    },
+    {
+      "endpoint": "/api/traces",
+      "calls": [
+        {
+          "endpoint": "/api/traces",
+          "method": "GET",
+          "file": "client/js/neural-viz.js",
+          "line": 374
+        },
+        {
+          "endpoint": "/api/traces",
+          "method": "GET",
+          "file": "client/js/neural-viz.js",
+          "line": 2150
+        }
+      ],
+      "multipleCallers": true
+    },
+    {
+      "endpoint": "/api/users",
+      "calls": [
+        {
+          "endpoint": "/api/users",
+          "method": "GET",
+          "file": "client/js/apps/core/setup-ui.js",
+          "line": 578
+        },
+        {
+          "endpoint": "/api/users",
+          "method": "GET",
+          "file": "client/js/apps/core/users-ui.js",
+          "line": 67
+        },
+        {
+          "endpoint": "/api/users",
+          "method": "POST",
+          "file": "client/js/apps/core/users-ui.js",
+          "line": 166
+        },
+        {
+          "endpoint": "/api/users",
+          "method": "GET",
+          "file": "client/js/apps/core/users-ui.js",
+          "line": 200
+        },
+        {
+          "endpoint": "/api/users",
+          "method": "POST",
+          "file": "client/js/apps/core/users-ui.js",
+          "line": 206
+        },
+        {
+          "endpoint": "/api/users",
+          "method": "GET",
+          "file": "client/js/apps/core/users-ui.js",
+          "line": 266
+        },
+        {
+          "endpoint": "/api/users",
+          "method": "POST",
+          "file": "client/js/apps/core/users-ui.js",
+          "line": 322
+        }
+      ],
+      "multipleCallers": true
+    },
+    {
+      "endpoint": "/api/users/",
+      "calls": [
+        {
+          "endpoint": "/api/users/",
+          "method": "DELETE",
+          "file": "client/js/apps/core/users-ui.js",
+          "line": 378
+        }
+      ],
+      "multipleCallers": false
+    },
+    {
+      "endpoint": "/api/users/active",
+      "calls": [
+        {
+          "endpoint": "/api/users/active",
+          "method": "POST",
+          "file": "client/js/apps/core/users-ui.js",
+          "line": 130
+        },
+        {
+          "endpoint": "/api/users/active",
+          "method": "DELETE",
+          "file": "client/js/apps/core/users-ui.js",
+          "line": 149
+        },
+        {
+          "endpoint": "/api/users/active",
+          "method": "POST",
+          "file": "client/js/apps/core/users-ui.js",
+          "line": 176
+        },
+        {
+          "endpoint": "/api/users/active",
+          "method": "POST",
+          "file": "client/js/apps/core/users-ui.js",
+          "line": 214
+        },
+        {
+          "endpoint": "/api/users/active",
+          "method": "GET",
+          "file": "client/js/apps/core/users-ui.js",
+          "line": 224
+        },
+        {
+          "endpoint": "/api/users/active",
+          "method": "GET",
+          "file": "client/js/apps/core/users-ui.js",
+          "line": 267
+        },
+        {
+          "endpoint": "/api/users/active",
+          "method": "POST",
+          "file": "client/js/apps/core/users-ui.js",
+          "line": 343
+        },
+        {
+          "endpoint": "/api/users/active",
+          "method": "DELETE",
+          "file": "client/js/apps/core/users-ui.js",
+          "line": 363
+        }
+      ],
+      "multipleCallers": true
+    },
+    {
+      "endpoint": "/api/vfs/delete",
+      "calls": [
+        {
+          "endpoint": "/api/vfs/delete",
+          "method": "POST",
+          "file": "client/js/apps/optional/skills-ui.js",
+          "line": 1337
+        }
+      ],
+      "multipleCallers": false
+    },
+    {
+      "endpoint": "/api/vfs/list",
+      "calls": [
+        {
+          "endpoint": "/api/vfs/list",
+          "method": "GET",
+          "file": "client/js/apps/optional/skills-ui.js",
+          "line": 1164
+        }
+      ],
+      "multipleCallers": false
+    },
+    {
+      "endpoint": "/api/vfs/mkdir",
+      "calls": [
+        {
+          "endpoint": "/api/vfs/mkdir",
+          "method": "POST",
+          "file": "client/js/apps/optional/skills-ui.js",
+          "line": 1350
+        }
+      ],
+      "multipleCallers": false
+    },
+    {
+      "endpoint": "/api/vfs/move",
+      "calls": [
+        {
+          "endpoint": "/api/vfs/move",
+          "method": "POST",
+          "file": "client/js/apps/optional/skills-ui.js",
+          "line": 1317
+        }
+      ],
+      "multipleCallers": false
+    },
+    {
+      "endpoint": "/api/vfs/read",
+      "calls": [
+        {
+          "endpoint": "/api/vfs/read",
+          "method": "GET",
+          "file": "client/js/apps/optional/skills-ui.js",
+          "line": 1262
+        }
+      ],
+      "multipleCallers": false
+    },
+    {
+      "endpoint": "/api/vfs/write",
+      "calls": [
+        {
+          "endpoint": "/api/vfs/write",
+          "method": "POST",
+          "file": "client/js/apps/optional/skills-ui.js",
+          "line": 1280
+        },
+        {
+          "endpoint": "/api/vfs/write",
+          "method": "POST",
+          "file": "client/js/apps/optional/skills-ui.js",
+          "line": 1371
+        }
+      ],
+      "multipleCallers": true
+    },
+    {
+      "endpoint": "/api/visualizer/chat-history",
+      "calls": [
+        {
+          "endpoint": "/api/visualizer/chat-history",
+          "method": "POST",
+          "file": "client/js/visualizer.js",
+          "line": 448
+        }
+      ],
+      "multipleCallers": false
+    },
+    {
+      "endpoint": "/api/workspace/config",
+      "calls": [
+        {
+          "endpoint": "/api/workspace/config",
+          "method": "GET",
+          "file": "client/js/apps/optional/skills-ui.js",
+          "line": 944
+        },
+        {
+          "endpoint": "/api/workspace/config",
+          "method": "POST",
+          "file": "client/js/apps/optional/skills-ui.js",
+          "line": 967
+        }
+      ],
+      "multipleCallers": true
+    },
+    {
+      "endpoint": "/api/workspace/list",
+      "calls": [
+        {
+          "endpoint": "/api/workspace/list",
+          "method": "GET",
+          "file": "client/js/apps/optional/skills-ui.js",
+          "line": 996
+        }
+      ],
+      "multipleCallers": false
+    },
+    {
+      "endpoint": "/api/workspace/read",
+      "calls": [
+        {
+          "endpoint": "/api/workspace/read",
+          "method": "GET",
+          "file": "client/js/apps/optional/skills-ui.js",
+          "line": 1048
+        }
+      ],
+      "multipleCallers": false
+    },
+    {
+      "endpoint": "/api/workspace/write",
+      "calls": [
+        {
+          "endpoint": "/api/workspace/write",
+          "method": "POST",
+          "file": "client/js/apps/optional/skills-ui.js",
+          "line": 1065
+        }
+      ],
+      "multipleCallers": false
+    }
+  ],
+  "sseEventSources": [
+    {
+      "endpoint": "/api/brain/events",
+      "file": "client/js/app.js",
+      "line": 726,
+      "type": "EventSource"
+    },
+    {
+      "endpoint": "/api/brain/events",
+      "file": "client/js/apps/core/chat.js",
+      "line": 109,
+      "type": "EventSource"
+    },
+    {
+      "endpoint": "/api/brain/events",
+      "file": "client/js/apps/optional/physical-ui.js",
+      "line": 202,
+      "type": "EventSource"
+    },
+    {
+      "endpoint": "/api/brain/events",
+      "file": "client/js/apps/optional/physical-ui.js",
+      "line": 238,
+      "type": "EventSource"
+    },
+    {
+      "endpoint": "/api/brain/events",
+      "file": "client/js/neural-viz/data-layer.js",
+      "line": 23,
+      "type": "EventSource"
+    },
+    {
+      "endpoint": "/api/brain/events",
+      "file": "client/js/neural-viz.js",
+      "line": 1531,
+      "type": "EventSource"
+    },
+    {
+      "endpoint": "/api/timeline/stream?tail=80",
+      "file": "client/js/visualizer.js",
+      "line": 1180,
+      "type": "EventSource"
+    }
+  ],
+  "sseEvents": [
+    {
+      "event": "beforeunload",
+      "file": "client/js/apps/optional/popout-manager.js",
+      "line": 249,
+      "raw": "window.addEventListener('beforeunload', function () {"
+    },
+    {
+      "event": "beforeunload",
+      "file": "client/js/desktop.js",
+      "line": 366,
+      "raw": "window.addEventListener('beforeunload', () => {"
+    },
+    {
+      "event": "brain_boredom_action",
+      "file": "client/js/apps/core/chat.js",
+      "line": 220,
+      "raw": "brainEventSource.addEventListener('brain_boredom_action', (e) => {"
+    },
+    {
+      "event": "brain_cycle_complete",
+      "file": "client/js/apps/core/chat.js",
+      "line": 214,
+      "raw": "brainEventSource.addEventListener('brain_cycle_complete', (e) => {"
+    },
+    {
+      "event": "brain_cycle_start",
+      "file": "client/js/apps/core/chat.js",
+      "line": 192,
+      "raw": "brainEventSource.addEventListener('brain_cycle_start', (e) => {"
+    },
+    {
+      "event": "brain_deep_sleep_complete",
+      "file": "client/js/neural-viz/data-layer.js",
+      "line": 47,
+      "raw": "es.addEventListener('brain_deep_sleep_complete', function (e) {"
+    },
+    {
+      "event": "brain_deep_sleep_complete",
+      "file": "client/js/neural-viz.js",
+      "line": 1561,
+      "raw": "eventSource.addEventListener('brain_deep_sleep_complete', (e) => {"
+    },
+    {
+      "event": "brain_phase",
+      "file": "client/js/apps/core/chat.js",
+      "line": 200,
+      "raw": "brainEventSource.addEventListener('brain_phase', (e) => {"
+    },
+    {
+      "event": "chat_follow_up",
+      "file": "client/js/apps/core/chat.js",
+      "line": 237,
+      "raw": "brainEventSource.addEventListener('chat_follow_up', async (e) => {"
+    },
+    {
+      "event": "connected",
+      "file": "client/js/apps/core/chat.js",
+      "line": 111,
+      "raw": "brainEventSource.addEventListener('connected', () => {"
+    },
+    {
+      "event": "dragleave",
+      "file": "client/js/apps/optional/document-digest.js",
+      "line": 56,
+      "raw": "dropZone.addEventListener('dragleave', (e) => {"
+    },
+    {
+      "event": "dragover",
+      "file": "client/js/apps/optional/document-digest.js",
+      "line": 50,
+      "raw": "dropZone.addEventListener('dragover', (e) => {"
+    },
+    {
+      "event": "dragover",
+      "file": "client/js/desktop.js",
+      "line": 721,
+      "raw": "dashBtn.addEventListener('dragover', onPinnedDragOver);"
+    },
+    {
+      "event": "memory_accessed",
+      "file": "client/js/app.js",
+      "line": 727,
+      "raw": "miniVizEventSource.addEventListener('memory_accessed', function(e) {"
+    },
+    {
+      "event": "memory_accessed",
+      "file": "client/js/neural-viz/data-layer.js",
+      "line": 30,
+      "raw": "es.addEventListener('memory_accessed', function (e) {"
+    },
+    {
+      "event": "memory_accessed",
+      "file": "client/js/neural-viz.js",
+      "line": 1540,
+      "raw": "eventSource.addEventListener('memory_accessed', (e) => {"
+    },
+    {
+      "event": "memory_created",
+      "file": "client/js/neural-viz/data-layer.js",
+      "line": 40,
+      "raw": "es.addEventListener('memory_created', function (e) {"
+    },
+    {
+      "event": "memory_created",
+      "file": "client/js/neural-viz.js",
+      "line": 1550,
+      "raw": "eventSource.addEventListener('memory_created', (e) => {"
+    },
+    {
+      "event": "mouseenter",
+      "file": "client/js/vfs.js",
+      "line": 415,
+      "raw": "el.addEventListener('mouseenter', function() { el.style.background = 'color-mix("
+    },
+    {
+      "event": "mouseleave",
+      "file": "client/js/vfs.js",
+      "line": 416,
+      "raw": "el.addEventListener('mouseleave', function() { el.style.background = ''; });"
+    },
+    {
+      "event": "mousemove",
+      "file": "client/js/neural-viz/renderer.js",
+      "line": 268,
+      "raw": "renderer.domElement.addEventListener('mousemove', onMouseMove);"
+    },
+    {
+      "event": "mousemove",
+      "file": "client/js/neural-viz.js",
+      "line": 362,
+      "raw": "renderer.domElement.addEventListener('mousemove', onMouseMove);"
+    },
+    {
+      "event": "orchestration_complete",
+      "file": "client/js/apps/core/chat.js",
+      "line": 170,
+      "raw": "brainEventSource.addEventListener('orchestration_complete', (e) => {"
+    },
+    {
+      "event": "orchestration_start",
+      "file": "client/js/apps/core/chat.js",
+      "line": 116,
+      "raw": "brainEventSource.addEventListener('orchestration_start', () => {"
+    },
+    {
+      "event": "paste",
+      "file": "client/js/apps/core/chat.js",
+      "line": 645,
+      "raw": "input.addEventListener('paste', (e) => {"
+    },
+    {
+      "event": "phase_complete",
+      "file": "client/js/apps/core/chat.js",
+      "line": 153,
+      "raw": "brainEventSource.addEventListener('phase_complete', (e) => {"
+    },
+    {
+      "event": "phase_detail",
+      "file": "client/js/apps/core/chat.js",
+      "line": 141,
+      "raw": "brainEventSource.addEventListener('phase_detail', (e) => {"
+    },
+    {
+      "event": "phase_start",
+      "file": "client/js/apps/core/chat.js",
+      "line": 124,
+      "raw": "brainEventSource.addEventListener('phase_start', (e) => {"
+    },
+    {
+      "event": "pointercancel",
+      "file": "client/js/desktop.js",
+      "line": 295,
+      "raw": "inner.addEventListener('pointercancel', finishPointerAction);"
+    },
+    {
+      "event": "storage",
+      "file": "client/js/apps/optional/popout-manager.js",
+      "line": 256,
+      "raw": "window.addEventListener('storage', handleStorageEvent);"
+    },
+    {
+      "event": "thought",
+      "file": "client/js/apps/optional/physical-ui.js",
+      "line": 239,
+      "raw": "physicalSSE.addEventListener('thought', function(e) {"
+    },
+    {
+      "event": "thought",
+      "file": "client/js/neural-viz/data-layer.js",
+      "line": 26,
+      "raw": "es.addEventListener('thought', function (e) {"
+    },
+    {
+      "event": "thought",
+      "file": "client/js/neural-viz.js",
+      "line": 1533,
+      "raw": "eventSource.addEventListener('thought', (e) => {"
+    },
+    {
+      "event": "timeline",
+      "file": "client/js/visualizer.js",
+      "line": 1184,
+      "raw": "timelineLiveSse.addEventListener('timeline', (e) => {"
+    },
+    {
+      "event": "touchmove",
+      "file": "client/js/apps/core/chat.js",
+      "line": 979,
+      "raw": "c.addEventListener('touchmove', () => {"
+    },
+    {
+      "event": "visibilitychange",
+      "file": "client/js/desktop.js",
+      "line": 400,
+      "raw": "document.addEventListener('visibilitychange', () => {"
+    },
+    {
+      "event": "visibilitychange",
+      "file": "client/js/visualizer.js",
+      "line": 88,
+      "raw": "document.addEventListener('visibilitychange', () => {"
+    }
+  ],
+  "customEvents": [
+    {
+      "event": "storage",
+      "file": "client/js/apps/optional/popout-manager.js",
+      "line": 256,
+      "type": "listen"
+    },
+    {
+      "event": "contextmenu",
+      "file": "client/js/context-menu.js",
+      "line": 91,
+      "type": "listen"
+    },
+    {
+      "event": "message",
+      "file": "client/js/nekocore-app.js",
+      "line": 587,
+      "type": "listen"
+    },
+    {
+      "event": "resize",
+      "file": "client/js/window-manager.js",
+      "line": 28,
+      "type": "dispatch"
+    },
+    {
+      "event": "rem:layout-resized",
+      "file": "client/js/window-manager.js",
+      "line": 29,
+      "type": "dispatch"
+    },
+    {
+      "event": "pointermove",
+      "file": "client/js/window-manager.js",
+      "line": 521,
+      "type": "listen"
+    },
+    {
+      "event": "pointerup",
+      "file": "client/js/window-manager.js",
+      "line": 522,
+      "type": "listen"
+    },
+    {
+      "event": "pointermove",
+      "file": "client/js/window-manager.js",
+      "line": 562,
+      "type": "listen"
+    },
+    {
+      "event": "pointerup",
+      "file": "client/js/window-manager.js",
+      "line": 563,
+      "type": "listen"
+    }
+  ],
+  "storageEntries": [
+    {
+      "store": "localStorage",
+      "op": "removeItem",
+      "key": "rem-window-layout-v2",
+      "file": "client/index.html",
+      "line": 97
+    },
+    {
+      "store": "localStorage",
+      "op": "getItem",
+      "key": "showThoughtsInChat",
+      "file": "client/js/apps/core/chat.js",
+      "line": 49
+    },
+    {
+      "store": "localStorage",
+      "op": "setItem",
+      "key": "showThoughtsInChat",
+      "file": "client/js/sleep.js",
+      "line": 18
+    }
+  ],
+  "cssAudit": {
+    "defined": [],
+    "used": [],
+    "undefined": [],
+    "unused": [],
+    "rows": []
+  },
+  "dependencies": {
+    "client/js/app-window.js": [
+      "client/js/desktop.js",
+      "client/js/window-manager.js"
+    ],
+    "client/js/app.js": [
+      "client/js/apps/core/chat.js",
+      "client/js/apps/core/config-profiles.js",
+      "client/js/apps/core/entity-ui.js",
+      "client/js/apps/optional/visualizer-ui.js",
+      "client/js/create.js",
+      "client/js/desktop.js",
+      "client/js/memory-ui.js",
+      "client/js/window-manager.js"
+    ],
+    "client/js/apps/core/archive-ui.js": [
+      "client/js/app.js"
+    ],
+    "client/js/apps/core/chat.js": [
+      "client/js/app.js",
+      "client/js/apps/core/config-profiles.js",
+      "client/js/apps/core/setup-ui.js",
+      "client/js/apps/core/telemetry-ui.js",
+      "client/js/apps/optional/skills-ui.js",
+      "client/js/create.js",
+      "client/js/pipeline.js",
+      "client/js/sleep.js",
+      "server/tools/backfill-legacy-document-chunks.js"
+    ],
+    "client/js/apps/core/config-profiles.js": [
+      "client/js/app.js",
+      "client/js/apps/core/setup-ui.js",
+      "client/js/apps/core/simple-provider.js",
+      "client/js/auth.js"
+    ],
+    "client/js/apps/core/debug-core-app.js": [
+      "client/js/app.js",
+      "client/js/window-manager.js"
+    ],
+    "client/js/apps/core/entity-ui.js": [
+      "client/js/app.js",
+      "client/js/apps/core/chat.js",
+      "client/js/apps/core/setup-ui.js",
+      "client/js/apps/core/users-ui.js",
+      "server/entityPaths.js"
+    ],
+    "client/js/apps/core/setup-ui.js": [
+      "client/js/app.js",
+      "client/js/apps/core/chat.js",
+      "client/js/apps/core/config-profiles.js",
+      "client/js/apps/core/entity-ui.js",
+      "client/js/login.js",
+      "client/js/window-manager.js"
+    ],
+    "client/js/apps/core/simple-provider.js": [
+      "client/js/app.js",
+      "client/js/apps/core/config-profiles.js",
+      "client/js/apps/core/setup-ui.js"
+    ],
+    "client/js/apps/core/slash-commands.js": [
+      "client/js/apps/core/chat.js",
+      "client/js/apps/optional/browser-app.js",
+      "client/js/apps/optional/task-ui.js"
+    ],
+    "client/js/apps/core/system-health.js": [
+      "client/js/apps/core/chat.js"
+    ],
+    "client/js/apps/core/telemetry-ui.js": [
+      "client/js/app.js",
+      "client/js/desktop.js"
+    ],
+    "client/js/apps/core/users-ui.js": [
+      "client/js/apps/core/chat.js",
+      "client/js/apps/optional/visualizer-ui.js",
+      "client/js/login.js"
+    ],
+    "client/js/apps/non-core-html-loader.js": [
+      "client/js/app.js",
+      "client/js/apps/core/chat.js",
+      "client/js/apps/optional/skills-ui.js"
+    ],
+    "client/js/apps/optional/browser-app.js": [
+      "client/js/app.js",
+      "client/js/window-manager.js"
+    ],
+    "client/js/apps/optional/diary.js": [
+      "client/js/apps/optional/dream-gallery.js"
+    ],
+    "client/js/apps/optional/document-digest.js": [
+      "client/js/create.js",
+      "server/brain/nekocore/doc-ingestion.js"
+    ],
+    "client/js/apps/optional/physical-ui.js": [
+      "client/js/apps/core/telemetry-ui.js"
+    ],
+    "client/js/apps/optional/popout-manager.js": [
+      "client/js/app.js",
+      "client/js/desktop.js",
+      "client/js/window-manager.js",
+      "server/brain/nekocore/model-intelligence.js",
+      "server/contracts/response-contracts.js"
+    ],
+    "client/js/apps/optional/skills-ui.js": [
+      "client/js/app.js",
+      "client/js/apps/core/chat.js",
+      "client/js/apps/optional/visualizer-ui.js"
+    ],
+    "client/js/apps/optional/task-ui.js": [
+      "client/js/apps/core/telemetry-ui.js"
+    ],
+    "client/js/apps/optional/visualizer-ui.js": [
+      "client/js/apps/optional/skills-ui.js"
+    ],
+    "client/js/auth.js": [
+      "client/js/app.js",
+      "client/js/apps/core/chat.js",
+      "client/js/apps/core/config-profiles.js"
+    ],
+    "client/js/boot.js": [
+      "client/js/app.js",
+      "client/js/apps/core/config-profiles.js",
+      "client/js/apps/optional/physical-ui.js",
+      "client/js/desktop.js",
+      "client/js/login.js"
+    ],
+    "client/js/context-menu.js": [
+      "client/js/app.js",
+      "client/js/desktop.js",
+      "client/js/window-manager.js"
+    ],
+    "client/js/create.js": [
+      "client/js/app.js",
+      "client/js/apps/core/chat.js",
+      "client/js/apps/core/entity-ui.js",
+      "client/js/apps/optional/document-digest.js",
+      "client/js/window-manager.js",
+      "server/brain/nekocore/doc-ingestion.js"
+    ],
+    "client/js/desktop.js": [
+      "client/js/app.js",
+      "client/js/apps/core/telemetry-ui.js",
+      "client/js/apps/optional/browser-app.js",
+      "client/js/apps/optional/theme-manager.js",
+      "client/js/login.js",
+      "client/js/window-manager.js"
+    ],
+    "client/js/login.js": [
+      "client/js/apps/core/config-profiles.js",
+      "client/js/apps/core/entity-ui.js",
+      "client/js/apps/core/setup-ui.js",
+      "client/js/desktop.js"
+    ],
+    "client/js/memory-ui.js": [
+      "client/js/apps/core/chat.js"
+    ],
+    "client/js/neural-viz/renderer.js": [
+      "client/js/apps/core/chat.js",
+      "client/js/apps/optional/skills-ui.js"
+    ],
+    "client/js/neural-viz.js": [
+      "client/js/apps/core/chat.js",
+      "client/js/apps/optional/skills-ui.js"
+    ],
+    "client/js/pipeline.js": [
+      "client/js/app.js",
+      "client/js/apps/core/chat.js",
+      "server/tools/backfill-legacy-document-chunks.js"
+    ],
+    "client/js/sleep.js": [
+      "client/js/app.js",
+      "client/js/apps/core/chat.js",
+      "client/js/pipeline.js",
+      "server/tools/backfill-legacy-document-chunks.js"
+    ],
+    "client/js/vfs.js": [
+      "client/js/app.js",
+      "client/js/desktop.js",
+      "server/brain/affect/neurochemistry.js",
+      "server/brain/affect/somatic-awareness.js",
+      "server/services/voice-profile.js"
+    ],
+    "client/js/visualizer.js": [
+      "client/js/apps/core/chat.js",
+      "client/js/apps/optional/skills-ui.js",
+      "client/js/neural-viz.js"
+    ],
+    "client/js/window-manager.js": [
+      "client/js/app-window.js",
+      "client/js/app.js",
+      "client/js/apps/core/entity-ui.js",
+      "client/js/apps/core/telemetry-ui.js",
+      "client/js/apps/core/users-ui.js",
+      "client/js/apps/optional/browser-app.js",
+      "client/js/apps/optional/diary.js",
+      "client/js/apps/optional/physical-ui.js",
+      "client/js/apps/optional/skills-ui.js",
+      "client/js/create.js",
+      "client/js/desktop.js",
+      "client/js/shadow-content-loader.js"
+    ],
+    "server/api-entity-last-memory.js": [
+      "server/entityPaths.js"
+    ],
+    "server/brain/affect/neurochemistry.js": [
+      "server/brain/affect/somatic-awareness.js",
+      "server/entityPaths.js",
+      "server/services/voice-profile.js"
+    ],
+    "server/brain/affect/somatic-awareness.js": [
+      "server/brain/affect/neurochemistry.js",
+      "server/services/voice-profile.js"
+    ],
+    "server/brain/agent-echo.js": [
+      "server/brain/utils/archive-directory.js"
+    ],
+    "server/brain/cognition/boredom-engine.js": [
+      "client/js/pipeline.js"
+    ],
+    "server/brain/cognition/dream-engine.js": [
+      "client/js/pipeline.js"
+    ],
+    "server/brain/cognition/dream-intuition-adapter.js": [
+      "client/js/pipeline.js"
+    ],
+    "server/brain/cognition/phases/phase-archive-index.js": [
+      "server/brain/utils/archive-indexes.js"
+    ],
+    "server/brain/cognition/phases/phase-archive.js": [
+      "server/brain/utils/archive-index.js",
+      "server/brain/utils/textrank.js",
+      "server/entityPaths.js"
+    ],
+    "server/brain/cognition/phases/phase-dreams.js": [
+      "server/brain/cognition/dream-maintenance-selector.js",
+      "server/brain/generation/diary-prompts.js",
+      "server/brain/knowledge/dream-link-writer.js",
+      "server/entityPaths.js"
+    ],
+    "server/brain/cognition/phases/phase-identity.js": [
+      "server/brain/generation/diary-prompts.js"
+    ],
+    "server/brain/core/conscious-engine.js": [
+      "client/js/pipeline.js",
+      "server/brain/nekocore/knowledge-retrieval.js"
+    ],
+    "server/brain/core/orchestrator.js": [
+      "client/js/pipeline.js",
+      "server/brain/cognition/dream-intuition-adapter.js",
+      "server/brain/core/orchestration-policy.js",
+      "server/brain/core/worker-dispatcher.js",
+      "server/brain/core/worker-registry.js",
+      "server/brain/generation/aspect-prompts.js",
+      "server/brain/tasks/task-archive-writer.js",
+      "server/brain/utils/turn-signals.js",
+      "server/contracts/contributor-contracts.js",
+      "server/server.js",
+      "server/services/relationship-service.js"
+    ],
+    "server/brain/core/worker-dispatcher.js": [
+      "client/js/pipeline.js",
+      "server/brain/core/orchestration-policy.js",
+      "server/contracts/worker-output-contract.js"
+    ],
+    "server/brain/generation/context-consolidator.js": [
+      "server/entityPaths.js"
+    ],
+    "server/brain/generation/core-life-generator.js": [
+      "client/js/pipeline.js",
+      "server/entityPaths.js"
+    ],
+    "server/brain/generation/humanize-filter.js": [
+      "client/js/pipeline.js"
+    ],
+    "server/brain/generation/image-generator.js": [
+      "server/entityPaths.js"
+    ],
+    "server/brain/generation/pixel-art-engine.js": [
+      "client/js/pipeline.js",
+      "server/brain/generation/core-life-generator.js"
+    ],
+    "server/brain/generation/synthetic-memory-generator.js": [
+      "client/js/apps/core/entity-ui.js"
+    ],
+    "server/brain/identity/dream-diary.js": [
+      "server/entityPaths.js"
+    ],
+    "server/brain/identity/hatch-entity.js": [
+      "server/brain/generation/core-life-generator.js",
+      "server/entityPaths.js"
+    ],
+    "server/brain/identity/life-diary.js": [
+      "server/entityPaths.js"
+    ],
+    "server/brain/identity/onboarding.js": [
+      "server/brain/tasks/task-archive-writer.js",
+      "server/entityPaths.js"
+    ],
+    "server/brain/knowledge/beliefGraph.js": [
+      "server/entityPaths.js"
+    ],
+    "server/brain/memory/conscious-memory.js": [
+      "server/entityPaths.js"
+    ],
+    "server/brain/memory/dream-memory.js": [
+      "server/entityPaths.js"
+    ],
+    "server/brain/memory/memory-images.js": [
+      "server/entityPaths.js"
+    ],
+    "server/brain/memory/memory-index-cache.js": [
+      "server/brain/nekocore/model-intelligence.js",
+      "server/brain/tasks/task-archive-reader.js",
+      "server/brain/tasks/task-archive-writer.js",
+      "server/brain/tasks/task-project-store.js",
+      "server/brain/utils/topic-utils.js",
+      "server/entityPaths.js",
+      "server/tools/installer-cli.js"
+    ],
+    "server/brain/memory/memory-storage.js": [
+      "server/brain/nekocore/model-intelligence.js",
+      "server/contracts/memory-schema.js",
+      "server/entityPaths.js"
+    ],
+    "server/brain/nekocore/bootstrap.js": [
+      "server/brain/nekocore/model-intelligence.js",
+      "server/brain/nekocore/persona-profile.js"
+    ],
+    "server/brain/nekocore/doc-ingestion.js": [
+      "client/js/apps/optional/document-digest.js",
+      "client/js/create.js",
+      "server/brain/utils/archive-index.js",
+      "server/brain/utils/textrank.js"
+    ],
+    "server/brain/nekocore/knowledge-retrieval.js": [
+      "server/entityPaths.js"
+    ],
+    "server/brain/nekocore/model-intelligence.js": [
+      "server/brain/tasks/task-archive-reader.js",
+      "server/brain/tasks/task-archive-writer.js",
+      "server/brain/tasks/task-project-store.js",
+      "server/tools/installer-cli.js"
+    ],
+    "server/brain/nekocore/reset-runtime.js": [
+      "server/brain/nekocore/bootstrap.js",
+      "server/brain/nekocore/doc-ingestion.js",
+      "server/brain/nekocore/model-intelligence.js",
+      "server/brain/nekocore/persona-profile.js",
+      "server/entityPaths.js"
+    ],
+    "server/brain/skills/skill-manager.js": [
+      "client/js/apps/optional/skills-ui.js",
+      "server/entityPaths.js"
+    ],
+    "server/brain/skills/task-runner.js": [
+      "client/js/pipeline.js",
+      "server/brain/skills/workspace-tools.js"
+    ],
+    "server/brain/skills/workspace-tools.js": [
+      "server/integrations/web-fetch.js"
+    ],
+    "server/brain/tasks/entity-chat-manager.js": [
+      "server/brain/tasks/task-session.js",
+      "server/services/auth-service.js"
+    ],
+    "server/brain/tasks/intent-classifier.js": [
+      "server/brain/tasks/task-classifier-rules.js"
+    ],
+    "server/brain/tasks/task-archive-reader.js": [
+      "server/brain/nekocore/model-intelligence.js",
+      "server/brain/tasks/task-archive-writer.js",
+      "server/brain/tasks/task-project-store.js",
+      "server/tools/installer-cli.js"
+    ],
+    "server/brain/tasks/task-archive-writer.js": [
+      "server/brain/nekocore/model-intelligence.js",
+      "server/brain/tasks/task-archive-reader.js",
+      "server/brain/tasks/task-project-store.js",
+      "server/brain/tasks/task-session.js",
+      "server/brain/utils/archive-router.js",
+      "server/entityPaths.js",
+      "server/tools/installer-cli.js"
+    ],
+    "server/brain/tasks/task-context-gatherer.js": [
+      "server/brain/tasks/task-context-strategies.js"
+    ],
+    "server/brain/tasks/task-executor.js": [
+      "server/brain/skills/task-runner.js",
+      "server/brain/tasks/task-archive-writer.js",
+      "server/brain/tasks/task-session.js"
+    ],
+    "server/brain/tasks/task-frontman.js": [
+      "server/brain/generation/aspect-prompts.js",
+      "server/brain/tasks/task-executor.js",
+      "server/brain/tasks/task-session.js",
+      "server/server.js"
+    ],
+    "server/brain/tasks/task-pipeline-bridge.js": [
+      "server/brain/tasks/task-archive-writer.js",
+      "server/brain/tasks/task-executor.js",
+      "server/brain/tasks/task-project-store.js",
+      "server/brain/tasks/task-session.js",
+      "server/server.js",
+      "server/services/auth-service.js"
+    ],
+    "server/brain/tasks/task-project-store.js": [
+      "server/brain/nekocore/model-intelligence.js",
+      "server/brain/tasks/task-archive-reader.js",
+      "server/brain/tasks/task-archive-writer.js",
+      "server/brain/utils/archive-router.js",
+      "server/entityPaths.js",
+      "server/tools/installer-cli.js"
+    ],
+    "server/brain/tasks/task-session.js": [
+      "server/brain/tasks/task-archive-writer.js",
+      "server/services/auth-service.js"
+    ],
+    "server/brain/utils/archive-directory.js": [
+      "server/entityPaths.js"
+    ],
+    "server/brain/utils/archive-index.js": [
+      "server/brain/utils/archive-router.js",
+      "server/brain/utils/bm25.js",
+      "server/entityPaths.js"
+    ],
+    "server/brain/utils/archive-indexes.js": [
+      "server/entityPaths.js"
+    ],
+    "server/brain/utils/archive-router.js": [
+      "server/brain/tasks/task-archive-writer.js",
+      "server/brain/tasks/task-project-store.js",
+      "server/brain/utils/archive-index.js",
+      "server/entityPaths.js"
+    ],
+    "server/brain/utils/bulk-ingest.js": [
+      "server/brain/utils/archive-index.js",
+      "server/brain/utils/archive-router.js",
+      "server/brain/utils/rake.js",
+      "server/entityPaths.js"
+    ],
+    "server/brain/utils/entity-manager.js": [
+      "server/entityPaths.js"
+    ],
+    "server/brain/utils/rake.js": [
+      "server/services/memory-retrieval.js"
+    ],
+    "server/routes/archive-routes.js": [
+      "server/brain/utils/archive-index.js",
+      "server/brain/utils/archive-indexes.js",
+      "server/brain/utils/bulk-ingest.js",
+      "server/brain/utils/rake.js",
+      "server/entityPaths.js",
+      "server/server.js"
+    ],
+    "server/routes/auth-routes.js": [
+      "server/brain/tasks/task-session.js",
+      "server/server.js",
+      "server/services/auth-service.js",
+      "server/services/entity-checkout.js"
+    ],
+    "server/routes/brain-routes.js": [
+      "server/brain/generation/context-consolidator.js",
+      "server/brain/utils/topic-utils.js",
+      "server/entityPaths.js",
+      "server/server.js"
+    ],
+    "server/routes/browser-routes.js": [
+      "server/brain/tasks/task-session.js",
+      "server/integrations/web-fetch.js",
+      "server/server.js",
+      "server/services/auth-service.js"
+    ],
+    "server/routes/chat-routes.js": [
+      "server/contracts/response-contracts.js",
+      "server/entityPaths.js",
+      "server/server.js"
+    ],
+    "server/routes/cognitive-routes.js": [
+      "server/entityPaths.js",
+      "server/server.js",
+      "server/services/entity-memory-compat.js"
+    ],
+    "server/routes/config-routes.js": [
+      "client/js/apps/optional/skills-ui.js",
+      "server/entityPaths.js",
+      "server/server.js",
+      "server/services/auto-open-browser.js",
+      "server/services/config-runtime.js"
+    ],
+    "server/routes/document-routes.js": [
+      "client/js/pipeline.js",
+      "server/brain/nekocore/knowledge-retrieval.js",
+      "server/contracts/response-contracts.js",
+      "server/entityPaths.js",
+      "server/server.js",
+      "server/tools/backfill-legacy-document-chunks.js"
+    ],
+    "server/routes/entity-chat-routes.js": [
+      "server/brain/tasks/task-session.js",
+      "server/server.js",
+      "server/services/auth-service.js"
+    ],
+    "server/routes/entity-routes.js": [
+      "server/brain/generation/context-consolidator.js",
+      "server/brain/tasks/task-archive-writer.js",
+      "server/entityPaths.js",
+      "server/server.js",
+      "server/services/auth-service.js",
+      "server/services/config-runtime.js",
+      "server/services/entity-checkout.js",
+      "server/services/relationship-service.js",
+      "server/services/user-profiles.js",
+      "server/services/voice-profile.js"
+    ],
+    "server/routes/memory-routes.js": [
+      "server/brain/generation/context-consolidator.js",
+      "server/contracts/response-contracts.js",
+      "server/entityPaths.js",
+      "server/server.js",
+      "server/services/entity-memory-compat.js"
+    ],
+    "server/routes/nekocore-routes.js": [
+      "server/brain/nekocore/audit.js",
+      "server/brain/nekocore/bootstrap.js",
+      "server/brain/nekocore/doc-ingestion.js",
+      "server/brain/nekocore/model-intelligence.js",
+      "server/brain/nekocore/persona-profile.js",
+      "server/brain/nekocore/reset-runtime.js",
+      "server/entityPaths.js",
+      "server/server.js"
+    ],
+    "server/routes/skills-routes.js": [
+      "client/js/apps/optional/skills-ui.js",
+      "server/entityPaths.js",
+      "server/integrations/web-fetch.js",
+      "server/server.js"
+    ],
+    "server/routes/task-routes.js": [
+      "server/brain/skills/task-runner.js",
+      "server/brain/tasks/intent-classifier.js",
+      "server/brain/tasks/task-archive-writer.js",
+      "server/brain/tasks/task-context-gatherer.js",
+      "server/brain/tasks/task-executor.js",
+      "server/brain/tasks/task-project-store.js",
+      "server/brain/tasks/task-session.js",
+      "server/server.js",
+      "server/services/auth-service.js"
+    ],
+    "server/routes/vfs-routes.js": [
+      "server/server.js"
+    ],
+    "server/server.js": [
+      "server/brain/generation/context-consolidator.js",
+      "server/brain/nekocore/bootstrap.js",
+      "server/brain/nekocore/doc-ingestion.js",
+      "server/entityPaths.js",
+      "server/routes/archive-routes.js",
+      "server/routes/auth-routes.js",
+      "server/routes/brain-routes.js",
+      "server/routes/browser-routes.js",
+      "server/routes/chat-routes.js",
+      "server/routes/config-routes.js",
+      "server/routes/document-routes.js",
+      "server/routes/entity-chat-routes.js",
+      "server/routes/entity-routes.js",
+      "server/routes/memory-routes.js",
+      "server/routes/nekocore-routes.js",
+      "server/routes/skills-routes.js",
+      "server/routes/sse-routes.js",
+      "server/routes/task-routes.js",
+      "server/routes/vfs-routes.js",
+      "server/services/auth-service.js",
+      "server/services/auto-open-browser.js",
+      "server/services/boot.js",
+      "server/services/chat-pipeline.js",
+      "server/services/config-runtime.js",
+      "server/services/entity-checkout.js",
+      "server/services/llm-interface.js",
+      "server/services/memory-operations.js",
+      "server/services/memory-retrieval.js",
+      "server/services/nekocore-pipeline.js",
+      "server/services/runtime-lifecycle.js",
+      "server/services/startup-preflight.js"
+    ],
+    "server/services/auth-service.js": [
+      "server/brain/tasks/task-session.js",
+      "server/services/entity-checkout.js"
+    ],
+    "server/services/chat-pipeline.js": [
+      "server/brain/agent-echo.js",
+      "server/brain/generation/context-consolidator.js",
+      "server/brain/nekocore/model-intelligence.js",
+      "server/brain/skills/task-runner.js",
+      "server/brain/skills/workspace-tools.js",
+      "server/brain/tasks/task-frontman.js",
+      "server/brain/tasks/task-pipeline-bridge.js",
+      "server/brain/utils/archive-index.js",
+      "server/brain/utils/rake.js",
+      "server/entityPaths.js",
+      "server/server.js",
+      "server/services/config-runtime.js",
+      "server/services/llm-runtime-utils.js",
+      "server/services/post-response-memory.js",
+      "server/services/response-postprocess.js",
+      "server/services/user-profiles.js"
+    ],
+    "server/services/config-service.js": [
+      "server/server.js"
+    ],
+    "server/services/entity-checkout.js": [
+      "server/services/auth-service.js"
+    ],
+    "server/services/entity-runtime.js": [
+      "server/entityPaths.js",
+      "server/server.js"
+    ],
+    "server/services/llm-interface.js": [
+      "server/services/llm-runtime-utils.js"
+    ],
+    "server/services/llm-service.js": [
+      "server/services/llm-runtime-utils.js"
+    ],
+    "server/services/memory-operations.js": [
+      "server/entityPaths.js",
+      "server/server.js"
+    ],
+    "server/services/memory-retrieval.js": [
+      "server/brain/agent-echo.js",
+      "server/brain/utils/bm25.js",
+      "server/brain/utils/topic-utils.js",
+      "server/entityPaths.js",
+      "server/server.js",
+      "server/services/relationship-service.js"
+    ],
+    "server/services/memory-service.js": [
+      "server/contracts/memory-schema.js",
+      "server/entityPaths.js"
+    ],
+    "server/services/nekocore-memory.js": [
+      "server/services/memory-operations.js",
+      "server/services/post-response-memory.js"
+    ],
+    "server/services/nekocore-pipeline.js": [
+      "server/brain/nekocore/knowledge-retrieval.js",
+      "server/brain/skills/task-runner.js",
+      "server/brain/skills/workspace-tools.js",
+      "server/brain/utils/archive-index.js",
+      "server/brain/utils/rake.js",
+      "server/entityPaths.js",
+      "server/server.js",
+      "server/services/config-runtime.js",
+      "server/services/nekocore-memory.js"
+    ],
+    "server/services/post-response-memory.js": [
+      "server/entityPaths.js",
+      "server/server.js",
+      "server/services/llm-runtime-utils.js",
+      "server/services/relationship-service.js"
+    ],
+    "server/services/relationship-service.js": [
+      "server/entityPaths.js",
+      "server/server.js"
+    ],
+    "server/services/response-postprocess.js": [
+      "server/brain/generation/humanize-filter.js",
+      "server/brain/generation/message-chunker.js",
+      "server/server.js"
+    ],
+    "server/services/runtime-lifecycle.js": [
+      "server/brain/generation/context-consolidator.js",
+      "server/brain/generation/diary-prompts.js",
+      "server/integrations/web-fetch.js",
+      "server/server.js",
+      "server/services/auto-open-browser.js",
+      "server/services/entity-checkout.js"
+    ],
+    "server/services/startup-preflight.js": [
+      "server/entityPaths.js",
+      "server/server.js"
+    ],
+    "server/services/user-profiles.js": [
+      "server/entityPaths.js"
+    ],
+    "server/services/voice-profile.js": [
+      "server/brain/affect/neurochemistry.js",
+      "server/brain/affect/somatic-awareness.js"
+    ],
+    "server/tools/audit-legacy-memory-records.js": [
+      "server/contracts/memory-schema.js",
+      "server/entityPaths.js",
+      "server/tools/backfill-legacy-document-chunks.js",
+      "server/tools/installer-cli.js"
+    ],
+    "server/tools/backfill-legacy-document-chunks.js": [
+      "client/js/pipeline.js",
+      "server/entityPaths.js",
+      "server/tools/audit-legacy-memory-records.js",
+      "server/tools/installer-cli.js"
+    ],
+    "server/tools/installer-cli.js": [
+      "server/brain/nekocore/model-intelligence.js",
+      "server/brain/tasks/task-archive-reader.js",
+      "server/brain/tasks/task-archive-writer.js",
+      "server/brain/tasks/task-project-store.js",
+      "server/tools/audit-legacy-memory-records.js",
+      "server/tools/backfill-legacy-document-chunks.js",
+      "server/tools/installer-marker-engine.js"
+    ]
+  },
+  "circularDependencies": [
+    "client/js/app-window.js ↔ client/js/window-manager.js",
+    "client/js/app.js ↔ client/js/apps/core/chat.js",
+    "client/js/app.js ↔ client/js/apps/core/config-profiles.js",
+    "client/js/app.js ↔ client/js/apps/core/entity-ui.js",
+    "client/js/app.js ↔ client/js/create.js",
+    "client/js/app.js ↔ client/js/desktop.js",
+    "client/js/app.js ↔ client/js/window-manager.js",
+    "client/js/apps/core/chat.js ↔ client/js/apps/core/setup-ui.js",
+    "client/js/apps/core/chat.js ↔ client/js/apps/optional/skills-ui.js",
+    "client/js/apps/core/chat.js ↔ client/js/create.js",
+    "client/js/apps/core/chat.js ↔ client/js/pipeline.js",
+    "client/js/apps/core/chat.js ↔ client/js/sleep.js",
+    "client/js/apps/core/config-profiles.js ↔ client/js/apps/core/setup-ui.js",
+    "client/js/apps/core/config-profiles.js ↔ client/js/apps/core/simple-provider.js",
+    "client/js/apps/core/config-profiles.js ↔ client/js/auth.js",
+    "client/js/apps/core/entity-ui.js ↔ client/js/apps/core/setup-ui.js",
+    "client/js/apps/core/setup-ui.js ↔ client/js/login.js",
+    "client/js/apps/core/telemetry-ui.js ↔ client/js/desktop.js",
+    "client/js/apps/optional/browser-app.js ↔ client/js/window-manager.js",
+    "client/js/apps/optional/document-digest.js ↔ client/js/create.js",
+    "client/js/apps/optional/document-digest.js ↔ server/brain/nekocore/doc-ingestion.js",
+    "client/js/apps/optional/skills-ui.js ↔ client/js/apps/optional/visualizer-ui.js",
+    "client/js/create.js ↔ client/js/window-manager.js",
+    "client/js/create.js ↔ server/brain/nekocore/doc-ingestion.js",
+    "client/js/desktop.js ↔ client/js/login.js",
+    "client/js/desktop.js ↔ client/js/window-manager.js",
+    "client/js/pipeline.js ↔ server/tools/backfill-legacy-document-chunks.js",
+    "server/brain/affect/neurochemistry.js ↔ server/brain/affect/somatic-awareness.js",
+    "server/brain/affect/neurochemistry.js ↔ server/services/voice-profile.js",
+    "server/brain/affect/somatic-awareness.js ↔ server/services/voice-profile.js",
+    "server/brain/nekocore/model-intelligence.js ↔ server/brain/tasks/task-archive-reader.js",
+    "server/brain/nekocore/model-intelligence.js ↔ server/brain/tasks/task-archive-writer.js",
+    "server/brain/nekocore/model-intelligence.js ↔ server/brain/tasks/task-project-store.js",
+    "server/brain/nekocore/model-intelligence.js ↔ server/tools/installer-cli.js",
+    "server/brain/tasks/task-archive-reader.js ↔ server/brain/tasks/task-archive-writer.js",
+    "server/brain/tasks/task-archive-reader.js ↔ server/brain/tasks/task-project-store.js",
+    "server/brain/tasks/task-archive-reader.js ↔ server/tools/installer-cli.js",
+    "server/brain/tasks/task-archive-writer.js ↔ server/brain/tasks/task-project-store.js",
+    "server/brain/tasks/task-archive-writer.js ↔ server/brain/tasks/task-session.js",
+    "server/brain/tasks/task-archive-writer.js ↔ server/brain/utils/archive-router.js",
+    "server/brain/tasks/task-archive-writer.js ↔ server/tools/installer-cli.js",
+    "server/brain/tasks/task-project-store.js ↔ server/brain/utils/archive-router.js",
+    "server/brain/tasks/task-project-store.js ↔ server/tools/installer-cli.js",
+    "server/brain/tasks/task-session.js ↔ server/services/auth-service.js",
+    "server/brain/utils/archive-index.js ↔ server/brain/utils/archive-router.js",
+    "server/routes/archive-routes.js ↔ server/server.js",
+    "server/routes/auth-routes.js ↔ server/server.js",
+    "server/routes/brain-routes.js ↔ server/server.js",
+    "server/routes/browser-routes.js ↔ server/server.js",
+    "server/routes/chat-routes.js ↔ server/server.js",
+    "server/routes/config-routes.js ↔ server/server.js",
+    "server/routes/document-routes.js ↔ server/server.js",
+    "server/routes/entity-chat-routes.js ↔ server/server.js",
+    "server/routes/entity-routes.js ↔ server/server.js",
+    "server/routes/memory-routes.js ↔ server/server.js",
+    "server/routes/nekocore-routes.js ↔ server/server.js",
+    "server/routes/skills-routes.js ↔ server/server.js",
+    "server/routes/task-routes.js ↔ server/server.js",
+    "server/routes/vfs-routes.js ↔ server/server.js",
+    "server/server.js ↔ server/services/chat-pipeline.js",
+    "server/server.js ↔ server/services/memory-operations.js",
+    "server/server.js ↔ server/services/memory-retrieval.js",
+    "server/server.js ↔ server/services/nekocore-pipeline.js",
+    "server/server.js ↔ server/services/runtime-lifecycle.js",
+    "server/server.js ↔ server/services/startup-preflight.js",
+    "server/services/auth-service.js ↔ server/services/entity-checkout.js",
+    "server/tools/audit-legacy-memory-records.js ↔ server/tools/backfill-legacy-document-chunks.js",
+    "server/tools/audit-legacy-memory-records.js ↔ server/tools/installer-cli.js",
+    "server/tools/backfill-legacy-document-chunks.js ↔ server/tools/installer-cli.js"
+  ]
+}
