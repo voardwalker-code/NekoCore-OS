@@ -630,8 +630,20 @@ function createNekoCoreRoutes(ctx) {
         res.end(JSON.stringify({ error: 'Missing message' }));
         return;
       }
+      const trimmed = String(message).trim();
+
+      // ── Slash command intercept — dispatch before LLM pipeline ──
+      const slashInterceptor = require('./slash-interceptor');
+      const nekoCoreEntityId = 'nekocore';
+      const slash = await slashInterceptor.intercept(trimmed, nekoCoreEntityId, ctx);
+      if (slash.handled) {
+        res.writeHead(200, apiHeaders);
+        res.end(JSON.stringify(slash.response));
+        return;
+      }
+
       const result = await ctx.processNekoCoreChatMessage(
-        String(message).trim(),
+        trimmed,
         Array.isArray(chatHistory) ? chatHistory : []
       );
       res.writeHead(200, apiHeaders);

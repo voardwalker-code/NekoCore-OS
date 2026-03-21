@@ -52,6 +52,7 @@ const CORE_REGISTRY = {
   'server/routes/memory-routes.js': 'Memory API routes',
   'server/routes/nekocore-routes.js': 'NekoCore system routes',
   'server/routes/skills-routes.js': 'Skills API routes',
+  'server/routes/slash-interceptor.js': 'Server-side slash command interceptor',
   'server/routes/sse-routes.js': 'Server-sent events routes',
   'server/routes/task-routes.js': 'Task API routes',
   'server/routes/vfs-routes.js': 'Virtual filesystem routes',

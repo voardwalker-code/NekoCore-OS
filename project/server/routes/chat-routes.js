@@ -4,6 +4,7 @@
 
 function createChatRoutes(ctx) {
   const { enforceResponseContract } = require('../contracts/response-contracts');
+  const slashInterceptor = require('./slash-interceptor');
   const logTimeline = (type, payload = {}) => {
     try {
       if (ctx.timelineLogger && typeof ctx.timelineLogger.logEvent === 'function') {
@@ -54,6 +55,17 @@ function createChatRoutes(ctx) {
         res.writeHead(400, apiHeaders);
         res.end(JSON.stringify({ error: 'Missing message' }));
         logTimeline('api.chat.rejected', { reason: 'missing_message' });
+        return;
+      }
+
+      // ── Slash command intercept — dispatch before LLM pipeline ──
+      const entityId = ctx.getActiveEntityId ? ctx.getActiveEntityId() : null;
+      const slash = await slashInterceptor.intercept(userMessage, entityId, ctx);
+      if (slash.handled) {
+        const validatedSlash = enforceResponseContract('/api/chat', slash.response);
+        res.writeHead(200, apiHeaders);
+        res.end(JSON.stringify(validatedSlash));
+        logTimeline('api.chat.slash_command', { command: userMessage.split(/\s+/)[0] });
         return;
       }
 
