@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NekoCore OS — Failsafe Console</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0d0d12;--surface:#16161e;--border:#2a2a3a;--text:#e0e0ef;--muted:#8888a0;--accent:#7c6ff7;--accent2:#9b8aff;--err:#f06070;--ok:#40d880}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center}
+h1{font-size:1.3rem;margin-bottom:.3rem;color:var(--accent2)}
+.sub{font-size:.75rem;color:var(--muted);margin-bottom:1.5rem}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1.6rem 1.8rem;width:min(440px,92vw);box-shadow:0 4px 24px rgba(0,0,0,.5)}
+.card+.card{margin-top:1rem}
+label{display:block;font-size:.78rem;color:var(--muted);margin-bottom:.25rem;margin-top:.75rem}
+label:first-of-type{margin-top:0}
+input,select,textarea{width:100%;padding:.55rem .7rem;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:.85rem;outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--accent)}
+textarea{resize:vertical;min-height:60px;font-family:inherit}
+.row{display:flex;gap:.5rem;align-items:flex-end}
+.row>*{flex:1}
+button{padding:.55rem 1.1rem;border:none;border-radius:6px;background:var(--accent);color:#fff;font-size:.82rem;cursor:pointer;font-weight:600;margin-top:.9rem;transition:background .15s}
+button:hover{background:var(--accent2)}
+button:disabled{opacity:.5;cursor:not-allowed}
+.btn-sm{padding:.35rem .7rem;font-size:.75rem;margin-top:0}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--muted)}
+.btn-outline:hover{border-color:var(--accent);color:var(--text)}
+.btn-danger{background:var(--err)}
+.btn-danger:hover{background:#e04858}
+.err{color:var(--err);font-size:.78rem;margin-top:.4rem;min-height:1rem}
+.ok{color:var(--ok);font-size:.78rem;margin-top:.4rem}
+.hidden{display:none}
+.tag{display:inline-block;padding:.15rem .5rem;border-radius:10px;font-size:.68rem;font-weight:600}
+.tag-ok{background:rgba(64,216,128,.15);color:var(--ok)}
+.tag-err{background:rgba(240,96,112,.15);color:var(--err)}
+.tag-warn{background:rgba(255,180,60,.15);color:#ffb43c}
+.status-bar{display:flex;gap:.6rem;align-items:center;margin-bottom:.8rem;flex-wrap:wrap}
+.chat-box{border:1px solid var(--border);border-radius:8px;height:320px;overflow-y:auto;padding:.7rem;background:var(--bg);margin-bottom:.6rem;scroll-behavior:smooth}
+.msg{margin-bottom:.5rem;padding:.5rem .7rem;border-radius:8px;max-width:88%;font-size:.83rem;line-height:1.45}
+.msg-user{background:rgba(124,111,247,.15);margin-left:auto;text-align:right}
+.msg-neko{background:rgba(255,255,255,.05)}
+.msg-sys{color:var(--muted);font-style:italic;font-size:.75rem;text-align:center;max-width:100%}
+.chat-input{display:flex;gap:.4rem}
+.chat-input input{flex:1}
+.chat-input button{margin-top:0;white-space:nowrap}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:.3rem}
+@keyframes spin{to{transform:rotate(360deg)}}
+footer{margin-top:2rem;font-size:.65rem;color:var(--muted);text-align:center;padding:1rem}
+.section-title{font-size:.9rem;font-weight:700;margin-bottom:.5rem;color:var(--text)}
+</style>
+</head>
+<body>
+
+<!-- ────── PHASE 1: AUTH ────── -->
+<div id="authView">
+  <h1>NekoCore OS</h1>
+  <p class="sub">Failsafe Console — Emergency Recovery Mode</p>
+
+  <div class="card" id="authCard">
+    <div class="status-bar" id="authStatus"></div>
+    <div id="authTabs" style="display:flex;gap:.4rem;margin-bottom:.8rem">
+      <button class="btn-sm" onclick="showTab('login')" id="btnTabLogin">Sign In</button>
+      <button class="btn-sm btn-outline" onclick="showTab('register')" id="btnTabReg">Create Account</button>
+    </div>
+
+    <!-- Login -->
+    <div id="tabLogin">
+      <label>Username</label>
+      <input id="loginUser" autocomplete="username" maxlength="40">
+      <label>Password</label>
+      <input id="loginPass" type="password" autocomplete="current-password" maxlength="128">
+      <div class="err" id="loginErr"></div>
+      <button onclick="doLogin()">Sign In</button>
+    </div>
+
+    <!-- Register -->
+    <div id="tabRegister" class="hidden">
+      <label>Display Name</label>
+      <input id="regDisplay" maxlength="60" placeholder="Your name">
+      <label>Username</label>
+      <input id="regUser" maxlength="40" placeholder="lowercase, no spaces">
+      <label>Password</label>
+      <input id="regPass" type="password" maxlength="128">
+      <label>Bio (optional)</label>
+      <input id="regInfo" maxlength="200">
+      <div class="err" id="regErr"></div>
+      <button onclick="doRegister()">Create Account</button>
+    </div>
+  </div>
+</div>
+
+<!-- ────── PHASE 2: SETUP ────── -->
+<div id="setupView" class="hidden">
+  <h1>NekoCore OS</h1>
+  <p class="sub">Failsafe Console — LLM Setup</p>
+
+  <div class="card">
+    <div class="section-title">LLM Provider</div>
+    <label>Provider</label>
+    <select id="llmType" onchange="updateProviderUI()">
+      <option value="ollama">Ollama (Local)</option>
+      <option value="openrouter">OpenRouter (Cloud)</option>
+    </select>
+
+    <label>Endpoint</label>
+    <input id="llmEndpoint" value="http://localhost:11434" placeholder="http://localhost:11434">
+
+    <div id="apiKeyRow">
+      <label>API Key</label>
+      <input id="llmApiKey" type="password" placeholder="sk-or-...">
+    </div>
+
+    <label>Model</label>
+    <input id="llmModel" placeholder="mistral">
+
+    <div class="err" id="setupErr"></div>
+    <div class="ok hidden" id="setupOk"></div>
+
+    <div style="display:flex;gap:.4rem">
+      <button onclick="testLLM()">Test Connection</button>
+      <button onclick="saveLLM()">Save &amp; Continue</button>
+    </div>
+  </div>
+</div>
+
+<!-- ────── PHASE 3: CHAT ────── -->
+<div id="chatView" class="hidden">
+  <h1>NekoCore OS</h1>
+  <p class="sub">Failsafe Console — Chat</p>
+
+  <div class="card" style="width:min(560px,95vw)">
+    <div class="status-bar" id="chatStatus"></div>
+    <div class="chat-box" id="chatBox"></div>
+    <div class="chat-input">
+      <input id="chatInput" placeholder="Type a message…" maxlength="4000"
+             onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat()}">
+      <button onclick="sendChat()" id="btnSend">Send</button>
+    </div>
+    <div style="margin-top:.5rem;display:flex;gap:.4rem;flex-wrap:wrap">
+      <button class="btn-sm btn-outline" onclick="doLogout()">Sign Out</button>
+      <button class="btn-sm btn-outline" onclick="goSetup()">LLM Settings</button>
+    </div>
+  </div>
+</div>
+
+<footer>NekoCore OS — Failsafe Console v1.0 — Zero-dependency emergency interface</footer>
+
+<script>
+// ====================================================================
+// NekoCore OS — Failsafe Console
+// Single-file, zero-dependency emergency interface.
+// Works even when every other client file is broken.
+// ====================================================================
+
+'use strict';
+
+// ── API helpers ──
+
+async function api(method, path, body) {
+  const opts = { method, headers: {}, credentials: 'same-origin' };
+  if (body !== undefined) {
+    opts.headers['Content-Type'] = 'application/json';
+    opts.body = JSON.stringify(body);
+  }
+  const res = await fetch(path, opts);
+  return res.json();
+}
+const GET  = (p) => api('GET', p);
+const POST = (p, b) => api('POST', p, b);
+
+// ── State ──
+
+let account = null;
+let chatHistory = [];
+let sending = false;
+
+// ── Auth tab switching ──
+
+function showTab(tab) {
+  const login = document.getElementById('tabLogin');
+  const reg   = document.getElementById('tabRegister');
+  const bL    = document.getElementById('btnTabLogin');
+  const bR    = document.getElementById('btnTabReg');
+  if (tab === 'login') {
+    login.classList.remove('hidden'); reg.classList.add('hidden');
+    bL.classList.remove('btn-outline'); bR.classList.add('btn-outline');
+  } else {
+    reg.classList.remove('hidden'); login.classList.add('hidden');
+    bR.classList.remove('btn-outline'); bL.classList.add('btn-outline');
+  }
+}
+
+// ── Auth ──
+
+async function checkAuth() {
+  const statusEl = document.getElementById('authStatus');
+  try {
+    const r = await GET('/api/auth/bootstrap');
+    if (r.authenticated && r.account) {
+      account = r.account;
+      enterSetupOrChat();
+      return;
+    }
+    if (!r.hasAccounts) {
+      statusEl.innerHTML = '<span class="tag tag-warn">No accounts — create one</span>';
+      showTab('register');
+    } else {
+      statusEl.innerHTML = '<span class="tag tag-ok">Server online</span>';
+    }
+  } catch (e) {
+    statusEl.innerHTML = '<span class="tag tag-err">Server offline</span>';
+  }
+}
+
+async function doLogin() {
+  const user = document.getElementById('loginUser').value.trim();
+  const pass = document.getElementById('loginPass').value;
+  const err  = document.getElementById('loginErr');
+  err.textContent = '';
+  if (!user || !pass) { err.textContent = 'Username and password required'; return; }
+  try {
+    const r = await POST('/api/auth/login', { username: user, password: pass });
+    if (!r.ok) { err.textContent = r.error || 'Login failed'; return; }
+    account = r.account;
+    enterSetupOrChat();
+  } catch (e) { err.textContent = 'Server unreachable'; }
+}
+
+async function doRegister() {
+  const display = document.getElementById('regDisplay').value.trim();
+  const user    = document.getElementById('regUser').value.trim();
+  const pass    = document.getElementById('regPass').value;
+  const info    = document.getElementById('regInfo').value.trim();
+  const err     = document.getElementById('regErr');
+  err.textContent = '';
+  if (!display) { err.textContent = 'Display name required'; return; }
+  if (!user || user.length < 2) { err.textContent = 'Username must be 2+ characters, lowercase'; return; }
+  if (!pass || pass.length < 3) { err.textContent = 'Password must be 3+ characters'; return; }
+  try {
+    const r = await POST('/api/auth/register', { username: user, password: pass, displayName: display, info });
+    if (!r.ok) { err.textContent = r.error || 'Registration failed'; return; }
+    account = r.account;
+    enterSetupOrChat();
+  } catch (e) { err.textContent = 'Server unreachable'; }
+}
+
+async function doLogout() {
+  try { await POST('/api/auth/logout'); } catch (_) {}
+  account = null;
+  chatHistory = [];
+  document.getElementById('chatBox').innerHTML = '';
+  show('authView');
+  checkAuth();
+}
+
+// ── Navigation ──
+
+function show(viewId) {
+  ['authView','setupView','chatView'].forEach(id => {
+    document.getElementById(id).classList.toggle('hidden', id !== viewId);
+  });
+}
+
+async function enterSetupOrChat() {
+  // Check if LLM is already configured
+  try {
+    const cfg = await GET('/api/config');
+    if (cfg && cfg.profiles) {
+      const keys = Object.keys(cfg.profiles);
+      if (keys.length > 0) {
+        const p = cfg.profiles[keys[0]];
+        if (p && p.main && p.main.model) {
+          enterChat();
+          return;
+        }
+      }
+    }
+  } catch (_) {}
+  show('setupView');
+  updateProviderUI();
+}
+
+function goSetup() { show('setupView'); updateProviderUI(); }
+
+// ── LLM Setup ──
+
+function updateProviderUI() {
+  const type = document.getElementById('llmType').value;
+  const keyRow = document.getElementById('apiKeyRow');
+  const endpoint = document.getElementById('llmEndpoint');
+  if (type === 'ollama') {
+    keyRow.classList.add('hidden');
+    endpoint.value = endpoint.value || 'http://localhost:11434';
+    document.getElementById('llmModel').placeholder = 'mistral';
+  } else {
+    keyRow.classList.remove('hidden');
+    if (!endpoint.value || endpoint.value === 'http://localhost:11434') {
+      endpoint.value = 'https://openrouter.ai/api/v1';
+    }
+    document.getElementById('llmModel').placeholder = 'qwen/qwen3-30b-a3b:free';
+  }
+}
+
+async function testLLM() {
+  const err = document.getElementById('setupErr');
+  const ok  = document.getElementById('setupOk');
+  err.textContent = ''; ok.textContent = ''; ok.classList.add('hidden');
+  const type     = document.getElementById('llmType').value;
+  const endpoint = document.getElementById('llmEndpoint').value.trim();
+  const model    = document.getElementById('llmModel').value.trim();
+  if (!endpoint || !model) { err.textContent = 'Endpoint and model are required'; return; }
+  try {
+    // For Ollama, try the tags endpoint; for OpenRouter, try a lightweight models list
+    if (type === 'ollama') {
+      const r = await fetch(endpoint + '/api/tags');
+      if (!r.ok) { err.textContent = 'Ollama not responding at ' + endpoint; return; }
+      const data = await r.json();
+      const names = (data.models || []).map(m => m.name);
+      if (names.length === 0) { err.textContent = 'Ollama running but no models installed. Run: ollama pull ' + model; return; }
+      const found = names.some(n => n.startsWith(model));
+      ok.classList.remove('hidden');
+      ok.textContent = found
+        ? 'Connected — model "' + model + '" available (' + names.length + ' models installed)'
+        : 'Connected — ' + names.length + ' models installed but "' + model + '" not found. Available: ' + names.slice(0, 5).join(', ');
+    } else {
+      ok.classList.remove('hidden');
+      ok.textContent = 'OpenRouter endpoint set — will verify on first chat message';
+    }
+  } catch (e) { err.textContent = 'Connection failed: ' + (e.message || 'unreachable'); }
+}
+
+async function saveLLM() {
+  const err = document.getElementById('setupErr');
+  const ok  = document.getElementById('setupOk');
+  err.textContent = ''; ok.textContent = ''; ok.classList.add('hidden');
+  const type     = document.getElementById('llmType').value;
+  const endpoint = document.getElementById('llmEndpoint').value.trim();
+  const apiKey   = document.getElementById('llmApiKey').value.trim();
+  const model    = document.getElementById('llmModel').value.trim();
+  if (!endpoint || !model) { err.textContent = 'Endpoint and model required'; return; }
+  if (type === 'openrouter' && !apiKey) { err.textContent = 'API key required for OpenRouter'; return; }
+
+  const mainCfg = { type, endpoint, model };
+  if (apiKey) mainCfg.apiKey = apiKey;
+
+  // Build a minimal profile where all slots point to the same provider
+  const profile = {
+    main: mainCfg,
+    subconscious: { ...mainCfg },
+    dream: { ...mainCfg },
+    orchestrator: { ...mainCfg },
+    nekocore: { ...mainCfg },
+    _activeTypes: { main: type, subconscious: type, dream: type, orchestrator: type, nekocore: type }
+  };
+  const payload = {
+    configVersion: 1,
+    lastActive: 'failsafe',
+    profiles: { failsafe: profile }
+  };
+  try {
+    const r = await POST('/api/config', payload);
+    if (!r.ok) { err.textContent = r.error || 'Save failed'; return; }
+    ok.classList.remove('hidden');
+    ok.textContent = 'Saved — entering chat...';
+    setTimeout(() => enterChat(), 600);
+  } catch (e) { err.textContent = 'Server unreachable'; }
+}
+
+// ── Chat ──
+
+async function enterChat() {
+  show('chatView');
+  const statusEl = document.getElementById('chatStatus');
+  statusEl.innerHTML = '<span class="tag tag-ok">Online</span>';
+  // Try to load an entity
+  try {
+    const ent = await GET('/api/entity');
+    if (ent.ok && ent.entity) {
+      statusEl.innerHTML += ' <span class="tag tag-ok">' + escapeHtml(ent.entity.name) + '</span>';
+      addMsg('sys', 'Connected to ' + ent.entity.name);
+    } else {
+      // Try loading first available entity
+      const list = await GET('/api/entities');
+      if (list.ok && list.entities && list.entities.length > 0) {
+        const first = list.entities[0];
+        await POST('/api/entities/load', { entityId: first.id });
+        statusEl.innerHTML += ' <span class="tag tag-ok">' + escapeHtml(first.name || first.id) + '</span>';
+        addMsg('sys', 'Loaded entity: ' + (first.name || first.id));
+      } else {
+        statusEl.innerHTML += ' <span class="tag tag-warn">No entity</span>';
+        addMsg('sys', 'No entity loaded — chat will use base NekoCore persona');
+      }
+    }
+  } catch (_) {
+    addMsg('sys', 'Entity check failed — chatting in base mode');
+  }
+  // Connect SSE for follow-ups
+  try {
+    const es = new EventSource('/api/brain/events');
+    es.addEventListener('chat_follow_up', (ev) => {
+      try {
+        const d = JSON.parse(ev.data);
+        if (d.message) addMsg('neko', d.message);
+      } catch (_) {}
+    });
+  } catch (_) {}
+  document.getElementById('chatInput').focus();
+}
+
+async function sendChat() {
+  if (sending) return;
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  addMsg('user', text);
+  chatHistory.push({ role: 'user', content: text });
+
+  sending = true;
+  document.getElementById('btnSend').disabled = true;
+  addMsg('sys', '<span class="spinner"></span>Thinking…');
+  const thinkingEl = document.getElementById('chatBox').lastElementChild;
+
+  try {
+    const r = await POST('/api/chat', {
+      message: text,
+      chatHistory: chatHistory.slice(-20),
+      memoryRecall: true,
+      memorySave: true
+    });
+    thinkingEl.remove();
+    if (r.ok && r.response) {
+      addMsg('neko', r.response);
+      chatHistory.push({ role: 'assistant', content: r.response });
+    } else {
+      addMsg('sys', 'Error: ' + (r.error || 'Empty response'));
+    }
+  } catch (e) {
+    thinkingEl.remove();
+    addMsg('sys', 'Error: Server unreachable');
+  }
+  sending = false;
+  document.getElementById('btnSend').disabled = false;
+  input.focus();
+}
+
+function addMsg(type, text) {
+  const box = document.getElementById('chatBox');
+  const div = document.createElement('div');
+  div.className = 'msg msg-' + type;
+  if (type === 'sys') {
+    div.innerHTML = text;
+  } else {
+    div.textContent = text;
+  }
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+}
+
+function escapeHtml(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+// ── Boot ──
+
+checkAuth();
+</script>
+</body>
+</html>

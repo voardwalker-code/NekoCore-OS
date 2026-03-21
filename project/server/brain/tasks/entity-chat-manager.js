@@ -88,6 +88,43 @@ class EntityChatManager {
       .sort((a, b) => Number(b.updatedAt || 0) - Number(a.updatedAt || 0))
       .slice(0, Math.max(1, Number(limit || 50)));
   }
-}
 
+  /**
+   * Invoke an entity worker within a chat session: call LLM with the entity's
+   * persona and store the response as a message in the session.
+   *
+   * @param {string} sessionId — the chat session
+   * @param {string} entityId — which entity to invoke
+   * @param {Object} options
+   * @param {Function} options.callLLM — async (runtime, messages, opts) => string
+   * @param {Object} [options.runtime] — LLM runtime config
+   * @param {Object} [options.entityFallback] — fallback profile data (name, capabilities)
+   * @returns {Promise<Object|null>} the stored message, or null if session not found/closed
+   */
+  async invokeEntity(sessionId, entityId, options = {}) {
+    const s = this.getSession(sessionId);
+    if (!s || s.status !== 'active') return null;
+
+    const { invokeEntityWorker } = require('./entity-worker-invoker');
+
+    // Build chat history from session messages for context
+    const chatHistory = s.messages.map(m => ({
+      role: m.from === 'system' ? 'system' : 'user',
+      content: `[${m.from}]: ${m.content}`
+    }));
+
+    const result = await invokeEntityWorker(entityId, chatHistory, {
+      callLLM: options.callLLM,
+      runtime: options.runtime || {},
+      sessionPrompt: s.prompt,
+      entityFallback: options.entityFallback || {}
+    });
+
+    // Store the entity's response as a message in the session
+    return this.routeMessage(sessionId, {
+      content: result.content,
+      from: entityId
+    });
+  }
+}
 module.exports = new EntityChatManager();

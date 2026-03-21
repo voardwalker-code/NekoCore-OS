@@ -184,6 +184,72 @@ function finalize(taskArchiveId, finalOutput, opts = {}) {
   return true;
 }
 
+// ── Planning archive methods ──
+
+const { validatePlanningRound, validatePlanningArtifacts } = require('../../contracts/planning-session-contract');
+
+function createPlanningArchive(taskArchiveId, sessionMeta, opts = {}) {
+  const archiveDir = resolveTaskArchivePath(taskArchiveId, opts);
+  if (!archiveDir) throw new Error('Invalid taskArchiveId for planning archive');
+
+  const planningDir = path.join(archiveDir, 'planning');
+  fs.mkdirSync(planningDir, { recursive: true });
+
+  _writeJsonAtomic(path.join(planningDir, 'session.json'), {
+    taskArchiveId,
+    sessionId: sessionMeta.sessionId || null,
+    prompt: sessionMeta.prompt || '',
+    roundCount: sessionMeta.roundCount || 0,
+    consensus: !!sessionMeta.consensus,
+    createdAt: Date.now()
+  });
+
+  _writeJsonAtomic(path.join(planningDir, 'participants.json'),
+    Array.isArray(sessionMeta.participants) ? sessionMeta.participants : []
+  );
+
+  return planningDir;
+}
+
+function appendPlanningRound(taskArchiveId, round, opts = {}) {
+  const archiveDir = resolveTaskArchivePath(taskArchiveId, opts);
+  if (!archiveDir) return false;
+
+  const v = validatePlanningRound(round);
+  if (!v.ok) throw new Error('Invalid planning round: ' + v.errors.join('; '));
+
+  const roundDir = path.join(archiveDir, 'planning', 'round-' + String(round.roundIndex).padStart(2, '0'));
+  fs.mkdirSync(roundDir, { recursive: true });
+
+  for (const resp of round.responses) {
+    const safeId = String(resp.entityId).replace(/[^a-z0-9_-]/gi, '_');
+    _writeJsonAtomic(path.join(roundDir, safeId + '.json'), {
+      entityId: resp.entityId,
+      content: resp.content,
+      writtenAt: Date.now()
+    });
+  }
+
+  return true;
+}
+
+function writePlanningArtifacts(taskArchiveId, artifacts, opts = {}) {
+  const archiveDir = resolveTaskArchivePath(taskArchiveId, opts);
+  if (!archiveDir) return false;
+
+  const v = validatePlanningArtifacts(artifacts);
+  if (!v.ok) throw new Error('Invalid planning artifacts: ' + v.errors.join('; '));
+
+  const planningDir = path.join(archiveDir, 'planning');
+  fs.mkdirSync(planningDir, { recursive: true });
+
+  fs.writeFileSync(path.join(planningDir, 'final-plan.md'), artifacts.finalPlan, 'utf8');
+  fs.writeFileSync(path.join(planningDir, 'decision-rationale.md'), artifacts.decisionRationale, 'utf8');
+  _writeJsonAtomic(path.join(planningDir, 'issues-flagged.json'), artifacts.issuesFlagged);
+
+  return true;
+}
+
 module.exports = {
   parseTaskArchiveId,
   buildTaskArchiveId,
@@ -192,5 +258,8 @@ module.exports = {
   appendStep,
   appendSource,
   saveDraft,
-  finalize
+  finalize,
+  createPlanningArchive,
+  appendPlanningRound,
+  writePlanningArtifacts
 };

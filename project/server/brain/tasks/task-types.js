@@ -10,6 +10,7 @@ const TASK_TYPES = {
   WRITING: 'writing',
   ANALYSIS: 'analysis',
   PLANNING: 'planning',
+  PROJECT: 'project',
   MEMORY_QUERY: 'memory_query'
 };
 
@@ -34,11 +35,11 @@ const DEFAULT_MODULE_CONFIGS = {
     name: 'Code Agent',
     taskType: TASK_TYPES.CODE,
     systemPromptKey: 'task_code',
-    tools: ['ws_read', 'ws_write', 'ws_list', 'ws_append'],
+    tools: ['ws_read', 'ws_write', 'ws_list', 'ws_append', 'ws_delete', 'ws_move', 'ws_mkdir', 'cmd_run'],
     sourceOfTruth: 'workspace_files',
-    maxSteps: 6,
-    maxLLMCalls: 20,
-    description: 'Writes, edits, and manages code in the workspace'
+    maxSteps: 8,
+    maxLLMCalls: 25,
+    description: 'Writes, edits, debugs, and scaffolds real code projects in the workspace'
   },
   [TASK_TYPES.WRITING]: {
     id: 'writing-module',
@@ -72,6 +73,17 @@ const DEFAULT_MODULE_CONFIGS = {
     maxSteps: 12,
     maxLLMCalls: 40,
     description: 'Orchestrates multi-entity collaborative planning sessions'
+  },
+  [TASK_TYPES.PROJECT]: {
+    id: 'project-module',
+    name: 'Project Executor',
+    taskType: TASK_TYPES.PROJECT,
+    systemPromptKey: 'task_project',
+    tools: ['ws_read', 'ws_write', 'ws_list', 'ws_append', 'ws_delete', 'ws_move', 'ws_mkdir', 'web_search', 'web_fetch', 'cmd_run'],
+    sourceOfTruth: 'workspace_files',
+    maxSteps: 10,
+    maxLLMCalls: 40,
+    description: 'Executes multi-phase projects with sequential phase chaining'
   },
   [TASK_TYPES.MEMORY_QUERY]: {
     id: 'memory-module',

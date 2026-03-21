@@ -86,7 +86,7 @@ Return ONLY this JSON (no other text, no markdown, no explanation):
       { role: 'user', content: memPrompt }
     ], { temperature: 0.1, maxTokens: getTokenLimit('memoryEncoding'), timeout: 30000, responseFormat: 'json' });
 
-    let memData = parseJsonBlock(memResult);
+    memData = parseJsonBlock(memResult);
 
     if (!memData) {
       let cleaned = String(memResult || '').trim();

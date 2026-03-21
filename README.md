@@ -22,7 +22,7 @@
   &nbsp;
   <img src="https://img.shields.io/badge/dependencies-0-brightgreen?style=flat-square" alt="zero deps"/>
   &nbsp;
-  <img src="https://img.shields.io/badge/tests-1555%20passing-brightgreen?style=flat-square" alt="1555 tests"/>
+  <a href="https://github.com/voardwalker-code/NekoCore-OS/actions/workflows/ci.yml"><img src="https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/voardwalker-code/BADGE_GIST_ID/raw/nekocore-test-results.json" alt="Tests"/></a>
 </p>
 
 <p align="center">
@@ -37,11 +37,27 @@
 
 <div align="center">
 
-| 1,555 | 0 | 5 |
+| 2,012 | 0 | 5 |
 |:-----:|:-:|:-:|
 | **Tests Passing** | **Runtime Dependencies** | **Pipeline Phases** |
 
 </div>
+
+<br>
+
+> [!WARNING]
+> **ACTIVE DEVELOPMENT — POWERFUL FEATURES, NOT YET BATTLE-TESTED**
+>
+> The `staging` branch contains major new subsystems that are **under active development**:
+> entity orchestration, blueprint-driven project execution, sandboxed code execution (Rust, Python, C/C++, Node.js),
+> a self-repair/diagnostics chain, and a failsafe emergency console.
+>
+> These features have **2,012 passing unit tests** but have **not been stress-tested in production**.
+> Expect rough edges. Back up your `entities/` and `memories/` folders before experimenting.
+>
+> **Python is NOT required to run NekoCore.** The only runtime dependency is Node.js 18+.
+> Python 3 is used *only* by the optional self-repair fixer script (`neko_fixer.py`) — a standalone
+> emergency rebuild tool generated on demand. It uses only the Python 3 standard library.
 
 <br>
 
@@ -200,7 +216,7 @@ The brain loop ticks independently of conversation:
 | **Realtime** | SSE cognitive bus — all pipeline events streamed to the browser |
 | **Visualizer** | Three.js WebGL 3D neural node graph — live cognitive bus events |
 | **Skills** | Drop-in function-call plugins: web search, memory tools, workspace ops |
-| **Test suite** | 1,555 passing — unit + integration (Node built-in `--test` runner) |
+| **Test suite** | 2,012 passing — unit + integration (Node built-in `--test` runner) |
 | **Installer** | Contract-driven app install/uninstall with rollback and file lifecycle |
 
 ### Memory System
@@ -260,17 +276,24 @@ The brain loop ticks independently of conversation:
 ## ◉ Roadmap
 
 ```
-✔  Phase 1    Bug Fixes                       Complete
-✔  Phase 2    Refactor / Cleanup              Complete
-✔  Phase 3    Full App Modularization         Complete  (866 tests, 0 fail)
-✔  Phase 4    Feature Foundation              Complete
-✔  Phase 4.5  Intelligent Memory Expansion    Complete
-✔  Phase 4.6  Slash Command System            Complete  (A0–A2; A3/A4 future)
-✔  Phase 4.7  HTML Shadow Cleanup             Complete  (guard-first refactor)
-✔  Phase 4.8  Cognitive State Integration     Complete  (4 phases, 14 slices)
-✔  Phase 4.8  Token Optimization              Complete  (Phases 1–4, ~68% reduction)
-✔  Phase 4.9  Task Orchestration (MTOA)       Complete  (T-1 → T-7)
-○  Phase 5    Predictive Memory Topology      Next
+✔  Phase 1     Bug Fixes                       Complete
+✔  Phase 2     Refactor / Cleanup              Complete
+✔  Phase 3     Full App Modularization         Complete  (866 tests, 0 fail)
+✔  Phase 4     Feature Foundation              Complete
+✔  Phase 4.5   Intelligent Memory Expansion    Complete
+✔  Phase 4.6   Slash Command System            Complete  (A0–A2; A3/A4 future)
+✔  Phase 4.7   HTML Shadow Cleanup             Complete  (guard-first refactor)
+✔  Phase 4.8   Cognitive State Integration     Complete  (4 phases, 14 slices)
+✔  Phase 4.8   Token Optimization              Complete  (Phases 1–4, ~68% reduction)
+✔  Phase 4.9   Task Orchestration (MTOA)       Complete  (T-1 → T-7)
+✔  Phase 4.10  Entity Orchestration            Complete  (E-0 → E-7)
+✔  Phase 4.11  Blueprint System                Complete
+✔  Phase 4.12  Coding Skill + Project Executor Complete
+✔  Phase 4.13  Health Scanner + Fixer Generator Complete  (self-repair chain)
+✔  Phase 4.14  Sandboxed Code Execution        Complete  (cmd_run tool)
+✔  Phase 4.15  BIOS Completeness + Failsafe    Complete  (300 registry entries)
+✔  Phase 4.16  Self-Repair Skill               Complete  (2,012 tests, 0 fail)
+○  Phase 5     Predictive Memory Topology      Next
 ```
 
 **Token Optimization** eliminated ~68% of per-turn token usage across 4 phases:
@@ -299,8 +322,9 @@ The brain loop ticks independently of conversation:
 
 ### Prerequisites
 
-- Node.js 18+
+- Node.js 18+ *(the only runtime requirement)*
 - An LLM provider — [Ollama](https://ollama.ai) (local) or an [OpenRouter](https://openrouter.ai) API key
+- Python 3 — **not required**. Only used by the optional `neko_fixer.py` self-repair script
 
 ### Clone & Start
 
@@ -411,7 +435,26 @@ Skills live in `project/skills/<name>/`. The entity's LLM invokes them via funct
 
 - `web-search` — searches the web and summarizes results
 - `memory-tools` — query, tag, or reinforce specific memories
+- `search-archive` — search archived conversation history
 - `ws_mkdir` / `ws_move` — workspace file operations
+- `vscode` — VS Code workspace integration
+- `coding` — write, run, test, and debug code projects
+- `python` / `rust` — language-specific programming skills
+- `tutorial-notes` — structured learning note-taking
+- `self-repair` — diagnose and fix NekoCore's own system (health scanner, fixer generator, failsafe console)
+
+### Self-Repair & Failsafe
+
+NekoCore includes a full self-healing chain for disaster recovery:
+
+| Tool | What it does | Requires |
+|------|-------------|----------|
+| **Health Scanner** (`node scripts/health-scan.js`) | Scans 300 core files for missing/corrupt entries | Node.js |
+| **Fixer Generator** (`node scripts/generate-fixer.js`) | Produces `neko_fixer.py` — a standalone rebuild script | Node.js |
+| **neko_fixer.py** | Restores missing/corrupt files from embedded DNA hashes | Python 3 (stdlib only) |
+| **Failsafe Console** (`/failsafe.html`) | Zero-dependency emergency WebGUI — auth, LLM setup, chat | Browser |
+
+> **Python is not required to run NekoCore.** The fixer script is an optional emergency tool generated on demand. It uses only the Python 3 standard library — no pip, no packages.
 
 ### Telegram Integration
 
@@ -434,8 +477,9 @@ NekoCore-OS/
     ├── client/                # Browser frontend (desktop shell + apps)
     ├── server/                # Backend server
     ├── browser-host/          # Browser host modules
-    ├── skills/                # Pluggable skill plugins
-    ├── tests/                 # Unit + integration tests (1,555 passing)
+    ├── skills/                # Pluggable skill plugins (11 skills)
+    ├── scripts/               # Health scanner, fixer generator, safety scripts
+    ├── tests/                 # Unit + integration tests (2,012 passing)
     ├── Config/                # Runtime config template/example
     ├── entities/              # Runtime entity data (gitignored)
     ├── memories/              # System memory (gitignored)

@@ -65,6 +65,7 @@ test('encodeNekoConversationMemory creates core and semantic memory layers for a
       finalResponse: 'I will remember that you like jasmine tea and rainy mornings.',
       innerDialog: { subconscious: { memoryContext: { connections: [] } } },
       memoryEntityId: entityId,
+      memoryEncodingUseNLP: false,
       memoryAspectConfigs: {
         subconscious: { type: 'ollama', model: 'test', endpoint: 'http://localhost' },
         background: { type: 'ollama', model: 'test', endpoint: 'http://localhost' }

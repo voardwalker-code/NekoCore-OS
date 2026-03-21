@@ -217,7 +217,7 @@ test('app.js owns shared chat state: subconsciousBootstrapped', () => {
 test('chat.js exports syncContextChatGuard as window property for app.js access', () => {
   const src = read(CHAT_JS);
   assert.ok(
-    hasDecl(src, 'window.syncContextChatGuard = syncContextChatGuard'),
+    /window\.syncContextChatGuard\s+=\s+syncContextChatGuard/.test(src),
     'chat.js must export syncContextChatGuard as window.syncContextChatGuard'
   );
 });

@@ -26,4 +26,36 @@ jobs:
 
       - name: Run tests
         working-directory: project
-        run: npm test
+        run: |
+          npm test 2>&1 | tee test-output.txt
+          # Fail the step if node exited non-zero (tee masks the exit code)
+          exit ${PIPESTATUS[0]}
+
+      - name: Parse test results
+        if: always()
+        id: test-results
+        working-directory: project
+        run: |
+          PASS=$(grep -oP '# pass \K[0-9]+' test-output.txt || echo "0")
+          FAIL=$(grep -oP '# fail \K[0-9]+' test-output.txt || echo "0")
+          echo "pass=$PASS" >> "$GITHUB_OUTPUT"
+          echo "fail=$FAIL" >> "$GITHUB_OUTPUT"
+          if [ "$FAIL" = "0" ]; then
+            echo "color=brightgreen" >> "$GITHUB_OUTPUT"
+            echo "label=$PASS passing" >> "$GITHUB_OUTPUT"
+          else
+            echo "color=red" >> "$GITHUB_OUTPUT"
+            echo "label=$PASS passing, $FAIL failing" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Update test count badge
+        if: github.ref == 'refs/heads/main' && always()
+        uses: schneegans/dynamic-badges-action@v1.7.0
+        with:
+          auth: ${{ secrets.GIST_SECRET }}
+          gistID: ${{ vars.BADGE_GIST_ID }}
+          filename: nekocore-test-results.json
+          label: tests
+          message: ${{ steps.test-results.outputs.label }}
+          color: ${{ steps.test-results.outputs.color }}
+          style: flat-square

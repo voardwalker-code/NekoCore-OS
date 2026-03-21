@@ -8,6 +8,7 @@ const path = require('node:path');
 const ROOT = path.resolve(__dirname, '..', '..');
 const windowManagerSrc = fs.readFileSync(path.join(ROOT, 'client', 'js', 'window-manager.js'), 'utf8');
 const indexHtmlSrc = fs.readFileSync(path.join(ROOT, 'client', 'index.html'), 'utf8');
+const tabChatHtmlSrc = fs.readFileSync(path.join(ROOT, 'client', 'apps', 'core', 'tab-chat.html'), 'utf8');
 
 test('window titlebar includes minimize plus true left/right snap arrows', () => {
   assert.match(windowManagerSrc, /data-action="minimize" title="Minimize">&#8722;/, 'window-manager.js must provide a minimize titlebar button');
@@ -24,7 +25,7 @@ test('window manager defines minimizeWindow hide behavior', () => {
 
 test('shell close and back buttons no longer render as question marks', () => {
   assert.match(indexHtmlSrc, /aria-label="Close start menu">&#10005;</, 'index.html must render the start menu close button as X');
-  assert.match(indexHtmlSrc, /closeTaskHistory\(\)" title="Close">&#10005;</, 'index.html must render task history close button as X');
-  assert.match(indexHtmlSrc, /closeTaskDetail\(\)" title="Back to history">&#8592; Back</, 'index.html must render task detail back button as a left arrow');
-  assert.match(indexHtmlSrc, /closeTaskDetail\(\)" title="Close">&#10005;</, 'index.html must render task detail close button as X');
+  assert.match(tabChatHtmlSrc, /closeTaskHistory\(\)" title="Close">&#10005;</, 'tab-chat.html must render task history close button as X');
+  assert.match(tabChatHtmlSrc, /closeTaskDetail\(\)" title="Back to history">&#8592; Back</, 'tab-chat.html must render task detail back button as a left arrow');
+  assert.match(tabChatHtmlSrc, /closeTaskDetail\(\)" title="Close">&#10005;</, 'tab-chat.html must render task detail close button as X');
 });

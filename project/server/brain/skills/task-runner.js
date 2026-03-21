@@ -14,6 +14,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const blueprintLoader = require('../tasks/blueprint-loader');
 
 const PLAN_REGEX = /\[TASK_PLAN\]([\s\S]*?)\[\/TASK_PLAN\]/;
 const NEEDS_INPUT_REGEX = /\[NEEDS_INPUT:\s*([^\]]+)\]/;
@@ -172,6 +173,7 @@ function buildStepPrompt(plan, stepIndex, stepOutputs, userMessage, planFileCont
  */
 async function executeTaskPlan(plan, userMessage, options) {
   const {
+    taskType = 'task',
     entityName = 'Entity',
     systemPrompt = '',
     callLLM,
@@ -179,6 +181,7 @@ async function executeTaskPlan(plan, userMessage, options) {
     workspacePath = '',
     webFetch,
     workspaceTools,
+    cmdRun,
     memorySearch,
     memoryCreate,
     skillCreate,
@@ -206,6 +209,10 @@ async function executeTaskPlan(plan, userMessage, options) {
 
     const stepPromptText = buildStepPrompt(plan, i, stepOutputs, userMessage, planFileContent);
 
+    // Inject execution-phase blueprints (tool guide + error recovery + module-specific)
+    const stepBlueprint = blueprintLoader.getBlueprintForPhase(taskType, { phase: 'execute' });
+    const blueprintSection = stepBlueprint ? `\n\n[Execution Instructions]\n${stepBlueprint}` : '';
+
     const systemMsg = `You are ${entityName}. You are executing step ${i + 1} of a ${plan.steps.length}-step task plan.
 Stay in character. Your workspace directory is where you write all output files.
 
@@ -214,7 +221,7 @@ CRITICAL RULES:
 - Do NOT output the full content of documents/stories/code into the chat — write them to files instead
 - If a step involves creating content (writing, research notes, outlines, etc.), ALWAYS write it to a file
 - You may use multiple tools in one response
-- Be thorough but keep CHAT responses concise — the real output goes to workspace files`;
+- Be thorough but keep CHAT responses concise — the real output goes to workspace files${blueprintSection}`;
 
     const messages = [
       { role: 'system', content: systemMsg },
@@ -242,6 +249,7 @@ CRITICAL RULES:
         const toolExec = await workspaceTools.executeToolCalls(stepResponse, {
           workspacePath,
           webFetch,
+          cmdRun,
           memorySearch,
           memoryCreate,
           skillCreate,
@@ -317,10 +325,14 @@ CRITICAL RULES:
       `Step ${s.step} — ${s.description}:\n${s.output}`
     ).join('\n\n');
 
+    // Inject summarize-phase blueprints (quality gate + output format)
+    const summaryBlueprint = blueprintLoader.getBlueprintForPhase(taskType, { phase: 'summarize' });
+    const summaryBpSection = summaryBlueprint ? `\n\n[Before you respond, check these rules]\n${summaryBlueprint}` : '';
+
     const summaryMessages = [
       {
         role: 'system',
-        content: `You are ${entityName}. You have completed a multi-step task for the user. Give a natural, brief summary of what you accomplished and where the files are in your workspace. Stay in character. Do NOT repeat the full content of files — just tell the user what you created and where to find it.`
+        content: `You are ${entityName}. You have completed a multi-step task for the user. Give a natural, brief summary of what you accomplished and where the files are in your workspace. Stay in character. Do NOT repeat the full content of files — just tell the user what you created and where to find it.${summaryBpSection}`
       },
       {
         role: 'user',
@@ -391,11 +403,15 @@ async function runTask(config) {
   }
 
   // Step 1: Call LLM to generate a plan
+  const planBlueprint = blueprintLoader.getBlueprintForPhase(taskType, { phase: 'plan' });
+  const planSystemContent = planBlueprint
+    ? `${systemPrompt}\n\n[Planning Instructions]\n${planBlueprint}`
+    : (systemPrompt || `You are ${entityName}. Create a step-by-step task plan using [TASK_PLAN]...[/TASK_PLAN] blocks.`);
+
   const planMessages = [
     {
       role: 'system',
-      content: systemPrompt ||
-        `You are ${entityName}. Create a step-by-step task plan using [TASK_PLAN]...[/TASK_PLAN] blocks.`
+      content: planSystemContent
     },
     {
       role: 'user',
@@ -436,6 +452,7 @@ async function runTask(config) {
 
   // Step 3: Execute the plan with hooks
   return executeTaskPlan(plan, userMessage, {
+    taskType,
     entityName,
     systemPrompt,
     callLLM,
@@ -443,6 +460,7 @@ async function runTask(config) {
     workspacePath,
     workspaceTools: tools.workspaceTools || null,
     webFetch: tools.webFetch || null,
+    cmdRun: tools.cmdRun || null,
     memorySearch: tools.memorySearch || null,
     memoryCreate: tools.memoryCreate || null,
     onStep,

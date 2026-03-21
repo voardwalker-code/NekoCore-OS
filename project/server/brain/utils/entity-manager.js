@@ -285,6 +285,91 @@ class EntityManager {
     }
   }
 
+  // ── Worker entity constants ──
+  static RESERVED_NAMES = new Set(['nekocore', 'neko', 'echo', 'agentecho']);
+  static WORKER_PREFIX = 'Worker: ';
+
+  /**
+   * Spawn a lightweight worker entity for task delegation.
+   * Creates minimal entity.json + persona.json on disk — no full memory tree.
+   * @param {object} config
+   * @param {string} config.specialty - e.g. 'Research', 'Analysis'
+   * @param {string[]} [config.traits] - personality traits
+   * @param {string} [config.llmStyle] - LLM style hint
+   * @param {string} [config.taskType] - task type this worker handles
+   * @returns {{ id: string, name: string, traits: string[], entityPath: string }}
+   */
+  spawnWorkerEntity(config = {}) {
+    const { specialty = 'General', traits = ['focused', 'efficient'], llmStyle = 'concise', taskType = '' } = config;
+
+    const name = `${EntityManager.WORKER_PREFIX}${specialty}`;
+    // Reserved name guard (compare lowercase sans prefix)
+    if (EntityManager.RESERVED_NAMES.has(specialty.toLowerCase())) {
+      throw new Error(`Cannot spawn worker with reserved name: ${specialty}`);
+    }
+
+    const id = `worker_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    const entityPath = entityPaths.getEntityRoot(id);
+
+    // Create minimal directory — no full memory tree
+    fs.mkdirSync(entityPath, { recursive: true });
+
+    const entityJson = {
+      id,
+      name,
+      gender: 'neutral',
+      personality_traits: traits,
+      creation_mode: 'worker',
+      taskType: taskType || undefined,
+      created: new Date().toISOString()
+    };
+
+    const personaJson = {
+      mood: 'neutral',
+      tone: 'professional',
+      llmStyle,
+      llmPersonality: `A specialist entity focused on ${specialty}.`
+    };
+
+    fs.writeFileSync(path.join(entityPath, 'entity.json'), JSON.stringify(entityJson, null, 2), 'utf-8');
+    const memoriesPath = path.join(entityPath, 'memories');
+    fs.mkdirSync(memoriesPath, { recursive: true });
+    fs.writeFileSync(path.join(memoriesPath, 'persona.json'), JSON.stringify(personaJson, null, 2), 'utf-8');
+
+    console.log(`  ✓ Spawned worker entity: ${name} (${id})`);
+    return { id, name, traits, entityPath };
+  }
+
+  /**
+   * Check whether an entity is a worker (creation_mode === 'worker').
+   * @param {string} entityId
+   * @returns {boolean}
+   */
+  isWorkerEntity(entityId) {
+    try {
+      const canonicalId = entityPaths.normalizeEntityId(entityId);
+      const entityFile = path.join(entityPaths.getEntityRoot(canonicalId), 'entity.json');
+      if (!fs.existsSync(entityFile)) return false;
+      const data = JSON.parse(fs.readFileSync(entityFile, 'utf-8'));
+      return data.creation_mode === 'worker';
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Remove a worker entity directory. Refuses to delete non-worker entities.
+   * @param {string} entityId
+   * @returns {boolean}
+   */
+  cleanupWorkerEntity(entityId) {
+    if (!this.isWorkerEntity(entityId)) {
+      throw new Error(`Entity ${entityId} is not a worker — cleanup refused`);
+    }
+    // Reuse existing deleteEntity which handles recursive removal
+    return this.deleteEntity(entityId);
+  }
+
   /**
    * Get entity state for display
    */

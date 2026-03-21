@@ -7,7 +7,7 @@ const path = require('node:path');
 
 const ROOT = path.resolve(__dirname, '..', '..');
 const telemetrySrc = fs.readFileSync(path.join(ROOT, 'client', 'js', 'apps', 'core', 'telemetry-ui.js'), 'utf8');
-const indexHtmlSrc = fs.readFileSync(path.join(ROOT, 'client', 'index.html'), 'utf8');
+const tabActivityHtmlSrc = fs.readFileSync(path.join(ROOT, 'client', 'apps', 'core', 'tab-activity.html'), 'utf8');
 
 test('task manager telemetry falls back to saved profile provider and models', () => {
   assert.match(telemetrySrc, /function getSavedTaskManagerConfigs\(\)/, 'telemetry-ui.js must expose a saved-profile fallback helper for Task Manager');
@@ -19,8 +19,8 @@ test('task manager telemetry falls back to saved profile provider and models', (
 });
 
 test('task manager headings and placeholders no longer render broken icon glyphs', () => {
-  assert.match(indexHtmlSrc, /&#128187; Task Manager/, 'index.html must render the Task Manager heading with a proper icon');
-  assert.match(indexHtmlSrc, /tmTokensBreakdown">In: 0 • Out: 0</, 'index.html must render the token separator correctly');
-  assert.match(indexHtmlSrc, /id="tmModelSub">—</, 'index.html must render a clean fallback dash for Task Manager models');
-  assert.match(indexHtmlSrc, /&#127760; Browser Status/, 'index.html must render the Browser Status heading with a proper icon');
+  assert.match(tabActivityHtmlSrc, /&#128187; Task Manager/, 'tab-activity.html must render the Task Manager heading with a proper icon');
+  assert.match(tabActivityHtmlSrc, /tmTokensBreakdown">In: 0 • Out: 0</, 'tab-activity.html must render the token separator correctly');
+  assert.match(tabActivityHtmlSrc, /id="tmModelSub">—</, 'tab-activity.html must render a clean fallback dash for Task Manager models');
+  assert.match(tabActivityHtmlSrc, /&#127760; Browser Status/, 'tab-activity.html must render the Browser Status heading with a proper icon');
 });

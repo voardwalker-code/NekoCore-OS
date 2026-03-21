@@ -13,6 +13,7 @@ const entityPaths  = require('../entityPaths');
 const Orchestrator = require('../brain/orchestrator');
 const { createTaskFrontman } = require('../brain/tasks/task-frontman');
 const { createTaskPipelineBridge } = require('../brain/tasks/task-pipeline-bridge');
+const cmdExecutor = require('../integrations/cmd-executor');
 const { resumeWithInput } = require('../brain/tasks/task-executor');
 const { stripInternalResumeTag, runtimeLabel } = require('./llm-runtime-utils');
 const { runPostResponseMemoryEncoding } = require('./post-response-memory');
@@ -122,6 +123,7 @@ function createChatPipeline(deps) {
     getSubconsciousMemoryContext,
     webFetch,
     workspaceTools,
+    cmdRun: cmdExecutor.execCommand,
     logTimeline
   });
 

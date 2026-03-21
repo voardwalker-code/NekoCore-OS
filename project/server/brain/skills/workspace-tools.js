@@ -168,6 +168,9 @@ async function executeToolCalls(responseText, options = {}) {
         case 'ws_move':
           result = await execWsMove(wsRoot, call.params.src, call.params.dst);
           break;
+        case 'ws_mkdir':
+          result = await execWsMkdir(wsRoot, call.params.path);
+          break;
         case 'web_search':
           result = await execWebSearch(webFetch, call.params.query);
           break;
@@ -225,6 +228,17 @@ async function executeToolCalls(responseText, options = {}) {
             result = await options.profileUpdate(call.params);
           } else {
             result = { ok: false, error: 'Profile update not available' };
+          }
+          break;
+        case 'cmd_run':
+          if (options.cmdRun) {
+            result = await options.cmdRun(
+              call.params.cmd || call.params.command || '',
+              wsRoot,
+              { timeout: call.params.timeout ? parseInt(call.params.timeout, 10) : undefined }
+            );
+          } else {
+            result = { ok: false, error: 'Command execution not available' };
           }
           break;
         default:
@@ -306,6 +320,16 @@ async function execWsDelete(wsRoot, relPath) {
   if (!fs.existsSync(filep)) return { ok: true, message: 'Already gone' };
   fs.unlinkSync(filep);
   return { ok: true, message: 'Deleted ' + relPath };
+}
+
+async function execWsMkdir(wsRoot, relPath) {
+  if (!wsRoot) return { ok: false, error: 'No workspace configured' };
+  if (!relPath) return { ok: false, error: 'No path specified' };
+  const dir = resolveSafe(wsRoot, relPath);
+  if (!dir) return { ok: false, error: 'Path outside workspace' };
+  if (fs.existsSync(dir)) return { ok: true, message: 'Directory already exists: ' + relPath };
+  fs.mkdirSync(dir, { recursive: true });
+  return { ok: true, message: 'Created directory: ' + relPath };
 }
 
 async function execWsMove(wsRoot, srcRelPath, dstRelPath) {
@@ -401,6 +425,12 @@ function formatToolResults(toolResults) {
       }
     } else if (tr.result.text) {
       parts.push(tr.result.text.slice(0, 4000));
+    } else if (tr.result.stdout !== undefined || tr.result.stderr !== undefined) {
+      // cmd_run results
+      if (tr.result.stdout) parts.push('STDOUT:\n' + tr.result.stdout.slice(0, 4000));
+      if (tr.result.stderr) parts.push('STDERR:\n' + tr.result.stderr.slice(0, 4000));
+      if (tr.result.exitCode !== undefined) parts.push('Exit code: ' + tr.result.exitCode);
+      if (tr.result.timedOut) parts.push('(command timed out)');
     } else if (tr.result.message) {
       parts.push(tr.result.message);
     }

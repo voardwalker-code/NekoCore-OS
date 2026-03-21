@@ -98,9 +98,59 @@ function getTaskSummary(taskArchiveId, opts = {}) {
   };
 }
 
+// ── Planning archive reader methods ──
+
+function getPlanningRounds(taskArchiveId, opts = {}) {
+  const archiveDir = writer.resolveTaskArchivePath(taskArchiveId, opts);
+  if (!archiveDir) return [];
+
+  const planningDir = path.join(archiveDir, 'planning');
+  if (!fs.existsSync(planningDir)) return [];
+
+  const roundDirs = fs.readdirSync(planningDir)
+    .filter(d => d.startsWith('round-') && fs.statSync(path.join(planningDir, d)).isDirectory())
+    .sort();
+
+  return roundDirs.map(dir => {
+    const roundPath = path.join(planningDir, dir);
+    const match = dir.match(/round-(\d+)/);
+    const roundIndex = match ? parseInt(match[1], 10) : 0;
+
+    const responses = fs.readdirSync(roundPath)
+      .filter(f => f.endsWith('.json'))
+      .sort()
+      .map(f => _readJson(path.join(roundPath, f), null))
+      .filter(Boolean);
+
+    return { roundIndex, responses };
+  });
+}
+
+function getPlanningArtifacts(taskArchiveId, opts = {}) {
+  const archiveDir = writer.resolveTaskArchivePath(taskArchiveId, opts);
+  if (!archiveDir) return null;
+
+  const planningDir = path.join(archiveDir, 'planning');
+  if (!fs.existsSync(planningDir)) return null;
+
+  const planPath = path.join(planningDir, 'final-plan.md');
+  const rationalePath = path.join(planningDir, 'decision-rationale.md');
+  const issuesPath = path.join(planningDir, 'issues-flagged.json');
+
+  if (!fs.existsSync(planPath)) return null;
+
+  return {
+    finalPlan: fs.readFileSync(planPath, 'utf8'),
+    decisionRationale: fs.existsSync(rationalePath) ? fs.readFileSync(rationalePath, 'utf8') : '',
+    issuesFlagged: _readJson(issuesPath, [])
+  };
+}
+
 module.exports = {
   getTaskSummary,
   getStepHistory,
   getSources,
-  getLatestDraft
+  getLatestDraft,
+  getPlanningRounds,
+  getPlanningArtifacts
 };

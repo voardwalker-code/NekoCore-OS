@@ -18,6 +18,7 @@ const archiveIndexPath = path.join(__dirname, '../../server/brain/utils/archive-
 const archiveRoutesPath = path.join(__dirname, '../../server/routes/archive-routes.js');
 const archiveUiJsPath   = path.join(__dirname, '../../client/js/apps/core/archive-ui.js');
 const indexHtmlPath     = path.join(__dirname, '../../client/index.html');
+const tabArchiveHtmlPath = path.join(__dirname, '../../client/apps/core/tab-archive.html');
 
 // ── Temp entity setup (mirrors archive-index.test.js pattern) ────────────────
 
@@ -191,19 +192,19 @@ test('archive-routes.js passes narrowSet to queryArchive (E-6-1)', () => {
 
 // ── E-6-2: Archive UI source + HTML contracts ─────────────────────────────────
 
-test('index.html has archiveSearchMonth input element (E-6-2)', () => {
-  const html = fs.readFileSync(indexHtmlPath, 'utf8');
+test('tab-archive.html has archiveSearchMonth input element (E-6-2)', () => {
+  const html = fs.readFileSync(tabArchiveHtmlPath, 'utf8');
   assert.ok(
     html.includes('archiveSearchMonth'),
-    'index.html must have an element with id="archiveSearchMonth" for month narrowing'
+    'tab-archive.html must have an element with id="archiveSearchMonth" for month narrowing'
   );
 });
 
-test('index.html has archiveSearchSubject input element (E-6-2)', () => {
-  const html = fs.readFileSync(indexHtmlPath, 'utf8');
+test('tab-archive.html has archiveSearchSubject input element (E-6-2)', () => {
+  const html = fs.readFileSync(tabArchiveHtmlPath, 'utf8');
   assert.ok(
     html.includes('archiveSearchSubject'),
-    'index.html must have an element with id="archiveSearchSubject" for subject narrowing'
+    'tab-archive.html must have an element with id="archiveSearchSubject" for subject narrowing'
   );
 });
 

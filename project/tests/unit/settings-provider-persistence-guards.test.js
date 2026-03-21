@@ -9,6 +9,7 @@ const ROOT = path.resolve(__dirname, '..', '..');
 const simpleProviderSrc = fs.readFileSync(path.join(ROOT, 'client', 'js', 'apps', 'core', 'simple-provider.js'), 'utf8');
 const configRoutesSrc = fs.readFileSync(path.join(ROOT, 'server', 'routes', 'config-routes.js'), 'utf8');
 const indexHtmlSrc = fs.readFileSync(path.join(ROOT, 'client', 'index.html'), 'utf8');
+const tabSettingsHtmlSrc = fs.readFileSync(path.join(ROOT, 'client', 'apps', 'core', 'tab-settings.html'), 'utf8');
 
 test('simple provider preserves saved OpenRouter key when settings field is blank', () => {
   assert.match(simpleProviderSrc, /const SIMPLE_PROVIDER_REDACTED_KEY = '••••••••';/, 'simple-provider.js must define the redacted API key sentinel');
@@ -22,8 +23,8 @@ test('entity config route merges redacted keys back before normalizing runtime c
 });
 
 test('settings provider buttons and labels no longer render missing icon placeholders', () => {
-  assert.match(indexHtmlSrc, /simpleProviderBtn-openrouter[\s\S]*&#9729; OpenRouter/, 'index.html must render the OpenRouter settings button with an icon');
-  assert.match(indexHtmlSrc, /simpleProviderBtn-ollama[\s\S]*&#128302; Ollama \(Local\)/, 'index.html must render the Ollama settings button with an icon');
-  assert.match(indexHtmlSrc, /Sign up here &#8599;/, 'index.html must render the OpenRouter signup link with an external-link arrow');
-  assert.match(indexHtmlSrc, /&#9881; Advanced - per-stage model overrides/, 'index.html must render the advanced settings summary without placeholder glyphs');
+  assert.match(tabSettingsHtmlSrc, /simpleProviderBtn-openrouter[\s\S]*&#9729; OpenRouter/, 'tab-settings.html must render the OpenRouter settings button with an icon');
+  assert.match(tabSettingsHtmlSrc, /simpleProviderBtn-ollama[\s\S]*&#128302; Ollama \(Local\)/, 'tab-settings.html must render the Ollama settings button with an icon');
+  assert.match(tabSettingsHtmlSrc, /Sign up here &#8599;/, 'tab-settings.html must render the OpenRouter signup link with an external-link arrow');
+  assert.match(tabSettingsHtmlSrc, /&#9881; Advanced - per-stage model overrides/, 'tab-settings.html must render the advanced settings summary without placeholder glyphs');
 });

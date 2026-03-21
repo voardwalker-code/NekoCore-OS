@@ -44,20 +44,358 @@ Emergency exception log:
 
 ---
 
-## Stop/Resume Snapshot — 2026-03-20 (Entity release on refresh/close fix)
+## Stop/Resume Snapshot — 2026-03-21 (Self-Repair Skill COMPLETE)
 
 - **Current phase:** `Phase 4 — Feature work`
-- **Current slice:** `Bug fix — entity not released on page refresh or chat window close`
-- **Last completed work:** `Fixed entity lingering server-side after page refresh or chat close — sendBeacon release on beforeunload in desktop.js, fetch release on chat window close in window-manager.js, brain loop stop+saveState on server release in entity-routes.js; 1555/1567 full suite (12 pre-existing), 4/4 entity tests`
+- **Current slice:** `None — awaiting next plan`
+- **Last completed work:** `Self-repair skill (skills/self-repair/SKILL.md — teaches Neko how to diagnose, scan, and fix her own system); CORE_REGISTRY now 300 entries; 14 new guard tests; 2012/2012 (0 fail)`
 - **In-progress item:** `none`
 - **Blocking issue:** `none`
-- **Next action on resume:** `Pick next plan from backlog`
+- **Next action on resume:** `Pick up next plan or user request`
 - **Active plans:**
+  - `Documents/current/PLAN-ENTITY-ORCHESTRATION-v1.md` — Phase 4.10: Entity Orchestration — `Complete`
   - `Documents/current/PLAN-TOKEN-OPTIMIZATION-v1.md` — COMPLETE (Phases 1–4 done, Phase 5 cancelled)
   - `Documents/current/PLAN-COGNITIVE-STATE-INTEGRATION-v1.md` — COMPLETE (all 4 phases, 14 slices)
   - `Documents/current/PLAN-INTROSPECTION-LOOP-v1.md` — 6-axis self-inquiry brain-loop phase with local model
 - **Prior plan (paused):** `Documents/current/PLAN-SLASH-COMMAND-SYSTEM-v1.md — A0/A1/A2 complete; A3/A4 future`
 - **Phase 5 plan:** `PLAN-PREDICTIVE-MEMORY-v1.md — held`
+
+---
+
+## Session Ledger — 2026-03-21 (Self-Repair Skill)
+
+Status: `Complete`
+
+- **Purpose:** Give Neko explicit knowledge of her own BIOS, diagnostics, and recovery tools so she can diagnose problems, guide users through repair, and fix herself when asked.
+- Created `skills/self-repair/SKILL.md` (~180 lines) — comprehensive self-repair and diagnostics skill covering: health scanner (scripts/health-scan.js with cmd_run tool syntax, all CLI modes: default, --json, --fix-list), fixer generator (scripts/generate-fixer.js → neko_fixer.py with all modes: dry-run, --repair, --force, --verify, --list), failsafe console (client/failsafe.html URL and purpose), CORE_REGISTRY as source of truth (300 entries), step-by-step diagnosis workflow (run scan → categorize damage → choose repair strategy → verify), UI-broken recovery flow, headless server recovery (SSH + fixer + Telegram), key file locations table, "fix yourself" complete sequence, and "what NOT to do" section
+- Registered `skills/self-repair/SKILL.md` in CORE_REGISTRY — registry now 300 entries
+- Updated `tests/unit/bios-failsafe-guards.test.js` — added 14 new tests (Section 9: self-repair skill structure, frontmatter, scanner/fixer/failsafe coverage, cmd_run syntax, fixer modes, headless recovery, what-not-to-do, fix-yourself sequence, registry check); updated skills count assertion from 10→11; updated registry count from 299→300
+- Tests: 2012/2012 full suite (0 fail), +14 new
+
+Boundary markers: [BOUNDARY_OK]
+
+---
+
+## Session Ledger — 2026-03-21 (BIOS Completeness + Failsafe Console)
+
+Status: `Complete`
+
+- **Purpose:** Close all BIOS registry gaps so the fixer generator embeds every essential file, and build a zero-dependency failsafe emergency WebGUI for disaster recovery.
+- **BIOS registry audit:** Ran full cross-reference of CORE_REGISTRY vs disk. Found 20 files present on disk but not registered. Registered all 20.
+  - Skills (7): memory-tools, search-archive, web-search, vscode, ws_mkdir, ws_move, tutorial-notes
+  - Integrations (1): telegram.js
+  - Services (1): voice-profile.js
+  - Contracts (6): vfs-drive-mapping schema+example, installer-uninstaller schema+example, installer-hello-world example, payloads/tab-hello-world template
+  - Brain (3): agent-echo.js, bulk-ingest.js, memory-images.js
+  - Client (2): system-apps.schema.json, neural-viz.js wrapper
+- CORE_REGISTRY grew from 278 → 299 entries (20 gap files + 1 failsafe.html)
+- **Failsafe Console:** Created `client/failsafe.html` — single-file, zero-external-dependency emergency WebGUI
+  - Phase 1: Auth — login/register forms hitting `/api/auth/login` + `/api/auth/register` + `/api/auth/bootstrap`
+  - Phase 2: LLM Setup — Ollama or OpenRouter provider config, test connection, save to `/api/config`
+  - Phase 3: Chat — full chat interface hitting `/api/chat` with chat history, memory recall/save, SSE follow-up listener (`/api/brain/events` → `chat_follow_up`), entity auto-load
+  - All inline (CSS + JS in single HTML file), works even if every other client file is broken
+  - Accessible at `http://localhost:3847/failsafe.html`
+- Created `tests/unit/bios-failsafe-guards.test.js` — 68 tests across 11 sections: registry count (1), skills completeness (11+dynamic), integrations completeness (6), services (3), contracts (6), brain gaps (3), client gaps (2), failsafe registry (1), failsafe existence (2), failsafe structure (15), no stale entries (18 disk checks)
+- Tests: 1998/1998 full suite (0 fail), +68 new
+
+Boundary markers: [BOUNDARY_OK]
+
+---
+
+## Session Ledger — 2026-03-21 (cmd_run Tool + Rust/Python Skills)
+
+Status: `Complete`
+
+- **Purpose:** Enable entities to compile, run, and test code in Rust, Python, and other languages via a sandboxed shell execution tool (`cmd_run`), plus provide structured Rust and Python skills.
+- Created `server/integrations/cmd-executor.js` (~250 lines) — sandboxed command executor: COMMAND_WHITELIST (20+ commands: cargo, rustc, rustfmt, python, python3, pip, pip3, node, npm, npx, gcc, g++, make, cmake, go, git, cat, head, tail, wc, ls, dir, find, grep, type); subcommand restrictions per command; BLOCKED_PATTERNS (shell metacharacters, directory traversal, redirects, destructive commands, shell escape commands); parseCommand() tokenizer with whitelist + blocked pattern validation; execCommand() with child_process.spawn (shell:false, workspace jail, timeout enforcement, output truncation at 16KB, CI env vars); getAvailableCommands() for prompt injection; exports: execCommand, parseCommand, getAvailableCommands, COMMAND_WHITELIST, constants
+- Modified `server/brain/skills/workspace-tools.js` — added `case 'cmd_run':` dispatch (calls options.cmdRun with workspace path + timeout); added cmd_run output formatting in formatToolResults (STDOUT/STDERR blocks, exit code, timed-out indicator)
+- Modified `server/brain/tasks/task-types.js` — added `cmd_run` to CODE and PROJECT task type tool lists
+- Modified `server/services/chat-pipeline.js` — imports cmd-executor, passes `cmdRun: cmdExecutor.execCommand` to bridge deps
+- Modified `server/brain/tasks/task-pipeline-bridge.js` — threads `cmdRun` through all three allTools assembly points (delegation, project, standard)
+- Modified `server/brain/skills/task-runner.js` — passes `cmdRun` through to executeToolCalls options
+- Created `skills/rust/SKILL.md` (~300 lines) — comprehensive Rust skill: cargo lifecycle (build/run/test/check/clippy/fmt), project scaffolding (CLI, library, web API), Rust patterns (structs, enums, traits, Result/?, iterators, collections), Cargo.toml patterns, common crates table (15 entries), debugging workflow with error code table (E0382/E0308/E0502/E0433/E0599), testing patterns
+- Created `skills/python/SKILL.md` (~300 lines) — comprehensive Python skill: script/project creation, pip management, Python patterns (classes, error handling, pathlib, requests, collections, comprehensions, context managers), common packages table (17 entries), testing (unittest + pytest), requirements.txt patterns, debugging workflow with error type table (8 types), project scaffolding (script, CLI, Flask API, data pipeline)
+- Modified `skills/coding/SKILL.md` — added cmd_run tool reference and updated package installation rule
+- Modified `scripts/health-scan.js` — added 3 entries to CORE_REGISTRY (cmd-executor.js, rust/SKILL.md, python/SKILL.md); registry now 278 entries
+- Created `tests/unit/cmd-run-guards.test.js` — 70 tests across 10 sections: command whitelist (8), parseCommand security (18), execCommand validation (6), module exports (5), workspace-tools dispatch (4), task-types integration (5), Rust skill structure (7), Python skill structure (7), coding skill update (1), pipeline wiring (5), CORE_REGISTRY coverage (3)
+- Updated `tests/unit/project-executor-guards.test.js` — updated PROJECT tool list assertion to include cmd_run
+- Tests: 1930/1930 full suite (0 fail), +70 new
+
+Boundary markers: [BOUNDARY_OK] [CONTRACT_ENFORCED]
+
+---
+
+## Session Ledger — 2026-03-21 (Health Scanner + Fixer Generator)
+
+Status: `Complete`
+
+- **Purpose:** System diagnostics and self-healing BIOS — scanner finds broken/missing/malformed files across the entire core, fixer generator produces a standalone Python script that can rebuild the core from embedded DNA.
+- Created `scripts/health-scan.js` — 275-entry CORE_REGISTRY mapping every essential file with descriptions; multi-pass scanning: existence/size check, JS syntax validation (vm.Script), require() reference checking, JSON parse validation (with BOM detection), HTML tag matching, CSS brace matching; unregistered file detection in core directories; report output: console + `scripts/health-report.log`; CLI modes: default (full report), --json, --fix-list; exports: CORE_REGISTRY, runScan
+- Created `scripts/generate-fixer.js` — reads all CORE_REGISTRY files, Base64-encodes each with SHA-256 hash, generates standalone Python 3 repair script (neko_fixer.py); generated script supports: dry-run integrity check, --repair (missing/empty only), --force (full restore), --verify (hash check), --list (inventory); zero dependencies (Python 3 stdlib only), cross-platform; CLI: --output, --dry-run; exports: generateFixer
+- Updated `.gitignore` — added `project/neko_fixer.py` (generated build artifact)
+- Created `tests/unit/health-scanner-guards.test.js` — 41 tests across 8 sections: CORE_REGISTRY structure (13), core files exist on disk (2), scanner engine exports (1), fixer generator exports + dry-run (3), script file existence (4), path safety (3), subsystem coverage (11), gitignore coverage (2)
+- Validated: scanner ran against live project (275 files, 275 healthy, 0 missing, 0 zero-byte); generator produced 59,458-line neko_fixer.py (4.8 MB, 275 embedded files)
+- Tests: 1860/1860 full suite (0 fail), +41 new
+
+Boundary markers: [BOUNDARY_OK]
+
+---
+
+## Session Ledger — 2026-03-20 (Project Executor)
+
+Status: `Complete`
+
+- **Purpose:** Enable full end-to-end project execution — NekoCore can now decompose a project plan into ordered phases, execute each phase as a full task (with its own step loop, tool calls, and blueprints), and feed completed phase outputs into subsequent phases as context.
+- Created `server/brain/tasks/project-executor.js` (~440 lines)
+  - `executeProject(config)` — main entry: LLM-decomposes plan into [PROJECT_PHASES] block, loops through phases executing each via `executeTaskFn`, feeds completed phase outputs as context snippets to next phase, retries once per failed phase, generates final summary
+  - `parseProjectPhases(text)` — regex parser for `[PROJECT_PHASES]...[/PROJECT_PHASES]` block with per-line `- Phase N: description | type: taskType | depends: N,N` format
+  - `stripPhasesBlock(text)` — removes phases block from text
+  - `buildPhaseContext(completedPhases)` — builds `[COMPLETED PROJECT PHASES]` context string from completed phases
+  - `_decomposePlan()` — LLM call to break user request into structured phases
+  - `_buildPhaseMessage()` — constructs phase-specific task message with original request, phase description, and prior phase context
+  - `_generateProjectSummary()` — LLM call to summarize completed project across all phases
+  - Events emitted: project_started, project_phase_started, project_phase_complete, project_phase_failed, project_phase_retry, project_complete
+  - Limits: MAX_PHASES = 10, MAX_PHASE_RETRIES = 1
+  - Fallback: if no phases parsed, delegates to single executeTaskFn call
+- Created `server/brain/tasks/blueprints/modules/project.md` — project execution blueprint with phase patterns (code/research/writing), rules for building on prior work, and common mistakes section
+- Modified `server/brain/tasks/task-types.js` — added `PROJECT: 'project'` to TASK_TYPES, added project-module config (9 tools: ws_read/ws_write/ws_list/ws_append/ws_delete/ws_move/ws_mkdir/web_search/web_fetch, maxSteps 10, maxLLMCalls 40)
+- Modified `server/brain/tasks/blueprint-loader.js` — added `project: 'project'` to MODULE_MAP
+- Modified `server/brain/tasks/task-pipeline-bridge.js` — added project-executor import, routing check for `classification.taskType === 'project'`, and `_handleProjectExecution()` function (creates session/archive, gathers context, fires executeProject async, returns immediate response)
+- Fixed regex bug in parseProjectPhases: lazy `.+?` with optional suffix groups was consuming everything; switched to `[^|]+?` with `\s*` spacing between groups so type and depends are correctly captured
+- Created `tests/unit/project-executor-guards.test.js` — 44 tests across 12 sections: constants, phase parsing (8 cases), strip block, context building, config validation, fallback path, multi-phase execution, failed phase retry, context feeding, event emission, TASK_TYPES registration, blueprint existence, pipeline bridge integration, module exports
+- Tests: 1819/1819 full suite (0 fail), +44 new
+
+Boundary markers: [BOUNDARY_OK] [CONTRACT_ENFORCED]
+
+---
+
+## Session Ledger — 2026-03-20 (Entity Orchestration E-0)
+
+Status: `Complete`
+
+- Plan: `Documents/current/PLAN-ENTITY-ORCHESTRATION-v1.md` — slice E-0 (Guard tests + entity network config)
+- `entity-network.json` confirmed present with 3 seed entities (Research, Analysis, Synthesis) — registry loads all 3
+- Created `server/contracts/planning-session-contract.js` — validates planning sessions, rounds, participants, and artifacts; exports PLANNING_LIMITS (3 rounds, 4 entities, 800 tokens, 120s timeout)
+- Created `tests/unit/entity-orchestration-guards.test.js` — 41 guard tests across 6 sections: entity network registry (9), entity chat manager CRUD (11), planning session contract validation (14), task pipeline bridge planning lock (2), task module registry planning module (2), security guards (3)
+- Tests: 1608/1608 full suite (0 fail), +41 new
+
+Boundary markers: [BOUNDARY_OK] [CONTRACT_ENFORCED]
+
+---
+
+## Session Ledger — 2026-03-20 (Entity Orchestration E-1)
+
+Status: `Complete`
+
+- Plan: `Documents/current/PLAN-ENTITY-ORCHESTRATION-v1.md` — slice E-1 (Entity worker invocation)
+- Created `server/brain/tasks/entity-worker-invoker.js` — loads entity persona from disk, builds persona-based system prompt, calls LLM; exports `invokeEntityWorker()`, `loadEntityProfile()`, `buildEntityWorkerPrompt()`
+- Modified `server/brain/tasks/entity-chat-manager.js` — added `invokeEntity(sessionId, entityId, options)` method that calls entity-worker-invoker and stores response as a session message
+- Added 12 guard tests to `entity-orchestration-guards.test.js` (Sections 7+8): entity worker invoker persona loading, prompt building, graceful missing-entity fallback; EntityChatManager.invokeEntity integration
+- Tests: 1620/1620 full suite (0 fail), +12 new (53 total entity-orchestration tests)
+
+Boundary markers: [BOUNDARY_OK]
+
+---
+
+## Session Ledger — 2026-03-20 (Entity Orchestration E-4)
+
+Status: `Complete`
+
+- Plan: `Documents/current/PLAN-ENTITY-ORCHESTRATION-v1.md` — slice E-4 (Planning archive)
+- Added 3 planning archive methods to `server/brain/tasks/task-archive-writer.js`:
+  - `createPlanningArchive(taskArchiveId, sessionMeta, opts)` — creates `planning/` subdir with session.json + participants.json
+  - `appendPlanningRound(taskArchiveId, round, opts)` — writes `round-{nn}/` with per-entity JSON files; validates via planning-session-contract
+  - `writePlanningArtifacts(taskArchiveId, artifacts, opts)` — writes final-plan.md, decision-rationale.md, issues-flagged.json; validates via contract
+- Added 2 planning archive reader methods to `server/brain/tasks/task-archive-reader.js`:
+  - `getPlanningRounds(taskArchiveId, opts)` — reads all round directories and entity responses
+  - `getPlanningArtifacts(taskArchiveId, opts)` — reads final plan, rationale, and issues
+- Added 10 guard tests in Section 11 of `entity-orchestration-guards.test.js`: create planning archive, append round, reject invalid round, write artifacts, reject invalid artifacts, read rounds round-trip, read artifacts round-trip, empty returns for missing archives, archive test cleanup
+- Tests: 1656/1656 full suite (0 fail), +10 new (89 total entity-orchestration tests)
+
+Boundary markers: [BOUNDARY_OK] [CONTRACT_ENFORCED]
+
+---
+
+## Session Ledger — 2026-03-20 (Entity Orchestration E-5)
+
+Status: `Complete`
+
+- Plan: `Documents/current/PLAN-ENTITY-ORCHESTRATION-v1.md` — slice E-5 (Task delegation to worker entities)
+- Modified `server/brain/tasks/task-pipeline-bridge.js`:
+  - Added `shouldDelegate(classification, userMessage)` — heuristic: delegates research/analysis tasks when confidence >= 0.85 and message length >= 100
+  - Added `_handleDelegation()` — spawns worker via EntityManager, runs executor with worker context, archives attributed to requesting entity, cleans up worker on completion
+  - Delegation check inserted before standard task dispatch — planning > delegation > normal
+  - `shouldDelegate` exported on bridge return object for testability
+- Added 6 guard tests in Section 12: shouldDelegate true/false for various conditions, export check
+- Tests: 1662/1662 full suite (0 fail), +6 new (95 total entity-orchestration tests)
+
+Boundary markers: [BOUNDARY_OK]
+
+---
+
+## Session Ledger — 2026-03-20 (Entity Orchestration E-6)
+
+Status: `Complete`
+
+- Plan: `Documents/current/PLAN-ENTITY-ORCHESTRATION-v1.md` — slice E-6 (Integration)
+- Replaced canned planning branch in `task-pipeline-bridge.js` with real async orchestrator call: builds participant list from registry, creates task session + archive, fires `runPlanningSession()` async, archives rounds + artifacts, closes session
+- Updated E-0 guard test to reflect new behavior (task session instead of entity chat session)
+- Added 5 integration guard tests in Section 13
+- Tests: 1667/1667 full suite (0 fail), +5 new (100 total entity-orchestration tests)
+
+Boundary markers: [BOUNDARY_OK]
+
+---
+
+## Session Ledger — 2026-03-20 (Entity Orchestration E-3)
+
+Status: `Complete`
+
+- Plan: `Documents/current/PLAN-ENTITY-ORCHESTRATION-v1.md` — slice E-3 (Planning deliberation loop)
+- Created `server/brain/tasks/planning-orchestrator.js` — async deliberation engine:
+  - `runPlanningSession(config)` — entity resolution, round loop (max 3), sequential entity invocation per round, NekoCore moderator consensus detection, final synthesis; emits `planning_round_complete` and `planning_complete` events on task event bus
+  - `_parseModerationResponse()` — extracts JSON or falls back to keyword heuristic for consensus
+  - `_parseSynthesisResponse()` — extracts final plan JSON or falls back to plain text
+- Entity cap (4) and round cap (3) enforced from PLANNING_LIMITS
+- Session closed with artifacts on completion
+- Graceful LLM failure handling (moderation falls through, synthesis provides fallback)
+- Added 14 guard tests in Section 10 of `entity-orchestration-guards.test.js`: module exports, input validation, 1-round consensus, maxRounds cap, entity cap, event bus emission, JSON/keyword moderation parsing, synthesis parsing, LLM failure, session closure
+- Tests: 1646/1646 full suite (0 fail), +14 new (79 total entity-orchestration tests)
+
+Boundary markers: [BOUNDARY_OK]
+
+---
+
+## Session Ledger — 2026-03-20 (Entity Orchestration E-2)
+
+Status: `Complete`
+
+- Plan: `Documents/current/PLAN-ENTITY-ORCHESTRATION-v1.md` — slice E-2 (Entity spawning for tasks)
+- Added 3 methods to `server/brain/utils/entity-manager.js`:
+  - `spawnWorkerEntity(config)` — creates lightweight entity directory with minimal entity.json (creation_mode: 'worker') + persona.json; names prefixed "Worker: {specialty}"; reserved name guard enforced
+  - `isWorkerEntity(entityId)` — checks entity.json for creation_mode === 'worker'
+  - `cleanupWorkerEntity(entityId)` — removes worker entity directory; refuses non-workers
+- Added static constants `RESERVED_NAMES` and `WORKER_PREFIX` to EntityManager class
+- Added 12 guard tests in Section 9 of `entity-orchestration-guards.test.js`: spawn creates valid structure, entity/persona JSON shapes, reserved name rejection, defaults, isWorkerEntity true/false, cleanup works/refuses, invoker integration
+- Tests: 1632/1632 full suite (0 fail), +12 new (65 total entity-orchestration tests)
+
+Boundary markers: [BOUNDARY_OK]
+
+---
+
+## Session Ledger — 2026-03-20 (Entity Orchestration E-7)
+
+Status: `Complete`
+
+- Plan: `Documents/current/PLAN-ENTITY-ORCHESTRATION-v1.md` — slice E-7 (Exit audit + docs)
+- Updated CHANGELOG.md with Phase 4.10 Entity Orchestration entry documenting all new files, methods, and capabilities
+- Marked plan status `Complete`, all 7 phases complete, all slices E-0 through E-7 checked off
+- Updated WORKLOG stop/resume snapshot to reflect plan completion
+- Final test count: 1667/1667 (0 fail), 100 entity-orchestration guard tests across 13 sections
+- Plan deliverables: planning-orchestrator.js, entity-worker-invoker.js, planning-session-contract.js, entity-network.json; EntityManager worker methods; archive writer/reader planning methods; delegation heuristic; full integration wiring
+
+Boundary markers: [BOUNDARY_OK]
+
+---
+
+## Session Ledger — 2026-03-20 (Coding Skill)
+
+Status: `Complete`
+
+- Created `skills/coding/SKILL.md` — comprehensive coding skill for entities to write real code files
+  - Tool reference: ws_write, ws_read, ws_list, ws_append, ws_delete, ws_move, ws_mkdir with syntax examples
+  - 5 critical rules: complete files, read-before-edit, list-before-read, one-file-per-write, escape quotes
+  - Step-by-step workflows for creating, editing, and debugging code
+  - Language patterns: JavaScript/Node.js, Python, HTML, CSS
+  - Project scaffolding templates: Node.js, Node.js with tests, static website, Python project
+  - Code quality checklist, debugging workflow, session notes pattern
+  - Explicit "What NOT to Do" section for small LLM compliance
+  - Auto-migrates to entities via existing SkillManager.migrateGlobalSkills()
+- Added `ws_mkdir` tool to `server/brain/skills/workspace-tools.js`
+  - `execWsMkdir(wsRoot, relPath)` — create directories recursively
+  - Path-traversal protection via existing `resolveSafe()`
+  - Idempotent: succeeds if directory already exists
+- Updated code module in `server/brain/tasks/task-types.js`
+  - Tools: ws_read, ws_write, ws_list, ws_append, ws_delete, ws_move, ws_mkdir (was 4 tools → now 7)
+  - maxSteps: 8 (was 6), maxLLMCalls: 25 (was 20) — supports multi-file projects
+- Enhanced code blueprint `server/brain/tasks/blueprints/modules/code.md`
+  - Added multi-file project plan pattern with step-by-step scaffolding order
+  - Added mandatory workflow section (LIST → READ → WRITE COMPLETE)
+  - Added ws_delete, ws_move, ws_mkdir to tool documentation
+  - Added "Common Mistakes to Avoid" section
+- Created `tests/unit/coding-skill-guards.test.js` — 49 tests across 7 sections:
+  - SKILL.md existence/structure (5), content completeness (14), code module tools (10)
+  - ws_mkdir execution (6), blueprint enhancements (9), scaffolding integration (2), registry reflection (3)
+- Tests: 1775/1775 full suite (0 fail), +49 new
+
+Boundary markers: [BOUNDARY_OK]
+
+---
+
+## Session Ledger — 2026-03-20 (Task Blueprint System)
+
+Status: `Complete`
+
+- Created 5 core blueprints in `server/brain/tasks/blueprints/core/`:
+  - `task-decomposition.md` — how to break tasks into [TASK_PLAN] steps, step count guide, when to ask for input
+  - `tool-guide.md` — complete tool reference with format examples and when-to-use guidance
+  - `quality-gate.md` — completeness/accuracy/scope/output checklist before submission
+  - `error-recovery.md` — decision tree for failures, retry rules, graceful degradation
+  - `output-format.md` — chat vs file rules, file naming, structure templates, special tags
+- Created 5 module blueprints in `server/brain/tasks/blueprints/modules/`:
+  - `research.md` — search→evaluate→extract→write pattern, source evaluation, citation rules
+  - `code.md` — new/edit/debug patterns, read-before-write, debugging sequence
+  - `writing.md` — article/creative/editing patterns, audience-purpose-tone, sentence craft
+  - `analysis.md` — data/comparison/diagnosis patterns, evidence evaluation, confidence rating
+  - `planning.md` — deliberation flow, consensus checking, moderation/synthesis JSON formats
+- Created `server/brain/tasks/blueprint-loader.js` — loads/caches markdown blueprints, phase-aware assembly (plan/execute/summarize), `getBlueprintForPhase(taskType, {phase})` returns appropriate combination of core + module blueprints
+- Wired into `task-executor.js` — `buildTaskSystemPrompt` now injects execute-phase blueprints via `[Task Blueprints]` section
+- Wired into `task-runner.js` — plan generation gets plan-phase blueprint, step execution gets execute-phase blueprint, final summary gets summarize-phase blueprint; `taskType` now passed through to `executeTaskPlan`
+- Wired into `planning-orchestrator.js` — moderation and synthesis prompts now include planning module blueprint
+- Created `tests/unit/blueprint-system-guards.test.js` — 59 tests across 10 sections: file existence (12), content quality (6), loader exports (9), reading (12), phase assembly (7), caching (2), listing (2), executor integration (4), runner integration (2), orchestrator integration (3)
+- All blueprints optimized for small/local LLMs: numbered instructions, concrete examples, positive framing, output format enforcement, decision trees, explicit do/don't rules
+- Tests: 1726/1726 full suite (0 fail), +59 new
+
+Boundary markers: [BOUNDARY_OK]
+
+---
+
+## Session Ledger — 2026-03-20 (Dynamic CI test badge)
+
+Status: `Complete`
+
+- Issue: README test badge was hardcoded shields.io static badge (`tests-1567%20passing`) that goes stale every time test count changes
+- Fix: CI workflow now captures `npm test` output via `tee`, parses `# pass` and `# fail` counts with grep, and uses `schneegans/dynamic-badges-action@v1.7.0` to write a JSON badge file to a GitHub Gist; README badge replaced with `img.shields.io/endpoint?url=<gist-raw-url>` pointing to that Gist; badge auto-updates on every push to main; shows green when 0 failures, red with "X passing, Y failing" when failures exist
+- Files changed: `.github/workflows/ci.yml` (test output capture + parse + Gist update step), `README.md` (static badge → dynamic endpoint badge)
+- Setup required: user must create a GitHub Gist and add `GIST_SECRET` (PAT with gist scope) + `BADGE_GIST_ID` (repo variable) to the repo settings; README Gist URL placeholder needs the real Gist ID
+
+Boundary markers: [BOUNDARY_OK]
+
+---
+
+## Session Ledger — 2026-03-20 (CI test fix — 12 pre-existing failures)
+
+Status: `Complete`
+
+- Issue: CI failing — 12 guard tests still checking `index.html` for DOM elements that were extracted to `tab-*.html` files during HTML shadow cleanup (Phase 4.7); plus 1 string-match mismatch and 1 variable-scoping bug
+- Root causes:
+  1. 10 tests read `client/index.html` for elements now in `tab-archive.html`, `tab-settings.html`, `tab-activity.html`, `tab-chat.html`, `tab-creator.html`, `tab-nekocore.html`
+  2. `chat-extraction-guards.test.js` used `includes()` with single space for a double-space export line `window.syncContextChatGuard  = syncContextChatGuard`
+  3. `post-response-memory.js` LLM path had a `let memData` shadowing the outer `memData`, so the LLM result was lost after the else block ended — `nekocore-memory.test.js` discovered this
+- Fix (9 files):
+  - `tests/unit/archive-query-narrowset-guards.test.js` — Read `tab-archive.html` for archiveSearchMonth/archiveSearchSubject
+  - `tests/unit/chat-extraction-guards.test.js` — Use regex `/window\.syncContextChatGuard\s+=\s+syncContextChatGuard/` instead of `includes()`
+  - `tests/unit/nekocore-memory.test.js` — Pass `memoryEncodingUseNLP: false` to force LLM path (test has LLM mock)
+  - `tests/unit/settings-provider-persistence-guards.test.js` — Read `tab-settings.html` for provider buttons
+  - `tests/unit/system-apps-manifest-guards.test.js` — Read `tab-creator.html` and `tab-nekocore.html` for iframe hosts
+  - `tests/unit/task-manager-fallback-guards.test.js` — Read `tab-activity.html` for Task Manager/Browser Status icons
+  - `tests/unit/task-ui-guards.test.js` — Read `tab-chat.html` for task badge/panels, `tab-activity.html` for tmActiveTaskSection
+  - `tests/unit/window-titlebar-controls-guards.test.js` — Read `tab-chat.html` for task history/detail buttons (start menu close stays in `index.html`)
+  - `server/services/post-response-memory.js` — Fixed `let memData` → `memData` in LLM path to use outer-scoped variable
+- Tests: 1567/1567 full suite (0 fail)
+- README: Updated test count 1555 → 1567 in badge, spec table, and directory tree
+
+Boundary markers: [BOUNDARY_OK]
 
 ---
 

@@ -23,6 +23,8 @@ const schema = readJson(SCHEMA_PATH);
 const legacyManifest = readJson(LEGACY_MANIFEST_PATH);
 const nonCoreManifest = readJson(NON_CORE_MANIFEST_PATH);
 const indexHtml = fs.readFileSync(INDEX_PATH, 'utf8');
+const tabCreatorHtml = fs.readFileSync(path.join(ROOT, 'client', 'apps', 'core', 'tab-creator.html'), 'utf8');
+const tabNekocoreHtml = fs.readFileSync(path.join(ROOT, 'client', 'apps', 'core', 'tab-nekocore.html'), 'utf8');
 const createHtml = fs.readFileSync(CREATE_PATH, 'utf8');
 const creatorPackageIndexHtml = fs.readFileSync(CREATOR_PACKAGE_INDEX_PATH, 'utf8');
 
@@ -110,8 +112,8 @@ test('system-apps manifest embedded targets remain aligned with current shell ho
   const creator = systemManifest.apps.find((app) => app.id === 'creator');
   const nekocore = systemManifest.apps.find((app) => app.id === 'nekocore');
 
-  assert.match(indexHtml, /id="creatorAppFrame"\s+src="create\.html\?embed=1"/, 'index.html must still host creator via embedded iframe');
-  assert.match(indexHtml, /id="nekocore-panel-frame"/, 'index.html must still host the nekocore iframe shell');
+  assert.match(tabCreatorHtml, /id="creatorAppFrame"\s+src="create\.html\?embed=1"/, 'tab-creator.html must host creator via embedded iframe');
+  assert.match(tabNekocoreHtml, /id="nekocore-panel-frame"/, 'tab-nekocore.html must host the nekocore iframe shell');
   assert.equal(creator.standalonePath, 'create.html');
   assert.equal(nekocore.standalonePath, 'nekocore.html');
 });

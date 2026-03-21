@@ -7,6 +7,7 @@
 const crypto = require('crypto');
 const taskEventBus = require('./task-event-bus');
 const taskModuleRegistry = require('./task-module-registry');
+const blueprintLoader = require('./blueprint-loader');
 
 // Map of sessionId -> { resolve: Function } for stalled sessions awaiting input
 const _pendingInputs = new Map();
@@ -223,6 +224,16 @@ function buildTaskSystemPrompt(moduleConfig, entity, contextSnippets) {
     if (bridgeParts.length > 0) {
       parts.push('\n[Entity Identity]');
       parts.push(bridgeParts.join(' '));
+    }
+  }
+
+  // Blueprint injection — task-type-specific instructions for execution
+  const taskType = moduleConfig ? moduleConfig.taskType : null;
+  if (taskType) {
+    const executionBlueprint = blueprintLoader.getBlueprintForPhase(taskType, { phase: 'execute' });
+    if (executionBlueprint) {
+      parts.push('\n[Task Blueprints]');
+      parts.push(executionBlueprint);
     }
   }
 

@@ -28,6 +28,8 @@ const taskUiSrc   = read('client/js/apps/optional/task-ui.js');
 const chatSrc     = read('client/js/apps/core/chat.js');
 const telemetrySrc = read('client/js/apps/core/telemetry-ui.js');
 const indexHtml   = read('client/index.html');
+const tabChatHtml = read('client/apps/core/tab-chat.html');
+const tabActivityHtml = read('client/apps/core/tab-activity.html');
 
 // ── 1. task-ui.js ownership ──────────────────────────────────────────────────
 
@@ -168,31 +170,31 @@ test('index.html includes task-ui.js before boot.js', () => {
   assert.ok(taskUiPos < bootPos, 'task-ui.js must appear before boot.js in index.html');
 });
 
-test('index.html has taskStatusBadge element', () => {
+test('tab-chat.html has taskStatusBadge element', () => {
   assert.ok(
-    indexHtml.includes('taskStatusBadge'),
-    'index.html must include taskStatusBadge element'
+    tabChatHtml.includes('taskStatusBadge'),
+    'tab-chat.html must include taskStatusBadge element'
   );
 });
 
-test('index.html has taskHistoryPanel element', () => {
+test('tab-chat.html has taskHistoryPanel element', () => {
   assert.ok(
-    indexHtml.includes('taskHistoryPanel'),
-    'index.html must include taskHistoryPanel element'
+    tabChatHtml.includes('taskHistoryPanel'),
+    'tab-chat.html must include taskHistoryPanel element'
   );
 });
 
-test('index.html has taskDetailPanel element', () => {
+test('tab-chat.html has taskDetailPanel element', () => {
   assert.ok(
-    indexHtml.includes('taskDetailPanel'),
-    'index.html must include taskDetailPanel element'
+    tabChatHtml.includes('taskDetailPanel'),
+    'tab-chat.html must include taskDetailPanel element'
   );
 });
 
-test('index.html has tmActiveTaskSection element', () => {
+test('tab-activity.html has tmActiveTaskSection element', () => {
   assert.ok(
-    indexHtml.includes('tmActiveTaskSection'),
-    'index.html must include tmActiveTaskSection element in Task Manager'
+    tabActivityHtml.includes('tmActiveTaskSection'),
+    'tab-activity.html must include tmActiveTaskSection element in Task Manager'
   );
 });
 
