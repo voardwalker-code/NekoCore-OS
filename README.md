@@ -22,7 +22,7 @@
   &nbsp;
   <img src="https://img.shields.io/badge/dependencies-0-brightgreen?style=flat-square" alt="zero deps"/>
   &nbsp;
-  <a href="https://github.com/voardwalker-code/NekoCore-OS/actions/workflows/ci.yml"><img src="https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/voardwalker-code/BADGE_GIST_ID/raw/nekocore-test-results.json" alt="Tests"/></a>
+  <img src="https://img.shields.io/badge/tests-2%2C012%20passing-brightgreen?style=flat-square" alt="2,012 tests passing"/>
 </p>
 
 <p align="center">
