@@ -1120,7 +1120,7 @@ function createChatPipeline(deps) {
     return { finalResponse, innerDialog: null, memoryConnections: [] };
   }
 
-  return { processChatMessage, processSingleLlmChatMessage, processPendingSkillApproval };
+  return { processChatMessage, processSingleLlmChatMessage, processPendingSkillApproval, taskFrontman };
 }
 
 module.exports = createChatPipeline;

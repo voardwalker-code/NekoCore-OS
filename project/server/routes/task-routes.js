@@ -24,6 +24,19 @@ function createTaskRoutes(ctx) {
     return (body && body.entityId) || (ctx.getActiveEntityId ? ctx.getActiveEntityId() : null);
   }
 
+  function _loadEntityProfile(entityId) {
+    const fs = require('fs');
+    const path = require('path');
+    try {
+      const entityPaths = require('../entityPaths');
+      const entityFile = path.join(entityPaths.getEntityRoot(entityId), 'entity.json');
+      if (fs.existsSync(entityFile)) {
+        return JSON.parse(fs.readFileSync(entityFile, 'utf8'));
+      }
+    } catch (_) {}
+    return {};
+  }
+
   function _readAllSessionsForHistory() {
     const fs = require('fs');
     const path = require('path');
@@ -157,16 +170,20 @@ function createTaskRoutes(ctx) {
         }
       }, _sessionOpts());
 
+      // Resolve entity profile from disk for workspace path and identity
+      const entityProfile = _loadEntityProfile(entityId);
+
       const runConfig = {
+        sessionId: session.id,
         taskType: classification.taskType,
         userMessage,
         entity: {
           id: entityId,
-          name: body.entityName || 'Entity',
-          persona: body.persona || null,
+          name: body.entityName || entityProfile.name || 'Entity',
+          persona: body.persona || entityProfile.persona || null,
           mood: body.mood || null,
           relationship: body.relationship || null,
-          workspacePath: body.workspacePath || ''
+          workspacePath: body.workspacePath || entityProfile.workspacePath || ''
         },
         contextSnippets: context.snippets || [],
         callLLM: ctx.callLLMWithRuntime,
@@ -180,6 +197,17 @@ function createTaskRoutes(ctx) {
       };
 
       const unsubscribe = _attachEventSync(session.id);
+
+      // Wire Frontman for SSE feedback if available on ctx
+      if (ctx.taskFrontman && typeof ctx.taskFrontman.startSession === 'function') {
+        ctx.taskFrontman.startSession({
+          sessionId: session.id,
+          entityId,
+          entity: runConfig.entity,
+          relationshipSignal: 'neutral',
+          runtime: body.runtime || {}
+        });
+      }
 
       const asyncMode = body.async === true;
       if (asyncMode) {

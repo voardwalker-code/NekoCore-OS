@@ -25,6 +25,7 @@ const _pendingInputs = new Map();
  *   - allTools {Object} — all available tools { toolName: handler }
  *   - taskArchiveId {string?} — archive ID for step writes (optional)
  *   - archiveWriter {Object?} — task-archive-writer instance (optional)
+ *   - sessionId {string?} — external session ID (callers pass their own to keep event subscriptions aligned)
  *   - _runTaskFn {Function?} — override for testing; defaults to task-runner.runTask
  * @returns {Promise<Object>} { sessionId, steps, finalOutput, taskType, entityId, completedAt }
  */
@@ -39,6 +40,7 @@ async function executeTask(config) {
     allTools = {},
     taskArchiveId = null,
     archiveWriter = null,
+    sessionId: externalSessionId = null,
     _runTaskFn = null
   } = config;
 
@@ -50,10 +52,12 @@ async function executeTask(config) {
     throw new Error('executeTask: callLLM must be a function');
   }
 
-  // Generate unique session ID
-  const sessionId = typeof crypto.randomUUID === 'function'
-    ? crypto.randomUUID()
-    : `task-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  // Use caller-supplied session ID when available, otherwise generate one
+  const sessionId = externalSessionId || (
+    typeof crypto.randomUUID === 'function'
+      ? crypto.randomUUID()
+      : `task-${Date.now()}-${Math.random().toString(36).slice(2)}`
+  );
 
   // Get module config for this task type
   const moduleConfig = taskModuleRegistry.getModule(taskType);

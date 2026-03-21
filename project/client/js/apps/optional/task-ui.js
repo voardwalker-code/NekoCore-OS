@@ -162,11 +162,11 @@ function _taskUIPushTelemetry(eventName, detail) {
 
 // ─── Task History Panel ───────────────────────────────────────────────────────
 async function openTaskHistory() {
-  // Resolve entityId from global config
+  // Resolve entityId from the global entity manager
   let entityId = null;
   try {
-    if (typeof activeConfig !== 'undefined' && activeConfig && activeConfig.entityId) {
-      entityId = activeConfig.entityId;
+    if (typeof window.getActiveEntityId === 'function') {
+      entityId = window.getActiveEntityId();
     }
   } catch (_) {}
 

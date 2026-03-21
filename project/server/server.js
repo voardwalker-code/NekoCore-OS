@@ -690,6 +690,7 @@ const ctx = {
   gracefulShutdown(src) { return gracefulShutdown(src); },
   webFetch,
   authService,
+  get taskFrontman() { return chatPipeline.taskFrontman; },
 };
 
 const lifecycle = createRuntimeLifecycle({

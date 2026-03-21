@@ -22,6 +22,19 @@ const projectStore = require('../brain/tasks/task-project-store');
 const archiveWriter = require('../brain/tasks/task-archive-writer');
 const workspaceTools = require('../brain/workspace-tools');
 
+function _loadEntityProfile(entityId) {
+  const fs = require('fs');
+  const path = require('path');
+  try {
+    const entityPaths = require('../entityPaths');
+    const entityFile = path.join(entityPaths.getEntityRoot(entityId), 'entity.json');
+    if (fs.existsSync(entityFile)) {
+      return JSON.parse(fs.readFileSync(entityFile, 'utf8'));
+    }
+  } catch (_) {}
+  return {};
+}
+
 function _readAllSessionsForHistory() {
   const fs = require('fs');
   const path = require('path');
@@ -162,10 +175,21 @@ async function _runTask(userMessage, entityId, ctx, taskType, skill) {
       sharedContext: { taskContext: context }
     }, {});
 
+    // Resolve entity profile from disk for workspace path and identity
+    const entityProfile = _loadEntityProfile(entityId);
+
     const runConfig = {
+      sessionId: session.id,
       taskType: classification.taskType,
       userMessage,
-      entity: { id: entityId, name: 'Entity', persona: null, mood: null, relationship: null, workspacePath: '' },
+      entity: {
+        id: entityId,
+        name: entityProfile.name || 'Entity',
+        persona: entityProfile.personality_traits || null,
+        mood: null,
+        relationship: null,
+        workspacePath: entityProfile.workspacePath || ''
+      },
       contextSnippets: context.snippets || [],
       callLLM: ctx.callLLMWithRuntime,
       runtime: {},
@@ -174,6 +198,17 @@ async function _runTask(userMessage, entityId, ctx, taskType, skill) {
       archiveWriter,
       ...(skill ? { skill } : {})
     };
+
+    // Wire Frontman for SSE feedback if available on ctx
+    if (ctx.taskFrontman && typeof ctx.taskFrontman.startSession === 'function') {
+      ctx.taskFrontman.startSession({
+        sessionId: session.id,
+        entityId,
+        entity: runConfig.entity,
+        relationshipSignal: 'neutral',
+        runtime: {}
+      });
+    }
 
     // Subscribe to task events for session tracking
     const handler = (event) => {

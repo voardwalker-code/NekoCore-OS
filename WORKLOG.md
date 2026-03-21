@@ -44,11 +44,11 @@ Emergency exception log:
 
 ---
 
-## Stop/Resume Snapshot — 2026-03-21 (Self-Repair Skill COMPLETE)
+## Stop/Resume Snapshot — 2026-03-21 (Server-Side Slash Interceptor COMPLETE)
 
 - **Current phase:** `Phase 4 — Feature work`
 - **Current slice:** `None — awaiting next plan`
-- **Last completed work:** `Self-repair skill (skills/self-repair/SKILL.md — teaches Neko how to diagnose, scan, and fix her own system); CORE_REGISTRY now 300 entries; 14 new guard tests; 2012/2012 (0 fail)`
+- **Last completed work:** `Server-side slash command interceptor (server/routes/slash-interceptor.js) — intercepts /command messages before LLM pipeline so slash commands work from all clients (entity chat, NekoCore OS, failsafe); wired into /api/chat and /api/nekocore/chat; CORE_REGISTRY now 301 entries; 2012/2012 (0 fail)`
 - **In-progress item:** `none`
 - **Blocking issue:** `none`
 - **Next action on resume:** `Pick up next plan or user request`
@@ -71,6 +71,22 @@ Status: `Complete`
 - Registered `skills/self-repair/SKILL.md` in CORE_REGISTRY — registry now 300 entries
 - Updated `tests/unit/bios-failsafe-guards.test.js` — added 14 new tests (Section 9: self-repair skill structure, frontmatter, scanner/fixer/failsafe coverage, cmd_run syntax, fixer modes, headless recovery, what-not-to-do, fix-yourself sequence, registry check); updated skills count assertion from 10→11; updated registry count from 299→300
 - Tests: 2012/2012 full suite (0 fail), +14 new
+
+Boundary markers: [BOUNDARY_OK]
+
+---
+
+## Session Ledger — 2026-03-21 (Server-Side Slash Interceptor)
+
+Status: `Complete`
+
+- **Purpose:** Make slash commands work from all clients (entity chat, NekoCore OS chat, failsafe console) by intercepting `/command` messages at the server level before the LLM pipeline.
+- Created `server/routes/slash-interceptor.js` (~210 lines) — server-side slash command detector and dispatcher: regex parser for `/command arg` syntax, handles `/task`, `/project`, `/skill`, `/websearch` (fire-and-forget async via task system), `/list` (task history), `/listactive` (running tasks), `/stop` (cancel active session); returns `{ handled, response }` so callers skip LLM when a slash command is detected
+- Wired into `server/routes/chat-routes.js` (`/api/chat`) — intercept call before LLM pipeline using `ctx.getActiveEntityId()` for entity resolution
+- Wired into `server/routes/nekocore-routes.js` (`/api/nekocore/chat`) — intercept call with hardcoded `'nekocore'` entity ID
+- Registered in CORE_REGISTRY — registry now 301 entries
+- Tests: 2012/2012 full suite (0 fail)
+- Pushed to `origin staging` (commit c3a0602)
 
 Boundary markers: [BOUNDARY_OK]
 
