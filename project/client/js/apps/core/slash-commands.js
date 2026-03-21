@@ -209,9 +209,19 @@
     const parts = args.split(/\s+/);
     const skillName = parts[0];
     if (!skillName) { _sysMsg('Usage: /skill <name> [args…]'); return; }
-    _sysMsg(`🔧 Invoking skill: ${skillName}…`);
-    _post('/api/skills/workspace/list', {})
-      .catch(() => _sysMsg('⚠️ Skill dispatch failed — check the Skills tab for available skills.'));
+    const skillArgs = parts.slice(1).join(' ');
+    const entityId = _entityId();
+    if (!entityId) { _sysMsg('⚠️ Load an entity first.'); return; }
+    _sysMsg(`🔧 Invoking skill: ${skillName}${skillArgs ? ' — ' + skillArgs : ''}…`);
+    _post('/api/task/run', {
+      message: skillArgs || skillName,
+      entityId,
+      taskType: 'skill',
+      skill: skillName,
+      async: true,
+    }).then(r => {
+      if (r && !r.ok) _sysMsg('⚠️ Skill dispatch failed: ' + (r.error || 'unknown error'));
+    }).catch(() => _sysMsg('⚠️ Skill request failed — check the Skills tab for available skills.'));
   }
 
   // ── Command: /websearch ───────────────────────────────────────────────────────
