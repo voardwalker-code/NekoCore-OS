@@ -22,7 +22,7 @@
   &nbsp;
   <img src="https://img.shields.io/badge/dependencies-0-brightgreen?style=flat-square" alt="zero deps"/>
   &nbsp;
-  <img src="https://img.shields.io/badge/tests-2%2C012%20passing-brightgreen?style=flat-square" alt="2,012 tests passing"/>
+  <img src="https://img.shields.io/badge/tests-2%2C247%20passing-brightgreen?style=flat-square" alt="2,247 tests passing"/>
 </p>
 
 <p align="center">
@@ -30,16 +30,18 @@
   &nbsp;·&nbsp;
   <a href="project/Neko-Core.html">Architecture Deck</a>
   &nbsp;·&nbsp;
-  <strong>v0.9.0</strong>
+  <a href="docs/USER-GUIDE.md">User Guide</a>
+  &nbsp;·&nbsp;
+  <strong>v0.10.0</strong>
 </p>
 
 <br>
 
 <div align="center">
 
-| 2,012 | 0 | 5 |
-|:-----:|:-:|:-:|
-| **Tests Passing** | **Runtime Dependencies** | **Pipeline Phases** |
+| 2,247 | 0 | 5 | 20+ |
+|:-----:|:-:|:-:|:----:|
+| **Tests Passing** | **Runtime Dependencies** | **Pipeline Phases** | **Desktop Apps** |
 
 </div>
 
@@ -50,9 +52,10 @@
 >
 > The `staging` branch contains major new subsystems that are **under active development**:
 > entity orchestration, blueprint-driven project execution, sandboxed code execution (Rust, Python, C/C++, Node.js),
-> a self-repair/diagnostics chain, and a failsafe emergency console.
+> a self-repair/diagnostics chain, a failsafe emergency console, the Memory Architect (MA) AI coding assistant,
+> a resource manager, a bug tracker, smart port management, and server-to-server MA integration.
 >
-> These features have **2,012 passing unit tests** but have **not been stress-tested in production**.
+> These features have **2,247 passing unit tests** but have **not been stress-tested in production**.
 > Expect rough edges. Back up your `entities/` and `memories/` folders before experimenting.
 >
 > **Python is NOT required to run NekoCore.** The only runtime dependency is Node.js 18+.
@@ -107,7 +110,21 @@ Pre-turn snapshot assembles beliefs, goals, mood, diary, and curiosity into the 
 </td>
 <td width="33%" valign="top">
 <strong>📋 Task Orchestration</strong><br><br>
-Slash commands (<code>/task</code>, <code>/skill</code>, <code>/project</code>, <code>/websearch</code>) dispatch structured work. The Frontman bridge translates worker progress into entity-voice milestone messages.
+Slash commands (<code>/task</code>, <code>/skill</code>, <code>/project</code>, <code>/websearch</code>, <code>/ma</code>) dispatch structured work. The Frontman bridge translates worker progress into entity-voice milestone messages.
+</td>
+</tr>
+<tr>
+<td width="33%" valign="top">
+<strong>🏗️ Memory Architect (MA)</strong><br><br>
+Built-in AI coding assistant with blueprint-driven project execution, agent delegation, deep research, and workspace management. Ships with full blueprints for two companion projects: REM System Core and NekoCore Cognitive Mind.
+</td>
+<td width="33%" valign="top">
+<strong>🐛 Developer Tools</strong><br><br>
+Bug Tracker with screenshot capture, severity tracking, and Markdown report export. Resource Manager for entity active resource and task/project tracking. Both ship as desktop apps inside the OS.
+</td>
+<td width="33%" valign="top">
+<strong>🔌 Smart Port Management</strong><br><br>
+Auto-detects port conflicts, identifies running instances (NekoCore OS vs MA), and prompts before spawning duplicates. Power users can run multiple servers simultaneously on fallback ports.
 </td>
 </tr>
 </table>
@@ -216,7 +233,7 @@ The brain loop ticks independently of conversation:
 | **Realtime** | SSE cognitive bus — all pipeline events streamed to the browser |
 | **Visualizer** | Three.js WebGL 3D neural node graph — live cognitive bus events |
 | **Skills** | Drop-in function-call plugins: web search, memory tools, workspace ops |
-| **Test suite** | 2,012 passing — unit + integration (Node built-in `--test` runner) |
+| **Test suite** | 2,247 passing — unit + integration (Node built-in `--test` runner) |
 | **Installer** | Contract-driven app install/uninstall with rollback and file lifecycle |
 
 ### Memory System
@@ -293,6 +310,14 @@ The brain loop ticks independently of conversation:
 ✔  Phase 4.14  Sandboxed Code Execution        Complete  (cmd_run tool)
 ✔  Phase 4.15  BIOS Completeness + Failsafe    Complete  (300 registry entries)
 ✔  Phase 4.16  Self-Repair Skill               Complete  (2,012 tests, 0 fail)
+✔  Phase 4.17  OS Tool Upgrade                 Complete  (workspace-tools expansion)
+✔  Phase 4.18  Entity Genesis Skill            Complete  (multi-round entity creation)
+✔  Phase 4.19  MA Bridge                       Complete  (/ma slash command, auto-boot)
+✔  Phase 4.20  Bug Tracker App                 Complete  (screenshots, severity, export)
+✔  Phase 4.21  Resource Manager App            Complete  (task/project tracking)
+✔  Phase 4.22  Smart Port Management           Complete  (port-guard for all servers)
+✔  Phase 4.23  User Documentation              Complete  (24-section user guide)
+✔  Phase 4.24  MA Public Release               Complete  (2,247 tests, factory reset)
 ○  Phase 5     Predictive Memory Topology      Next
 ```
 
@@ -412,6 +437,9 @@ Any OpenAI-compatible model works. For fully local: set all phases to an Ollama 
 | `/` — Dream Gallery | View and replay recorded dreams |
 | `/` — Diary | Entity self-reflection log |
 | `/` — Sleep tab | Trigger REM cycle, view sleep history |
+| `/` — Bug Tracker | Screenshot capture, severity tracking, report export |
+| `/` — Resource Manager | Task/project tracking for active entities |
+| `/` — MA Server | Memory Architect control panel |
 | `/visualizer.html` | 3D WebGL neural cognitive state graph |
 
 ### Desktop Shell
@@ -440,7 +468,7 @@ Skills live in `project/skills/<name>/`. The entity's LLM invokes them via funct
 - `vscode` — VS Code workspace integration
 - `coding` — write, run, test, and debug code projects
 - `python` / `rust` — language-specific programming skills
-- `tutorial-notes` — structured learning note-taking
+- `entity-genesis` — guided multi-round entity creation wizard
 - `self-repair` — diagnose and fix NekoCore's own system (health scanner, fixer generator, failsafe console)
 
 ### Self-Repair & Failsafe
@@ -455,6 +483,29 @@ NekoCore includes a full self-healing chain for disaster recovery:
 | **Failsafe Console** (`/failsafe.html`) | Zero-dependency emergency WebGUI — auth, LLM setup, chat | Browser |
 
 > **Python is not required to run NekoCore.** The fixer script is an optional emergency tool generated on demand. It uses only the Python 3 standard library — no pip, no packages.
+
+### Memory Architect (MA)
+
+MA is a built-in AI coding assistant that lives at `project/MA/`. It can build entire Node.js projects from blueprints, delegate to specialized agents, run deep research, and manage a workspace of in-progress builds.
+
+**Start MA from NekoCore OS:**
+- Use the `/ma` slash command in any entity chat, or
+- Launch the MA Server app from the Start menu
+
+**Start MA standalone:**
+```bash
+cd project/MA
+npm install
+npm start
+```
+
+MA ships with blueprints for two companion projects:
+- **REM System Core** — a 26-module memory/cognition server (port 3860)
+- **NekoCore Cognitive Mind** — a 97-module cognitive engine (port 3870)
+
+Both are starter scaffolds with `PROJECT-MANIFEST.json`, `BUILD-ORDER.md`, and `package.json`. MA builds the actual source code from the blueprints.
+
+See [project/MA/README.md](project/MA/README.md) for the full MA guide.
 
 ### Telegram Integration
 
@@ -471,15 +522,25 @@ NekoCore-OS/
 ├── BUGS.md                    # Bug queue and status tracking
 ├── CHANGELOG.md               # Release notes
 ├── docs/                      # Public documentation
+│   ├── USER-GUIDE.md                   # 24-section user guide
+│   ├── MA-AND-PROJECT-STRUCTURE.md     # MA architecture and layout
 │   ├── NEKOCORE-OS-WHITE-PAPER-v2.md   # Technical white paper
 │   └── NEKOCORE-OS-ARCHITECTURE-v1.md  # Architecture reference
 └── project/
-    ├── client/                # Browser frontend (desktop shell + apps)
+    ├── client/                # Browser frontend (desktop shell + 20+ apps)
     ├── server/                # Backend server
     ├── browser-host/          # Browser host modules
     ├── skills/                # Pluggable skill plugins (11 skills)
     ├── scripts/               # Health scanner, fixer generator, safety scripts
-    ├── tests/                 # Unit + integration tests (2,012 passing)
+    ├── tests/                 # Unit + integration tests (2,247 passing)
+    ├── MA/                    # Memory Architect — AI coding assistant
+    │   ├── MA-Server.js       #   MA HTTP server (port 3850)
+    │   ├── MA-server/         #   Core modules (LLM, memory, tasks, agents)
+    │   ├── MA-blueprints/     #   Build blueprints (NekoCore + REM System)
+    │   ├── MA-knowledge/      #   Injected knowledge base
+    │   ├── MA-skills/         #   MA skill plugins
+    │   ├── MA-entity/         #   Agent profiles + MA entity definition
+    │   └── MA-workspace/      #   Project scaffolds (build targets)
     ├── Config/                # Runtime config template/example
     ├── entities/              # Runtime entity data (gitignored)
     ├── memories/              # System memory (gitignored)
