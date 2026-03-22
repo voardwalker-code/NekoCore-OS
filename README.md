@@ -32,7 +32,7 @@
   &nbsp;·&nbsp;
   <a href="docs/USER-GUIDE.md">User Guide</a>
   &nbsp;·&nbsp;
-  <strong>v0.10.0</strong>
+  <strong>v0.9.0-alpha.4.24</strong>
 </p>
 
 <br>

@@ -5,6 +5,8 @@ Built with MA (Memory Architect v1).
 
 ## [Unreleased]
 
+## [0.9.0-alpha.4.24] — 2026-03-22
+
 ### Changed
 - MA Workspace Reset: Replaced completed sub-project builds (734 files) with starter scaffolds. Both `MA-workspace/rem-system/` and `MA-workspace/nekocore/` now ship as PROJECT-MANIFEST.json (all statuses "not-started"), BUILD-ORDER.md (construction guide), and package.json only. MA builds the full implementation from blueprints. `.gitignore` updated from 2 blanket directory exclusions to 20 granular rules — scaffold files are now tracked in git while build artifacts remain ignored. `docs/MA-AND-PROJECT-STRUCTURE.md` updated to reflect starter scaffold state.
 

@@ -1,6 +1,6 @@
 # REM System — Architecture Overview
 
-Version: 0.10.0
+Version: 0.9.0-alpha.4.24
 Last updated: 2026-03-22
 
 ---

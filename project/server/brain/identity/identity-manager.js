@@ -14,7 +14,7 @@ class IdentityManager {
     // Initialize identity
     this.identity = {
       name: 'REM System',
-      version: '0.5.1-prealpha',
+      version: '0.9.0-alpha.4.24',
       created: new Date().toISOString(),
       beliefs: {},
       preferences: {},
@@ -433,7 +433,7 @@ class IdentityManager {
   reset() {
     this.identity = {
       name: 'REM System',
-      version: '0.5.1-prealpha',
+      version: '0.9.0-alpha.4.24',
       created: new Date().toISOString(),
       beliefs: {},
       preferences: {},
