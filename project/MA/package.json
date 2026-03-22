@@ -1,0 +1,25 @@
+{
+  "name": "ma-memory-architect",
+  "version": "1.0.0",
+  "description": "MA — Memory Architect. Standalone AI development agent.",
+  "main": "MA-Server.js",
+  "scripts": {
+    "start": "node MA-Server.js",
+    "start:bg": "node ma-start.js",
+    "stop": "node ma-start.js --stop",
+    "status": "node ma-start.js --status",
+    "cli": "node MA-cli.js",
+    "health": "node -e \"const h=require('./MA-server/MA-health');const r=h.scan();console.log(h.formatReport(r))\"",
+    "fixer": "node MA-scripts/MA-generate-fixer.js"
+  },
+  "keywords": [
+    "memory-architect",
+    "nekocore",
+    "cognitive"
+  ],
+  "license": "MIT",
+  "private": true,
+  "dependencies": {
+    "zod": "^4.3.6"
+  }
+}

@@ -26,6 +26,7 @@
     { cmd: 'stop',       args: '[session-id]',    desc: 'Stop the active task (or a session by ID)'                 },
     { cmd: 'list',       args: '',                desc: 'Open the task history panel'                               },
     { cmd: 'listactive', args: '',                desc: 'Show all currently running tasks in chat'                  },
+    { cmd: 'ma',         args: '<message>',       desc: 'Send a message to MA for tool execution'                    },
   ];
 
   // ── State ─────────────────────────────────────────────────────────────────────

@@ -1,0 +1,792 @@
+<div class="tab-content" id="tab-bugtracker">
+  <div class="bt-container">
+    <!-- Toolbar -->
+    <div class="bt-toolbar">
+      <div class="bt-toolbar-left">
+        <button class="bt-btn" id="btLoadBtn" title="Load bug tracking file">📂 Load</button>
+        <button class="bt-btn" id="btSaveBtn" title="Save bug tracking file">💾 Save</button>
+        <button class="bt-btn" id="btReportBtn" title="Generate bug report">📋 Report</button>
+        <button class="bt-btn bt-btn-accent" id="btNewBugBtn" title="Create new bug">➕ New Bug</button>
+      </div>
+      <div class="bt-toolbar-right">
+        <label class="bt-label">Project:</label>
+        <input type="text" class="bt-input bt-project-input" id="btProjectName" value="NekoCore OS" placeholder="Project name">
+        <span class="bt-counter" id="btCounter">Bugs: 0 | Open: 0</span>
+      </div>
+    </div>
+
+    <!-- Main panels -->
+    <div class="bt-panels">
+      <!-- Left: bug list -->
+      <div class="bt-list-panel">
+        <div class="bt-list-controls">
+          <input type="text" class="bt-input bt-search" id="btSearch" placeholder="Search bugs…">
+          <select class="bt-select" id="btFilterStatus">
+            <option value="all">All</option>
+            <option value="open">Open</option>
+            <option value="in-progress">In Progress</option>
+            <option value="fixed">Fixed</option>
+            <option value="wont-fix">Won't Fix</option>
+            <option value="duplicate">Duplicate</option>
+          </select>
+          <select class="bt-select" id="btSort">
+            <option value="newest">Newest</option>
+            <option value="severity">Severity ↓</option>
+            <option value="status">Status</option>
+            <option value="id">ID</option>
+          </select>
+        </div>
+        <div class="bt-list" id="btBugList">
+          <div class="bt-empty" id="btEmptyState">No bugs tracked yet — click ➕ New Bug or 📂 Load</div>
+        </div>
+      </div>
+
+      <!-- Right: bug editor -->
+      <div class="bt-editor-panel" id="btEditorPanel">
+        <div class="bt-editor-placeholder" id="btEditorPlaceholder">
+          <div class="bt-editor-placeholder-icon">🐛</div>
+          <div>Select a bug from the list or create a new one</div>
+        </div>
+        <div class="bt-editor" id="btEditor" style="display:none">
+          <div class="bt-editor-header">
+            <span class="bt-bug-id" id="btBugId">BUG-001</span>
+            <span class="bt-bug-created" id="btBugCreated"></span>
+          </div>
+
+          <label class="bt-field-label" for="btTitle">Title <span class="bt-required">*</span></label>
+          <input type="text" class="bt-input bt-title-input" id="btTitle" placeholder="Short bug description">
+
+          <div class="bt-row">
+            <div class="bt-col">
+              <label class="bt-field-label">Severity</label>
+              <div class="bt-severity-group" id="btSeverity">
+                <label class="bt-severity-opt bt-sev-critical"><input type="radio" name="btSev" value="critical"> Critical</label>
+                <label class="bt-severity-opt bt-sev-high"><input type="radio" name="btSev" value="high"> High</label>
+                <label class="bt-severity-opt bt-sev-medium"><input type="radio" name="btSev" value="medium" checked> Medium</label>
+                <label class="bt-severity-opt bt-sev-low"><input type="radio" name="btSev" value="low"> Low</label>
+              </div>
+            </div>
+            <div class="bt-col">
+              <label class="bt-field-label" for="btStatus">Status</label>
+              <select class="bt-select" id="btStatus">
+                <option value="open">Open</option>
+                <option value="in-progress">In Progress</option>
+                <option value="fixed">Fixed</option>
+                <option value="wont-fix">Won't Fix</option>
+                <option value="duplicate">Duplicate</option>
+              </select>
+              <label class="bt-field-label" for="btArea" style="margin-top:8px">Area</label>
+              <select class="bt-select" id="btArea">
+                <option value="Chat">Chat</option>
+                <option value="Entity">Entity</option>
+                <option value="Creator">Creator</option>
+                <option value="Settings">Settings</option>
+                <option value="Wizard">Wizard</option>
+                <option value="Memory System">Memory System</option>
+                <option value="Pipeline">Pipeline</option>
+                <option value="Dream System">Dream System</option>
+                <option value="Cognitive State">Cognitive State</option>
+                <option value="Skills">Skills</option>
+                <option value="Workspace">Workspace</option>
+                <option value="Browser">Browser</option>
+                <option value="Window Manager">Window Manager</option>
+                <option value="Theme">Theme</option>
+                <option value="Server">Server</option>
+                <option value="API">API</option>
+                <option value="UI General">UI General</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+          </div>
+
+          <label class="bt-field-label" for="btDesc">Description</label>
+          <textarea class="bt-textarea" id="btDesc" rows="4" placeholder="Describe the bug in detail…"></textarea>
+
+          <label class="bt-field-label" for="btSteps">Steps to Reproduce</label>
+          <textarea class="bt-textarea" id="btSteps" rows="3" placeholder="1. Go to…&#10;2. Click on…&#10;3. Observe…"></textarea>
+
+          <div class="bt-row">
+            <div class="bt-col">
+              <label class="bt-field-label" for="btExpected">Expected Behavior</label>
+              <textarea class="bt-textarea" id="btExpected" rows="2" placeholder="What should happen"></textarea>
+            </div>
+            <div class="bt-col">
+              <label class="bt-field-label" for="btActual">Actual Behavior</label>
+              <textarea class="bt-textarea" id="btActual" rows="2" placeholder="What actually happens"></textarea>
+            </div>
+          </div>
+
+          <!-- Screenshots -->
+          <div class="bt-screenshots-section">
+            <label class="bt-field-label">Screenshots</label>
+            <div class="bt-screenshot-actions">
+              <button class="bt-btn bt-btn-sm" id="btCaptureBtn" title="Capture screenshot">📸 Capture</button>
+              <div class="bt-capture-menu" id="btCaptureMenu" style="display:none">
+                <button class="bt-btn bt-btn-sm" id="btCaptureFullBtn">Full OS</button>
+                <button class="bt-btn bt-btn-sm" id="btCaptureWindowBtn">Active Window</button>
+              </div>
+              <button class="bt-btn bt-btn-sm" id="btAttachBtn" title="Attach image file">📎 Attach File</button>
+              <input type="file" id="btAttachInput" accept="image/*" style="display:none">
+            </div>
+            <div class="bt-screenshot-gallery" id="btScreenshots"></div>
+          </div>
+
+          <!-- Editor actions -->
+          <div class="bt-editor-actions">
+            <button class="bt-btn bt-btn-accent" id="btSaveBugBtn">💾 Save Bug</button>
+            <button class="bt-btn bt-btn-danger" id="btDeleteBugBtn">🗑️ Delete Bug</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Status bar -->
+    <div class="bt-statusbar">
+      <span id="btFileInfo">No file loaded</span>
+      <span id="btDirtyFlag"></span>
+      <span id="btLastSaved"></span>
+    </div>
+  </div>
+
+  <!-- Report dialog -->
+  <div class="bt-dialog-overlay" id="btReportDialog" style="display:none">
+    <div class="bt-dialog">
+      <div class="bt-dialog-header">Generate Bug Report</div>
+      <div class="bt-dialog-body">
+        <label class="bt-field-label">Format</label>
+        <div class="bt-radio-row">
+          <label><input type="radio" name="btReportFmt" value="markdown" checked> Markdown</label>
+          <label><input type="radio" name="btReportFmt" value="json"> JSON</label>
+        </div>
+        <label class="bt-field-label" for="btReportFilter">Filter</label>
+        <select class="bt-select" id="btReportFilter">
+          <option value="all">All bugs</option>
+          <option value="open">Open only</option>
+          <option value="fixed">Fixed only</option>
+        </select>
+      </div>
+      <div class="bt-dialog-actions">
+        <button class="bt-btn" id="btReportCancelBtn">Cancel</button>
+        <button class="bt-btn bt-btn-accent" id="btReportGenerateBtn">Generate</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Load merge dialog -->
+  <div class="bt-dialog-overlay" id="btMergeDialog" style="display:none">
+    <div class="bt-dialog">
+      <div class="bt-dialog-header">Load Bug Tracking File</div>
+      <div class="bt-dialog-body">
+        <p>You already have bugs loaded. How would you like to proceed?</p>
+      </div>
+      <div class="bt-dialog-actions">
+        <button class="bt-btn" id="btMergeCancelBtn">Cancel</button>
+        <button class="bt-btn" id="btMergeAppendBtn">Merge — add new bugs</button>
+        <button class="bt-btn bt-btn-accent" id="btMergeReplaceBtn">Replace all</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Screenshot preview overlay -->
+  <div class="bt-dialog-overlay" id="btScreenshotPreview" style="display:none">
+    <div class="bt-preview-container">
+      <img id="btPreviewImg" class="bt-preview-img" src="" alt="Screenshot preview">
+      <div class="bt-preview-actions">
+        <button class="bt-btn bt-btn-danger bt-btn-sm" id="btPreviewDeleteBtn">Delete</button>
+        <button class="bt-btn bt-btn-sm" id="btPreviewCloseBtn">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hidden file input for loading -->
+  <input type="file" id="btLoadInput" accept=".bugtrack.json,.json" style="display:none">
+</div>
+
+<script>
+(function () {
+  if (window.__bugtrackerInit) return;
+  window.__bugtrackerInit = true;
+
+  /* ── Constants ──────────────────────────────────────────────── */
+  const SEVERITIES    = ['critical', 'high', 'medium', 'low'];
+  const SEVERITY_ORD  = { critical: 0, high: 1, medium: 2, low: 3 };
+  const STATUSES      = ['open', 'in-progress', 'fixed', 'wont-fix', 'duplicate'];
+  const FORMAT_V      = 'nekocore-bugtrack-v1';
+
+  /* ── State ──────────────────────────────────────────────────── */
+  const store = {
+    project: 'NekoCore OS',
+    bugs: [],
+    selectedId: null,
+    dirty: false,
+    fileName: null,
+    lastSavedAt: null
+  };
+  window.__bugtrackerStore = store;
+
+  /* ── DOM refs ───────────────────────────────────────────────── */
+  const $ = id => document.getElementById(id);
+
+  const els = {
+    projectName: $('btProjectName'),
+    counter: $('btCounter'),
+    bugList: $('btBugList'),
+    emptyState: $('btEmptyState'),
+    editorPanel: $('btEditorPanel'),
+    editorPlaceholder: $('btEditorPlaceholder'),
+    editor: $('btEditor'),
+    bugId: $('btBugId'),
+    bugCreated: $('btBugCreated'),
+    title: $('btTitle'),
+    severity: $('btSeverity'),
+    status: $('btStatus'),
+    area: $('btArea'),
+    desc: $('btDesc'),
+    steps: $('btSteps'),
+    expected: $('btExpected'),
+    actual: $('btActual'),
+    screenshots: $('btScreenshots'),
+    captureMenu: $('btCaptureMenu'),
+    attachInput: $('btAttachInput'),
+    fileInfo: $('btFileInfo'),
+    dirtyFlag: $('btDirtyFlag'),
+    lastSaved: $('btLastSaved'),
+    search: $('btSearch'),
+    filterStatus: $('btFilterStatus'),
+    sort: $('btSort'),
+    loadInput: $('btLoadInput'),
+    // Dialogs
+    reportDialog: $('btReportDialog'),
+    reportFilter: $('btReportFilter'),
+    mergeDialog: $('btMergeDialog'),
+    screenshotPreview: $('btScreenshotPreview'),
+    previewImg: $('btPreviewImg')
+  };
+
+  /* ── Helpers ────────────────────────────────────────────────── */
+
+  function nextBugId() {
+    if (!store.bugs.length) return 'BUG-001';
+    const nums = store.bugs.map(b => parseInt(b.id.replace('BUG-', ''), 10)).filter(n => !isNaN(n));
+    return 'BUG-' + String(Math.max(0, ...nums) + 1).padStart(3, '0');
+  }
+
+  function markDirty() {
+    store.dirty = true;
+    els.dirtyFlag.textContent = '• Unsaved changes';
+  }
+
+  function markClean() {
+    store.dirty = false;
+    store.lastSavedAt = new Date();
+    els.dirtyFlag.textContent = '';
+    els.lastSaved.textContent = 'Last saved: just now';
+  }
+
+  function updateCounter() {
+    const open = store.bugs.filter(b => b.status === 'open').length;
+    els.counter.textContent = `Bugs: ${store.bugs.length} | Open: ${open}`;
+  }
+
+  function updateStatusBar() {
+    els.fileInfo.textContent = store.fileName ? `File: ${store.fileName}` : 'No file loaded';
+  }
+
+  /* ── Bug list rendering ─────────────────────────────────────── */
+
+  function getFilteredBugs() {
+    let bugs = [...store.bugs];
+    // Text search
+    const q = els.search.value.trim().toLowerCase();
+    if (q) {
+      bugs = bugs.filter(b => b.title.toLowerCase().includes(q) || (b.description || '').toLowerCase().includes(q));
+    }
+    // Status filter
+    const sf = els.filterStatus.value;
+    if (sf !== 'all') {
+      bugs = bugs.filter(b => b.status === sf);
+    }
+    // Sort
+    const sort = els.sort.value;
+    if (sort === 'severity') {
+      bugs.sort((a, b) => (SEVERITY_ORD[a.severity] || 99) - (SEVERITY_ORD[b.severity] || 99));
+    } else if (sort === 'newest') {
+      bugs.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    } else if (sort === 'status') {
+      bugs.sort((a, b) => STATUSES.indexOf(a.status) - STATUSES.indexOf(b.status));
+    } else {
+      bugs.sort((a, b) => {
+        const na = parseInt(a.id.replace('BUG-', ''), 10);
+        const nb = parseInt(b.id.replace('BUG-', ''), 10);
+        return na - nb;
+      });
+    }
+    return bugs;
+  }
+
+  const SEV_COLORS = { critical: '#e74c3c', high: '#f39c12', medium: '#f1c40f', low: '#2ecc71' };
+
+  function renderBugList() {
+    const bugs = getFilteredBugs();
+    els.emptyState.style.display = bugs.length ? 'none' : 'block';
+    // Build list items
+    const items = bugs.map(b => {
+      const active = b.id === store.selectedId ? ' bt-list-item-active' : '';
+      const color = SEV_COLORS[b.severity] || '#999';
+      const titleText = b.title || '(untitled)';
+      const truncTitle = titleText.length > 32 ? titleText.slice(0, 32) + '…' : titleText;
+      return `<div class="bt-list-item${active}" data-bugid="${b.id}">
+        <span class="bt-sev-dot" style="background:${color}"></span>
+        <div class="bt-list-item-text">
+          <span class="bt-list-item-id">${b.id}</span>
+          <span class="bt-list-item-title">${truncTitle}</span>
+        </div>
+      </div>`;
+    });
+    // Preserve empty state div, replace the rest
+    const children = els.bugList.querySelectorAll('.bt-list-item');
+    children.forEach(c => c.remove());
+    els.bugList.insertAdjacentHTML('beforeend', items.join(''));
+    // Click handlers
+    els.bugList.querySelectorAll('.bt-list-item').forEach(el => {
+      el.addEventListener('click', () => selectBug(el.dataset.bugid));
+    });
+    updateCounter();
+  }
+
+  /* ── Editor ─────────────────────────────────────────────────── */
+
+  function selectBug(id) {
+    store.selectedId = id;
+    const bug = store.bugs.find(b => b.id === id);
+    if (!bug) return;
+    els.editorPlaceholder.style.display = 'none';
+    els.editor.style.display = '';
+    els.bugId.textContent = bug.id;
+    els.bugCreated.textContent = bug.createdAt ? new Date(bug.createdAt).toLocaleString() : '';
+    els.title.value = bug.title || '';
+    // Severity radios
+    const sevRadio = els.severity.querySelector(`input[value="${bug.severity}"]`);
+    if (sevRadio) sevRadio.checked = true;
+    els.status.value = bug.status;
+    els.area.value = bug.area || 'Other';
+    els.desc.value = bug.description || '';
+    els.steps.value = bug.steps || '';
+    els.expected.value = bug.expected || '';
+    els.actual.value = bug.actual || '';
+    renderScreenshots(bug);
+    renderBugList();
+  }
+
+  function readEditorToBug(bug) {
+    bug.title = els.title.value.trim();
+    const sevRadio = els.severity.querySelector('input[name="btSev"]:checked');
+    bug.severity = sevRadio ? sevRadio.value : 'medium';
+    bug.status = els.status.value;
+    bug.area = els.area.value;
+    bug.description = els.desc.value;
+    bug.steps = els.steps.value;
+    bug.expected = els.expected.value;
+    bug.actual = els.actual.value;
+    bug.updatedAt = new Date().toISOString();
+  }
+
+  function clearEditor() {
+    store.selectedId = null;
+    els.editorPlaceholder.style.display = '';
+    els.editor.style.display = 'none';
+  }
+
+  /* ── Screenshots ────────────────────────────────────────────── */
+
+  function renderScreenshots(bug) {
+    if (!bug.screenshots || !bug.screenshots.length) {
+      els.screenshots.innerHTML = '<div class="bt-no-screenshots">No screenshots</div>';
+      return;
+    }
+    els.screenshots.innerHTML = bug.screenshots.map((s, i) =>
+      `<div class="bt-thumb" data-idx="${i}">
+        <img src="${s.dataUrl}" alt="${s.name || 'Screenshot'}" class="bt-thumb-img">
+        <button class="bt-thumb-delete" data-idx="${i}" title="Remove">✕</button>
+      </div>`
+    ).join('');
+    // Click to preview
+    els.screenshots.querySelectorAll('.bt-thumb-img').forEach(img => {
+      img.addEventListener('click', (e) => {
+        const idx = e.target.closest('.bt-thumb').dataset.idx;
+        showScreenshotPreview(bug, parseInt(idx, 10));
+      });
+    });
+    // Delete buttons
+    els.screenshots.querySelectorAll('.bt-thumb-delete').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const idx = parseInt(btn.dataset.idx, 10);
+        bug.screenshots.splice(idx, 1);
+        renderScreenshots(bug);
+        markDirty();
+      });
+    });
+  }
+
+  function showScreenshotPreview(bug, idx) {
+    const ss = bug.screenshots[idx];
+    if (!ss) return;
+    els.previewImg.src = ss.dataUrl;
+    els.screenshotPreview.style.display = 'flex';
+    $('btPreviewDeleteBtn').onclick = () => {
+      bug.screenshots.splice(idx, 1);
+      renderScreenshots(bug);
+      els.screenshotPreview.style.display = 'none';
+      markDirty();
+    };
+    $('btPreviewCloseBtn').onclick = () => {
+      els.screenshotPreview.style.display = 'none';
+    };
+  }
+
+  function addScreenshotToBug(dataUrl, name) {
+    const bug = store.bugs.find(b => b.id === store.selectedId);
+    if (!bug) return;
+    if (!bug.screenshots) bug.screenshots = [];
+    bug.screenshots.push({
+      name: name || `capture-${Date.now()}.png`,
+      dataUrl: dataUrl,
+      capturedAt: new Date().toISOString()
+    });
+    renderScreenshots(bug);
+    markDirty();
+  }
+
+  /* ── Screenshot capture (html2canvas) ───────────────────────── */
+
+  let html2canvasLoaded = null;
+
+  function loadHtml2Canvas() {
+    if (html2canvasLoaded) return html2canvasLoaded;
+    html2canvasLoaded = new Promise((resolve, reject) => {
+      if (window.html2canvas) { resolve(window.html2canvas); return; }
+      const script = document.createElement('script');
+      script.src = 'shared/lib/html2canvas.min.js';
+      script.onload = () => resolve(window.html2canvas);
+      script.onerror = () => {
+        // CDN fallback
+        const cdn = document.createElement('script');
+        cdn.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+        cdn.integrity = 'sha512-BNaRQnYJYiPSc2kFGtR823LjhC4aMSBRMBdapDOGJEN3TtXCRGSrUoRFIvoUNYkMGBNQHJSYTmjmPATLo7ICg==';
+        cdn.crossOrigin = 'anonymous';
+        cdn.onload = () => resolve(window.html2canvas);
+        cdn.onerror = () => {
+          html2canvasLoaded = null;
+          reject(new Error('Failed to load html2canvas'));
+        };
+        document.head.appendChild(cdn);
+      };
+      document.head.appendChild(script);
+    });
+    return html2canvasLoaded;
+  }
+
+  async function captureScreenshot(mode) {
+    try {
+      const h2c = await loadHtml2Canvas();
+      let target = document.body;
+      if (mode === 'window') {
+        // Find last focused window that isn't the bugtracker
+        const allWindows = document.querySelectorAll('.wm-window[data-tab]');
+        let highest = null;
+        let highestZ = -1;
+        allWindows.forEach(w => {
+          if (w.dataset.tab === 'bugtracker') return;
+          if (w.style.display === 'none') return;
+          const z = parseInt(w.style.zIndex || '0', 10);
+          if (z > highestZ) { highestZ = z; highest = w; }
+        });
+        if (highest) target = highest;
+      }
+      const canvas = await h2c(target, { useCORS: true, scale: 1, logging: false });
+      // Compress large captures to JPEG
+      let dataUrl;
+      const pngUrl = canvas.toDataURL('image/png');
+      if (pngUrl.length > 1024 * 1024) {
+        dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+      } else {
+        dataUrl = pngUrl;
+      }
+      addScreenshotToBug(dataUrl, `capture-${mode}-${Date.now()}.png`);
+      els.captureMenu.style.display = 'none';
+    } catch (err) {
+      alert('Screenshot capture failed: ' + err.message + '\nUse Attach File instead.');
+      els.captureMenu.style.display = 'none';
+    }
+  }
+
+  /* ── Save / Load ────────────────────────────────────────────── */
+
+  function buildSaveData() {
+    return {
+      format: FORMAT_V,
+      project: els.projectName.value.trim() || 'Untitled',
+      createdAt: store.bugs.length ? store.bugs[store.bugs.length - 1].createdAt : new Date().toISOString(),
+      lastModified: new Date().toISOString(),
+      bugs: store.bugs
+    };
+  }
+
+  function triggerDownload(content, filename, mime) {
+    const blob = new Blob([content], { type: mime });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  function saveFile() {
+    const data = buildSaveData();
+    const json = JSON.stringify(data, null, 2);
+    const project = (els.projectName.value.trim() || 'bugs').replace(/[^a-zA-Z0-9_-]/g, '-').toLowerCase();
+    const date = new Date().toISOString().slice(0, 10);
+    const filename = store.fileName || `${project}-bugs-${date}.bugtrack.json`;
+    triggerDownload(json, filename, 'application/json');
+    store.fileName = filename;
+    markClean();
+    updateStatusBar();
+  }
+
+  function validateBugtrackFormat(obj) {
+    if (!obj || obj.format !== FORMAT_V) return 'Invalid file format — expected nekocore-bugtrack-v1';
+    if (!Array.isArray(obj.bugs)) return 'Invalid file — bugs array missing';
+    return null;
+  }
+
+  let pendingLoadData = null;
+
+  function loadFile(file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const obj = JSON.parse(e.target.result);
+        const err = validateBugtrackFormat(obj);
+        if (err) { alert(err); return; }
+        if (store.bugs.length > 0) {
+          pendingLoadData = obj;
+          els.mergeDialog.style.display = 'flex';
+          return;
+        }
+        applyLoadedData(obj, 'replace');
+        store.fileName = file.name;
+        updateStatusBar();
+      } catch (parseErr) {
+        alert('Failed to parse file: ' + parseErr.message);
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  function applyLoadedData(obj, mode) {
+    if (mode === 'replace') {
+      store.bugs = obj.bugs || [];
+      els.projectName.value = obj.project || 'Untitled';
+    } else {
+      // Merge: add bugs that don't exist by ID
+      const existingIds = new Set(store.bugs.map(b => b.id));
+      const newBugs = (obj.bugs || []).filter(b => !existingIds.has(b.id));
+      // Re-number new bugs to avoid collisions
+      for (const nb of newBugs) {
+        if (existingIds.has(nb.id)) {
+          nb.id = nextBugId();
+        }
+        store.bugs.push(nb);
+        existingIds.add(nb.id);
+      }
+    }
+    clearEditor();
+    markDirty();
+    renderBugList();
+  }
+
+  /* ── Report generation ──────────────────────────────────────── */
+
+  function generateMarkdownReport(project, bugs) {
+    const open  = bugs.filter(b => b.status === 'open').length;
+    const fixed = bugs.filter(b => b.status === 'fixed').length;
+    let md = `# Bug Report — ${project}\n`;
+    md += `Generated: ${new Date().toISOString().slice(0, 10)}\n`;
+    md += `Total: ${bugs.length} | Open: ${open} | Fixed: ${fixed}\n\n---\n\n`;
+    for (const bug of bugs) {
+      md += `## ${bug.id} — ${bug.title}\n`;
+      md += `**Area:** ${bug.area || 'Unspecified'}  \n`;
+      md += `**Severity:** ${bug.severity.charAt(0).toUpperCase() + bug.severity.slice(1)}  \n`;
+      md += `**Status:** ${bug.status.charAt(0).toUpperCase() + bug.status.slice(1)}  \n`;
+      if (bug.description) md += `**Description:** ${bug.description}  \n`;
+      if (bug.steps) md += `**Steps to Reproduce:** ${bug.steps}  \n`;
+      if (bug.expected) md += `**Expected:** ${bug.expected}  \n`;
+      if (bug.actual) md += `**Actual:** ${bug.actual}  \n`;
+      if (bug.screenshots && bug.screenshots.length) {
+        md += `**Screenshots:** ${bug.screenshots.length} attached (see .bugtrack.json for images)  \n`;
+      }
+      md += `\n---\n\n`;
+    }
+    return md;
+  }
+
+  function generateReport() {
+    const fmt = document.querySelector('input[name="btReportFmt"]:checked').value;
+    const filterVal = els.reportFilter.value;
+    let bugs = [...store.bugs];
+    if (filterVal === 'open') bugs = bugs.filter(b => b.status === 'open');
+    if (filterVal === 'fixed') bugs = bugs.filter(b => b.status === 'fixed');
+    const project = els.projectName.value.trim() || 'Untitled';
+    const date = new Date().toISOString().slice(0, 10);
+
+    if (fmt === 'markdown') {
+      const md = generateMarkdownReport(project, bugs);
+      triggerDownload(md, `${project.replace(/[^a-zA-Z0-9_-]/g, '-')}-bug-report-${date}.md`, 'text/markdown');
+    } else {
+      const data = { ...buildSaveData(), bugs };
+      triggerDownload(JSON.stringify(data, null, 2), `${project.replace(/[^a-zA-Z0-9_-]/g, '-')}-bug-report-${date}.bugtrack.json`, 'application/json');
+    }
+    els.reportDialog.style.display = 'none';
+  }
+
+  /* ── Event wiring ───────────────────────────────────────────── */
+
+  // New bug
+  $('btNewBugBtn').addEventListener('click', () => {
+    const id = nextBugId();
+    const bug = {
+      id, title: '', severity: 'medium', status: 'open', area: 'Other',
+      description: '', steps: '', expected: '', actual: '',
+      screenshots: [], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString()
+    };
+    store.bugs.push(bug);
+    markDirty();
+    renderBugList();
+    selectBug(id);
+    els.title.focus();
+  });
+
+  // Save bug (from editor)
+  $('btSaveBugBtn').addEventListener('click', () => {
+    const bug = store.bugs.find(b => b.id === store.selectedId);
+    if (!bug) return;
+    if (!els.title.value.trim()) { alert('Title is required.'); els.title.focus(); return; }
+    readEditorToBug(bug);
+    markDirty();
+    renderBugList();
+  });
+
+  // Delete bug
+  $('btDeleteBugBtn').addEventListener('click', () => {
+    if (!store.selectedId) return;
+    if (!confirm(`Delete ${store.selectedId}?`)) return;
+    store.bugs = store.bugs.filter(b => b.id !== store.selectedId);
+    clearEditor();
+    markDirty();
+    renderBugList();
+  });
+
+  // Save file
+  $('btSaveBtn').addEventListener('click', saveFile);
+
+  // Load file
+  $('btLoadBtn').addEventListener('click', () => els.loadInput.click());
+  els.loadInput.addEventListener('change', (e) => {
+    if (e.target.files[0]) loadFile(e.target.files[0]);
+    e.target.value = '';
+  });
+
+  // Merge dialog
+  $('btMergeCancelBtn').addEventListener('click', () => {
+    els.mergeDialog.style.display = 'none';
+    pendingLoadData = null;
+  });
+  $('btMergeReplaceBtn').addEventListener('click', () => {
+    if (pendingLoadData) applyLoadedData(pendingLoadData, 'replace');
+    els.mergeDialog.style.display = 'none';
+    pendingLoadData = null;
+  });
+  $('btMergeAppendBtn').addEventListener('click', () => {
+    if (pendingLoadData) applyLoadedData(pendingLoadData, 'merge');
+    els.mergeDialog.style.display = 'none';
+    pendingLoadData = null;
+  });
+
+  // Report dialog
+  $('btReportBtn').addEventListener('click', () => {
+    if (!store.bugs.length) { alert('No bugs to report.'); return; }
+    els.reportDialog.style.display = 'flex';
+  });
+  $('btReportCancelBtn').addEventListener('click', () => els.reportDialog.style.display = 'none');
+  $('btReportGenerateBtn').addEventListener('click', generateReport);
+
+  // Screenshot capture
+  $('btCaptureBtn').addEventListener('click', () => {
+    if (!store.selectedId) return;
+    const menu = els.captureMenu;
+    menu.style.display = menu.style.display === 'none' ? 'flex' : 'none';
+  });
+  $('btCaptureFullBtn').addEventListener('click', () => captureScreenshot('full'));
+  $('btCaptureWindowBtn').addEventListener('click', () => captureScreenshot('window'));
+
+  // Attach file
+  $('btAttachBtn').addEventListener('click', () => {
+    if (!store.selectedId) return;
+    els.attachInput.click();
+  });
+  els.attachInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => addScreenshotToBug(ev.target.result, file.name);
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  });
+
+  // Search / filter / sort
+  els.search.addEventListener('input', renderBugList);
+  els.filterStatus.addEventListener('change', renderBugList);
+  els.sort.addEventListener('change', renderBugList);
+
+  // Project name sync
+  els.projectName.addEventListener('input', () => { store.project = els.projectName.value; markDirty(); });
+
+  // Keyboard shortcuts
+  document.addEventListener('keydown', (e) => {
+    // Only handle when bugtracker tab is visible
+    const tab = document.getElementById('tab-bugtracker');
+    if (!tab || tab.offsetParent === null) return;
+    if (e.ctrlKey && e.key === 'n' && !e.shiftKey) {
+      e.preventDefault();
+      $('btNewBugBtn').click();
+    }
+    if (e.ctrlKey && e.key === 's' && !e.shiftKey) {
+      if (store.selectedId && document.activeElement && document.activeElement.closest('#btEditor')) {
+        e.preventDefault();
+        $('btSaveBugBtn').click();
+      }
+    }
+    if (e.ctrlKey && e.shiftKey && e.key === 'S') {
+      e.preventDefault();
+      saveFile();
+    }
+  });
+
+  // Close overlays on backdrop click
+  [els.reportDialog, els.mergeDialog, els.screenshotPreview].forEach(overlay => {
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) overlay.style.display = 'none';
+    });
+  });
+
+  // Initial render
+  renderBugList();
+  updateCounter();
+  updateStatusBar();
+
+})();
+</script>

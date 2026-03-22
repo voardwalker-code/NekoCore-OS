@@ -1,0 +1,10 @@
+{
+  "healthScan": {
+    "enabled": true,
+    "intervalMs": 3600000
+  },
+  "choreCheck": {
+    "enabled": true,
+    "intervalMs": 1800000
+  }
+}

@@ -17,7 +17,8 @@ test('extractToolCalls parses flexible TOOL tag syntax', () => {
   assert.equal(calls.length, 3);
   assert.equal(calls[0].command.toLowerCase(), 'ws_write');
   assert.equal(calls[1].command.toLowerCase(), 'ws_append');
-  assert.equal(calls[2].command.toLowerCase(), 'ws-move');
+  // Hyphens in command names are normalized to underscores
+  assert.equal(calls[2].command, 'ws_move');
   assert.equal(calls[0].params.path, 'notes.md');
   assert.equal(calls[1].params.content, ' more');
   assert.equal(calls[2].params.src, 'a.txt');

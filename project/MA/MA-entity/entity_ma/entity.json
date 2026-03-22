@@ -1,0 +1,30 @@
+{
+  "id": "ma",
+  "name": "MA",
+  "type": "memory-architect",
+  "description": "Minimal Memory Architect — the foundation layer. Stores and retrieves memory, runs tasks, ingests archives, and can health-scan and repair itself.",
+  "version": "1.0.0",
+  "capabilities": [
+    "memory-store",
+    "memory-search",
+    "archive-ingest",
+    "task-execution",
+    "web-search",
+    "web-fetch",
+    "cmd-run",
+    "health-scan",
+    "self-repair"
+  ],
+  "skills": [
+    "coding",
+    "memory-tools",
+    "python",
+    "rust",
+    "search-archive",
+    "self-repair",
+    "web-search",
+    "ws_mkdir",
+    "ws_move"
+  ],
+  "createdAt": "2025-07-17T00:00:00Z"
+}

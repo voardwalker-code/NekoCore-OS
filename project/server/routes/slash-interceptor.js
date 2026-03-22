@@ -21,6 +21,7 @@ const taskModuleRegistry = require('../brain/tasks/task-module-registry');
 const projectStore = require('../brain/tasks/task-project-store');
 const archiveWriter = require('../brain/tasks/task-archive-writer');
 const workspaceTools = require('../brain/workspace-tools');
+const maBridge = require('../services/ma-bridge');
 
 function _loadEntityProfile(entityId) {
   const fs = require('fs');
@@ -69,6 +70,7 @@ async function intercept(message, entityId, ctx) {
     case 'stop':       return _cmdStop(args);
     case 'list':       return _cmdList(entityId);
     case 'listactive': return _cmdListActive(entityId);
+    case 'ma':         return _dispatchMA(args, entityId, ctx);
     default:           return { handled: false }; // unknown → pass to LLM
   }
 }
@@ -137,6 +139,38 @@ function _cmdListActive(entityId) {
     `• [${s.id}]  ${s.taskType || '—'}  ${s.status}`
   ).join('\n');
   return _ok('Active tasks:\n' + lines);
+}
+
+// ── /ma ─────────────────────────────────────────────────────────────────────
+async function _dispatchMA(args, entityId, ctx) {
+  if (!args) return _ok('Usage: /ma <message for MA>\nExample: /ma write a unit test for auth-service');
+
+  // Ensure MA is running (auto-boot if needed)
+  const boot = await maBridge.ensureMARunning();
+  if (!boot.ok) {
+    return _ok(`⚠️ Could not reach MA: ${boot.reason}\nTry starting MA manually, or check /api/servers/ma/status.`);
+  }
+
+  const bootNote = boot.wasAlready ? '' : ' (auto-started)';
+
+  // Call MA's /api/chat
+  const result = await maBridge.callMA(args);
+  if (!result.ok) {
+    return _ok(`⚠️ MA call failed: ${result.error}`);
+  }
+
+  // Format the response
+  const parts = [`🧠 **MA${bootNote}**`];
+  if (result.taskType) parts.push(`Task type: ${result.taskType}`);
+  if (result.steps)    parts.push(`Steps: ${result.steps}`);
+  parts.push('');
+  parts.push(result.reply);
+  if (result.filesChanged && result.filesChanged.length) {
+    parts.push('');
+    parts.push('Files changed: ' + result.filesChanged.join(', '));
+  }
+
+  return _ok(parts.join('\n'));
 }
 
 // ── Shared task dispatch ────────────────────────────────────────────────────

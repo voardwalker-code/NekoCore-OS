@@ -151,7 +151,7 @@ function buildStepPrompt(plan, stepIndex, stepOutputs, userMessage, planFileCont
   }
 
   msg += `INSTRUCTIONS: Execute step ${stepIndex + 1} now. `;
-  msg += `Use [TOOL:ws_write] to write content to your workspace — DO NOT dump large text into the chat. `;
+  msg += `Use [TOOL:ws_write {"path":"filename"}]content[/TOOL] to write content to your workspace — DO NOT dump large text into the chat. `;
   msg += `When this step is complete, briefly describe what you accomplished.`;
   return msg;
 }
@@ -217,7 +217,7 @@ async function executeTaskPlan(plan, userMessage, options) {
 Stay in character. Your workspace directory is where you write all output files.
 
 CRITICAL RULES:
-- Use [TOOL:ws_write path="filename" content="..."] to write content TO FILES in your workspace
+- Use [TOOL:ws_write {"path":"filename"}] followed by content and [/TOOL] to write content TO FILES in your workspace
 - Do NOT output the full content of documents/stories/code into the chat — write them to files instead
 - If a step involves creating content (writing, research notes, outlines, etc.), ALWAYS write it to a file
 - You may use multiple tools in one response

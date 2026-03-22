@@ -1,0 +1,487 @@
+<div class="tab-content" id="tab-resourcemgr">
+  <div class="rm-container">
+    <!-- Type tabs -->
+    <div class="rm-type-tabs">
+      <button class="rm-type-tab rm-type-tab-active" data-rm-type="todos">Todos</button>
+      <button class="rm-type-tab" data-rm-type="pulses">Pulses</button>
+      <button class="rm-type-tab" data-rm-type="tasks">Tasks</button>
+      <button class="rm-type-tab" data-rm-type="projects">Projects</button>
+      <button class="rm-type-tab" data-rm-type="blueprints">Blueprints</button>
+    </div>
+
+    <!-- Main panels -->
+    <div class="rm-panels">
+      <!-- Left: list panel -->
+      <div class="rm-list-panel">
+        <div class="rm-list-controls">
+          <input type="text" class="rm-input rm-search" id="rmSearch" placeholder="Filter…">
+          <button class="rm-btn rm-btn-accent" id="rmNewBtn">+ New</button>
+        </div>
+        <div class="rm-list" id="rmList"></div>
+      </div>
+
+      <!-- Right: editor panel -->
+      <div class="rm-editor-panel">
+        <div class="rm-editor-placeholder" id="rmEditorPlaceholder">
+          <p>Select an item or click <strong>+ New</strong> to begin.</p>
+        </div>
+        <div class="rm-editor" id="rmEditor" style="display:none">
+          <div class="rm-editor-fields" id="rmEditorFields"></div>
+          <div class="rm-editor-actions" id="rmEditorActions">
+            <button class="rm-btn rm-btn-accent" id="rmSaveBtn">Save</button>
+            <button class="rm-btn" id="rmActiveBtn">Set Active</button>
+            <button class="rm-btn rm-btn-danger" id="rmDeleteBtn">Delete</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Status bar -->
+    <div class="rm-status-bar">
+      <span id="rmStatusCount">0 items</span>
+      <span id="rmStatusActive"></span>
+      <span class="rm-status-entity">
+        Entity: <select class="rm-select" id="rmEntitySelect"></select>
+      </span>
+    </div>
+  </div>
+
+  <script>
+  (function() {
+    if (window.__rmAppInit) return;
+    window.__rmAppInit = true;
+
+    // ── State ───────────────────────────────────────────
+    let currentType = 'todos';
+    let currentEntityId = '';
+    let items = [];
+    let selectedId = null;
+    let activeResources = {};
+    let isNewItem = false;
+
+    // ── DOM refs ────────────────────────────────────────
+    const typeTabs = document.querySelectorAll('.rm-type-tab');
+    const searchInput = document.getElementById('rmSearch');
+    const newBtn = document.getElementById('rmNewBtn');
+    const listEl = document.getElementById('rmList');
+    const editorPlaceholder = document.getElementById('rmEditorPlaceholder');
+    const editorEl = document.getElementById('rmEditor');
+    const fieldsEl = document.getElementById('rmEditorFields');
+    const actionsEl = document.getElementById('rmEditorActions');
+    const saveBtn = document.getElementById('rmSaveBtn');
+    const activeBtn = document.getElementById('rmActiveBtn');
+    const deleteBtn = document.getElementById('rmDeleteBtn');
+    const statusCount = document.getElementById('rmStatusCount');
+    const statusActive = document.getElementById('rmStatusActive');
+    const entitySelect = document.getElementById('rmEntitySelect');
+
+    // ── API helpers ─────────────────────────────────────
+    const API = '/api/resources';
+
+    async function apiFetch(path, opts = {}) {
+      try {
+        const res = await fetch(API + path, {
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
+          ...opts
+        });
+        return await res.json();
+      } catch (e) {
+        console.error('[RM] API error:', e);
+        return { ok: false, error: e.message };
+      }
+    }
+
+    // ── Entity loading ──────────────────────────────────
+    async function loadEntities() {
+      try {
+        const res = await fetch('/api/entities', { credentials: 'same-origin' });
+        const data = await res.json();
+        const entities = Array.isArray(data) ? data : (data.entities || []);
+        entitySelect.innerHTML = '';
+        entities.forEach(e => {
+          const id = e.id || e.entityId || e.name || '';
+          const opt = document.createElement('option');
+          opt.value = id;
+          opt.textContent = id;
+          entitySelect.appendChild(opt);
+        });
+        if (entities.length > 0) {
+          currentEntityId = entitySelect.value;
+        }
+      } catch (_) {}
+    }
+
+    // ── Cookie-cutter templates ─────────────────────────
+    const TEMPLATES = {
+      todos: {
+        title: 'Untitled Todo',
+        description: 'Describe what needs to be done...',
+        priority: 'medium',
+        status: 'active',
+        tags: []
+      },
+      pulses: {
+        name: 'New Chore',
+        description: 'Describe what this recurring task does...',
+        assignTo: '',
+        intervalMs: 3600000,
+        enabled: true
+      },
+      projects: {
+        name: 'New Project',
+        keywords: []
+      },
+      tasks: {
+        title: 'New Task Brief',
+        taskType: 'research',
+        description: 'Describe the task to be executed...',
+        status: 'planned'
+      },
+      blueprints: {
+        name: 'new-blueprint',
+        content: '# [Task Type] Blueprint\n\n## Task Overview\n\nYou are assigned a [task type] task. Follow this step-by-step workflow.\n\n## Pre-Task Checklist\n\n- [ ] Context gathered from entity memories\n- [ ] Tools available and validated\n- [ ] Output format confirmed\n\n## Execution Steps\n\n### Step 1: Gather Context\n[Describe what context to collect]\n\n### Step 2: Execute\n[Describe the core work]\n\n### Step 3: Quality Check\n[Describe validation criteria]\n\n## Output Format\n\n[Describe expected output structure]\n\n## Error Recovery\n\nIf a step fails:\n1. Log the error\n2. Attempt alternative approach\n3. Report if unrecoverable'
+      }
+    };
+
+    // ── Data loading ────────────────────────────────────
+    async function loadItems() {
+      items = [];
+      selectedId = null;
+      isNewItem = false;
+      const eid = currentEntityId;
+
+      if (currentType === 'todos' && eid) {
+        const r = await apiFetch('/todos/' + encodeURIComponent(eid));
+        if (r.ok) items = r.todos || [];
+      } else if (currentType === 'tasks' && eid) {
+        const r = await apiFetch('/tasks/' + encodeURIComponent(eid));
+        if (r.ok) items = r.tasks || [];
+      } else if (currentType === 'projects' && eid) {
+        const r = await apiFetch('/projects/' + encodeURIComponent(eid));
+        if (r.ok) items = r.projects || [];
+      } else if (currentType === 'pulses') {
+        const r = await apiFetch('/pulses');
+        if (r.ok) {
+          const pulseList = [];
+          if (r.chores && Array.isArray(r.chores)) {
+            r.chores.forEach(c => pulseList.push({ ...c, _subtype: 'chore' }));
+          }
+          items = pulseList;
+        }
+      } else if (currentType === 'blueprints') {
+        const r = await apiFetch('/blueprints');
+        if (r.ok) items = r.blueprints || [];
+      }
+
+      // Load active resources
+      if (eid) {
+        const ar = await apiFetch('/active/' + encodeURIComponent(eid));
+        if (ar.ok) activeResources = ar.active || {};
+      }
+
+      renderList();
+      showPlaceholder();
+    }
+
+    // ── List rendering ──────────────────────────────────
+    function getItemId(item) {
+      if (currentType === 'todos') return item.id;
+      if (currentType === 'tasks') return item.taskId;
+      if (currentType === 'projects') return item.id;
+      if (currentType === 'pulses') return item.id;
+      if (currentType === 'blueprints') return item.category + '/' + item.name;
+      return item.id || '';
+    }
+
+    function getItemLabel(item) {
+      if (currentType === 'todos') return item.title || item.id;
+      if (currentType === 'tasks') return (item.brief && item.brief.userMessage) || item.taskId || '';
+      if (currentType === 'projects') return item.name || item.id;
+      if (currentType === 'pulses') return item.name || item.id || '';
+      if (currentType === 'blueprints') return item.name || '';
+      return '';
+    }
+
+    function isItemActive(item) {
+      if (currentType === 'todos') return activeResources.activeTodo === item.id;
+      if (currentType === 'tasks') return activeResources.activeTask === item.taskId;
+      if (currentType === 'projects') return activeResources.activeProject === item.id;
+      if (currentType === 'pulses') return activeResources.activePulse === item.id;
+      return false;
+    }
+
+    function renderList() {
+      const filter = (searchInput.value || '').toLowerCase();
+      listEl.innerHTML = '';
+      const filtered = items.filter(item => {
+        const label = getItemLabel(item).toLowerCase();
+        return !filter || label.includes(filter);
+      });
+
+      filtered.forEach(item => {
+        const id = getItemId(item);
+        const div = document.createElement('div');
+        div.className = 'rm-list-item' + (id === selectedId ? ' rm-list-item-selected' : '');
+        const active = isItemActive(item);
+        div.innerHTML = '<span class="rm-list-label">' + (active ? '★ ' : '') + escHtml(getItemLabel(item)) + '</span>';
+        if (currentType === 'todos') {
+          div.innerHTML += '<span class="rm-list-badge rm-badge-' + (item.priority || 'medium') + '">' + escHtml(item.priority || '') + '</span>';
+        }
+        if (currentType === 'blueprints') {
+          div.innerHTML += '<span class="rm-list-badge rm-badge-' + item.category + '">' + escHtml(item.category) + '</span>';
+        }
+        div.addEventListener('click', () => selectItem(id));
+        listEl.appendChild(div);
+      });
+
+      statusCount.textContent = filtered.length + ' item' + (filtered.length !== 1 ? 's' : '');
+      updateActiveStatus();
+    }
+
+    function updateActiveStatus() {
+      const parts = [];
+      if (activeResources.activeTodo) parts.push('Todo: ' + activeResources.activeTodo);
+      if (activeResources.activeProject) parts.push('Project: ' + activeResources.activeProject);
+      if (activeResources.activeTask) parts.push('Task: ' + activeResources.activeTask);
+      statusActive.textContent = parts.length ? 'Active: ' + parts.join(' | ') : '';
+    }
+
+    function escHtml(s) {
+      const d = document.createElement('div');
+      d.textContent = s;
+      return d.innerHTML;
+    }
+
+    // ── Editor rendering ────────────────────────────────
+    function showPlaceholder() {
+      editorPlaceholder.style.display = '';
+      editorEl.style.display = 'none';
+    }
+
+    function showEditor() {
+      editorPlaceholder.style.display = 'none';
+      editorEl.style.display = '';
+    }
+
+    function selectItem(id) {
+      selectedId = id;
+      isNewItem = false;
+      renderList();
+      renderEditor();
+      showEditor();
+    }
+
+    function renderEditor() {
+      const item = isNewItem ? null : items.find(i => getItemId(i) === selectedId);
+      if (!item && !isNewItem) { showPlaceholder(); return; }
+      const data = item || TEMPLATES[currentType] || {};
+      fieldsEl.innerHTML = '';
+
+      if (currentType === 'todos') {
+        fieldsEl.innerHTML = renderTodoFields(data);
+      } else if (currentType === 'projects') {
+        fieldsEl.innerHTML = renderProjectFields(data);
+      } else if (currentType === 'tasks') {
+        fieldsEl.innerHTML = renderTaskFields(data);
+      } else if (currentType === 'pulses') {
+        fieldsEl.innerHTML = renderPulseFields(data);
+      } else if (currentType === 'blueprints') {
+        fieldsEl.innerHTML = renderBlueprintFields(data);
+      }
+
+      // Visibility of action buttons
+      const isBlueprint = currentType === 'blueprints';
+      const isTask = currentType === 'tasks';
+      activeBtn.style.display = isBlueprint ? 'none' : '';
+      deleteBtn.style.display = (isTask && !isNewItem) ? 'none' : '';
+      saveBtn.style.display = (isTask && !isNewItem) ? 'none' : '';
+
+      if (!isBlueprint && item) {
+        const active = isItemActive(item);
+        activeBtn.textContent = active ? 'Unset Active' : 'Set Active';
+      }
+    }
+
+    // ── Field renderers (per type) ──────────────────────
+    function fieldRow(label, inputHtml) {
+      return '<div class="rm-field"><label class="rm-field-label">' + escHtml(label) + '</label>' + inputHtml + '</div>';
+    }
+
+    function renderTodoFields(d) {
+      return fieldRow('Title', '<input class="rm-input" id="rmF_title" value="' + escAttr(d.title || '') + '">') +
+        fieldRow('Description', '<textarea class="rm-textarea" id="rmF_description" rows="3">' + escHtml(d.description || '') + '</textarea>') +
+        fieldRow('Priority', '<select class="rm-select" id="rmF_priority"><option value="critical"' + sel(d.priority, 'critical') + '>Critical</option><option value="high"' + sel(d.priority, 'high') + '>High</option><option value="medium"' + sel(d.priority, 'medium') + '>Medium</option><option value="low"' + sel(d.priority, 'low') + '>Low</option></select>') +
+        fieldRow('Status', '<select class="rm-select" id="rmF_status"><option value="active"' + sel(d.status, 'active') + '>Active</option><option value="paused"' + sel(d.status, 'paused') + '>Paused</option><option value="done"' + sel(d.status, 'done') + '>Done</option><option value="cancelled"' + sel(d.status, 'cancelled') + '>Cancelled</option></select>') +
+        fieldRow('Tags', '<input class="rm-input" id="rmF_tags" value="' + escAttr((d.tags || []).join(', ')) + '" placeholder="comma-separated">');
+    }
+
+    function renderProjectFields(d) {
+      return fieldRow('Name', '<input class="rm-input" id="rmF_name" value="' + escAttr(d.name || '') + '">') +
+        fieldRow('Keywords', '<input class="rm-input" id="rmF_keywords" value="' + escAttr((d.keywords || []).join(', ')) + '" placeholder="comma-separated">');
+    }
+
+    function renderTaskFields(d) {
+      const brief = d.brief || d;
+      return fieldRow('Task ID', '<input class="rm-input" id="rmF_taskId" value="' + escAttr(d.taskId || '') + '" readonly>') +
+        fieldRow('Type', '<input class="rm-input" id="rmF_taskType" value="' + escAttr(brief.taskType || d.taskType || '') + '" ' + (isNewItem ? '' : 'readonly') + '>') +
+        fieldRow('Message', '<textarea class="rm-textarea" id="rmF_description" rows="3" ' + (isNewItem ? '' : 'readonly') + '>' + escHtml(brief.userMessage || brief.description || d.description || '') + '</textarea>') +
+        fieldRow('Status', '<input class="rm-input" id="rmF_status" value="' + escAttr(brief.status || d.status || '') + '" readonly>');
+    }
+
+    function renderPulseFields(d) {
+      return fieldRow('Name', '<input class="rm-input" id="rmF_name" value="' + escAttr(d.name || '') + '">') +
+        fieldRow('Description', '<textarea class="rm-textarea" id="rmF_description" rows="3">' + escHtml(d.description || '') + '</textarea>') +
+        fieldRow('Assign To', '<input class="rm-input" id="rmF_assignTo" value="' + escAttr(d.assignTo || '') + '">') +
+        fieldRow('Interval (ms)', '<input class="rm-input" type="number" id="rmF_intervalMs" value="' + (d.intervalMs || 3600000) + '">') +
+        fieldRow('Enabled', '<select class="rm-select" id="rmF_enabled"><option value="true"' + sel(String(d.enabled !== false), 'true') + '>Yes</option><option value="false"' + sel(String(d.enabled === false), 'true') + '>No</option></select>');
+    }
+
+    function renderBlueprintFields(d) {
+      return fieldRow('Name', '<input class="rm-input" id="rmF_name" value="' + escAttr(d.name || '') + '" ' + (isNewItem ? '' : 'readonly') + '>') +
+        (d.category ? fieldRow('Category', '<input class="rm-input" value="' + escAttr(d.category) + '" readonly>') : '') +
+        '<div class="rm-field"><label class="rm-field-label">Content</label><textarea class="rm-textarea rm-textarea-lg" id="rmF_content" rows="14">' + escHtml(d.content || '') + '</textarea></div>';
+    }
+
+    function sel(val, target) { return val === target ? ' selected' : ''; }
+    function escAttr(s) { return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+    // ── Gather field values ─────────────────────────────
+    function gatherFields() {
+      if (currentType === 'todos') {
+        return {
+          title: (document.getElementById('rmF_title') || {}).value || '',
+          description: (document.getElementById('rmF_description') || {}).value || '',
+          priority: (document.getElementById('rmF_priority') || {}).value || 'medium',
+          status: (document.getElementById('rmF_status') || {}).value || 'active',
+          tags: ((document.getElementById('rmF_tags') || {}).value || '').split(',').map(t => t.trim()).filter(Boolean)
+        };
+      }
+      if (currentType === 'projects') {
+        return {
+          name: (document.getElementById('rmF_name') || {}).value || '',
+          keywords: ((document.getElementById('rmF_keywords') || {}).value || '').split(',').map(k => k.trim()).filter(Boolean)
+        };
+      }
+      if (currentType === 'pulses') {
+        return {
+          name: (document.getElementById('rmF_name') || {}).value || '',
+          description: (document.getElementById('rmF_description') || {}).value || '',
+          assignTo: (document.getElementById('rmF_assignTo') || {}).value || '',
+          intervalMs: parseInt((document.getElementById('rmF_intervalMs') || {}).value, 10) || 3600000,
+          enabled: (document.getElementById('rmF_enabled') || {}).value === 'true'
+        };
+      }
+      if (currentType === 'blueprints') {
+        return {
+          name: (document.getElementById('rmF_name') || {}).value || '',
+          content: (document.getElementById('rmF_content') || {}).value || ''
+        };
+      }
+      return {};
+    }
+
+    // ── CRUD actions ────────────────────────────────────
+    async function handleSave() {
+      const data = gatherFields();
+      const eid = encodeURIComponent(currentEntityId);
+
+      if (currentType === 'todos') {
+        if (isNewItem) {
+          const r = await apiFetch('/todos/' + eid, { method: 'POST', body: JSON.stringify(data) });
+          if (r.ok) { isNewItem = false; selectedId = r.todo.id; }
+        } else {
+          await apiFetch('/todos/' + eid + '/' + encodeURIComponent(selectedId), { method: 'PUT', body: JSON.stringify(data) });
+        }
+      } else if (currentType === 'projects') {
+        if (isNewItem) {
+          const r = await apiFetch('/projects/' + eid, { method: 'POST', body: JSON.stringify(data) });
+          if (r.ok) { isNewItem = false; selectedId = r.project.id; }
+        } else {
+          await apiFetch('/projects/' + eid + '/' + encodeURIComponent(selectedId), { method: 'PUT', body: JSON.stringify(data) });
+        }
+      } else if (currentType === 'pulses') {
+        if (isNewItem) {
+          const r = await apiFetch('/pulses/chores', { method: 'POST', body: JSON.stringify(data) });
+          if (r.ok && r.id) { isNewItem = false; selectedId = r.id; }
+        } else {
+          await apiFetch('/pulses/chores/' + encodeURIComponent(selectedId), { method: 'PUT', body: JSON.stringify(data) });
+        }
+      } else if (currentType === 'blueprints') {
+        if (isNewItem) {
+          const r = await apiFetch('/blueprints/modules', { method: 'POST', body: JSON.stringify(data) });
+          if (r.ok) { isNewItem = false; selectedId = 'modules/' + data.name; }
+        } else {
+          await apiFetch('/blueprints/' + selectedId, { method: 'PUT', body: JSON.stringify({ content: data.content }) });
+        }
+      }
+      await loadItems();
+      if (selectedId) { selectItem(selectedId); }
+    }
+
+    async function handleDelete() {
+      if (!selectedId || isNewItem) return;
+      if (!confirm('Delete this item?')) return;
+      const eid = encodeURIComponent(currentEntityId);
+
+      if (currentType === 'todos') {
+        await apiFetch('/todos/' + eid + '/' + encodeURIComponent(selectedId), { method: 'DELETE' });
+      } else if (currentType === 'projects') {
+        await apiFetch('/projects/' + eid + '/' + encodeURIComponent(selectedId), { method: 'DELETE' });
+      } else if (currentType === 'pulses') {
+        await apiFetch('/pulses/chores/' + encodeURIComponent(selectedId), { method: 'DELETE' });
+      } else if (currentType === 'blueprints') {
+        await apiFetch('/blueprints/' + selectedId, { method: 'DELETE' });
+      }
+      selectedId = null;
+      await loadItems();
+    }
+
+    async function handleSetActive() {
+      if (!selectedId || currentType === 'blueprints') return;
+      const eid = encodeURIComponent(currentEntityId);
+      const typeMap = { todos: 'todo', tasks: 'task', projects: 'project', pulses: 'pulse' };
+      const type = typeMap[currentType];
+      const item = items.find(i => getItemId(i) === selectedId);
+      const alreadyActive = item && isItemActive(item);
+      await apiFetch('/active/' + eid, {
+        method: 'POST',
+        body: JSON.stringify({ type, id: alreadyActive ? null : selectedId })
+      });
+      await loadItems();
+      if (selectedId) { selectItem(selectedId); }
+    }
+
+    async function handleNew() {
+      isNewItem = true;
+      selectedId = '__new__';
+      renderList();
+      renderEditor();
+      showEditor();
+    }
+
+    // ── Event wiring ────────────────────────────────────
+    typeTabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        typeTabs.forEach(t => t.classList.remove('rm-type-tab-active'));
+        tab.classList.add('rm-type-tab-active');
+        currentType = tab.dataset.rmType;
+        loadItems();
+      });
+    });
+
+    searchInput.addEventListener('input', () => renderList());
+    newBtn.addEventListener('click', handleNew);
+    saveBtn.addEventListener('click', handleSave);
+    deleteBtn.addEventListener('click', handleDelete);
+    activeBtn.addEventListener('click', handleSetActive);
+    entitySelect.addEventListener('change', () => {
+      currentEntityId = entitySelect.value;
+      loadItems();
+    });
+
+    // ── Init ────────────────────────────────────────────
+    loadEntities().then(() => loadItems());
+  })();
+  </script>
+</div>

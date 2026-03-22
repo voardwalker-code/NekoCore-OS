@@ -44,21 +44,600 @@ Emergency exception log:
 
 ---
 
-## Stop/Resume Snapshot — 2026-03-21 (Server-Side Slash Interceptor COMPLETE)
+## Stop/Resume Snapshot — 2026-03-22 (MA Workspace Reset Complete)
 
 - **Current phase:** `Phase 4 — Feature work`
-- **Current slice:** `None — awaiting next plan`
-- **Last completed work:** `Server-side slash command interceptor (server/routes/slash-interceptor.js) — intercepts /command messages before LLM pipeline so slash commands work from all clients (entity chat, NekoCore OS, failsafe); wired into /api/chat and /api/nekocore/chat; CORE_REGISTRY now 301 entries; 2012/2012 (0 fail)`
+- **Current slice:** `MA workspace reset — complete`
+- **Last completed work:** `Reset MA workspace sub-projects from completed builds to starter scaffolds. Deleted 734 built files. Created fresh PROJECT-MANIFEST.json (all statuses "not-started"), BUILD-ORDER.md, and package.json for both rem-system and nekocore. Updated .gitignore to granular rules (scaffold files tracked, build artifacts ignored). Reset MA-WORKLOG.md. Updated docs/MA-AND-PROJECT-STRUCTURE.md to reflect starter scaffold state.`
 - **In-progress item:** `none`
 - **Blocking issue:** `none`
-- **Next action on resume:** `Pick up next plan or user request`
+- **Next action on resume:** `User testing of Resource Manager app. Then proceed to next plan (Setup Wizard or other).`
 - **Active plans:**
+  - `Documents/current/PLAN-RESOURCE-MANAGER-APP-v1.md` — Resource Manager App — `Complete`
+  - `Documents/current/PLAN-BUG-TRACKER-APP-v1.md` — Bug Tracker App — `Complete`
+  - `Documents/current/PLAN-SETUP-WIZARD-v1.md` — Setup Wizard — `Plan ready, awaiting review`
+  - `Documents/current/PLAN-OS-TOOL-UPGRADE-v1.md` — OS Tool Upgrade — `Complete`
+  - `Documents/current/PLAN-ENTITY-GENESIS-v1.md` — Entity Genesis Skill — `Complete`
+  - `Documents/current/PLAN-MA-BRIDGE-v1.md` — MA Bridge Slash Command — `Complete`
   - `Documents/current/PLAN-ENTITY-ORCHESTRATION-v1.md` — Phase 4.10: Entity Orchestration — `Complete`
   - `Documents/current/PLAN-TOKEN-OPTIMIZATION-v1.md` — COMPLETE (Phases 1–4 done, Phase 5 cancelled)
   - `Documents/current/PLAN-COGNITIVE-STATE-INTEGRATION-v1.md` — COMPLETE (all 4 phases, 14 slices)
   - `Documents/current/PLAN-INTROSPECTION-LOOP-v1.md` — 6-axis self-inquiry brain-loop phase with local model
 - **Prior plan (paused):** `Documents/current/PLAN-SLASH-COMMAND-SYSTEM-v1.md — A0/A1/A2 complete; A3/A4 future`
 - **Phase 5 plan:** `PLAN-PREDICTIVE-MEMORY-v1.md — held`
+- **MA workspace projects (starter scaffolds):**
+  - `MA-workspace/rem-system/` — REM System Core starter scaffold (26 modules defined, 0 built, port 3860)
+  - `MA-workspace/nekocore/` — NekoCore Cognitive Mind starter scaffold (97 modules defined, 0 built, port 3870, pre-req: rem-system)
+
+---
+
+## Session Ledger — 2026-03-22 (MA Workspace Reset)
+
+Status: `Complete`
+
+- **Purpose:** Reset MA workspace sub-projects from completed builds to starter scaffolds so the repo ships buildable example projects instead of finished output.
+
+- **Changes:**
+  1. **MA-workspace/rem-system/** — Deleted all completed build files (42 files). Created fresh starter scaffold: `PROJECT-MANIFEST.json` (8 layers, 26 modules, all "not-started"), `BUILD-ORDER.md` (full construction guide), `package.json` (zero deps).
+  2. **MA-workspace/nekocore/** — Deleted all completed build files (692 files). Created fresh starter scaffold: `PROJECT-MANIFEST.json` (5 parts, 97 modules, all "not-started"), `BUILD-ORDER.md` (full construction guide), `package.json` (express dep for routes).
+  3. **MA-workspace/MA-WORKLOG.md** — Reset to clean state (no active project, no active task).
+  4. **.gitignore** — Replaced 2 blanket directory exclusions with 20 granular rules: scaffold files (PROJECT-MANIFEST.json, BUILD-ORDER.md, package.json) are now tracked in git; build artifacts (server/, contracts/, client/, tests/, scripts/, node_modules/, transport files) remain ignored.
+  5. **docs/MA-AND-PROJECT-STRUCTURE.md** — Updated from "completed builds" language to "starter scaffolds". Rewrote gitignore rationale section. Updated sub-project build history to reflect scaffold state.
+
+- **Files created:** `MA-workspace/rem-system/PROJECT-MANIFEST.json`, `MA-workspace/rem-system/BUILD-ORDER.md`, `MA-workspace/rem-system/package.json`, `MA-workspace/nekocore/PROJECT-MANIFEST.json`, `MA-workspace/nekocore/BUILD-ORDER.md`, `MA-workspace/nekocore/package.json`
+- **Files modified:** `MA-workspace/MA-WORKLOG.md`, `.gitignore`, `docs/MA-AND-PROJECT-STRUCTURE.md`, `WORKLOG.md`, `CHANGELOG.md`
+
+---
+
+## Session Ledger — 2026-03-22 (Docs Update + Express Audit)
+
+Status: `Complete`
+
+- **Purpose:** Update all documentation to reflect smart port management feature. Audit Express usage to determine if it's a real dependency.
+
+- **Changes:**
+  1. **docs/USER-GUIDE.md** — Updated startup output block to show port-guard behavior, added note about auto-port-resolution. Updated troubleshooting section (removed manual `netstat` advice, replaced with port-guard explanation). Updated Related Servers table header to "Default Port" with note about smart port management.
+  2. **README.md** — Removed bogus `"port": 3000` from both Ollama and OpenRouter config examples (config file has no port field). Added note explaining port is set via env var or built-in default. Updated "Zero dependencies" line and Technical Specification table to explicitly say "no Express, no frameworks."
+  3. **project/QUICKSTART.md** — Updated to say "Open the URL shown in the startup banner" with fallback note.
+  4. **project/MA/USER-GUIDE.md** — Fixed port table: NekoCore OS 3000→3847. Added smart port management note.
+  5. **project/MA/README.md** — Simplified Ports table (removed separate fallback entry, unified to "3851–3860 fallback range"). Added smart port management description.
+  6. **Express audit result:** Express is NOT used anywhere in the shipped codebase. All 13 `require('express')` imports are in `project/MA/MA-workspace/nekocore/` which is gitignored. No package.json lists express. The main NekoCore OS server and MA both use raw `http.createServer()`.
+
+- **Files modified:** `docs/USER-GUIDE.md`, `README.md`, `project/QUICKSTART.md`, `project/MA/USER-GUIDE.md`, `project/MA/README.md`, `WORKLOG.md`
+
+---
+
+## Session Ledger — 2026-03-22 (Smart Port Management)
+
+Status: `Complete`
+
+- **Purpose:** Implement smart port management for both NekoCore OS and MA servers — detect port conflicts, identify running instances, prompt users before spawning duplicates, support power users running multiple servers.
+
+- **Changes:**
+  1. **server/services/port-guard.js** (new) — Shared port-guard utility with `resolvePort()`, `isPortFree()`, `identifyInstance()`, `probe()`. Checks default port → if busy, probes `/api/nekocore/status` and `/api/health` to identify NekoCore OS or MA instances → prompts user via stdin (non-TTY safe: auto-answers for background launches) → finds next free port in configurable range. Supports `allowMultiple` flag.
+  2. **server/server.js** — Replaced hard-crash `EADDRINUSE` handler and static `const PORT = 3847` with async `resolvePort()` flow. Port is now resolved before `server.listen()`. Old "REM System may already be running" message removed. `windowTitle` references updated from `REM-System` to `NekoCore-OS`.
+  3. **MA/MA-Server.js** — Replaced local `isPortFree()`/`findPort()` with shared `resolvePort()` from port-guard. Removed unused `net` import. MA now identifies existing instances and prompts before silently finding next port. Silent fallback preserved for `MA_NO_OPEN_BROWSER` (process-manager) launches via non-TTY detection.
+  4. **tests/unit/port-guard.test.js** (new) — 10 tests: `isPortFree` (free/occupied), `probe` (responding/unoccupied), `identifyInstance` (NekoCore OS/MA/unoccupied), `resolvePort` (free port/different-service fallback/same-type duplicate rejection). All passing.
+
+- **Files created:** `server/services/port-guard.js`, `tests/unit/port-guard.test.js`
+- **Files modified:** `server/server.js`, `MA/MA-Server.js`, `WORKLOG.md`, `CHANGELOG.md`
+
+---
+
+## Session Ledger — 2026-03-22 (User Guides)
+
+Status: `Complete`
+
+- **Purpose:** Create a comprehensive NekoCore OS User Guide and update the existing MA User Guide with missing feature documentation.
+
+- **Changes:**
+  1. **docs/USER-GUIDE.md** (new) — Full 24-section NekoCore OS user guide: Getting Started (server startup, first-time setup, requirements), Desktop Interface (shell layout, header widgets, windows), Start Menu & App Launcher (sections, categories), Core Apps (Chat, Entity, Creator, Users), Mind & Identity Apps (Visualizer, Physical Body), Journal & Dream Apps (Dream Gallery, Life Diary, Dream Diary), Tools & Workspace Apps (Workspace, Documents, Skills, Browser, Bug Tracker, Resource Manager, Popouts), System Apps (Settings, Advanced, Task Manager, Observability, Core Debug, Archive, NekoCore OS), Entity System (creation methods, switching, privacy, deletion, data layout), Chat & Conversations (pipeline stages, inner dialog, file context, skill approval), Slash Commands (8 commands with /ma bridge), Brain & Cognitive Engine (loop, deep sleep, neurochemistry, user controls), Memory System (tiers, recall, decay, consolidation, beliefs, graph), Dream System (intuition, maintenance, diary vs gallery), LLM Configuration (5 slots, OpenRouter/Ollama setup, per-aspect overrides), System Health & Maintenance (5 tools, cognitive bus stats), Theme System (selection, architecture), Keyboard Shortcuts (chat, browser, bug tracker, general), MA Integration (what MA provides, starting, /ma command, related servers), Multi-User & Profiles (profiles, relationships, switching), Tasks & Projects (single tasks, projects, monitoring), Server Administration (start/stop, backup/restore, reset, ports, Telegram), Troubleshooting (6 common issues), Tips & Best Practices (conversations, entity development, performance, developers).
+  2. **project/MA/USER-GUIDE.md** (updated) — TOC expanded from 18 to 23 entries. Added 6 new sections: Activity Monitor (real-time sidebar, task plan display, session worklog), Worklog System (persistent MA-WORKLOG.md, auto-updated, `/worklog` command), Deep Research (trigger phrases, comparison table vs regular research, output structure), Entity Genesis Skill (multi-round workflow, requirements, what makes it special), NekoCore OS Integration (`/ma` bridge, auto-boot, use cases, ports). Expanded Memory System section with: Chat History Persistence (8-message restore on refresh), Memory Chain IDs (linked user+assistant memories, chain sibling expansion), ISO Timestamps (human-readable datetime on all records), Blueprint Injection (task-type blueprints in conversational mode). Added Activity Monitor and Workspace Path to Browser GUI section.
+  3. **docs/ARCHITECTURE-OVERVIEW.md** — Document Index updated with USER-GUIDE.md entry.
+
+- **Files created:** `docs/USER-GUIDE.md`
+- **Files modified:** `project/MA/USER-GUIDE.md`, `docs/ARCHITECTURE-OVERVIEW.md`, `WORKLOG.md`, `CHANGELOG.md`
+
+---
+
+## Session Ledger — 2026-03-22 (Documentation + Gitignore Update)
+
+Status: `Complete`
+
+- **Purpose:** Update documentation to reflect all recent feature work, explain MA's central role in the project structure, and gitignore completed MA workspace builds.
+
+- **Changes:**
+  1. **.gitignore** — Added `/project/MA/MA-workspace/nekocore/` and `/project/MA/MA-workspace/rem-system/` with comments explaining they are completed builds to be replaced with incomplete starter examples. Verified with `git check-ignore -v`. Neither project was previously tracked.
+  2. **docs/MA-AND-PROJECT-STRUCTURE.md** (new) — Comprehensive document explaining: why MA lives inside `project/`, folder relationship between OS (port 3000), MA (port 3850), REM System (port 3860), and NekoCore Cognitive Mind (port 3870), server-to-server communication patterns (MA Bridge `/ma` command, pulse/chore proxy, process manager lifecycle), sub-project build history, gitignore rationale, and how to build new projects with MA.
+  3. **docs/ARCHITECTURE-OVERVIEW.md** — Version bumped to 0.10.0. Updated: Current Direction Snapshot (added 7 completed phases: Phase 4.10 Entity Orchestration, OS Tool Upgrade, Entity Genesis, MA Bridge, Bug Tracker, Resource Manager), Subsystem Map (9 new entries: MA Bridge, Process Manager, Entity Enrichment, Todo Store, Resource Active State, Resource Manager Routes, Bug Tracker), Server Routing Structure (expanded from 12 to 20 route files, adding entity-enrichment, browser, vfs, nekocore, archive, process-manager, resource-manager routes), Entity Folder Layout (added `active-resources.json` and `memories/todos/`), Document Index (added MA-AND-PROJECT-STRUCTURE.md, HOW-TO-CREATE-AN-APP.md, APP-FOLDER-OWNERSHIP.md).
+
+- **Files created:** `docs/MA-AND-PROJECT-STRUCTURE.md`
+- **Files modified:** `.gitignore`, `docs/ARCHITECTURE-OVERVIEW.md`, `WORKLOG.md`
+- **Verification:** `git check-ignore -v` confirmed both gitignore patterns match correctly. All doc updates are factual summaries of already-implemented code.
+
+---
+
+## Session Ledger — 2026-03-22 (Bug Tracker App)
+
+Status: `Complete`
+
+- **Purpose:** Standalone NekoCore OS developer tool for tracking bugs/errors with screenshot capture, structured JSON persistence, and Markdown report generation.
+
+- **Changes:**
+  1. **tab-bugtracker.html** (new) — Complete non-core app in `apps/non-core/core/`. Two-panel layout: left panel with searchable/filterable/sortable bug list; right panel with full bug editor (title, severity radio group, status/area dropdowns, description/steps/expected/actual textareas). IIFE with `__bugtrackerInit` guard. Includes: bug CRUD with auto-generated sequential IDs (BUG-001+), screenshot capture via html2canvas (local file with CDN fallback) for full OS or active window with JPEG compression for large captures, save/load `.bugtrack.json` files with merge dialog, Markdown/JSON report generation with format+filter options, keyboard shortcuts (Ctrl+N/S/Shift+S), dirty tracking with status bar.
+  2. **non-core-apps.manifest.json** — Added bugtracker entry: `{ tabId: "bugtracker", enabled: true, path: "apps/non-core/core/tab-bugtracker.html", label: "Bug Tracker", icon: "🐛", navTarget: "#navOptionalAppsHost" }`.
+  3. **app.js WINDOW_APPS** — Added `{ tab: 'bugtracker', label: 'Bug Tracker', icon: '<svg>…</svg>', accent: 'red', w: 960, h: 700 }`.
+  4. **app.js APP_CATEGORY_BY_TAB** — Added `bugtracker: 'tools'`.
+  5. **ui-v2.css** — Appended ~120 lines of `.bt-*` namespaced CSS: container layout, toolbar, panels, list items with severity dots, editor form fields, severity radio group with `:has()` color coding, screenshot gallery with thumbnails, dialog overlays, preview container, status bar.
+  6. **bugtracker-guards.test.js** (new) — 22 tests across 6 suites: manifest guard, WINDOW_APPS guard, HTML payload guard, schema validation, bug ID generation, Markdown report generation. All passing.
+
+- **Files created:** `client/apps/non-core/core/tab-bugtracker.html`, `tests/unit/bugtracker-guards.test.js`
+- **Files modified:** `client/apps/non-core/non-core-apps.manifest.json`, `client/js/app.js`, `client/css/ui-v2.css`
+- **Plan:** `Documents/current/PLAN-BUG-TRACKER-APP-v1.md`
+- **Verification:** 22/22 bugtracker tests, 2088/2089 full suite (1 pre-existing unrelated failure in system-apps-manifest-guards re: ma-server).
+
+---
+
+## Session Ledger — 2026-03-22 (MA Bridge Slash Command)
+
+Status: `Complete`
+
+- **Purpose:** Enable NekoCore OS entities to call MA's HTTP API server-to-server via `/ma` slash command — OS keeps its cognitive brain, MA provides tool execution.
+
+- **Changes:**
+  1. **process-manager-routes.js helpers export** — `SERVERS`, `startServer`, `stopServer`, `healthCheck`, `readPid`, `isRunning` now exported alongside the factory function for reuse by ma-bridge.js.
+  2. **server/services/ma-bridge.js** (new) — `ensureMARunning()` auto-boots MA via process-manager helpers if not healthy, polls up to 20s. `callMA(message)` POSTs to `localhost:3850/api/chat` with 120s timeout, returns `{ ok, reply, filesChanged, taskType, steps }`. `getMAHealth()` returns running/healthy/pid/port status.
+  3. **slash-interceptor.js /ma command** — New `case 'ma':` dispatches to `_dispatchMA(args, entityId, ctx)` which calls ensureMARunning → callMA → formats response with MA attribution, boot note, task type, files changed.
+  4. **client slash-commands.js** — `/ma` registered in COMMANDS array for autocomplete.
+  5. **tests/unit/ma-bridge.test.js** (new) — 15 guard + unit tests: file existence, export shapes, source analysis of slash-interceptor, client registration, runtime behavior tests (callMA, getMAHealth, ensureMARunning shapes).
+
+- **Files modified:** `server/routes/process-manager-routes.js`, `server/routes/slash-interceptor.js`, `client/js/apps/core/slash-commands.js`
+- **Files created:** `server/services/ma-bridge.js`, `tests/unit/ma-bridge.test.js`
+- **Plan:** `Documents/current/PLAN-MA-BRIDGE-v1.md`
+- **Verification:** 15/15 ma-bridge tests, 22/22 slash-command guards, all 3 JS files pass `node --check`.
+
+---
+
+## Session Ledger — 2026-03-22 (Entity Genesis Skill)
+
+Status: `Complete`
+
+- **Purpose:** Add a new MA skill for deep, iterative entity creation. MA designs a character, creates the entity on the OS, then generates memories chapter by chapter — reading and responding to the entity's evolving cognitive state between rounds.
+
+- **Changes:**
+  1. **OS Entity Enrichment Routes** (`server/routes/entity-enrichment-routes.js`, new) — Three API endpoints: `POST /api/entities/:id/memories/inject` (creates memory folder with log.json/semantic.txt/memory.zip, updates memory-index.json), `POST /api/entities/:id/cognitive/tick` (runs single-cycle neurochemistry homeostasis + memory consolidation + belief integration via cognitive phases), `GET /api/entities/:id/cognitive/state` (read-only snapshot of neurochemistry, persona, beliefs, goals, memory count). All validate entity existence. Registered in `server/server.js`.
+  2. **MA entity_genesis Task Type** (`MA/MA-server/MA-tasks.js`) — Added `entity_genesis: { maxSteps: 10, maxLLM: 50 }` to TASK_TYPES. Classifier rules with 11 keywords and 2 regex patterns. Agent role mapped to `architect`.
+  3. **MA Entity Genesis Blueprint** (`MA/MA-blueprints/modules/modules/entity_genesis.md`, new) — Multi-round workflow: character design, entity shell creation, chapter-by-chapter memory genesis loop (read state, generate memories in evolved voice, inject individually, cognitive tick, log evolution), summary.
+  4. **MA Entity Genesis Skill** (`MA/MA-skills/entity-genesis/SKILL.md` + runtime copy to `MA-entity/entity_ma/skills/entity-genesis.md`, new) — Skill with YAML frontmatter, capability description, OS API endpoint templates, memory quality rules, available emotions list.
+  5. **Guard Tests** (`tests/unit/entity-genesis-guards.test.js`, new) — 18 tests covering contract guards and implementation guards. 18/18 passing.
+
+- **Files created:** `server/routes/entity-enrichment-routes.js`, `MA/MA-blueprints/modules/modules/entity_genesis.md`, `MA/MA-skills/entity-genesis/SKILL.md`, `MA/MA-entity/entity_ma/skills/entity-genesis.md`, `tests/unit/entity-genesis-guards.test.js`
+- **Files modified:** `server/server.js` (route registration), `MA/MA-server/MA-tasks.js` (task type + classifier + roleMap)
+- **Plan:** `Documents/current/PLAN-ENTITY-GENESIS-v1.md`
+- **Verification:** 18/18 entity-genesis + 15/15 ma-bridge + 22/22 slash-command = 55 tests, 0 failures.
+
+---
+
+## Session Ledger — 2026-03-22 (MA Context Persistence + Memory Chaining + Blueprints)
+
+Status: `Complete`
+
+- **Purpose:** Fix 6 user-reported issues: workspace path not configurable, blueprints not consulted during tasks, research blueprint too limited, chat context lost on page refresh, memories not chained together, memories missing human-readable timestamps.
+
+- **Changes:**
+  1. **Chat History Persistence** (`MA-Server.js`, `MA-client/MA-index.html`) — New `GET /POST /api/chat/history` routes save/load last 8 messages to `MA-Config/chat-history.json`. Client calls `loadHistory()` on page init to restore previous messages and renders them in chat. `saveHistory()` called after every assistant response. Survives page refresh.
+  2. **Memory ISO Timestamps** (`MA-server/MA-memory.js`) — Every memory record now includes `createdAtISO: new Date(now).toISOString()` alongside the existing epoch `createdAt`. Index entries also carry `createdAtISO`.
+  3. **Memory Chain IDs** (`MA-server/MA-memory.js`, `MA-server/MA-core.js`) — Each message loop generates a unique `chainId` (`chain_{timestamp}_{random}`). Both task-path and conversational-path memory stores pass `chainId` so user message and assistant reply memories are linked. Memory search expands top results to include chain siblings (same `chainId`), enabling connected recall.
+  4. **Blueprint Injection in Conversational Path** (`MA-server/MA-core.js`) — When classify detects a task type (even at low confidence), the relevant blueprint is injected into the conversational path system prompt. Previously, blueprints were only available in the task path.
+  5. **Task Path Confidence Threshold Lowered** (`MA-server/MA-core.js`) — Changed from `>= 0.3` to `>= 0.2` so more research/analysis requests route through the full task pipeline with blueprints.
+  6. **Research Blueprint Rewrite** (`MA-blueprints/modules/modules/research.md`) — Removed all hardcoded limits ("2-3 sentence overview", "2-4 sentences explaining"). Now requires 3-5 different search queries, comprehensive source listing, thorough explanations, and opposing viewpoints.
+  7. **Output Format Limit Removed** (`MA-blueprints/core/core/output-format.md`) — Replaced "Keep chat responses SHORT: 1-4 sentences" with adaptive length guidance matching response depth to task complexity.
+  8. **Workspace Path Configurable** (`MA-server/MA-core.js`, `MA-Server.js`, `MA-client/MA-index.html`) — `WORKSPACE_DIR` is now `let` instead of `const`; loadable from `config.workspacePath`; settings UI has workspace path input field.
+
+- **Files modified:**
+  - `MA/MA-Server.js` — chat history routes, config GET/POST workspace path + vision, hasFile fix
+  - `MA/MA-server/MA-core.js` — chainId generation, chain-aware memory storage, blueprint injection in conversational path, task threshold 0.2, workspace path configurable
+  - `MA/MA-server/MA-memory.js` — createdAtISO timestamp, chainId in records/index, chain expansion in search
+  - `MA/MA-server/MA-tasks.js` — (unchanged, but classify threshold effect via core.js)
+  - `MA/MA-client/MA-index.html` — loadHistory/saveHistory, workspace path settings input
+  - `MA/MA-blueprints/modules/modules/research.md` — full rewrite, no hardcoded limits
+  - `MA/MA-blueprints/core/core/output-format.md` — removed 1-4 sentences limit
+
+- **Verification:** 21/21 health (0 critical, 1 warning: HTML tag imbalance — pre-existing), all 4 JS files pass `node --check`, module chain loads OK (core/tasks/llm), skills loaded (6 files).
+
+---
+
+## Session Ledger — 2026-03-23 (NekoCore Part 4 — Identity & Generation)
+
+Status: `Complete`
+
+- **Part:** 4 — Identity & Generation
+- **Modules implemented:** 17 (8 identity + 9 generation)
+  - **Identity (8):** hatch-entity (reserved name validation, persona/core-memory/system-prompt generation), identity-manager (unbreakable trait protection, maxDelta clamping, evolution history), core-memory-manager (Map-based, MAX=50, THRESHOLD=0.85), goal-generator (trace-pattern frequency≥3 analysis), goals-manager (MAX_ACTIVE=10, full lifecycle), dream-diary (theme extraction, recurring freq≥2), life-diary (summary concatenation), onboarding (7-step session-tracked flow)
+  - **Generation (9):** aspect-prompts (6-aspect templates with persona/chemical interpolation), context-consolidator (7-source budget allocation, DEFAULT_TOKEN_BUDGET=4000), humanize-filter (4 ROBOTIC_PATTERNS regex), core-life-generator (narrative from memories+chapters), chapter-generator (topic-overlap evaluation + lifecycle), synthetic-memory-generator (initial+gap tagged sourceType:'synthetic'), diary-prompts (4 DIARY_TYPES templates), message-chunker (paragraph>sentence>word splitting, DEFAULT_CHUNK_SIZE=2000), voice-profile (formality/humor/vocabulary management)
+- **Tests:** 72/72 passed (behavioral, rewritten from stub-checking)
+- **Full suite:** 214/214 (21 + 22 + 50 + 72 + 49)
+- **Manifest updated:** Part 4 → complete, 17 modules → implemented, completedModules → 64
+
+---
+
+## Session Ledger — 2026-03-23 (NekoCore Part 5 — Services & Transport)
+
+Status: `Complete`
+
+- **Part:** 5 — Services & Transport
+- **Modules implemented:** 33 (16 services + 1 util + 12 routes + 3 transport)
+  - **Services (16):** auth-service (Map-based sessions, crypto.randomBytes token, 24h expiry), boot (async sequence: BOOT_STARTED → config → preflight → entity checkout → runtime init → memory → pipeline → pulse → routes → BOOT_READY), chat-pipeline (full turn: TURN_START → classify → magnitude → snapshot → recall → consolidate → generate → humanize → postprocess → TURN_COMPLETE → fire-and-forget post-response), config-runtime (in-memory key-value with CONFIG_CHANGED events), config-service (loads ma-config.json or defaults, getLLMConfig/getEntityConfig), entity-checkout (async with fs.existsSync, listEntities), entity-memory-compat (hydrate/flush stubs returning counts), entity-runtime (init/getState/getPersona/shutdown), memory-service (store/recall with keyword matching, stm/ltm by importance≥0.7), post-response-cognitive-feedback (fire-and-forget, COGNITION.FEEDBACK_PROCESSED), post-response-memory (stores user+entity messages, MEMORY.POST_RESPONSE_COMPLETE), relationship-service (Map-based trust/familiarity/sharedMemories/emotionalBond/interactionCount), response-postprocess (chunks text, adds processedAt), startup-preflight (checks server/contracts/client/Config dirs), timeline-logger (append-only log/getRecent), user-profiles (Map-based getProfile/upsertProfile/listUsers)
+  - **Utils (1):** model-router (6 TASK_TYPES, placeholder text when no LLM)
+  - **Routes (12):** auth-routes (POST /login /logout, GET /session), brain-routes (GET /snapshot /chemicals /pulse, POST /pulse/trigger), chat-routes (POST /turn, GET /history, DELETE /history/:id), memory-routes (GET /search, POST /store, GET /stats /graph), entity-routes (GET / /state, PUT /persona, GET /goals), config-routes (GET /, PUT /:key, GET /runtime), archive-routes (POST /run, GET /status /stats), cognitive-routes (GET /snapshot /feedback /attention /dreams), sse-routes (GET /events /bus with SSE headers), entity-chat-routes (POST /message, GET /context /relationship), document-routes (POST /summarize /encode), nekocore-routes (GET /health /status /version)
+  - **Transport (3):** nekocore-server.js (full service wiring + 12 route groups + boot), nekocore-cli.js (HTTP request function + command dispatch), client/index.html (fetch-based chat + /health check)
+- **Fixes applied:** entity-chat-routes.js identifier `createEntity-ChatRoutes` → `createEntityChatRoutes`; added fs/path requires to entity-checkout.js
+- **Tests:** 74/74 passed (behavioral, rewritten from stub-checking)
+- **Full suite:** 239/239 (21 + 22 + 50 + 72 + 74) ALL PARTS PASSED
+- **Manifest updated:** Part 5 → complete, 33 modules → implemented, completedModules → 97
+- **NekoCore project status:** COMPLETE — 97/97 modules, 239/239 tests, all behavioral
+
+---
+
+## Session Ledger — 2026-03-23 (NekoCore Part 4 — Identity & Generation)
+
+Status: `Complete`
+
+- **Part:** 3 — Cognition Engine (Phases + Attention + Feedback)
+- **Modules implemented:** 25 (9 engines + 16 phases)
+  - **Engines (9):** attention-system (stack-based salience scoring), cognitive-feedback (chemical delta mapping per feedback type), cognitive-pulse (background graph walker), cognitive-snapshot (full state capture via contract), curiosity-engine (gap+surprise+novelty weighted scoring), boredom-engine (repetition detection + exploration), dream-seed-pool (weighted random with decay), dream-maintenance-selector (emotional/goal/core scoring), dream-intuition-adapter (dream→pipeline context builder)
+  - **Phases (16):** phase-decay, phase-consolidation, phase-conscious-stm, phase-dreams, phase-deep-sleep, phase-beliefs, phase-goals, phase-identity, phase-neurochemistry, phase-somatic, phase-hebbian, phase-pruning, phase-traces, phase-archive, phase-archive-index, phase-boredom
+- **Tests:** 50/50 passed (behavioral, rewritten from stub-checking)
+- **Full suite:** 176/176 (21 + 22 + 50 + 34 + 49)
+- **Manifest updated:** Part 3 → complete, 25 modules → implemented, completedModules → 47
+
+---
+
+## Session Ledger — 2026-03-23 (NekoCore Part 1 — Cognitive Foundation)
+
+Status: `Complete`
+
+- **Purpose:** Audit REM Layer 5, then implement NekoCore Part 1: Cognitive Foundation (Bus + Affect + Contracts).
+
+- **Changes:**
+  1. **REM Layer 5 Audit** — Verified all 3 Layer 5 modules (llm-interface.js, orchestration-policy.js, ma-integration.js) are fully implemented. MA endpoint compatibility confirmed: `/api/chat` POST and `/api/health` GET both exist and match integration code. No fixes needed.
+  2. **cognitive-bus.js** — Implemented 6 methods: `emit` (typed envelope with seq/timestamp, fires snoops→wildcards→exact), `on` (wildcard pattern support with priority sorting), `once` (auto-unsubscribe), `snoop` (global listener), `getHistory` (circular buffer newest-first), `destroy` (cleanup).
+  3. **neurochemistry.js** — Implemented 6 methods: `stimulate` (delta + interaction rules: cortisol↑→serotonin↓×0.3, oxytocin↑→cortisol↓×0.4, dopamine↑→serotonin↑×0.15), `decay` (toward baseline, recovery at 0.5× rate), `getLevels`, `resetToBaseline`, `checkCrisis` (cortisol>0.7 && serotonin<0.25), `serialize`.
+  4. **somatic-awareness.js** — Implemented 3 methods + state: `computeSomatic` (8 sensations in priority order, intensity from max chemical deviation), `describe` (natural language output), `getSnapshot`.
+  5. **turn-classifier.js** — Implemented `classifyTurn` with 7 keyword dictionaries, 14 feature extraction, 10 intent classification with priority ordering and confidence scoring. Returns validated classification via contract.
+  6. **interaction-magnitude.js** — Implemented `scoreMagnitude` with 5 weighted factors: length(0–0.2), emotional intensity(0–0.25), topic novelty(0–0.25), question depth(0–0.15), personal disclosure(0–0.15). Returns `{ magnitude, factors }`.
+  7. **part-1.test.js** — Rewrote from stub-checking (assertThrows NOT_IMPLEMENTED) to behavioral validation. 21/21 tests passing.
+  8. **PROJECT-MANIFEST.json** — Part 1 status → "complete", 5 contracts + 6 modules → "implemented", completedModules → 11.
+  9. **Part 2 — Advanced Memory & Knowledge** — All 11 modules implemented from stubs:
+     - `conscious-memory.js` — STM (7 items FIFO) + LTM promotion (importance > 0.7 OR rehearsal > 3), rehearsal tracking, topic-based LTM search
+     - `dream-memory.js` — 3-tier storage (vivid/fading/fragments), age-based demotion, topic/emotion search
+     - `memory-graph.js` — Adjacency-based graph with BFS spreading activation (decay 0.7, threshold 0.1, max depth 4), bidirectional edges, Hebbian weakening and pruning
+     - `memory-graph-builder.js` — Jaccard topic similarity, temporal window (5min), emotion matching, auto-edge creation
+     - `archive-manager.js` — Gzip compression pipeline, date-based directory structure, index rebuild from disk
+     - `trace-graph.js` — Cause→event→effect chains, outcome tracking, strength-based retrieval
+     - `trace-graph-builder.js` — Sliding window analysis (2-5 memories), emotion shift detection, topic continuity, deduplication
+     - `dream-link-writer.js` — Creates/strengthens graph edges between dream seed memories
+     - `textrank.js` — PageRank on sentence similarity graph, convergence-based iteration, extractive summarization
+     - `memory-encoder-nlp.js` — Keyword extraction, emotion lexicon detection, topic classification, importance estimation
+     - `semantic-cache.js` — LRU cache with TTL expiry, hit/miss stats
+  10. **part-2.test.js** — Rewrote from stub-checking to behavioral validation. 22/22 tests passing.
+  11. **PROJECT-MANIFEST.json** — Part 2 status → "complete", 11 modules → "implemented", completedModules → 22.
+
+- **Files modified:**
+  - `nekocore/server/bus/cognitive-bus.js` — 6 methods from stubs
+  - `nekocore/server/affect/neurochemistry.js` — 6 methods from stubs
+  - `nekocore/server/affect/somatic-awareness.js` — 3 methods + state from stubs
+  - `nekocore/server/utils/turn-classifier.js` — classifyTurn from stub
+  - `nekocore/server/utils/interaction-magnitude.js` — scoreMagnitude from stub
+  - `nekocore/tests/part-1.test.js` — behavioral tests replacing stub checks
+  - `nekocore/PROJECT-MANIFEST.json` — Part 1 marked complete
+
+- **Verification:** 21/21 Part 1 tests passing, all 5 files pass `node --check` syntax validation.
+
+---
+
+## Session Ledger — 2026-03-21 (MA File Links + Skills)
+
+Status: `Complete`
+
+- **Purpose:** Fix MA's file creation confusion by adding clickable file links in chat, improving tool result visibility in activity feed, and populating the empty entity skills folder.
+
+- **Changes:**
+  1. **Clickable File Links in Chat** (`MA-client/MA-index.html`) — When MA creates or modifies files, clickable link chips appear below the assistant message. Each link has a file-type icon, filename, and opens the workspace file in a new tab via `/api/workspace/file`. CSS: `.file-links`, `.file-link` with hover effects. `addMsg()` updated to return the div and wrap MA messages in a `.bubble` container for appending file links.
+  2. **Workspace File Serving Route** (`MA-Server.js`) — New `GET /api/workspace/file?path=` endpoint serves files from the workspace directory with path traversal protection. Returns appropriate MIME type.
+  3. **Files Changed Tracking — Task Path** (`MA-server/MA-tasks.js`) — Added `allWrittenFiles` array that collects all written/appended file paths across all task steps. Returned in `{ filesChanged: allWrittenFiles }` alongside `finalResponse`.
+  4. **Files Changed Tracking — Conversational Path** (`MA-server/MA-core.js`) — Extracts written file paths from `toolResults` after conversational tool execution. Returns `filesChanged` array in response object.
+  5. **Task Path filesChanged Passthrough** (`MA-server/MA-core.js`) — Task path return now includes `filesChanged: result.filesChanged || []`.
+  6. **Improved Activity Detail** (`MA-server/MA-core.js`, `MA-server/MA-tasks.js`) — Tool result activity events now include the full result string (e.g., `ws_write: Wrote 1234 bytes to myfile.js`) instead of just the tool name.
+  7. **Entity Skills** (`MA-entity/entity_ma/skills/`) — Created 6 operational skill documents: `coding.md`, `memory-tools.md`, `self-repair.md`, `web-search.md`, `search-archive.md`, `workspace-ops.md`. Skills loaded at boot and injected into system prompt by keyword relevance (up to 2 matched skills per message).
+  8. **Skill Loading System** (`MA-server/MA-core.js`) — New `loadSkills()` function reads `.md` files from entity skills dir. `skills` state variable and `skillsCtx` injected into system prompt template.
+
+- **Files modified:**
+  - `MA/MA-client/MA-index.html` — file link CSS, `addMsg()` bubble wrapper, `handleChatResult()` file link rendering
+  - `MA/MA-Server.js` — `/api/workspace/file` route
+  - `MA/MA-server/MA-core.js` — skill loading, skill state, skillsCtx injection, filesChanged tracking (conversational + task passthrough), improved activity detail
+  - `MA/MA-server/MA-tasks.js` — allWrittenFiles tracking, filesChanged in return, improved activity detail
+
+- **Files created:**
+  - `MA/MA-entity/entity_ma/skills/coding.md`
+  - `MA/MA-entity/entity_ma/skills/memory-tools.md`
+  - `MA/MA-entity/entity_ma/skills/self-repair.md`
+  - `MA/MA-entity/entity_ma/skills/web-search.md`
+  - `MA/MA-entity/entity_ma/skills/search-archive.md`
+  - `MA/MA-entity/entity_ma/skills/workspace-ops.md`
+
+- **Verification:** 21/21 health (0 critical), all 3 JS files pass syntax check, module chain (core/tasks/llm) loads OK, skills loaded at boot (6 files).
+
+---
+
+## Session Ledger — 2026-03-21 (MA Image/Vision Support)
+
+Status: `Complete`
+
+- **Purpose:** Add image drag-and-drop support to MA chat, raise file size limits, and support vision/multimodal LLM models (OpenRouter + Ollama).
+
+- **Changes:**
+  1. **Image Drop Support** (`MA-client/MA-index.html`) — `IMAGE_TYPES` set (png, jpeg, jpg, gif, webp, svg+xml). Images read as base64 data URLs via `readAsDataURL()`. Text file limit raised from 32KB to 512KB, image limit 5MB. Image thumbnails shown in file chips (28×28) and inline in chat bubbles (max 300×200). `.chat-img` CSS class added.
+  2. **Server Body Limit** (`MA-Server.js`) — Raised from 1MB to 10MB (`10485760`). Config save now persists `vision: body.vision === true`.
+  3. **Vision Message Building** (`MA-server/MA-core.js`) — Separates text vs image attachments during processing. Images stored as `{ name, dataUrl, mime }`. Text file truncation raised to 128KB. If `config.vision === true` and images present, builds OpenAI-format multimodal content blocks `[{type:"text"},{type:"image_url",image_url:{url:dataUrl}}]`. If images present but no vision, appends note telling user to enable vision.
+  4. **Ollama Vision Format** (`MA-server/MA-llm.js`) — Ollama caller detects multimodal content arrays, extracts text parts and base64 image data (stripping data URL prefix), passes images in Ollama's per-message `{ images: [base64...] }` format. OpenRouter/OpenAI caller unchanged (already supports content arrays natively).
+  5. **Vision Model Flag** (`MA-server/MA-model-router.js`) — Added `vision: entry.vision === true` to model definition object.
+  6. **Vision Config UI** (`MA-client/MA-index.html`) — Vision checkbox `#cfg-vision` in config panel. Wired into save (sends `vision: checked`) and load (reads `d.vision`).
+
+- **Files modified:**
+  - `MA/MA-client/MA-index.html` — image drop handler, thumbnails, chat image display, vision config checkbox
+  - `MA/MA-Server.js` — body limit 10MB, vision config persistence
+  - `MA/MA-server/MA-core.js` — image/text attachment separation, vision multimodal content blocks
+  - `MA/MA-server/MA-llm.js` — Ollama multimodal image format conversion
+  - `MA/MA-server/MA-model-router.js` — vision flag in model definition
+
+- **Verification:** 21/21 health (0 critical), all 5 files pass syntax check, module chain (core/llm/router) loads OK.
+
+---
+
+## Session Ledger — 2026-03-21 (MA Activity Monitor + Session Continuity)
+
+Status: `Complete`
+
+- **Purpose:** Add real-time Activity Monitor panel, persistent worklog for session continuity, enhanced project awareness (reads manifests), and wire agent dispatch into task execution.
+
+- **Changes:**
+  1. **Activity Monitor Panel** (`MA-client/MA-index.html`) — Collapsible right sidebar showing real-time activity feed (tool calls, LLM calls, memory searches, knowledge loads, agent dispatches, step progress). Auto-opens when task starts. Task plan displayed with checkboxes. Session worklog summary visible. Toggle button in header.
+  2. **MA Worklog System** (`MA-server/MA-worklog.js`) — NEW module. Persistent `MA-workspace/MA-WORKLOG.md` with structured sections: Active Project, Current Task, Task Plan (checkboxes), Recent Work (table), Resume Point. Auto-updated on task start/completion. Loaded into system prompt so MA knows where it left off. API route `GET /api/worklog` + `/worklog` slash command.
+  3. **Enhanced Project Awareness** (`MA-server/MA-core.js`) — Workspace scan now reads `PROJECT-MANIFEST.json` from each project dir. Injects layer count, completion status, and description into system prompt. Tells MA "You built these projects — read PROJECT-MANIFEST.json and BUILD-ORDER.md to continue."
+  4. **Agent Dispatch** (`MA-server/MA-tasks.js`) — Task execution now checks agent catalog for matching role (code→coder, research→researcher, etc.). Selects highest-seniority agent. Injects agent's systemPrompt into step execution. Records prompt history per agent. Fires `agent_dispatch` activity event.
+  5. **SSE Activity Streaming** (`MA-Server.js`) — `/api/chat/stream` now streams `activity` events alongside existing `step`/`done`/`error`. Activities include: `memory_search`, `knowledge_load`, `workspace_scan`, `llm_call`, `tool_result`, `plan`, `step_start`, `step_done`, `agent_dispatch`, `worklog`, `error`.
+  6. **Bug Fix** — Fixed duplicate try/catch/cleanup code in `handleChatResult()` that was left over from the SSE extraction refactor.
+  7. **Health Registry** — Updated to 21 core files (added MA-worklog.js).
+
+- **Files changed:**
+  - `MA/MA-server/MA-worklog.js` — NEW: persistent session worklog module
+  - `MA/MA-server/MA-core.js` — onActivity callback, worklog integration, enhanced project scanning, worklog in system prompt
+  - `MA/MA-server/MA-tasks.js` — onActivity callback, agent dispatch, prompt history recording
+  - `MA/MA-Server.js` — activity SSE streaming, /api/worklog route, /worklog slash command
+  - `MA/MA-client/MA-index.html` — Activity Monitor panel (CSS + HTML + JS), handleChatResult bug fix
+  - `MA/MA-server/MA-health.js` — Added MA-worklog.js to CORE_REGISTRY
+
+---
+
+## Session Ledger — 2026-03-21 (MA Whitelist Management + Token Limit Strategy)
+
+Status: `Complete`
+
+- **Purpose:** Make cmd_run whitelist user-configurable via GUI settings + slash commands, address character/token limit issue for large script generation.
+
+- **Changes:**
+  1. **Configurable Whitelist** (`MA-server/MA-cmd-executor.js`) — whitelist now loads from `MA-Config/cmd-whitelist.json`, persists on change. Added `getWhitelist()`, `whitelistAdd()`, `whitelistRemove()`, `whitelistReset()`. Dangerous binaries (rm, del, curl, bash, powershell, etc.) permanently blocked.
+  2. **Whitelist API Routes** (`MA-Server.js`) — GET `/api/whitelist`, POST `/api/whitelist/add`, `/api/whitelist/remove`, `/api/whitelist/reset`
+  3. **Whitelist GUI Tab** (`MA-client/MA-index.html`) — Settings panel now has tabbed layout (LLM | Command Whitelist). Whitelist tab shows all allowed commands, per-command subcommand restrictions, add/remove buttons, and reset-to-defaults.
+  4. **Whitelist Slash Commands** — `/whitelist`, `/whitelist add <binary> [sub1,sub2]`, `/whitelist remove <binary>`, `/whitelist reset` — in both GUI and CLI.
+  5. **Chunked-Write System Prompt** (`MA-server/MA-core.js`) — Added `[Writing Large Files]` section to system prompt instructing MA to use ws_write + ws_append for multi-part file creation when files are >80 lines.
+
+- **Files modified:**
+  - `MA/MA-server/MA-cmd-executor.js` — configurable whitelist, file persistence, CRUD API, forbidden binary guard
+  - `MA/MA-Server.js` — whitelist API routes, whitelist slash commands, cmdExec import
+  - `MA/MA-client/MA-index.html` — tabbed settings (LLM + Whitelist), whitelist management UI
+  - `MA/MA-cli.js` — /whitelist commands + cmdExec import
+  - `MA/MA-server/MA-core.js` — chunked-write guidance in system prompt
+
+- **Verification:** 18/18 health (0 critical), whitelist add/remove/block-dangerous all pass
+
+---
+
+## Session Ledger — 2026-03-21 (MA 5-Item Bug Fix + Feature Batch)
+
+Status: `Complete`
+
+- **Purpose:** Fix 5 user-reported issues with MA:
+  1. MA can't see projects in workspace → auto-scan MA-workspace/ dirs + project archives into system prompt
+  2. Token limit too restrictive → tripled DEFAULT_MAX_TOKENS 4096→12288, added maxTokens to config persistence + GUI slider (1024–65536 range)
+  3. Tool calls posted as text instead of executed → improved TOOL_RE regex to allow hyphens, added _preCleanToolText() to strip code fences wrapping tool calls, enhanced system prompt with strict tool syntax instructions
+  4. No slash command helper in GUI → added /api/commands + /api/slash endpoints, added autocomplete popup in GUI (type / to see commands, arrow keys + Tab to select), ported all CLI commands to GUI
+  5. No way to continue a project → added resumeProject() to project-archive, added /project open|close|status to CLI + GUI, wired into slash command handler
+
+- **Files modified:**
+  - `MA/MA-server/MA-core.js` — workspace auto-scan, archive context, maxTokens passthrough, enhanced system prompt
+  - `MA/MA-server/MA-llm.js` — DEFAULT_MAX_TOKENS 4096→12288
+  - `MA/MA-server/MA-workspace-tools.js` — _preCleanToolText(), improved regex, better stripToolCalls
+  - `MA/MA-server/MA-project-archive.js` — resumeProject() + export
+  - `MA/MA-Server.js` — /api/commands, /api/slash routes, handleSlashCommand(), maxTokens in config GET/POST
+  - `MA/MA-client/MA-index.html` — maxTokens slider, slash command popup + autocomplete + execution
+  - `MA/MA-cli.js` — /projects, /project open|close|status commands + updated banner
+
+- **Verification:** 18/18 health, all tool parse tests pass (normal, hyphenated, code-fenced, language-fenced)
+
+---
+
+## Session Ledger — 2026-03-21 (NekoCore Cognitive Mind Project Scaffold)
+
+Status: `Complete`
+
+- **Purpose:** Create a new MA project called "nekocore" that scaffolds all the cognitive mind modules the REM System needs to become a full NekoCore OS entity. The REM System provides the base architecture; NekoCore adds the complete cognitive pipeline — bus, affect engine, memory system, knowledge graphs, cognition engine (with 16 dream/brain phases), identity lifecycle, generation pipeline, and the full service/route layer to wire it all together. Excludes task/worker/skill management (MA handles those), Telegram, pixel-art, image-generator, dream-visualizer.
+- **New files created (MA-workspace/nekocore/):**
+  - Infrastructure: `PROJECT-MANIFEST.json`, `BUILD-ORDER.md`, `package.json`
+  - 5 contracts: `cognitive-snapshot-contract.js`, `cognitive-feedback-contract.js`, `turn-classifier-contract.js`, `response-contract.js`, `worker-output-contract.js`
+  - Part 1 (Cognitive Foundation — 6 stubs): `bus/cognitive-bus.js`, `bus/thought-types.js`, `affect/neurochemistry.js`, `affect/somatic-awareness.js`, `utils/turn-classifier.js`, `utils/interaction-magnitude.js`
+  - Part 2 (Memory & Knowledge — 11 stubs): `memory/conscious-memory.js`, `memory/dream-memory.js`, `memory/memory-graph.js`, `memory/memory-graph-builder.js`, `memory/archive-manager.js`, `knowledge/trace-graph.js`, `knowledge/trace-graph-builder.js`, `knowledge/dream-link-writer.js`, `utils/textrank.js`, `utils/memory-encoder-nlp.js`, `utils/semantic-cache.js`
+  - Part 3 (Cognition Engine — 25 stubs): 9 engines (`attention-system`, `cognitive-feedback`, `cognitive-pulse`, `cognitive-snapshot`, `curiosity-engine`, `boredom-engine`, `dream-seed-pool`, `dream-maintenance-selector`, `dream-intuition-adapter`) + 16 phases in `cognition/phases/`
+  - Part 4 (Identity & Generation — 17 stubs): 8 identity (`hatch-entity`, `identity-manager`, `core-memory-manager`, `goal-generator`, `goals-manager`, `dream-diary`, `life-diary`, `onboarding`) + 9 generation (`aspect-prompts`, `context-consolidator`, `humanize-filter`, `core-life-generator`, `chapter-generator`, `synthetic-memory-generator`, `diary-prompts`, `message-chunker`, `voice-profile`)
+  - Part 5 (Services & Transport — 33 stubs): 16 services, 1 util (`model-router`), 12 routes, 3 transport (`nekocore-server.js` port 3870, `nekocore-cli.js`, `client/index.html`)
+  - Tests: `test-runner.js` + 5 part test files (`part-1.test.js` through `part-5.test.js`)
+  - Scripts: `project-status.js`
+  - Blueprints: `MA-blueprints/nekocore/INDEX.md` + 5 per-part blueprint files
+- **Test results:** 176/176 (21 + 22 + 50 + 34 + 49), all parts green
+- **Architecture:** Pre-req is REM System. NekoCore port 3870 (REM: 3860, MA: 3850). Every stub has full JSDoc, algorithm pseudocode comments, and `throw new Error('NOT_IMPLEMENTED: fn')`. Blueprints guide MA through building each part in dependency order.
+- **What MA handles separately (excluded from scaffold):** Task system (8 types), worker dispatch, skill management, NLP engines (RAKE/BM25/YAKE), web-fetch, agent delegation, project archive
+
+Boundary markers: [BOUNDARY_OK]
+
+---
+
+## Session Ledger — 2026-03-21 (MA Project Archive System)
+
+Status: `Complete`
+
+- **Purpose:** Give MA a complete per-project archive that stores every step, code, response, agent dispatch, thought, and decision as NekoCore OS-compatible memory nodes with weights (importance, decay, topics) and a full connection graph (edges with type + strength). Designed to feed the predictive memory system later.
+- **New files created:**
+  - `MA-server/MA-project-archive.js` (~430 lines) — Full archive module:
+    - **Project lifecycle:** `createProject()`, `getProject()`, `listProjects()`, `closeProject()`
+    - **Node operations:** `recordNode()` (stores NekoCore OS-schema memory records with archive extensions — sourceType, projectId, stepNumber, agentId, metadata), `getNode()` (with access tracking), `listNodes()` (filterable by sourceType)
+    - **Edge operations:** `addEdge()` (weighted connections: precedes/derives/produces/delegates/supports/contradicts/references), `getGraph()`, `getNodeEdges()`, `reinforceEdge()`
+    - **Convenience:** `recordStep()` (auto-creates temporal 'precedes' edge to previous node), `recordStepWithKnowledge()` (dual-path — creates episodic + semantic node + derives edge)
+    - **Predictive export:** `exportForPredictive()` — returns full graph (all nodes with weights + all edges + stats by type/averages) ready for predictive system consumption
+    - **Indexing:** Auto-maintained topic-index.json (topic → node IDs) + temporal-index.json (time-sorted), `lookupByTopic()`, `getArchiveStats()`
+    - **Atomic writes** throughout (temp file + rename pattern)
+    - 8 node types: step, code, response, agent-dispatch, thought, decision, error, semantic
+    - 7 edge types: precedes, derives, produces, delegates, supports, contradicts, references
+  - `MA-knowledge/project-archive.md` — Knowledge doc teaching MA when to archive (every action), what node types to use, how to maintain the temporal chain, dual-path encoding pattern, and export for predictive
+- **Storage layout:** `MA-entity/entity_ma/archives/proj_{id}/` with `project-meta.json`, `nodes/arc_*.json`, `graph/edges.json`, `index/topic-index.json`, `index/temporal-index.json`
+- **Node schema:** Full NekoCore OS compatibility: `memorySchemaVersion: 1`, `memory_id`, `type` (episodic/semantic), `created`, `last_accessed`, `access_count`, `access_events`, `decay`, `importance`, `topics`, `emotionalTag` — plus archive extensions: `projectId`, `sourceType`, `content`, `summary`, `agentId`, `stepNumber`, `metadata`
+- **Modified files:** MA-server/MA-core.js (require + re-export projectArchive), MA-server/MA-health.js (registry entry — now 18 entries)
+- **Integration test:** Created project, recorded 4 nodes (thought→code→step+semantic), 3 auto-edges (2 precedes + 1 derives), 15 topics auto-extracted, exported full graph successfully. Cleaned up.
+- **Test results:** All JS syntax OK, MA health 18/18
+
+Boundary markers: [BOUNDARY_OK]
+
+---
+
+## Session Ledger — 2026-03-21 (MA Integration into REM System)
+
+Status: `Complete`
+
+- **Purpose:** Allow users and entities in the REM System to call MA via `/MA` chat commands or programmatically via `/api/ma` endpoint — so that project planning, task delegation, and agent management are accessible from within any REM-built entity.
+- **New files created:**
+  - `MA-workspace/rem-system/server/services/ma-integration.js` — Bridge module: `parseMACommand()` (implemented — regex `/^\/ma\s*(.*)/i`, extracts command + args, defaults to 'status'), `callMA()` (stub — HTTP client to MA port 3850), `chatWithMA()` (stub — POST to /api/chat), `checkMAStatus()` (stub — GET /api/health), `routeMACommand()` (stub — command switch). MA_DEFAULTS: `{host:'localhost', port:3850, basePath:'/api'}`. No MA imports — talks via HTTP only.
+- **Modified files:**
+  - `MA-workspace/rem-system/rem-server.js` — (1) Lazy-load `getMAIntegration()` for ma-integration module, (2) `/MA` command interception at top of `handleChat()` before cognitive pipeline, (3) `handleMA(req, res)` — dedicated POST `/api/ma` endpoint for direct MA calls, (4) `/api/ma` route added to router, (5) `maIntegration` flag in health endpoint
+  - `MA-workspace/rem-system/tests/layer-5.test.js` — 18 new tests: exports check (6), parseMACommand scenarios (8 — plan, lowercase, no-args default, normal message, delegate with args, null/empty), stub behavior (4 — callMA/chatWithMA/checkMAStatus/routeMACommand throw NOT_IMPLEMENTED)
+  - `MA-workspace/rem-system/PROJECT-MANIFEST.json` — Layer 5 now has 3 modules (was 2), totalModules: 23, ma-integration.js added with status "stub"
+  - `MA-workspace/rem-system/BUILD-ORDER.md` — Layer 5 section expanded with ma-integration.js details (/MA commands, HTTP client pattern, parseMACommand specification)
+  - `MA-blueprints/rem-system/layer-5-integration.md` — Added full ma-integration.js algorithm section: callMA (HTTP request builder), chatWithMA (POST to /api/chat), checkMAStatus (GET /api/health), routeMACommand (switch: status/plan/delegate/agents/help/default). Updated scope + "After Completion" to include all 3 modules.
+- **Test results:** 205/205 full REM System suite (0 fail), MA health 17/17
+- **Architecture note:** MA runs on port 3850, REM on port 3860. The integration module never imports MA code — all communication is HTTP. `/MA` commands are intercepted at the transport layer BEFORE the cognitive pipeline runs.
+
+Boundary markers: [BOUNDARY_OK]
+
+---
+
+## Session Ledger — 2026-03-21 (MA Agent Delegation System)
+
+Status: `Complete`
+
+- **Purpose:** Give MA the ability to create, catalog, and dispatch specialist agents stored in MA-entity/. Agents are reusable across projects. Every prompt sent to an agent is saved and cataloged for reuse.
+- **New files created:**
+  - `MA-server/MA-agents.js` — Agent catalog module: CRUD, roster scan, role/capability search, prompt history recording + searching, validation. Added to health registry (17 entries now).
+  - `MA-scripts/seed-agents.js` — Seed script that registers the 6 agents MA needs for the REM System project
+  - `MA-knowledge/agent-delegation.md` — Knowledge doc teaching MA how to check the roster, match tasks to agents, construct delegation prompts, record dispatches, and create new agents
+  - `MA-blueprints/modules/modules/delegate.md` — Task blueprint for the `delegate` task type
+- **6 REM-project agents created** (all reusable for future projects):
+  - `senior-coder` (coder/senior) — implements modules from blueprints
+  - `junior-coder` (coder/junior) — simple implementation tasks, one function at a time
+  - `contract-architect` (architect/lead) — designs data shapes, validators, factories
+  - `test-engineer` (tester/senior) — writes/runs layer tests, regression checks
+  - `nlp-researcher` (researcher/senior) — RAKE/BM25/YAKE algorithm research + adaptation
+  - `code-reviewer` (reviewer/lead) — reviews implementations against blueprints
+- **Storage layout:** `MA-entity/agent_{id}/agent.json` + `prompt-history/` per agent
+- **Prompt history system:** Every dispatch is recorded with task label, full prompt, result summary, success flag, project tag, and searchable tags. `searchPromptHistory()` searches across all agents.
+- **Integration:** `delegate` task type added to MA-tasks.js (maxSteps: 8, maxLLM: 30) with classification rules. MA-agents.js wired into MA-core.js as `agentCatalog` re-export.
+- **Modified files:** MA-server/MA-tasks.js (delegate type + rules), MA-server/MA-core.js (require + re-export), MA-server/MA-health.js (registry entry)
+- Verified: all JS syntax OK, health 17/17, REM System 181/181 tests pass, catalog CRUD + prompt history all functional
+
+Boundary markers: [BOUNDARY_OK]
+
+---
+
+## Session Ledger — 2026-03-21 (MA Architect Blueprint Workflow Fix)
+
+Status: `Complete`
+
+- **Purpose:** Ensure MA can create project-specific blueprint subfolders during planning/execution, and verify her architect output covers all artifacts that the REM System actually has.
+- **Deep-dive findings:** REM System fully inventoried — 45 files (4 contracts, 7 tests, 20 module stubs, 2 transport modules, 1 status script, 3 config/planning docs), 181/181 tests passing, 7 blueprint files in `MA-blueprints/rem-system/`. No critical discrepancies between architect blueprint and actual REM System structure.
+- **Gaps identified and fixed:**
+  1. **Blueprint location wrong** — architect.md Step 5 wrote to `workspace/{project}/{prefix}-blueprints/` but REM has them in `MA-blueprints/rem-system/`. Fixed: Step 5 now creates `MA-blueprints/{project-name}/` subfolder with INDEX.md + per-layer blueprints
+  2. **No INDEX.md** — architect.md didn't mention INDEX.md. Fixed: Step 5 now includes INDEX.md template matching REM's actual INDEX.md structure
+  3. **No project-status.js creation** — package.json referenced a status script but no step created it. Fixed: Step 8 now includes full project-status.js template
+  4. **No transport layer step** — REM has rem-server.js + client/index.html. Fixed: Added optional Step 9 for projects with browser/API interfaces
+  5. **Task plan template outdated** — had 8 steps, didn't include blueprint subfolder or status script. Fixed: Updated to 9 steps with explicit blueprint subfolder and status script entries
+- **Files modified:**
+  - `MA-blueprints/modules/modules/architect.md` — task plan template (9 steps), Step 5 rewritten for MA-blueprints location + INDEX.md, Step 8 expanded with project-status.js, Step 9 (optional transport) added, common mistakes updated
+  - `MA-knowledge/project-architect.md` — "What Gets Generated" section restructured into workspace artifacts vs MA-blueprints artifacts vs optional transport
+- Verified: all JS syntax OK, health 16/16, REM System 181/181 tests pass
+
+Boundary markers: [BOUNDARY_OK]
+
+---
+
+## Session Ledger — 2026-03-21 (MA Namespace Refactor)
+
+Status: `Complete`
+
+- **Purpose:** Prefix all MA folders with `MA-` to prevent namespace collisions between projects, and teach MA to apply the same convention to all projects she creates.
+- **Folders renamed** (9 total):
+  - `blueprints/` → `MA-blueprints/`
+  - `client/` → `MA-client/`
+  - `Config/` → `MA-Config/`
+  - `entity/` → `MA-entity/`
+  - `knowledge/` → `MA-knowledge/`
+  - `scripts/` → `MA-scripts/`
+  - `server/` → `MA-server/`
+  - `skills/` → `MA-skills/`
+  - `workspace/` → `MA-workspace/`
+- **Code references updated** (8 files):
+  - `MA-server/MA-core.js` — CONFIG_PATH, ENTITY_DIR, WORKSPACE_DIR, KNOWLEDGE_DIR path constants + log message
+  - `MA-Server.js` — require path (`./MA-server/MA-core`), CLIENT_DIR path
+  - `MA-cli.js` — require path, 3× Config path references, knowledge path reference
+  - `MA-server/MA-tasks.js` — BP_DIR blueprint path
+  - `MA-server/MA-memory.js` — entity root path
+  - `MA-server/MA-health.js` — all 13 CORE_REGISTRY path entries (server→MA-server, client→MA-client, entity→MA-entity)
+  - `MA-scripts/MA-generate-fixer.js` — require path for health module
+  - `package.json` — health and fixer script paths
+- **Knowledge + Blueprint updated** for namespace convention:
+  - `MA-knowledge/project-architect.md` — added "Namespace Prefix Rule (NON-NEGOTIABLE)" section; updated artifact list to use `{prefix}-` pattern
+  - `MA-blueprints/modules/modules/architect.md` — all folder references now use `{prefix}-` pattern (contracts, blueprints, tests, scripts); added explicit warning that generic names are FORBIDDEN
+- Verified: all 7 JS files syntax OK, health 16/16, REM System 181/181 tests pass, task classifier + blueprint loading + knowledge docs all resolve correctly
+
+Boundary markers: [BOUNDARY_OK]
+
+---
+
+## Session Ledger — 2026-03-21 (MA Project Architect Capability)
+
+Status: `Complete`
+
+- **Purpose:** Give MA the ability to interview users about new project ideas and generate REM-System-quality project scaffolds — build orders, contracts, layer blueprints, test harnesses, and module stubs — for any project.
+- Created `MA/knowledge/project-architect.md` (~3500 chars) — interview protocol knowledge doc: 9-area discovery interview (5 must-have + 4 should-have), research-and-propose workflow for when users don't have answers, REQUIREMENTS.md accumulation pattern, generation trigger phrase, artifact checklist, quality markers
+- Created `MA/blueprints/modules/modules/architect.md` (~12K chars) — comprehensive generation blueprint: pre-generation checklist, 8-step artifact sequence (requirements analysis → BUILD-ORDER.md → PROJECT-MANIFEST.json → contracts/ → blueprints/ → module stubs → test harness → package.json), full template schemas for each artifact type, quality verification steps, common mistakes
+- Modified `MA/server/MA-tasks.js`:
+  - Added `architect` task type (maxSteps: 10, maxLLM: 50)
+  - Added architect intent classification rules (9 keywords including 'project plan', 'detailed plan', 'plan out', 'blueprint', 'specification'; 3 regex patterns)
+  - Fixed blueprint loading paths: `core/` → `core/core/`, `modules/` → `modules/modules/` (bug fix — blueprints were not loading for ANY task type due to double-nested directory structure)
+  - Fixed `parsePlan()` to accept per-type `maxSteps` parameter (was hardcoded to 6; architect tasks can now use up to 10 steps)
+- Verified: MA-tasks.js syntax OK, MA-core.js syntax OK, MA health 16/16, REM System 181/181 tests pass
+- Verified classification: "plan out a project" → architect, "generate the project plan" → architect, "build me a project" → project (correct differentiation)
+- Verified blueprint loading: architect blueprint 11,858 chars, code blueprint 6,541 chars (all blueprints now loading correctly)
+- Knowledge doc auto-loads when user message contains "project" or "architect" (keyword matching)
+
+Boundary markers: [BOUNDARY_OK]
 
 ---
 

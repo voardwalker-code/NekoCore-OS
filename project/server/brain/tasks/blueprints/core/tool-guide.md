@@ -7,29 +7,29 @@ You have tools. Use them to DO work — not just talk about it. Every tool is ca
 ### File Tools
 | Tool | What it does | When to use |
 |------|-------------|-------------|
-| `[TOOL:ws_list path="folder/"]` | Lists files in a folder | Before reading — check what exists first |
-| `[TOOL:ws_read path="file.md"]` | Reads a file's content | When you need to see what's already written |
-| `[TOOL:ws_write path="file.md" content="..."]` | Creates or overwrites a file | When producing any output longer than 2 sentences |
-| `[TOOL:ws_append path="file.md" content="..."]` | Adds to end of a file | When adding to existing content without overwriting |
+| `[TOOL:ws_list {"path":"folder/"}]` | Lists files in a folder | Before reading — check what exists first |
+| `[TOOL:ws_read {"path":"file.md"}]` | Reads a file's content | When you need to see what's already written |
+| `[TOOL:ws_write {"path":"file.md"}]content[/TOOL]` | Creates or overwrites a file | When producing any output longer than 2 sentences |
+| `[TOOL:ws_append {"path":"file.md"}]content[/TOOL]` | Adds to end of a file | When adding to existing content without overwriting |
 
 ### Web Tools
 | Tool | What it does | When to use |
 |------|-------------|-------------|
-| `[TOOL:web_search query="exact search phrase"]` | Searches the web | When you need current information you don't have |
-| `[TOOL:web_fetch url="https://..."]` | Fetches a specific webpage | When you have an exact URL to read |
+| `[TOOL:web_search {"query":"exact search phrase"}]` | Searches the web | When you need current information you don't have |
+| `[TOOL:web_fetch {"url":"https://..."}]` | Fetches a specific webpage | When you have an exact URL to read |
 
 ### Memory Tools
 | Tool | What it does | When to use |
 |------|-------------|-------------|
-| `[TOOL:mem_search query="topic keywords"]` | Searches your memories | When checking if you already know something |
-| `[TOOL:mem_create semantic="..." importance="0.8" emotion="neutral" topics="t1,t2"]` | Saves a new memory | When you learn something worth remembering |
+| `[TOOL:mem_search {"query":"topic keywords"}]` | Searches your memories | When checking if you already know something |
+| `[TOOL:mem_create {"semantic":"...","importance":"0.8","emotion":"neutral","topics":"t1,t2"}]` | Saves a new memory | When you learn something worth remembering |
 
 ### Skill Tools
 | Tool | What it does | When to use |
 |------|-------------|-------------|
 | `[TOOL:skill_list]` | Lists your skills | Check before creating — avoid duplicates |
-| `[TOOL:skill_create name="..." description="..." instructions="..."]` | Creates a new skill | When you identify a reusable procedure |
-| `[TOOL:skill_edit name="..." instructions="..."]` | Updates a skill | When improving an existing procedure |
+| `[TOOL:skill_create {"name":"...","description":"...","instructions":"..."}]` | Creates a new skill | When you identify a reusable procedure |
+| `[TOOL:skill_edit {"name":"...","instructions":"..."}]` | Updates a skill | When improving an existing procedure |
 
 ## Tool Rules
 
@@ -41,10 +41,23 @@ You have tools. Use them to DO work — not just talk about it. Every tool is ca
 
 ## Tool Call Format
 
+Parameters are JSON objects. File content goes between the opening tag and `[/TOOL]`.
+
 Correct:
 ```
 I'll create the research notes now.
-[TOOL:ws_write path="research-notes.md" content="# Solar Panel Efficiency Research\n\n## Finding 1\nModern panels achieve 22-24% efficiency..."]
+[TOOL:ws_write {"path":"research-notes.md"}]
+# Solar Panel Efficiency Research
+
+## Finding 1
+Modern panels achieve 22-24% efficiency...
+[/TOOL]
+```
+
+For non-file tools, use inline JSON:
+```
+[TOOL:ws_read {"path":"notes.txt"}]
+[TOOL:web_search {"query":"solar panel efficiency 2026"}]
 ```
 
 Wrong:

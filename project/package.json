@@ -5,6 +5,10 @@
   "main": "server/server.js",
   "scripts": {
     "start": "node server/server.js",
+    "start:bg": "node neko-start.js",
+    "stop": "node neko-start.js --stop",
+    "status": "node neko-start.js --status",
+    "kill-all": "node kill-all.js",
     "reset": "node reset-all.js",
     "installer:apply": "node server/tools/installer-cli.js install",
     "installer:remove": "node server/tools/installer-cli.js uninstall",
@@ -38,5 +42,8 @@
   "optionalDependencies": {
     "@napi-rs/canvas": "^0.1.96",
     "gif-encoder-2": "^1.0.5"
+  },
+  "dependencies": {
+    "zod": "^4.3.6"
   }
 }

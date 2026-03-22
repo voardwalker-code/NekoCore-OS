@@ -1,0 +1,89 @@
+<!-- ── REM System App ── opens the REM server GUI inside NekoCore OS ──────── -->
+<div class="tab-content" id="tab-rem-server">
+  <section class="card" style="height:100%;display:flex;flex-direction:column;gap:0;overflow:hidden;">
+    <!-- toolbar -->
+    <div class="card-hd" style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;flex-shrink:0;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span id="remServerDot" style="width:10px;height:10px;border-radius:50%;background:#555;display:inline-block;"></span>
+        <strong style="font-size:14px;">REM System — Recursive Echo Memory</strong>
+        <span id="remServerStatus" class="text-xs-c text-tertiary-c">Checking…</span>
+      </div>
+      <div style="display:flex;gap:6px;">
+        <button class="btn bp" id="remStartBtn" style="font-size:12px;padding:4px 12px;" title="Start REM server">▶ Start</button>
+        <button class="btn" id="remStopBtn" style="font-size:12px;padding:4px 12px;background:var(--danger,#e74c3c);color:#fff;" title="Stop REM server">■ Stop</button>
+        <button class="btn" id="remRefreshBtn" style="font-size:12px;padding:4px 10px;" title="Reload GUI">↻</button>
+      </div>
+    </div>
+    <!-- iframe -->
+    <div style="flex:1;position:relative;overflow:hidden;">
+      <div id="remOfflineMsg" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--text-tertiary,#888);font-size:15px;z-index:1;">
+        Server offline — press <strong style="margin:0 5px;">▶ Start</strong> to launch
+      </div>
+      <iframe id="remFrame" style="width:100%;height:100%;border:none;display:none;" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
+    </div>
+  </section>
+</div>
+
+<script>
+(function () {
+  var SRV   = 'rem';
+  var PORT  = 3860;
+  var dot   = document.getElementById('remServerDot');
+  var label = document.getElementById('remServerStatus');
+  var frame = document.getElementById('remFrame');
+  var offline = document.getElementById('remOfflineMsg');
+  var startBtn   = document.getElementById('remStartBtn');
+  var stopBtn    = document.getElementById('remStopBtn');
+  var refreshBtn = document.getElementById('remRefreshBtn');
+  var pollId = null;
+
+  function setStatus(running, healthy) {
+    if (healthy)     { dot.style.background = '#2ecc71'; label.textContent = 'Healthy · port ' + PORT; }
+    else if (running){ dot.style.background = '#f39c12'; label.textContent = 'Starting…'; }
+    else             { dot.style.background = '#555';    label.textContent = 'Offline'; }
+
+    if (healthy) {
+      offline.style.display = 'none';
+      if (frame.style.display === 'none') {
+        frame.src = 'http://localhost:' + PORT;
+        frame.style.display = 'block';
+      }
+    } else {
+      frame.style.display = 'none';
+      frame.removeAttribute('src');
+      offline.style.display = 'flex';
+    }
+  }
+
+  function poll() {
+    fetch('/api/servers/' + SRV + '/status').then(function (r) { return r.json(); }).then(function (d) {
+      setStatus(d.running, d.healthy);
+    }).catch(function () { setStatus(false, false); });
+  }
+
+  startBtn.addEventListener('click', function () {
+    label.textContent = 'Starting…';
+    dot.style.background = '#f39c12';
+    fetch('/api/servers/' + SRV + '/start', { method: 'POST' }).then(function () {
+      setTimeout(poll, 2500);
+    });
+  });
+
+  stopBtn.addEventListener('click', function () {
+    fetch('/api/servers/' + SRV + '/stop', { method: 'POST' }).then(function () { poll(); });
+  });
+
+  refreshBtn.addEventListener('click', function () {
+    frame.style.display = 'none';
+    frame.removeAttribute('src');
+    setTimeout(poll, 300);
+  });
+
+  poll();
+  pollId = setInterval(poll, 8000);
+
+  window.__remServerAppState = {
+    dispose: function () { clearInterval(pollId); }
+  };
+})();
+</script>

@@ -112,8 +112,9 @@ const EntityRuntime = require('./services/entity-runtime');
 const createChatPipeline = require('./services/chat-pipeline');
 const createNekoCoreChat  = require('./services/nekocore-pipeline');
 const { boot }            = require('./services/boot');
+const { resolvePort }     = require('./services/port-guard');
 
-const PORT = process.env.PORT || 3847;
+let PORT = process.env.PORT || 3847;
 const CLIENT_DIR = path.join(__dirname, '..', 'client');
 const ASSETS_DIR = path.join(__dirname, '..', 'assets');
 const SERVER_DATA_DIR = path.join(__dirname, 'data');
@@ -738,6 +739,9 @@ const createNekoCoreRoutes = require('./routes/nekocore-routes');
 const createArchiveRoutes  = require('./routes/archive-routes');
 const createTaskRoutes     = require('./routes/task-routes');
 const createEntityChatRoutes = require('./routes/entity-chat-routes');
+const createProcessMgrRoutes = require('./routes/process-manager-routes');
+const createEntityEnrichmentRoutes = require('./routes/entity-enrichment-routes');
+const createResourceManagerRoutes = require('./routes/resource-manager-routes');
 
 const sseRoutes      = createSSERoutes(ctx);
 const configRoutes   = createConfigRoutes(ctx);
@@ -755,8 +759,11 @@ const nekocoreRoutes  = createNekoCoreRoutes(ctx);
 const archiveRoutes   = createArchiveRoutes(ctx);
 const taskRoutes      = createTaskRoutes(ctx);
 const entityChatRoutes = createEntityChatRoutes(ctx);
+const processMgrRoutes = createProcessMgrRoutes(ctx);
+const enrichmentRoutes = createEntityEnrichmentRoutes(ctx);
+const resourceMgrRoutes = createResourceManagerRoutes(ctx);
 
-const _routeDispatchers = [authRoutes, sseRoutes, configRoutes, memoryRoutes, chatRoutes, entityRoutes, taskRoutes, entityChatRoutes, brainRoutes, skillsRoutes, cogRoutes, documentRoutes, browserRoutes, vfsRoutes, nekocoreRoutes, archiveRoutes];
+const _routeDispatchers = [authRoutes, sseRoutes, configRoutes, memoryRoutes, chatRoutes, entityRoutes, taskRoutes, entityChatRoutes, brainRoutes, skillsRoutes, cogRoutes, documentRoutes, browserRoutes, vfsRoutes, nekocoreRoutes, archiveRoutes, processMgrRoutes, enrichmentRoutes, resourceMgrRoutes];
 
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://localhost:${PORT}`);
@@ -851,82 +858,80 @@ if (typeof ctx.clearActiveEntity === 'function') ctx.clearActiveEntity();
 boot({ thoughtStream, attentionSystem, cognitiveBus, startTelegramBot });
 
 server.on('error', (error) => {
-  if (!error || error.code !== 'EADDRINUSE') {
-    throw error;
+  if (error.code === 'EADDRINUSE') {
+    console.log(`  ✖ Port ${PORT} became unavailable after resolution. Exiting.`);
+    process.exit(1);
   }
-
-  const url = `http://localhost:${PORT}`;
-  console.log(`  ✖ Port ${PORT} is already in use. REM System may already be running.`);
-
-  const autoOpenResult = tryAutoOpenBrowser(url, {
-    logger: console,
-    fullscreen: true,
-    windowTitle: 'REM-System',
-    preferredRuntime: 'chrome'
-  });
-  if (autoOpenResult.reason === 'already-open-switching') {
-    console.log('  ℹ Switching focus to the existing dedicated WebUI window.');
-  } else if (autoOpenResult.reason === 'opened') {
-    console.log('  ℹ Opened the existing REM System URL in the dedicated WebUI runtime.');
-  }
-
-  console.log('  ℹ Stop the existing process or close the prior server before starting a new one.');
-  process.exit(1);
+  throw error;
 });
 
-
-server.listen(PORT, () => {
-  // Auto-open/focus browser in OS mode.
-  const url = `http://localhost:${PORT}`;
-  const autoOpenResult = tryAutoOpenBrowser(url, {
-    logger: console,
-    fullscreen: true,
-    windowTitle: 'REM-System',
-    preferredRuntime: 'chrome'
+(async () => {
+  const resolved = await resolvePort({
+    defaultPort:  Number(PORT),
+    serverName:   'NekoCore OS',
+    healthPath:   '/api/nekocore/status',
+    portRange:    [Number(PORT), Number(PORT) + 10],
+    allowMultiple: true
   });
-  if (autoOpenResult.reason === 'already-open-switching') {
-    console.log('  ℹ WebUI already open. Switching focus to existing dedicated window.');
-  } else if (autoOpenResult.reason === 'opened') {
-    console.log('  ✓ WebUI launched in dedicated OS window (fullscreen request sent).');
-  } else if (autoOpenResult.reason === 'disabled') {
-    console.log('  ℹ WebUI auto-open is disabled (REM_AUTO_OPEN_BROWSER=off).');
-  } else if (autoOpenResult.reason === 'runtime-missing' || autoOpenResult.reason === 'runtime-unsupported') {
-    console.log('  ✖ WebUI did not launch. Dedicated runtime is missing/unsupported.');
-    if (autoOpenResult.error) console.log('    ' + autoOpenResult.error);
-  }
 
-  console.log('');
-  console.log('  \u250C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510');
-  console.log('  \u2502                                             \u2502');
-  console.log('  \u2502   NekoCore OS                            \u2502');
-  console.log('  \u2502   OpenRouter + Ollama                       \u2502');
-  console.log('  \u2502                                             \u2502');
-  console.log(`  \u2502   \u279C  http://localhost:${PORT}                  \u2502`);
-  console.log('  \u2502                                             \u2502');
-  console.log('  \u2502   Brain modules: loaded                     \u2502');
-  console.log('  \u2502   Press Ctrl+C to stop                      \u2502');
-  console.log('  \u2502                                             \u2502');
-  console.log('  \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518');
-  const cfg = loadConfig();
-  if (Object.keys(cfg).length > 0) {
-    const profiles = Object.keys(cfg.profiles || {});
-    console.log(`  Loaded ${profiles.length} saved profile(s): ${profiles.join(', ') || 'none'}`);
-  } else {
-    console.log('  No saved config found \u2014 will create on first save.');
+  if (resolved === 0) {
+    process.exit(1);
   }
+  PORT = resolved;
 
-  // Build consolidated context on startup for current entity
-  if (currentEntityId) {
-    try {
-      const entityPaths = require('./entityPaths');
-      contextConsolidator.buildConsolidatedContext(currentEntityId, entityPaths);
-    } catch (err) {
-      console.warn('  \u26A0 Context consolidation failed:', err.message);
+  server.listen(PORT, () => {
+    // Auto-open/focus browser in OS mode.
+    const url = `http://localhost:${PORT}`;
+    const autoOpenResult = tryAutoOpenBrowser(url, {
+      logger: console,
+      fullscreen: true,
+      windowTitle: 'NekoCore-OS',
+      preferredRuntime: 'chrome'
+    });
+    if (autoOpenResult.reason === 'already-open-switching') {
+      console.log('  ℹ WebUI already open. Switching focus to existing dedicated window.');
+    } else if (autoOpenResult.reason === 'opened') {
+      console.log('  ✓ WebUI launched in dedicated OS window (fullscreen request sent).');
+    } else if (autoOpenResult.reason === 'disabled') {
+      console.log('  ℹ WebUI auto-open is disabled (REM_AUTO_OPEN_BROWSER=off).');
+    } else if (autoOpenResult.reason === 'runtime-missing' || autoOpenResult.reason === 'runtime-unsupported') {
+      console.log('  ✖ WebUI did not launch. Dedicated runtime is missing/unsupported.');
+      if (autoOpenResult.error) console.log('    ' + autoOpenResult.error);
     }
-  }
 
-  console.log('');
-});
+    console.log('');
+    console.log('  ┌─────────────────────────────────────────────┐');
+    console.log('  │                                             │');
+    console.log('  │   NekoCore OS                            │');
+    console.log('  │   OpenRouter + Ollama                       │');
+    console.log('  │                                             │');
+    console.log(`  │   ➜  http://localhost:${PORT}                  │`);
+    console.log('  │                                             │');
+    console.log('  │   Brain modules: loaded                     │');
+    console.log('  │   Press Ctrl+C to stop                      │');
+    console.log('  │                                             │');
+    console.log('  └─────────────────────────────────────────────┘');
+    const cfg = loadConfig();
+    if (Object.keys(cfg).length > 0) {
+      const profiles = Object.keys(cfg.profiles || {});
+      console.log(`  Loaded ${profiles.length} saved profile(s): ${profiles.join(', ') || 'none'}`);
+    } else {
+      console.log('  No saved config found — will create on first save.');
+    }
+
+    // Build consolidated context on startup for current entity
+    if (currentEntityId) {
+      try {
+        const entityPaths = require('./entityPaths');
+        contextConsolidator.buildConsolidatedContext(currentEntityId, entityPaths);
+      } catch (err) {
+        console.warn('  ⚠ Context consolidation failed:', err.message);
+      }
+    }
+
+    console.log('');
+  });
+})();
 
 // Handle Ctrl+C and termination signals
 process.on('SIGINT', () => {

@@ -197,7 +197,7 @@ The brain loop ticks independently of conversation:
 
 > **Layered cognition** — subconscious, dream-intuition, and conscious phases run in formation; parallel where it counts, sequential where it must.
 
-> **Zero dependencies** — the entire runtime is pure Node.js. No vector database. No external SDKs. File-system JSON persistence.
+> **Zero dependencies** — the entire runtime is pure Node.js (no Express, no frameworks). No vector database. No external SDKs. File-system JSON persistence.
 
 > **Open architecture** — every subsystem is observable via the SSE cognitive bus. Nothing the entity thinks is hidden from the developer.
 
@@ -207,7 +207,7 @@ The brain loop ticks independently of conversation:
 
 | Capability | Detail |
 |---|---|
-| **Runtime** | Pure Node.js 18+ — zero external runtime dependencies |
+| **Runtime** | Pure Node.js 18+ — zero external runtime dependencies (no Express) |
 | **Persistence** | File-system JSON — no database required |
 | **Memory types** | Episodic · Semantic · Long-Term (compressed chatlog chunks) |
 | **Pipeline phases** | 1A (subconscious) · 1D (dream) · 1C (conscious) · Final · Brain Loop |
@@ -335,7 +335,7 @@ npm install
 npm start
 ```
 
-Open `http://localhost:3000` in your browser.
+Open `http://localhost:3847` in your browser.
 
 ### Configure
 
@@ -349,8 +349,7 @@ cp Config/ma-config.example.json Config/ma-config.json
 {
   "provider": "ollama",
   "ollamaBaseUrl": "http://localhost:11434",
-  "defaultModel": "mistral",
-  "port": 3000
+  "defaultModel": "mistral"
 }
 ```
 
@@ -360,10 +359,11 @@ cp Config/ma-config.example.json Config/ma-config.json
 {
   "provider": "openrouter",
   "openRouterApiKey": "sk-or-...",
-  "defaultModel": "mistralai/mistral-7b-instruct",
-  "port": 3000
+  "defaultModel": "mistralai/mistral-7b-instruct"
 }
 ```
+
+The server port (default 3847) is not set in the config file — it uses `PORT` environment variable or the built-in default. If the port is busy, the server identifies what's running and offers to start on the next available port.
 
 ### Recommended Multi-Phase Setup
 

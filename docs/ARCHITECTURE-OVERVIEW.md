@@ -1,7 +1,7 @@
 # REM System — Architecture Overview
 
-Version: 0.9.0
-Last updated: 2026-03-18
+Version: 0.10.0
+Last updated: 2026-03-22
 
 ---
 
@@ -22,6 +22,12 @@ Phases 1–3 (bug fixes, refactor, modularization) are complete. Feature work is
 - **Phase 4.7 — Agent Echo: Multi-Index Archive + Retrieval Pipeline:** ✅ COMPLETE — Echo Now + Echo Past retrieval behavior integrated.
 - **Phase 4.8 — Pipeline Hardening + Modularization Completion:** ✅ COMPLETE.
 - **Phase 4.9 — Modular Task Orchestration Architecture (MTOA):** ✅ COMPLETE — task intent fork, context gatherer, executor/event bus, sessions/archive/project store, frontman bridge, task routes, entity-chat planning, and client task UI are live.
+- **Phase 4.10 — Entity Orchestration:** ✅ COMPLETE — multi-entity session API and planning infrastructure.
+- **OS Tool System Upgrade:** ✅ COMPLETE — three-pass JSON/Zod parser replaces regex, block format for file writes, structured result formatting.
+- **Entity Genesis Skill:** ✅ COMPLETE — MA-driven entity creation with iterative memory injection and cognitive ticking.
+- **MA Bridge:** ✅ COMPLETE — `/ma` slash command for server-to-server MA calls with auto-boot.
+- **Bug Tracker App:** ✅ COMPLETE — developer bug tracking with screenshots, JSON persistence, markdown reports.
+- **Resource Manager App:** ✅ COMPLETE — unified GUI for Todos, Pulses, Tasks, Projects, and Blueprints with CRUD, active-state toggling, and MA pulse proxy.
 - **Installer package baseline (pre-cleanup):** ✅ COMPLETE — strict marker-boundary installer/uninstaller, rollback guarantees, `JsonEntryId` targeting, and app payload file lifecycle (`create-file`, `delete-file`) validated with Hello World end-to-end.
 - **Phase 5 — Predictive Memory Topology:** next approved feature phase.
 
@@ -63,6 +69,13 @@ Desktop shell, browser, and runtime stability work continues in parallel with Ph
 | **Skills** | skills/ | Pluggable tools (web search, file ops, memory tools) |
 | **SSE / Diagnostics** | server/routes/sse-routes.js | Real-time streaming diagnostics and cognitive bus events |
 | **Task UI (Client)** | client/js/apps/optional/task-ui.js, client/js/apps/core/chat.js, client/js/apps/core/telemetry-ui.js | Task badge/status in chat, task history/detail panel, Task Manager active-task telemetry |
+| **MA Bridge** | server/services/ma-bridge.js | Server-to-server calls to MA (port 3850) with auto-boot via process manager |
+| **Process Manager** | server/routes/process-manager-routes.js | Start/stop/health-check for MA, REM System, and NekoCore servers |
+| **Entity Enrichment** | server/routes/entity-enrichment-routes.js | Memory injection, cognitive tick, and state read for external builders (Entity Genesis) |
+| **Todo Store** | server/services/todo-store.js | Per-entity todo CRUD with atomic disk writes |
+| **Resource Active State** | server/services/resource-active-state.js | Tracks which todo/task/project/pulse is "active" per entity |
+| **Resource Manager Routes** | server/routes/resource-manager-routes.js | REST API for todos, tasks, projects, blueprints, MA pulse proxy, and active state |
+| **Bug Tracker (Client)** | client/apps/non-core/core/tab-bugtracker.html | Developer bug tracking app with screenshot capture and reporting |
 
 ---
 
@@ -96,6 +109,7 @@ server/routes/
   task-routes.js         — task run/session/cancel/modules/history API
   entity-chat-routes.js  — planning/multi-entity chat session API
   entity-routes.js       — entity CRUD, user profiles, relationships, guided/character creation
+  entity-enrichment-routes.js — memory injection, cognitive tick, state read (Entity Genesis)
   memory-routes.js       — memory read/write/search
   brain-routes.js        — brain loop control
   cognitive-routes.js    — sleep, dream, archive triggers
@@ -103,6 +117,12 @@ server/routes/
   config-routes.js       — runtime config management
   sse-routes.js          — real-time event streaming
   skills-routes.js       — skill invocation surface
+  browser-routes.js      — embedded browser session management
+  vfs-routes.js          — virtual filesystem operations
+  nekocore-routes.js     — NekoCore OS system routes
+  archive-routes.js      — conversation archive management
+  process-manager-routes.js — MA/REM/NekoCore server lifecycle
+  resource-manager-routes.js — todos, tasks, projects, pulses, blueprints, active state
 ```
 
 ---
@@ -117,6 +137,7 @@ entities/
     onboarding-state.json
     beliefs/             — belief graph persistence
     index/               — memory index files
+    active-resources.json — tracks which todo/task/project/pulse is currently active
     memories/
       context.md         — assembled LLM context (rebuilt on server start and memory update)
       system-prompt.txt  — identity foundation and backstory
@@ -125,6 +146,7 @@ entities/
       episodic/          — episodic memory folders
       semantic/          — semantic knowledge folders
       ltm/               — long-term compressed chatlog chunks
+      todos/             — per-entity todo items (todos.json)
     quarantine/
     skills/
 ```
@@ -136,11 +158,15 @@ entities/
 | File | Contents |
 |------|----------|
 | ARCHITECTURE-OVERVIEW.md | This file — system map and design principles |
+| USER-GUIDE.md | Complete NekoCore OS user guide — desktop, apps, entities, chat, brain, memory, dreams, LLM setup |
+| MA-AND-PROJECT-STRUCTURE.md | MA's role, folder relationship, gitignored builds, sub-project history |
 | PIPELINE-AND-ORCHESTRATION.md | Cognitive pipeline, orchestrator, worker subsystem, escalation |
 | MEMORY-SYSTEM.md | All memory subsystems — storage, retrieval, decay, belief graph, topic archive, context assembly |
 | ENTITY-AND-IDENTITY.md | Entity creation, identity modes, voice profiles, context consolidation |
 | DREAM-SYSTEM.md | Dream intuition (live) and dream maintenance (offline sleep) |
 | CONTRACTS-AND-SCHEMAS.md | Memory schema, voice profile schema, worker output contract, contributor contracts |
 | MODEL-RECOMMENDATIONS.md | OpenRouter + Ollama model picks for each pipeline stage |
+| HOW-TO-CREATE-AN-APP.md | Step-by-step guide for building new NekoCore OS apps |
+| APP-FOLDER-OWNERSHIP.md | File ownership rules for client apps |
 | NEKOCORE-OS-WHITE-PAPER-v2.md | Technical white paper — architecture, philosophy, and benchmark results |
 | NEKOCORE-OS-ARCHITECTURE-v1.md | Deep technical reference — full subsystem coverage, file map, ADRs |

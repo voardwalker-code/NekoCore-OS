@@ -1,0 +1,19 @@
+{
+  "name": "nekocore",
+  "version": "0.1.0",
+  "description": "NekoCore — Complete cognitive mind system",
+  "main": "nekocore-server.js",
+  "scripts": {
+    "start": "node nekocore-server.js",
+    "test": "node tests/test-runner.js",
+    "test:1": "node --test tests/test-part-1.js",
+    "test:2": "node --test tests/test-part-2.js",
+    "test:3": "node --test tests/test-part-3.js",
+    "test:4": "node --test tests/test-part-4.js",
+    "test:5": "node --test tests/test-part-5.js"
+  },
+  "dependencies": {
+    "express": "^4.18.0"
+  },
+  "private": true
+}

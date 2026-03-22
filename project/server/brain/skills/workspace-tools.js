@@ -4,26 +4,101 @@
 // Parses tool-call commands from entity LLM output and executes
 // them against the configured workspace and web search.
 //
-// Syntax the LLM uses:
-//   [TOOL:ws_list path="subdir"]
+// Three-pass parser (block → inline JSON → legacy quoted-string):
+//
+// Block format (ws_write / ws_append):
+//   [TOOL:ws_write {"path":"notes.txt"}]
+//   File content goes here...
+//   [/TOOL]
+//
+// Inline JSON format:
+//   [TOOL:ws_list {"path":"subdir"}]
+//   [TOOL:ws_read {"path":"notes.txt"}]
+//   [TOOL:web_search {"query":"quantum computing"}]
+//
+// Legacy format (backward compat):
 //   [TOOL:ws_read path="notes.txt"]
 //   [TOOL:ws_write path="notes.txt" content="Hello world"]
-//   [TOOL:ws_append path="notes.txt" content="More text added"]
-//   [TOOL:ws_delete path="old.txt"]
-//   [TOOL:web_search query="quantum computing"]
-//   [TOOL:web_fetch url="https://example.com"]
 //
 // Returns: { hadTools, cleanedResponse, toolResults[] }
 // ============================================================
 
 const fs = require('fs');
 const path = require('path');
+const { z } = require('zod');
 
-// ── Tool-call parser ──
-// Accepts flexible spacing/casing and both "double" / 'single' quoted values.
-const TOOL_REGEX = /\[TOOL:\s*([a-zA-Z_][\w-]*)\s*((?:\s+[a-zA-Z_][\w-]*\s*=\s*(?:"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'))*)\s*\]/gi;
+// ── Zod Tool Schemas ────────────────────────────────────────────────────────
+const ToolSchemas = {
+  ws_list:        z.object({ path: z.string().default('.') }),
+  ws_read:        z.object({ path: z.string() }),
+  ws_write:       z.object({ path: z.string(), content: z.string().optional() }),
+  ws_append:      z.object({ path: z.string(), content: z.string().optional() }),
+  ws_delete:      z.object({ path: z.string() }),
+  ws_mkdir:       z.object({ path: z.string() }),
+  ws_move:        z.object({ src: z.string(), dst: z.string() }),
+  web_search:     z.object({ query: z.string() }),
+  web_fetch:      z.object({ url: z.string() }),
+  mem_search:     z.object({ query: z.string().optional(), search: z.string().optional() }),
+  mem_create:     z.object({ semantic: z.string().optional(), importance: z.string().optional(), emotion: z.string().optional(), topics: z.string().optional() }).passthrough(),
+  search_archive: z.object({ query: z.string(), yearRange: z.string().optional(), limit: z.union([z.string(), z.number()]).optional() }),
+  skill_create:   z.object({ name: z.string(), description: z.string().optional(), instructions: z.string().optional() }).passthrough(),
+  skill_list:     z.object({}).passthrough(),
+  skill_edit:     z.object({ name: z.string(), instructions: z.string().optional() }).passthrough(),
+  profile_update: z.object({}).passthrough(),
+  cmd_run:        z.object({ cmd: z.string().optional(), command: z.string().optional(), timeout: z.union([z.string(), z.number()]).optional() }),
+};
 
-function parseToolParams(paramStr) {
+// ── Regex patterns ──────────────────────────────────────────────────────────
+// Block: [TOOL:ws_write {"path":"f"}]\ncontent\n[/TOOL]  (only ws_write/ws_append)
+const BLOCK_RE = /\[TOOL:(ws[-_]write|ws[-_]append)\s*(\{[\s\S]*?\})?\s*\]\n?([\s\S]*?)\[\s*\/\s*TOOL\s*\]/gi;
+// Inline JSON: [TOOL:name {"key":"val"}] or [TOOL:name]
+const INLINE_RE = /\[TOOL:(\w[\w-]*)\s*(\{[\s\S]*?\})?\s*\]/gi;
+// Legacy: [TOOL:name param="value" param2="value2"]
+const LEGACY_RE = /\[TOOL:\s*([a-zA-Z_][\w-]*)\s*((?:\s+[a-zA-Z_][\w-]*\s*=\s*(?:"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'))*)\s*\]/gi;
+// Strip pattern: blocks first, then inline, then legacy
+const STRIP_RE = /\[TOOL:[\s\S]*?\[\s*\/\s*TOOL\s*\]|\[TOOL:\w[\w-]*\s*(?:\{[\s\S]*?\})?\s*\]|\[TOOL:\s*[a-zA-Z_][\w-]*\s*(?:\s+[a-zA-Z_][\w-]*\s*=\s*(?:"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'))*\s*\]/gi;
+
+function _preCleanToolText(text) {
+  if (!text) return text;
+  return text.replace(/```[\w]*\s*(\[\s*TOOL[\s\S]*?(?:\[\s*\/\s*TOOL\s*\]|\]))\s*```/gi, '$1');
+}
+
+function _normName(n) { return n.toLowerCase().replace(/-/g, '_'); }
+
+function _parseJSON(raw) {
+  if (!raw) return {};
+  try { return JSON.parse(raw); } catch { return null; }
+}
+
+function _overlaps(pos, len, ranges) {
+  const end = pos + len;
+  for (const [s, e] of ranges) {
+    if (pos >= s && pos < e) return true;
+    if (end > s && end <= e) return true;
+    if (pos <= s && end >= e) return true;
+  }
+  return false;
+}
+
+function _validate(name, raw, blockContent) {
+  const schema = ToolSchemas[name];
+  if (!schema) return { ok: true, data: raw || {} }; // unknown tools pass through — caught at execution
+
+  const params = { ...raw };
+  if (blockContent !== undefined && (name === 'ws_write' || name === 'ws_append')) {
+    params.content = blockContent;
+  }
+
+  const result = schema.safeParse(params);
+  if (!result.success) {
+    const issues = result.error?.issues || result.error?.errors || [];
+    const msgs = issues.map(i => `${(i.path || []).join('.') || 'param'}: ${i.message}`);
+    return { ok: false, error: `${name} schema error: ${msgs.join('; ')}` };
+  }
+  return { ok: true, data: result.data };
+}
+
+function _parseLegacyParams(paramStr) {
   const params = {};
   const paramRegex = /([a-zA-Z_][\w-]*)\s*=\s*("((?:[^"\\]|\\.)*)"|'((?:[^'\\]|\\.)*)')/g;
   let m;
@@ -37,89 +112,76 @@ function parseToolParams(paramStr) {
 /**
  * Extract tool calls from LLM output.
  *
- * Two-pass strategy:
- *  1. Strict regex — works for simple tools and properly-escaped content.
- *  2. Lenient fallback — for ws_write / ws_append where the LLM puts
- *     unescaped quotes inside the content value (very common in prose).
- *     We locate content=" and scan forward to the closing "] of the block.
+ * Three-pass strategy:
+ *  1. Block format — [TOOL:ws_write {"path":"..."}]\ncontent\n[/TOOL]
+ *  2. Inline JSON  — [TOOL:name {"key":"value"}]
+ *  3. Legacy       — [TOOL:name param="value"] (backward compat)
+ *
+ * Returns array of { command, params, error? }
  */
 function extractToolCalls(text) {
+  if (!text) return [];
+  const cleaned = _preCleanToolText(text);
   const calls = [];
+  const matched = []; // [start, end] ranges
+  let m;
 
-  // Pass 1 — strict regex
-  const regex = new RegExp(TOOL_REGEX.source, TOOL_REGEX.flags);
-  const matchedStarts = new Set();
-  let match;
-  while ((match = regex.exec(text)) !== null) {
-    matchedStarts.add(match.index);
-    calls.push({
-      fullMatch: match[0],
-      command: match[1],
-      params: parseToolParams(match[2] || '')
-    });
-  }
-
-  // Pass 2 — lenient fallback for content-bearing tools the strict regex missed
-  const contentToolRe = /\[TOOL:\s*(ws_write|ws_append)\s+/gi;
-  let fb;
-  while ((fb = contentToolRe.exec(text)) !== null) {
-    if (matchedStarts.has(fb.index)) continue; // already captured
-
-    const command = String(fb[1] || '').toLowerCase();
-    const afterCmd = fb.index + fb[0].length;
-    const rest = text.slice(afterCmd);
-
-    // Limit search to before the next [TOOL: (if any)
-    const nextTool = rest.indexOf('[TOOL:');
-    const region = nextTool !== -1 ? rest.slice(0, nextTool) : rest;
-
-    // The tool block closes with "] — find the LAST one in the region
-    const closePos = Math.max(region.lastIndexOf('"]'), region.lastIndexOf("']"));
-    if (closePos === -1) continue;
-
-    const paramSection = region.slice(0, closePos + 1); // includes closing "
-
-    // Extract path (filenames never contain quotes)
-    const params = {};
-    const pathM = paramSection.match(/path\s*=\s*(?:"([^"]*)"|'([^']*)')\s*/i);
-    if (!pathM) continue;
-    params.path = pathM[1] !== undefined ? pathM[1] : pathM[2];
-
-    // Extract content — everything between content=" and the final "
-    const cIdx = paramSection.search(/content\s*=\s*["']/i);
-    if (cIdx !== -1) {
-      const contentLead = paramSection.slice(cIdx).match(/^content\s*=\s*["']/i);
-      const startOffset = contentLead ? contentLead[0].length : 9;
-      params.content = paramSection.slice(cIdx + startOffset, closePos)
-        .replace(/\\"/g, '"').replace(/\\\\/g, '\\');
+  // Pass 1: Block tools (ws_write / ws_append with [/TOOL])
+  const blockRe = new RegExp(BLOCK_RE.source, BLOCK_RE.flags);
+  while ((m = blockRe.exec(cleaned))) {
+    matched.push([m.index, m.index + m[0].length]);
+    const command = _normName(m[1]);
+    const json = _parseJSON(m[2]);
+    if (json === null) {
+      calls.push({ command, params: {}, error: `Invalid JSON in [TOOL:${command}]: ${m[2]}`, _pos: m.index });
+    } else {
+      const v = _validate(command, json, m[3]);
+      calls.push(v.ok
+        ? { command, params: v.data, _pos: m.index }
+        : { command, params: {}, error: v.error, _pos: m.index });
     }
-
-    const fullMatch = text.slice(fb.index, afterCmd + closePos + 2);
-    calls.push({ fullMatch, command, params });
-    contentToolRe.lastIndex = afterCmd + closePos + 2;
   }
 
-  return calls;
+  // Pass 2: Inline JSON — skip positions covered by blocks
+  const inlineRe = new RegExp(INLINE_RE.source, INLINE_RE.flags);
+  while ((m = inlineRe.exec(cleaned))) {
+    if (_overlaps(m.index, m[0].length, matched)) continue;
+    matched.push([m.index, m.index + m[0].length]);
+    const command = _normName(m[1]);
+    const json = _parseJSON(m[2]);
+    if (json === null) {
+      calls.push({ command, params: {}, error: `Invalid JSON in [TOOL:${command}]: ${m[2]}`, _pos: m.index });
+    } else {
+      const v = _validate(command, json, undefined);
+      calls.push(v.ok
+        ? { command, params: v.data, _pos: m.index }
+        : { command, params: {}, error: v.error, _pos: m.index });
+    }
+  }
+
+  // Pass 3: Legacy quoted-string — backward compatibility
+  const legacyRe = new RegExp(LEGACY_RE.source, LEGACY_RE.flags);
+  while ((m = legacyRe.exec(cleaned))) {
+    if (_overlaps(m.index, m[0].length, matched)) continue;
+    const command = _normName(m[1]);
+    const raw = _parseLegacyParams(m[2] || '');
+    const v = _validate(command, raw, undefined);
+    calls.push(v.ok
+      ? { command, params: v.data, _pos: m.index }
+      : { command, params: raw, error: v.error, _pos: m.index });
+  }
+
+  // Sort by document order, strip internal position marker
+  calls.sort((a, b) => a._pos - b._pos);
+  return calls.map(({ _pos, ...rest }) => rest);
 }
 
+/** Remove tool blocks from text (including block format and code-fenced tool calls). */
 function stripToolCalls(text) {
-  // First strip strict matches
-  let cleaned = text.replace(TOOL_REGEX, '');
-  // Then strip any lenient content-tool blocks that remain
-  const contentToolRe = /\[TOOL:\s*(ws_write|ws_append)\s+/gi;
-  let fb;
-  while ((fb = contentToolRe.exec(cleaned)) !== null) {
-    const afterCmd = fb.index + fb[0].length;
-    const rest = cleaned.slice(afterCmd);
-    const nextTool = rest.indexOf('[TOOL:');
-    const region = nextTool !== -1 ? rest.slice(0, nextTool) : rest;
-    const closePos = Math.max(region.lastIndexOf('"]'), region.lastIndexOf("']"));
-    if (closePos === -1) continue;
-    const end = afterCmd + closePos + 2;
-    cleaned = cleaned.slice(0, fb.index) + cleaned.slice(end);
-    contentToolRe.lastIndex = fb.index;
-  }
-  return cleaned.replace(/\n{3,}/g, '\n\n').trim();
+  if (!text) return '';
+  let out = _preCleanToolText(text);
+  out = out.replace(STRIP_RE, '');
+  return out.replace(/\n{3,}/g, '\n\n').trim();
 }
 
 /**
@@ -146,7 +208,14 @@ async function executeToolCalls(responseText, options = {}) {
 
   for (let i = 0; i < maxCalls; i++) {
     const call = calls[i];
-    const command = String(call.command || '').toLowerCase().replace(/-/g, '_');
+    const command = call.command;
+
+    // Zod validation errors are surfaced without throwing
+    if (call.error) {
+      toolResults.push({ command, params: call.params || {}, result: { ok: false, error: call.error }, ok: false });
+      continue;
+    }
+
     let result;
     try {
       switch (command) {
@@ -247,7 +316,7 @@ async function executeToolCalls(responseText, options = {}) {
     } catch (err) {
       result = { ok: false, error: err.message };
     }
-    toolResults.push({ command, params: call.params, result });
+    toolResults.push({ command, params: call.params, result, ok: result.ok !== false });
   }
 
   const cleanedResponse = stripToolCalls(responseText);
@@ -389,53 +458,57 @@ async function execWebFetch(webFetch, url) {
 }
 
 /**
- * Format tool results into a text block for the LLM follow-up call.
+ * Format tool results into structured blocks for the LLM follow-up call.
+ * Uses [TOOL_RESULT: name]...[/TOOL_RESULT] wrapper for reliable re-parsing.
  */
 function formatToolResults(toolResults) {
-  const parts = ['[TOOL RESULTS]:'];
+  if (!toolResults || toolResults.length === 0) return '';
+  const blocks = [];
   for (const tr of toolResults) {
-    parts.push(`\n--- ${tr.command}(${Object.entries(tr.params).map(([k,v]) => k + '=' + JSON.stringify(v)).join(', ')}) ---`);
-    if (tr.result.ok === false) {
-      parts.push('ERROR: ' + (tr.result.error || 'Unknown error'));
-    } else if (tr.result.files) {
-      parts.push(tr.result.files.length === 0 ? '(empty directory)' : tr.result.files.join('\n'));
-    } else if (tr.result.content !== undefined) {
-      parts.push(tr.result.content);
-    } else if (tr.result.results) {
+    const lines = [];
+    if (tr.result && tr.result.ok === false) {
+      lines.push('ERROR: ' + (tr.result.error || 'Unknown error'));
+    } else if (tr.result && tr.result.files) {
+      lines.push(tr.result.files.length === 0 ? '(empty directory)' : tr.result.files.join('\n'));
+    } else if (tr.result && tr.result.content !== undefined) {
+      lines.push(tr.result.content);
+    } else if (tr.result && tr.result.results) {
       for (const r of tr.result.results) {
-        parts.push(`• ${r.title || '(no title)'}\n  ${r.url || ''}\n  ${r.snippet || ''}`);
+        lines.push(`• ${r.title || '(no title)'}\n  ${r.url || ''}\n  ${r.snippet || ''}`);
       }
-    } else if (tr.result.skills) {
+    } else if (tr.result && tr.result.skills) {
       for (const s of tr.result.skills) {
-        parts.push(`\u2022 [${s.enabled ? 'ON' : 'OFF'}] ${s.name} — ${s.description || '(no description)'}`);
+        lines.push(`\u2022 [${s.enabled ? 'ON' : 'OFF'}] ${s.name} — ${s.description || '(no description)'}`);
       }
-    } else if (tr.result.memories) {
+    } else if (tr.result && tr.result.memories) {
       for (const m of tr.result.memories) {
         const topicStr = Array.isArray(m.topics) ? m.topics.join(', ') : '';
-        parts.push(`• [${m.type || 'memory'}] id=${m.id} score=${Number(m.relevanceScore || 0).toFixed(3)} topics=[${topicStr}] summary="${m.semantic || 'n/a'}"`);
+        lines.push(`• [${m.type || 'memory'}] id=${m.id} score=${Number(m.relevanceScore || 0).toFixed(3)} topics=[${topicStr}] summary="${m.semantic || 'n/a'}"`);
       }
       if (tr.result.chatlogContext && tr.result.chatlogContext.length > 0) {
-        parts.push('\n[RELATED CHATLOGS]:');
+        lines.push('\n[RELATED CHATLOGS]:');
         for (const cl of tr.result.chatlogContext) {
-          parts.push(`--- chatlog id=${cl.id} topic_overlap=${cl.overlap} ---`);
-          if (cl.sessionMeta) parts.push(cl.sessionMeta);
-          parts.push(cl.content);
-          parts.push('--- end ---');
+          lines.push(`--- chatlog id=${cl.id} topic_overlap=${cl.overlap} ---`);
+          if (cl.sessionMeta) lines.push(cl.sessionMeta);
+          lines.push(cl.content);
+          lines.push('--- end ---');
         }
       }
-    } else if (tr.result.text) {
-      parts.push(tr.result.text.slice(0, 4000));
-    } else if (tr.result.stdout !== undefined || tr.result.stderr !== undefined) {
-      // cmd_run results
-      if (tr.result.stdout) parts.push('STDOUT:\n' + tr.result.stdout.slice(0, 4000));
-      if (tr.result.stderr) parts.push('STDERR:\n' + tr.result.stderr.slice(0, 4000));
-      if (tr.result.exitCode !== undefined) parts.push('Exit code: ' + tr.result.exitCode);
-      if (tr.result.timedOut) parts.push('(command timed out)');
-    } else if (tr.result.message) {
-      parts.push(tr.result.message);
+    } else if (tr.result && tr.result.text) {
+      lines.push(tr.result.text.slice(0, 4000));
+    } else if (tr.result && (tr.result.stdout !== undefined || tr.result.stderr !== undefined)) {
+      if (tr.result.stdout) lines.push('STDOUT:\n' + tr.result.stdout.slice(0, 4000));
+      if (tr.result.stderr) lines.push('STDERR:\n' + tr.result.stderr.slice(0, 4000));
+      if (tr.result.exitCode !== undefined) lines.push('Exit code: ' + tr.result.exitCode);
+      if (tr.result.timedOut) lines.push('(command timed out)');
+    } else if (tr.result && tr.result.message) {
+      lines.push(tr.result.message);
+    } else if (typeof tr.result === 'string') {
+      lines.push(tr.result);
     }
+    blocks.push(`[TOOL_RESULT: ${tr.command}]\n${lines.join('\n')}\n[/TOOL_RESULT]`);
   }
-  return parts.join('\n');
+  return blocks.join('\n\n');
 }
 
 module.exports = { extractToolCalls, executeToolCalls, formatToolResults, stripToolCalls };

@@ -25,11 +25,13 @@ If PowerShell policy blocks npm scripts, run:
 node server/server.js
 ```
 
-Open:
+Open the URL shown in the startup banner (default):
 
 ```text
-http://localhost:3000
+http://localhost:3847
 ```
+
+If port 3847 is busy, the server will detect what's running and offer to start on the next available port.
 
 ### 2. Launch and use apps
 

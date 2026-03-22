@@ -1,0 +1,448 @@
+{
+  "project": "nekocore",
+  "version": "0.1.0",
+  "description": "NekoCore — Complete cognitive mind system. Builds on REM System.",
+  "prereq": "rem-system",
+  "buildOrder": "BUILD-ORDER.md",
+  "totalModules": 97,
+  "completedModules": 0,
+  "parts": {
+    "1": {
+      "name": "Cognitive Foundation (Bus + Affect + Contracts)",
+      "status": "not-started",
+      "contracts": [
+        {
+          "file": "contracts/cognitive-snapshot-contract.js",
+          "status": "stub"
+        },
+        {
+          "file": "contracts/cognitive-feedback-contract.js",
+          "status": "stub"
+        },
+        {
+          "file": "contracts/turn-classifier-contract.js",
+          "status": "stub"
+        },
+        {
+          "file": "contracts/response-contract.js",
+          "status": "stub"
+        },
+        {
+          "file": "contracts/worker-output-contract.js",
+          "status": "stub"
+        }
+      ],
+      "modules": [
+        {
+          "file": "server/bus/cognitive-bus.js",
+          "status": "stub",
+          "contract": "contracts/cognitive-feedback-contract.js"
+        },
+        {
+          "file": "server/bus/thought-types.js",
+          "status": "stub"
+        },
+        {
+          "file": "server/affect/neurochemistry.js",
+          "status": "stub",
+          "contract": "contracts/cognitive-snapshot-contract.js"
+        },
+        {
+          "file": "server/affect/somatic-awareness.js",
+          "status": "stub",
+          "contract": "contracts/cognitive-snapshot-contract.js"
+        },
+        {
+          "file": "server/utils/turn-classifier.js",
+          "status": "stub",
+          "contract": "contracts/turn-classifier-contract.js"
+        },
+        {
+          "file": "server/utils/interaction-magnitude.js",
+          "status": "stub"
+        }
+      ],
+      "test": "npm run test:1",
+      "dependsOn": []
+    },
+    "2": {
+      "name": "Advanced Memory & Knowledge",
+      "status": "not-started",
+      "modules": [
+        {
+          "file": "server/memory/conscious-memory.js",
+          "status": "stub",
+          "note": "STM 7-item FIFO + LTM promotion"
+        },
+        {
+          "file": "server/memory/dream-memory.js",
+          "status": "stub",
+          "note": "Multi-tier dream storage"
+        },
+        {
+          "file": "server/memory/memory-graph.js",
+          "status": "stub",
+          "note": "Spreading activation network"
+        },
+        {
+          "file": "server/memory/memory-graph-builder.js",
+          "status": "stub",
+          "note": "Build/maintain graph from memory records"
+        },
+        {
+          "file": "server/memory/archive-manager.js",
+          "status": "stub",
+          "note": "Gzip chatlog pipeline"
+        },
+        {
+          "file": "server/knowledge/trace-graph.js",
+          "status": "stub",
+          "note": "Experience → cause → effect traces"
+        },
+        {
+          "file": "server/knowledge/trace-graph-builder.js",
+          "status": "stub",
+          "note": "Build traces from memory patterns"
+        },
+        {
+          "file": "server/knowledge/dream-link-writer.js",
+          "status": "stub",
+          "note": "Write dream-derived links between memories"
+        },
+        {
+          "file": "server/utils/textrank.js",
+          "status": "stub",
+          "note": "Extractive summarization"
+        },
+        {
+          "file": "server/utils/memory-encoder-nlp.js",
+          "status": "stub",
+          "note": "Full NLP encoding pipeline"
+        },
+        {
+          "file": "server/utils/semantic-cache.js",
+          "status": "stub",
+          "note": "Cache semantic lookups"
+        }
+      ],
+      "test": "npm run test:2",
+      "dependsOn": [
+        "1"
+      ]
+    },
+    "3": {
+      "name": "Cognition Engine (Phases + Attention + Feedback)",
+      "status": "not-started",
+      "modules": [
+        {
+          "file": "server/cognition/attention-system.js",
+          "status": "stub"
+        },
+        {
+          "file": "server/cognition/cognitive-feedback.js",
+          "status": "stub"
+        },
+        {
+          "file": "server/cognition/cognitive-pulse.js",
+          "status": "stub"
+        },
+        {
+          "file": "server/cognition/cognitive-snapshot.js",
+          "status": "stub"
+        },
+        {
+          "file": "server/cognition/curiosity-engine.js",
+          "status": "stub"
+        },
+        {
+          "file": "server/cognition/boredom-engine.js",
+          "status": "stub"
+        },
+        {
+          "file": "server/cognition/dream-seed-pool.js",
+          "status": "stub"
+        },
+        {
+          "file": "server/cognition/dream-maintenance-selector.js",
+          "status": "stub"
+        },
+        {
+          "file": "server/cognition/dream-intuition-adapter.js",
+          "status": "stub"
+        },
+        {
+          "file": "server/cognition/phases/phase-decay.js",
+          "status": "stub"
+        },
+        {
+          "file": "server/cognition/phases/phase-consolidation.js",
+          "status": "stub"
+        },
+        {
+          "file": "server/cognition/phases/phase-conscious-stm.js",
+          "status": "stub"
+        },
+        {
+          "file": "server/cognition/phases/phase-dreams.js",
+          "status": "stub"
+        },
+        {
+          "file": "server/cognition/phases/phase-deep-sleep.js",
+          "status": "stub"
+        },
+        {
+          "file": "server/cognition/phases/phase-beliefs.js",
+          "status": "stub"
+        },
+        {
+          "file": "server/cognition/phases/phase-goals.js",
+          "status": "stub"
+        },
+        {
+          "file": "server/cognition/phases/phase-identity.js",
+          "status": "stub"
+        },
+        {
+          "file": "server/cognition/phases/phase-neurochemistry.js",
+          "status": "stub"
+        },
+        {
+          "file": "server/cognition/phases/phase-somatic.js",
+          "status": "stub"
+        },
+        {
+          "file": "server/cognition/phases/phase-hebbian.js",
+          "status": "stub"
+        },
+        {
+          "file": "server/cognition/phases/phase-pruning.js",
+          "status": "stub"
+        },
+        {
+          "file": "server/cognition/phases/phase-traces.js",
+          "status": "stub"
+        },
+        {
+          "file": "server/cognition/phases/phase-archive.js",
+          "status": "stub"
+        },
+        {
+          "file": "server/cognition/phases/phase-archive-index.js",
+          "status": "stub"
+        },
+        {
+          "file": "server/cognition/phases/phase-boredom.js",
+          "status": "stub"
+        }
+      ],
+      "test": "npm run test:3",
+      "dependsOn": [
+        "2"
+      ]
+    },
+    "4": {
+      "name": "Identity & Generation",
+      "status": "not-started",
+      "modules": [
+        {
+          "file": "server/identity/hatch-entity.js",
+          "status": "stub"
+        },
+        {
+          "file": "server/identity/identity-manager.js",
+          "status": "stub"
+        },
+        {
+          "file": "server/identity/core-memory-manager.js",
+          "status": "stub"
+        },
+        {
+          "file": "server/identity/goal-generator.js",
+          "status": "stub"
+        },
+        {
+          "file": "server/identity/goals-manager.js",
+          "status": "stub"
+        },
+        {
+          "file": "server/identity/dream-diary.js",
+          "status": "stub"
+        },
+        {
+          "file": "server/identity/life-diary.js",
+          "status": "stub"
+        },
+        {
+          "file": "server/identity/onboarding.js",
+          "status": "stub"
+        },
+        {
+          "file": "server/generation/aspect-prompts.js",
+          "status": "stub"
+        },
+        {
+          "file": "server/generation/context-consolidator.js",
+          "status": "stub"
+        },
+        {
+          "file": "server/generation/humanize-filter.js",
+          "status": "stub"
+        },
+        {
+          "file": "server/generation/core-life-generator.js",
+          "status": "stub"
+        },
+        {
+          "file": "server/generation/chapter-generator.js",
+          "status": "stub"
+        },
+        {
+          "file": "server/generation/synthetic-memory-generator.js",
+          "status": "stub"
+        },
+        {
+          "file": "server/generation/diary-prompts.js",
+          "status": "stub"
+        },
+        {
+          "file": "server/generation/message-chunker.js",
+          "status": "stub"
+        },
+        {
+          "file": "server/generation/voice-profile.js",
+          "status": "stub"
+        }
+      ],
+      "test": "npm run test:4",
+      "dependsOn": [
+        "3"
+      ]
+    },
+    "5": {
+      "name": "Services & Transport",
+      "status": "not-started",
+      "modules": [
+        {
+          "file": "server/services/auth-service.js",
+          "status": "stub"
+        },
+        {
+          "file": "server/services/boot.js",
+          "status": "stub"
+        },
+        {
+          "file": "server/services/chat-pipeline.js",
+          "status": "stub"
+        },
+        {
+          "file": "server/services/config-runtime.js",
+          "status": "stub"
+        },
+        {
+          "file": "server/services/config-service.js",
+          "status": "stub"
+        },
+        {
+          "file": "server/services/entity-checkout.js",
+          "status": "stub"
+        },
+        {
+          "file": "server/services/entity-memory-compat.js",
+          "status": "stub"
+        },
+        {
+          "file": "server/services/entity-runtime.js",
+          "status": "stub"
+        },
+        {
+          "file": "server/services/memory-service.js",
+          "status": "stub"
+        },
+        {
+          "file": "server/services/post-response-cognitive-feedback.js",
+          "status": "stub"
+        },
+        {
+          "file": "server/services/post-response-memory.js",
+          "status": "stub"
+        },
+        {
+          "file": "server/services/relationship-service.js",
+          "status": "stub"
+        },
+        {
+          "file": "server/services/response-postprocess.js",
+          "status": "stub"
+        },
+        {
+          "file": "server/services/startup-preflight.js",
+          "status": "stub"
+        },
+        {
+          "file": "server/services/timeline-logger.js",
+          "status": "stub"
+        },
+        {
+          "file": "server/services/user-profiles.js",
+          "status": "stub"
+        },
+        {
+          "file": "server/utils/model-router.js",
+          "status": "stub"
+        },
+        {
+          "file": "server/routes/auth-routes.js",
+          "status": "stub"
+        },
+        {
+          "file": "server/routes/brain-routes.js",
+          "status": "stub"
+        },
+        {
+          "file": "server/routes/chat-routes.js",
+          "status": "stub"
+        },
+        {
+          "file": "server/routes/memory-routes.js",
+          "status": "stub"
+        },
+        {
+          "file": "server/routes/entity-routes.js",
+          "status": "stub"
+        },
+        {
+          "file": "server/routes/config-routes.js",
+          "status": "stub"
+        },
+        {
+          "file": "server/routes/archive-routes.js",
+          "status": "stub"
+        },
+        {
+          "file": "server/routes/cognitive-routes.js",
+          "status": "stub"
+        },
+        {
+          "file": "server/routes/sse-routes.js",
+          "status": "stub"
+        },
+        {
+          "file": "server/routes/entity-chat-routes.js",
+          "status": "stub"
+        },
+        {
+          "file": "server/routes/document-routes.js",
+          "status": "stub"
+        },
+        {
+          "file": "server/routes/nekocore-routes.js",
+          "status": "stub"
+        }
+      ],
+      "test": "npm run test:5",
+      "dependsOn": [
+        "4"
+      ]
+    }
+  }
+}
