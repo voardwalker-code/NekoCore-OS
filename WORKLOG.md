@@ -44,14 +44,14 @@ Emergency exception log:
 
 ---
 
-## Stop/Resume Snapshot — 2026-03-22 (MA Workspace Reset Complete)
+## Stop/Resume Snapshot — 2026-03-22 (CI Fix — system-apps entries)
 
 - **Current phase:** `Phase 4 — Feature work`
-- **Current slice:** `MA workspace reset — complete`
-- **Last completed work:** `Reset MA workspace sub-projects from completed builds to starter scaffolds. Deleted 734 built files. Created fresh PROJECT-MANIFEST.json (all statuses "not-started"), BUILD-ORDER.md, and package.json for both rem-system and nekocore. Updated .gitignore to granular rules (scaffold files tracked, build artifacts ignored). Reset MA-WORKLOG.md. Updated docs/MA-AND-PROJECT-STRUCTURE.md to reflect starter scaffold state.`
+- **Current slice:** `CI fix — 5 missing system-apps entries`
+- **Last completed work:** `Added 5 non-core app entries (ma-server, rem-server, nekocore-mind, bugtracker, resourcemgr) to system-apps.json. Updated expected IDs list in system-apps-manifest-guards test. Tests: 2,248 pass, 0 fail.`
 - **In-progress item:** `none`
 - **Blocking issue:** `none`
-- **Next action on resume:** `User testing of Resource Manager app. Then proceed to next plan (Setup Wizard or other).`
+- **Next action on resume:** `Verify CI passes on GitHub after push. Then proceed to next plan.`
 - **Active plans:**
   - `Documents/current/PLAN-RESOURCE-MANAGER-APP-v1.md` — Resource Manager App — `Complete`
   - `Documents/current/PLAN-BUG-TRACKER-APP-v1.md` — Bug Tracker App — `Complete`
@@ -68,6 +68,18 @@ Emergency exception log:
 - **MA workspace projects (starter scaffolds):**
   - `MA-workspace/rem-system/` — REM System Core starter scaffold (26 modules defined, 0 built, port 3860)
   - `MA-workspace/nekocore/` — NekoCore Cognitive Mind starter scaffold (97 modules defined, 0 built, port 3870, pre-req: rem-system)
+
+---
+
+## Session Ledger — 2026-03-22 (CI Fix — system-apps entries)
+
+Status: `Complete`
+
+- **Purpose:** Fix CI test failure — 5 non-core apps existed in `non-core-apps.manifest.json` but were missing from `system-apps.json`, causing the `system-apps-manifest-guards` test to fail.
+- **Changes:**
+  1. **system-apps.json** — Added 5 new entries: ma-server, rem-server, nekocore-mind, bugtracker, resourcemgr (appType: html-only, sourcePath: their host HTML file)
+  2. **system-apps-manifest-guards.test.js** — Updated expected app IDs list to include the 5 new entries
+- **Tests:** 2,248 pass, 0 fail (was 2,247 pass, 1 fail)
 
 ---
 

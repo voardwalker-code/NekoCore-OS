@@ -477,6 +477,106 @@
         "sharedSourceGroup": null
       },
       "notes": ["Shell iframe is lazy-loaded on first open"]
+    },
+    {
+      "id": "ma-server",
+      "name": "MA Server",
+      "icon": "WINDOW_APPS:inline-svg",
+      "sourcePath": "apps/non-core/core/tab-ma-server.html",
+      "appType": "html-only",
+      "defaultWindow": { "width": 900, "height": 640 },
+      "standalonePath": null,
+      "optional": true,
+      "launchMode": "both",
+      "embedded": { "tabId": "ma-server", "target": "#tab-ma-server", "hostPath": "apps/non-core/core/tab-ma-server.html", "navTarget": "#navOptionalAppsHost" },
+      "popout": { "eligible": true, "queryParam": "?popout=ma-server" },
+      "ownership": {
+        "controllerPath": null,
+        "hostPath": "apps/non-core/core/tab-ma-server.html",
+        "pagePath": null,
+        "sharedSourceGroup": null
+      },
+      "notes": ["MA server control panel — mounted non-core HTML"]
+    },
+    {
+      "id": "rem-server",
+      "name": "REM System",
+      "icon": "WINDOW_APPS:inline-svg",
+      "sourcePath": "apps/non-core/core/tab-rem-server.html",
+      "appType": "html-only",
+      "defaultWindow": { "width": 900, "height": 640 },
+      "standalonePath": null,
+      "optional": true,
+      "launchMode": "both",
+      "embedded": { "tabId": "rem-server", "target": "#tab-rem-server", "hostPath": "apps/non-core/core/tab-rem-server.html", "navTarget": "#navOptionalAppsHost" },
+      "popout": { "eligible": true, "queryParam": "?popout=rem-server" },
+      "ownership": {
+        "controllerPath": null,
+        "hostPath": "apps/non-core/core/tab-rem-server.html",
+        "pagePath": null,
+        "sharedSourceGroup": null
+      },
+      "notes": ["REM System server panel — mounted non-core HTML"]
+    },
+    {
+      "id": "nekocore-mind",
+      "name": "NekoCore Mind",
+      "icon": "WINDOW_APPS:inline-svg",
+      "sourcePath": "apps/non-core/core/tab-nekocore-mind.html",
+      "appType": "html-only",
+      "defaultWindow": { "width": 900, "height": 640 },
+      "standalonePath": null,
+      "optional": true,
+      "launchMode": "both",
+      "embedded": { "tabId": "nekocore-mind", "target": "#tab-nekocore-mind", "hostPath": "apps/non-core/core/tab-nekocore-mind.html", "navTarget": "#navOptionalAppsHost" },
+      "popout": { "eligible": true, "queryParam": "?popout=nekocore-mind" },
+      "ownership": {
+        "controllerPath": null,
+        "hostPath": "apps/non-core/core/tab-nekocore-mind.html",
+        "pagePath": null,
+        "sharedSourceGroup": null
+      },
+      "notes": ["NekoCore Mind server panel — mounted non-core HTML"]
+    },
+    {
+      "id": "bugtracker",
+      "name": "Bug Tracker",
+      "icon": "WINDOW_APPS:inline-svg",
+      "sourcePath": "apps/non-core/core/tab-bugtracker.html",
+      "appType": "html-only",
+      "defaultWindow": { "width": 960, "height": 700 },
+      "standalonePath": null,
+      "optional": true,
+      "launchMode": "both",
+      "embedded": { "tabId": "bugtracker", "target": "#tab-bugtracker", "hostPath": "apps/non-core/core/tab-bugtracker.html", "navTarget": "#navOptionalAppsHost" },
+      "popout": { "eligible": true, "queryParam": "?popout=bugtracker" },
+      "ownership": {
+        "controllerPath": null,
+        "hostPath": "apps/non-core/core/tab-bugtracker.html",
+        "pagePath": null,
+        "sharedSourceGroup": null
+      },
+      "notes": ["Bug tracker — mounted non-core HTML with screenshot capture"]
+    },
+    {
+      "id": "resourcemgr",
+      "name": "Resource Manager",
+      "icon": "WINDOW_APPS:inline-svg",
+      "sourcePath": "apps/non-core/core/tab-resourcemgr.html",
+      "appType": "html-only",
+      "defaultWindow": { "width": 1060, "height": 740 },
+      "standalonePath": null,
+      "optional": true,
+      "launchMode": "both",
+      "embedded": { "tabId": "resourcemgr", "target": "#tab-resourcemgr", "hostPath": "apps/non-core/core/tab-resourcemgr.html", "navTarget": "#navOptionalAppsHost" },
+      "popout": { "eligible": true, "queryParam": "?popout=resourcemgr" },
+      "ownership": {
+        "controllerPath": null,
+        "hostPath": "apps/non-core/core/tab-resourcemgr.html",
+        "pagePath": null,
+        "sharedSourceGroup": null
+      },
+      "notes": ["Resource manager — mounted non-core HTML with active resource tracking"]
     }
   ]
 }

@@ -5,6 +5,9 @@ Built with MA (Memory Architect v1).
 
 ## [Unreleased]
 
+### Fixed
+- Added 5 missing non-core app entries to `system-apps.json` (ma-server, rem-server, nekocore-mind, bugtracker, resourcemgr) — CI green (2,248 pass, 0 fail)
+
 ## [0.9.0-alpha.4.24] — 2026-03-22
 
 ### Changed

@@ -44,7 +44,8 @@ test('system-apps manifest contains expected app ids including installer-managed
     'chat', 'entity', 'creator', 'users', 'browser', 'skills', 'workspace',
     'popouts', 'documents', 'visualizer', 'physical', 'dreamgallery', 'lifediary',
     'dreamdiary', 'helloworld', 'themes', 'settings', 'advanced', 'activity',
-    'observability', 'debugcore', 'archive', 'nekocore'
+    'observability', 'debugcore', 'archive', 'nekocore', 'ma-server',
+    'rem-server', 'nekocore-mind', 'bugtracker', 'resourcemgr'
   ];
   assert.deepEqual(ids, expected);
 });
