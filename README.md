@@ -22,7 +22,7 @@
   &nbsp;
   <img src="https://img.shields.io/badge/dependencies-0-brightgreen?style=flat-square" alt="zero deps"/>
   &nbsp;
-  <img src="https://img.shields.io/badge/tests-2%2C247%20passing-brightgreen?style=flat-square" alt="2,247 tests passing"/>
+  <img src="https://img.shields.io/badge/tests-2%2C248%20passing-brightgreen?style=flat-square" alt="2,248 tests passing"/>
 </p>
 
 <p align="center">
@@ -39,7 +39,7 @@
 
 <div align="center">
 
-| 2,247 | 0 | 5 | 20+ |
+| 2,248 | 0 | 5 | 20+ |
 |:-----:|:-:|:-:|:----:|
 | **Tests Passing** | **Runtime Dependencies** | **Pipeline Phases** | **Desktop Apps** |
 
@@ -47,16 +47,20 @@
 
 <br>
 
-> [!WARNING]
-> **ACTIVE DEVELOPMENT — POWERFUL FEATURES, NOT YET BATTLE-TESTED**
+> [!CAUTION]
+> **PRE-ALPHA SOFTWARE — USE AT YOUR OWN RISK**
 >
-> The `staging` branch contains major new subsystems that are **under active development**:
-> entity orchestration, blueprint-driven project execution, sandboxed code execution (Rust, Python, C/C++, Node.js),
-> a self-repair/diagnostics chain, a failsafe emergency console, the Memory Architect (MA) AI coding assistant,
-> a resource manager, a bug tracker, smart port management, and server-to-server MA integration.
+> NekoCore OS is in **pre-alpha**. All subsystems — including entity orchestration, blueprint-driven
+> project execution, sandboxed code execution, the Memory Architect (MA) AI coding assistant,
+> self-repair/diagnostics, the failsafe console, resource manager, bug tracker, smart port management,
+> and server-to-server MA integration — are **functional but not yet battle-tested**.
 >
-> These features have **2,247 passing unit tests** but have **not been stress-tested in production**.
-> Expect rough edges. Back up your `entities/` and `memories/` folders before experimenting.
+> There are **2,248 passing unit tests** covering these features, but they have **not been
+> stress-tested in production environments**. APIs, data formats, and behaviour may change
+> without notice between releases.
+>
+> **Before experimenting:** back up your `entities/` and `memories/` folders.
+> Report issues via GitHub Issues — contributions and feedback are welcome.
 >
 > **Python is NOT required to run NekoCore.** The only runtime dependency is Node.js 18+.
 > Python 3 is used *only* by the optional self-repair fixer script (`neko_fixer.py`) — a standalone
