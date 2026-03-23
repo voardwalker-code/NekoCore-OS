@@ -16,6 +16,7 @@ const agentCatalog          = require('./MA-agents');
 const projectArchive        = require('./MA-project-archive');
 const modelRouter           = require('./MA-model-router');
 const worklog               = require('./MA-worklog');
+const { DEFAULT_AGENTS, DEFAULT_ENTITY } = require('../MA-scripts/agent-definitions');
 
 // ── Paths ───────────────────────────────────────────────────────────────────
 const MA_ROOT       = path.join(__dirname, '..');
@@ -111,14 +112,50 @@ function initMemory() {
   console.log('  Memory store ready');
 }
 
+/** Ensure the MA entity.json exists — recreate from defaults if missing. */
+function ensureEntity() {
+  const p = path.join(ENTITY_DIR, 'entity.json');
+  if (fs.existsSync(p)) return;
+  console.log('  Entity missing — provisioning default MA entity...');
+  fs.mkdirSync(ENTITY_DIR, { recursive: true });
+  const entityDef = { ...DEFAULT_ENTITY, createdAt: new Date().toISOString() };
+  fs.writeFileSync(p, JSON.stringify(entityDef, null, 2));
+  // Ensure skills directory exists
+  const skillsDir = path.join(ENTITY_DIR, 'skills');
+  if (!fs.existsSync(skillsDir)) fs.mkdirSync(skillsDir, { recursive: true });
+  console.log('  Entity provisioned: MA');
+}
+
+/** Ensure default agents exist — seed any that are missing. */
+function ensureAgents() {
+  const existing = agentCatalog.listAgents();
+  const existingIds = new Set(existing.map(a => a.id));
+  let created = 0;
+  for (const def of DEFAULT_AGENTS) {
+    if (existingIds.has(def.id)) continue;
+    const result = agentCatalog.createAgent(def);
+    if (result.ok) {
+      console.log(`  Agent provisioned: ${def.name} (${def.id})`);
+      created++;
+    }
+  }
+  if (created) {
+    console.log(`  ${created} agent(s) auto-provisioned`);
+  } else {
+    console.log(`  Agents OK: ${existing.length} in catalog`);
+  }
+}
+
 /** Full bootstrap sequence. Call once at startup. */
 function boot() {
   console.log('\n  MA — Memory Architect');
   console.log('  ' + '─'.repeat(36));
   ensureDirs();
   loadConfig();
+  ensureEntity();
   loadEntity();
   loadSkills();
+  ensureAgents();
   initMemory();
 }
 

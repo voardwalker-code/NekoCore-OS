@@ -546,7 +546,7 @@ function createPinnedButton(app, className) {
   button.title = app.label;
   button.setAttribute('aria-label', app.label);
   button.innerHTML = '<span class="os-pinned-app-icon" data-accent="' + (app.accent || 'green') + '">' + app.icon + '</span>';
-  button.onclick = function() { switchMainTab(app.tab, button); };
+  button.onclick = function() { taskbarAppClick(app.tab); };
   button.draggable = true;
   button.addEventListener('dragstart', onPinnedDragStart);
   button.addEventListener('dragend', onPinnedDragEnd);
@@ -740,4 +740,78 @@ function renderPinnedApps() {
   updateTaskbarOverflow();
   updateTaskManagerView();
   syncDetachedShellStateUI();
+}
+
+// ── Running‑apps taskbar (dynamic window buttons) ───────────────────────────
+
+/**
+ * Sync the #osTaskbarRunning container with all currently open windows.
+ * Pinned apps that are open get an indicator dot on their pinned button instead
+ * of a duplicate entry here. Non-pinned open windows get a full button.
+ * Called from syncShellStatusWidgets() on every window state change.
+ */
+function syncRunningApps() {
+  const host = document.getElementById('osTaskbarRunning');
+  if (!host || !windowManager.initialized) return;
+
+  const pinnedSet = new Set(pinnedApps);
+  const focusedTab = typeof getFocusedWindowTab === 'function' ? getFocusedWindowTab() : null;
+
+  // Collect open windows
+  const running = [];
+  windowManager.windows.forEach(function(meta, tabName) {
+    if (!meta.open) return;
+    running.push({ tab: tabName, minimized: meta.minimized, focused: tabName === focusedTab });
+  });
+
+  // Update pinned-app indicator dots (open / minimized / focused)
+  document.querySelectorAll('.os-pinned-app[data-tab]').forEach(function(btn) {
+    const tab = btn.getAttribute('data-tab');
+    const meta = windowManager.windows.get(tab);
+    const isOpen = meta && meta.open;
+    const isMin = meta && meta.minimized;
+    const isFocused = tab === focusedTab && isOpen && !isMin;
+    btn.classList.toggle('has-window', !!isOpen);
+    btn.classList.toggle('is-minimized', !!isMin);
+    btn.classList.toggle('on', !!isFocused);
+  });
+
+  // Build non-pinned running buttons
+  const fragment = document.createDocumentFragment();
+  running.forEach(function(entry) {
+    if (pinnedSet.has(entry.tab)) return; // already shown via pinned button dot
+    const app = getWindowApp(entry.tab);
+    const btn = document.createElement('button');
+    btn.className = 'os-running-app';
+    if (entry.focused) btn.classList.add('on');
+    if (entry.minimized) btn.classList.add('is-minimized');
+    btn.setAttribute('data-tab', entry.tab);
+    btn.title = app.label + (entry.minimized ? ' (minimized)' : '');
+    btn.setAttribute('aria-label', app.label);
+    btn.innerHTML = '<span class="os-pinned-app-icon" data-accent="' + (app.accent || 'green') + '">' + app.icon + '</span>';
+    btn.onclick = function() { taskbarAppClick(entry.tab); };
+    fragment.appendChild(btn);
+  });
+
+  host.innerHTML = '';
+  host.appendChild(fragment);
+}
+
+/**
+ * Standard taskbar click: if the window is focused → minimize it,
+ * if minimized or unfocused → open/focus it (like Windows/macOS).
+ */
+function taskbarAppClick(tabName) {
+  var meta = windowManager.windows.get(tabName);
+  if (!meta) { switchMainTab(tabName); return; }
+
+  var focusedTab = typeof getFocusedWindowTab === 'function' ? getFocusedWindowTab() : null;
+
+  if (meta.open && !meta.minimized && tabName === focusedTab) {
+    // Currently focused → minimize
+    minimizeWindow(tabName);
+  } else {
+    // Minimized or not focused → open / restore / focus
+    switchMainTab(tabName);
+  }
 }

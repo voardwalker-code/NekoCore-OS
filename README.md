@@ -14,8 +14,6 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/voardwalker-code/NekoCore-OS/actions/workflows/ci.yml"><img src="https://github.com/voardwalker-code/NekoCore-OS/actions/workflows/ci.yml/badge.svg" alt="CI"/></a>
-  &nbsp;
   <img src="https://img.shields.io/badge/node-%3E%3D18-brightgreen?style=flat-square&logo=node.js" alt="Node 18+"/>
   &nbsp;
   <img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"/>

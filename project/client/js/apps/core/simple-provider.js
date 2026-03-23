@@ -179,6 +179,8 @@ async function simpleFetchOllamaModels() {
 async function simpleSaveConfig() {
   const isOllama = simpleActiveProvider === 'ollama';
   let mainModel, mainEndpoint, mainKey, mainType;
+  let keyEl = null;
+  let typedKey = '';
 
   if (isOllama) {
     mainType = 'ollama';
@@ -192,10 +194,23 @@ async function simpleSaveConfig() {
   } else {
     mainType = 'openrouter';
     mainEndpoint = OPENROUTER_PRESET.ep;
-    const keyEl = document.getElementById('simpleOrKey');
-    const typedKey = (keyEl?.value || '').trim();
+    keyEl = document.getElementById('simpleOrKey');
+    typedKey = (keyEl?.value || '').trim();
     const hasStoredKey = keyEl?.dataset.hasStoredKey === 'true' || _simpleHasStoredOpenRouterKey();
     mainKey = typedKey || (hasStoredKey ? SIMPLE_PROVIDER_REDACTED_KEY : '');
+
+    // If field is blank and no stored key detected in-memory, try fetching from server
+    if (!mainKey) {
+      try {
+        const existingResp = await fetch('/api/entity-config?provider=main');
+        if (existingResp.ok) {
+          const existing = await existingResp.json();
+          const storedKey = String(existing?.apiKey || existing?.key || '').trim();
+          if (storedKey) mainKey = SIMPLE_PROVIDER_REDACTED_KEY;
+        }
+      } catch (_) {}
+    }
+
     mainModel = (document.getElementById('simpleOrModel')?.value || '').trim();
     if (!mainKey) {
       simpleShowStatus('orStatus', 'API key is required', 'var(--dn)');

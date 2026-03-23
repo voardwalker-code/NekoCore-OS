@@ -44,14 +44,14 @@ Emergency exception log:
 
 ---
 
-## Stop/Resume Snapshot — 2026-03-22 (CI Fix — system-apps entries)
+## Stop/Resume Snapshot — 2026-03-22 (Settings app API key fix)
 
 - **Current phase:** `Phase 4 — Feature work`
-- **Current slice:** `CI fix — 5 missing system-apps entries`
-- **Last completed work:** `Added 5 non-core app entries (ma-server, rem-server, nekocore-mind, bugtracker, resourcemgr) to system-apps.json. Updated expected IDs list in system-apps-manifest-guards test. Tests: 2,248 pass, 0 fail.`
+- **Current slice:** `Settings app config save fix`
+- **Last completed work:** `Fixed block-scoping bug in simpleSaveConfig() — keyEl/typedKey were const inside else block but used outside. Hoisted to function scope + added server-side stored-key fallback. 2,248 tests, 1 pre-existing fail.`
 - **In-progress item:** `none`
 - **Blocking issue:** `none`
-- **Next action on resume:** `Verify CI passes on GitHub after push. Then proceed to next plan.`
+- **Next action on resume:** `Proceed to next plan (Setup Wizard full redesign or next feature).`
 - **Active plans:**
   - `Documents/current/PLAN-RESOURCE-MANAGER-APP-v1.md` — Resource Manager App — `Complete`
   - `Documents/current/PLAN-BUG-TRACKER-APP-v1.md` — Bug Tracker App — `Complete`
@@ -65,9 +65,99 @@ Emergency exception log:
   - `Documents/current/PLAN-INTROSPECTION-LOOP-v1.md` — 6-axis self-inquiry brain-loop phase with local model
 - **Prior plan (paused):** `Documents/current/PLAN-SLASH-COMMAND-SYSTEM-v1.md — A0/A1/A2 complete; A3/A4 future`
 - **Phase 5 plan:** `PLAN-PREDICTIVE-MEMORY-v1.md — held`
-- **MA workspace projects (starter scaffolds):**
-  - `MA-workspace/rem-system/` — REM System Core starter scaffold (26 modules defined, 0 built, port 3860)
-  - `MA-workspace/nekocore/` — NekoCore Cognitive Mind starter scaffold (97 modules defined, 0 built, port 3870, pre-req: rem-system)
+- **MA workspace projects:** `Moved to separate repo — MA-workspace is now fully cleared on reset`
+
+---
+
+## Session Ledger — 2026-03-22 (Settings app API key fix)
+
+Status: `Complete`
+
+- **Purpose:** Fix Settings app not allowing model-only saves — API key not detected from stored config, save blocked with "API key is required".
+- **Root Cause:** `keyEl` and `typedKey` were declared with `const` inside the `else` block of `simpleSaveConfig()` but referenced later in the `try` block outside that scope. This caused a silent `ReferenceError` after the POST succeeded, preventing `refreshSavedConfig()` from running and `hasStoredKey` from ever being set.
+- **Changes:**
+  1. **simple-provider.js** — Hoisted `keyEl` and `typedKey` from block-scoped `const` to function-scoped `let` declarations. Added server-side fallback: when no stored key is detected in-memory, fetches `GET /api/entity-config?provider=main` to check for a stored key on disk (matches the pattern used by `saveNekocoreConfig()`).
+- **Tests:** 2,248 tests, 1 pre-existing fail (port-guard.test.js)
+
+---
+
+## Session Ledger — 2026-03-22 (Taskbar running-windows fix)
+
+Status: `Complete`
+
+- **Purpose:** Fix open app windows not being represented on the taskbar — minimized windows were unrecoverable.
+- **Changes:**
+  1. **index.html** — Added `#osTaskbarRunning` container div inside `os-taskbar-center`, after the overflow wrap
+  2. **desktop.js** — Added `syncRunningApps()` function: renders dynamic buttons for open non-pinned windows, updates pinned-app buttons with `has-window`/`is-minimized` indicator classes, and adds `taskbarAppClick()` for toggle focus/minimize behavior. Updated `createPinnedButton()` to use `taskbarAppClick` instead of `switchMainTab`.
+  3. **app.js** — Wired `syncRunningApps()` into `syncShellStatusWidgets()` so taskbar updates on every window open/close/minimize/focus
+  4. **ui-v2.css** — Added `.os-taskbar-running` layout, `.os-running-app` button styles (matches pinned-app sizing), indicator dot (`::before`) for open windows on both pinned and running buttons, dimmed dot + opacity for minimized state
+- **Tests:** 2,248 tests, 1 pre-existing fail (port-guard.test.js)
+
+---
+
+## Session Ledger — 2026-03-22 (MA-Server.js extraction)
+
+Status: `Complete`
+
+- **Purpose:** Slim MA-Server.js from ~750 to ~500 lines by extracting the inline `handleSlashCommand()` switch block (~250 lines) and `renderMarkdownToHtml()` (~30 lines) into dedicated modules.
+- **Changes:**
+  1. **MA-server/MA-slash-commands.js** — NEW. Extracted `handleSlashCommand()` with all 13 command families (health, memory, knowledge, ingest, config, projects, project, whitelist, pulse, chores, models, worklog). Requires core, cmdExec, pulse, modelRouter directly.
+  2. **MA-server/MA-markdown.js** — NEW. Extracted lightweight markdown→HTML renderer used by the `/user-guide` endpoint.
+  3. **MA-Server.js** — Replaced inline functions with `require()` imports. Line count: ~750 → ~502. No logic changes — pure extraction.
+  4. **shadow-cleanup-a0-guards.test.js** — Updated guard assertion for `createPinnedButton` to match `taskbarAppClick` routing (introduced by the earlier taskbar fix, guard was stale).
+- **Tests:** 2,248 tests, 0 fail
+
+---
+
+## Session Ledger — 2026-03-22 (App Visibility Fix)
+
+- **Purpose:** Fix Bug Tracker, Resource Manager, and Setup Wizard not visible/accessible in the OS.
+- **Changes:**
+  1. **index.html** — Added missing `optional-tab-slot-bugtracker` and `optional-tab-slot-resourcemgr` slot divs (before `optional-tab-custom-slot`) so the non-core-html-loader mounts them at the correct DOM position
+  2. **app.js** — Added "Setup Wizard" entry to `START_MENU_SPECIAL_APPS` (id: `setup-wizard`, category: `system`, action: `showSetupWizard`) so users can re-open the wizard from the Start menu
+  3. **CHANGELOG.md** — Logged both fixes under `[Unreleased]`
+- **Tests:** 2,248 pass, 1 pre-existing fail (port-guard.test.js Node.js deserialization issue)
+
+---
+
+## Session Ledger — 2026-03-22 (MA GUI fix + app removal)
+
+Status: `Complete`
+
+- **Purpose:** Fix MA app GUI sizing/scrollability in iframe. Remove REM System and NekoCore Mind apps (already built-in to NekoCore OS).
+- **Changes:**
+  1. **MA-index.html** — Replaced `body{height:100vh}` with `html,body{height:100%;overflow:hidden}` so it fits the iframe container. Reduced header padding (12px→6px), input bar padding (12px→6px), message font (14px→13px), textarea max-height (120px→80px). Added `min-height:0` to `#main-wrap` for proper flex scroll. Chat messages now 85% max-width.
+  2. **non-core-apps.manifest.json** — Removed `rem-server` and `nekocore-mind` entries
+  3. **system-apps.json** — Removed `rem-server` and `nekocore-mind` entries
+  4. **index.html** — Removed `optional-tab-slot-rem-server` and `optional-tab-slot-nekocore-mind` slot divs
+  5. **system-apps-manifest-guards.test.js** — Removed `rem-server` and `nekocore-mind` from expected app IDs
+- **Tests:** 2,248 pass, 1 pre-existing fail
+
+---
+
+## Session Ledger — 2026-03-22 (MA agent reset + auto-provisioning)
+
+Status: `Complete`
+
+- **Purpose:** Fix MA-Reset-All.js not wiping agents (retained job info across resets). Add idempotent auto-provisioning on boot.
+- **Changes:**
+  1. **MA-scripts/agent-definitions.js** (NEW) — Extracted 6 default agent definitions + default MA entity definition into a shared module importable by both seed script and boot
+  2. **MA-server/MA-core.js** — Added `ensureEntity()` (creates entity.json + skills dir if missing) and `ensureAgents()` (seeds any missing default agents). Both called in `boot()` before `loadEntity()` and after `loadSkills()` respectively. Idempotent — skips if already present.
+  3. **MA-Reset-All.js** — Added full `entity_ma/` dir to TARGETS (was only clearing memories/index/archives). Added `agents` target type that deletes all `agent_*` directories. Removed entity.json and skills from PRESERVE list. Added `deleteAgents()` helper. Added "recreated on next boot" confirmation message.
+  4. **MA-scripts/seed-agents.js** — Replaced inline 280-line agent definitions with `require('./agent-definitions')` import, eliminating duplication
+- **Tests:** 2,246 pass, 1 pre-existing fail (port-guard.test.js Node.js deserialization)
+
+---
+
+## Session Ledger — 2026-03-22 (staging → main merge)
+
+Status: `Complete`
+
+- **Purpose:** Promote staging branch to main for pre-alpha public release (v0.9.0-alpha.4.24).
+- **Changes:**
+  1. **README.md** — Replaced staging-specific WARNING block with pre-alpha CAUTION disclaimer; updated test badge and stats table to 2,248
+  2. **Git** — Committed disclaimer update on staging, merged staging→main (--no-ff), pushed both branches to origin
+- **Commits merged:** 10 (8 prior staging commits + disclaimer commit + merge commit)
 
 ---
 
@@ -1054,7 +1144,7 @@ Status: `Complete`
 Status: `Complete`
 
 - Plan: `Documents/current/PLAN-TOKEN-OPTIMIZATION-v1.md` — slices T1-0–T1-4
-- Pre-optimization rollback snapshot: `C:\Users\voard\Documents\NekoCore-OS-backup-pre-token-opt_2026-03-20_134152.zip` (30 MB)
+- Pre-optimization rollback snapshot: local backup zip (30 MB)
 - T1-0: Created `project/tests/unit/token-optimization-guards.test.js` — 37 guard tests across 7 suites: memory encoding output shape (10), reranker behavior (8), existing NLP utilities (4), YAKE extractor (4), NLP encoder (4), pipeline integration (2), security (5)
 - T1-1: Created `project/server/brain/utils/yake.js` — YAKE keyword extractor (~170 lines); statistical features: WPos (position), WFreq (frequency normalization), WCase (uppercase ratio), WRel (sentence spread), WDiff (position spread); unigram + bigram scoring with overlap dedup; `extractKeywords(text, maxKeywords?)` → `string[]`
 - T1-2: Created `project/server/brain/utils/memory-encoder-nlp.js` — NLP memory encoder (~170 lines); RAKE + YAKE for topics, TextRank-lite extractive summarization for semantic/narrative, lexicon-based emotion detection via scoreSentiment() from cognitive-feedback, heuristic importance scoring (question density, exclamation density, topic richness, length, sentiment strength, personal pronouns), regex-based factual knowledge extraction; `encodeMemory(userMessage, entityResponse, opts?)` → `{topics, semantic, narrative, emotion, importance, knowledge}`
@@ -1851,7 +1941,7 @@ Slice ledger update (2026-03-15):
 - Phase 3 slice P3-S7 completed — `setup-ui.js` extracted setup enforcement (`isApiConfigured`, setup-required modal helpers, guardEntityOperation), setup wizard ownership (`SETUP_STEPS`, `LLM_ROLES`, setup state helpers, wizard connect/test/finish flow), and user-name modal helpers from `app.js`. `index.html` now loads `setup-ui.js` after `users-ui.js` and before `skills-ui.js`. Guard tests added in `setup-ui-extraction-guards.test.js`; targeted extraction guards pass and full suite is green (527 pass, 0 fail). `[BOUNDARY_OK]`
 - Critical bug fix completed — NekoCore system entity pipeline parity restored: NekoCore now uses persistent `nekoSystemRuntime` (EntityRuntime instance) instead of creating local throwaway brain modules per-call, giving her full architectural parity with user entities. NekoCore can now dream (DreamEngine), evolve emotionally (Neurochemistry), track goals (GoalsManager), express curiosity (CuriosityEngine), and consolidate memories through the same episodic/semantic pipeline as all other entities. This was blocking Phase 3 modularization because Visualizer memory types showed NekoCore as missing entity-level subsystems. Added guard tests in `project/tests/unit/nekocore-parity-guards.test.js` covering 12 core subsystems. `server.js` (lines 327-348) initializes `nekoSystemRuntime` on startup; `nekocore-pipeline.js` now requires and delegates to this runtime; `ctx` exposes NekoCore subsystems via getters. Suite: 527 pass, 0 fail. `[BOUNDARY_OK] [JS_OFFLOAD]`
 - Critical bug fix completed — Visualizer entity context now stays aligned with actual active/selected entity state after NekoCore parity work. `project/server/services/entity-runtime.js` now guards shared mutable-global updates behind `shareMutableGlobals`; `project/server/server.js` creates `nekoSystemRuntime` with `shareMutableGlobals: false`; `project/server/routes/entity-routes.js` now reads current entity from `entityManager` instead of `hatchEntity` shared state; `project/server/routes/memory-routes.js` resolves selected entity context explicitly for memory search/detail/reconstruct and visualizer chat-history routes; `project/client/js/visualizer.js` preserves a real blank placeholder, merges the current entity into the picker when `/api/entities` omits it, and passes selected entity id through graph/memory/diagnostic/chat-history requests; `project/client/js/neural-viz/renderer.js` appends optional entity context to graph/trace/belief requests. Added/updated guards in `project/tests/unit/visualizer-entity-context-regression.test.js`, `project/tests/unit/nekocore-visualizer-memory-regression.test.js`, and `project/tests/unit/nekocore-parity-guards.test.js`. Validation: full suite `npm.cmd test` green at 554 pass, 0 fail. `[BOUNDARY_OK] [JS_OFFLOAD]`
-- Critical bug fix completed — Three Visualizer + NekoCore regressions fixed: (1) NekoCore dreaming re-enabled: removed `dreamDisabled: true` from `entity_nekocore/entity.json` and `bootstrap.js` so `phase-dreams.js` no longer skips the dream pipeline; bootstrap guard test updated to assert `dreamDisabled` is absent. (2) Memory graph endpoints now entity-aware: `getMemoryGraphNodes` uses active entity's in-memory graph when `entityId` param matches active entity, otherwise scans disk using `getEntityMemoryScanDirs` with topic co-occurrence edges; `getFullMindGraph` reads `entityId` URL param and uses it as target; `getTraces` and `getBeliefGraphNodes` return empty data for non-active entities (in-memory only subsystems). (3) Visualizer entity picker now refreshes on `visibilitychange` via new `refreshEntityPickerList()` so newly created/loaded entities (including Rebecca) appear without a full page reload; `clearFilter()` now passes `selectedEntityId` to `NeuralViz.loadGraphData()`. Suite: 554 pass, 0 fail. `[BOUNDARY_OK] [JS_OFFLOAD]`
+- Critical bug fix completed — Three Visualizer + NekoCore regressions fixed: (1) NekoCore dreaming re-enabled: removed `dreamDisabled: true` from `entity_nekocore/entity.json` and `bootstrap.js` so `phase-dreams.js` no longer skips the dream pipeline; bootstrap guard test updated to assert `dreamDisabled` is absent. (2) Memory graph endpoints now entity-aware: `getMemoryGraphNodes` uses active entity's in-memory graph when `entityId` param matches active entity, otherwise scans disk using `getEntityMemoryScanDirs` with topic co-occurrence edges; `getFullMindGraph` reads `entityId` URL param and uses it as target; `getTraces` and `getBeliefGraphNodes` return empty data for non-active entities (in-memory only subsystems). (3) Visualizer entity picker now refreshes on `visibilitychange` via new `refreshEntityPickerList()` so newly created/loaded entities appear without a full page reload; `clearFilter()` now passes `selectedEntityId` to `NeuralViz.loadGraphData()`. Suite: 554 pass, 0 fail. `[BOUNDARY_OK] [JS_OFFLOAD]`
 - Critical bug fix completed (2026-03-16, post-reset) — Three root-cause memory pipeline bugs fixed after factory reset confirmed they were code issues, not data corruption: (1) `getMemoriesSearch` in `memory-routes.js` now skips directories that have no `log.json` (structural subdirs like `traces/`, `dreams/core/` were previously returned as fake memory records); (2) `getEntityMemoryScanDirs` in `entity-memory-compat.js` now recurses into `dreams/episodic`, `dreams/semantic`, and `dreams/core` instead of scanning the flat `dreams/` root (fixes visualizer dream memory count + memory graph builder false-positive "4 dream memories" log); (3) `encodeNekoConversationMemory` call in `nekocore-pipeline.js` now passes `memoryAspectConfigs: { subconscious: ... }` (plural) and `effectiveUserMessage:` instead of `aspectConfig:` (singular) + `userMessage:` — the wrong key names were causing a silent early exit in `runPostResponseMemoryEncoding` so LLM-enhanced topic extraction and richer memory encoding never ran. Suite: 554 pass, 0 fail. `[BOUNDARY_OK]`
 - Critical bug fix completed (2026-03-16, post-reset) — Setup wizard no longer requires manual discovery after first run. `_onAuthSuccess` in `login.js` now checks if any saved profile has a valid main LLM config via `getMainConfigFromProfile`; if none exists, `showSetupWizard()` auto-launches 350ms after the login overlay closes. Covers both fresh registration and re-login on an unconfigured machine. The auto-launch path was lost during P3-S7 extraction (setup-ui.js) — the trigger was never moved to the new module. Suite: 554 pass, 0 fail. `[BOUNDARY_OK]`
 

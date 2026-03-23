@@ -66,8 +66,8 @@ test('A-0 guard: desktop icon entrypoints stay wired to switchMainTab and detach
   );
   assert.match(
     desktopJs,
-    /function createPinnedButton\(app, className\)[\s\S]*button\.onclick = function\(\) \{ switchMainTab\(app\.tab, button\); \};/,
-    'createPinnedButton must keep taskbar icon launches routed through switchMainTab'
+    /function createPinnedButton\(app, className\)[\s\S]*button\.onclick = function\(\) \{ taskbarAppClick\(app\.tab\); \};/,
+    'createPinnedButton must keep taskbar icon launches routed through taskbarAppClick'
   );
   assert.match(
     desktopJs,

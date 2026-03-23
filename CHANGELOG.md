@@ -6,6 +6,27 @@ Built with MA (Memory Architect v1).
 ## [Unreleased]
 
 ### Fixed
+- **Settings app: model-only saves no longer blocked by "API key is required"** — `keyEl` and `typedKey` were declared with `const` inside a block-scoped `else` branch but referenced outside it, causing a silent `ReferenceError` that killed post-save refresh. Hoisted to function scope. Added server-side fallback fetch for stored key when in-memory detection fails.
+- Bug Tracker and Resource Manager apps not visible in OS — added missing `optional-tab-slot-bugtracker` and `optional-tab-slot-resourcemgr` slot divs to `index.html`; non-core-html-loader can now mount them at the correct DOM position instead of falling through to the generic custom-slot fallback
+- Setup Wizard not re-accessible after initial setup — added "Setup Wizard" entry to `START_MENU_SPECIAL_APPS` in `app.js` so it appears in the Start menu under System category (calls `showSetupWizard()`)
+- MA GUI layout: made scrollable and compact for iframe embedding — reduced header/input padding, added `min-height:0` to flex containers, capped chat message width at 85%, used `height:100%` instead of `100vh` so it fits the iframe frame instead of the viewport
+- **MA Reset-All now fully wipes agents and MA entity** — `MA-Reset-All.js` deletes all `agent_*` directories and the full `entity_ma/` folder (entity.json, memories, index, archives, skills). Both are auto-provisioned on next boot by `MA-core.js` via `ensureEntity()` and `ensureAgents()`, matching the NekoCore OS idempotent bootstrap pattern. Agent definitions extracted to shared `MA-scripts/agent-definitions.js` so both `seed-agents.js` (manual) and boot (automatic) use the same source of truth.
+- **MA Reset-All now fully wipes workspace** — Changed from `dir-shallow` (which preserved projects with `PROJECT-MANIFEST.json`) to full `dir` wipe. NekoCore and REM System starter scaffolds are now in a separate repo, so MA-workspace is cleared completely on reset.
+- **Taskbar now shows open windows** — Added `#osTaskbarRunning` container and `syncRunningApps()` function. Non-pinned open windows appear as dynamic buttons on the taskbar; pinned apps get an indicator dot when their window is open. Clicking a focused taskbar button minimizes the window; clicking a minimized/unfocused button restores and focuses it. Minimized windows show a dimmed indicator so they're always recoverable from the taskbar.
+- Guard test (`shadow-cleanup-a0-guards.test.js`) updated to match `taskbarAppClick` routing introduced by the taskbar fix
+
+### Refactored
+- **MA-Server.js slimmed from ~750 → ~500 lines** — Extracted `handleSlashCommand()` (~250 lines) to `MA-server/MA-slash-commands.js` and `renderMarkdownToHtml()` (~30 lines) to `MA-server/MA-markdown.js`. MA-Server.js is now a pure HTTP shell with no inline command dispatch logic.
+
+### Removed
+- REM System (`rem-server`) app from OS — already built into NekoCore OS; removed from `non-core-apps.manifest.json`, `system-apps.json`, `index.html` slot divs, and test expectations
+- NekoCore Mind (`nekocore-mind`) app from OS — already built into NekoCore OS; removed from `non-core-apps.manifest.json`, `system-apps.json`, `index.html` slot divs, and test expectations
+
+### Changed
+- Promoted staging to main — pre-alpha v0.9.0-alpha.4.24 merge (10 commits)
+- README: replaced staging-specific WARNING with pre-alpha CAUTION disclaimer; updated test count to 2,248
+
+### Fixed
 - Added 5 missing non-core app entries to `system-apps.json` (ma-server, rem-server, nekocore-mind, bugtracker, resourcemgr) — CI green (2,248 pass, 0 fail)
 
 ## [0.9.0-alpha.4.24] — 2026-03-22

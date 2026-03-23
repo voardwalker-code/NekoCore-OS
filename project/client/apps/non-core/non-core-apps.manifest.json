@@ -67,22 +67,6 @@
             "navTarget": "#navOptionalAppsHost"
         },
         {
-            "tabId": "rem-server",
-            "enabled": true,
-            "path": "apps/non-core/core/tab-rem-server.html",
-            "label": "REM System",
-            "icon": "💾",
-            "navTarget": "#navOptionalAppsHost"
-        },
-        {
-            "tabId": "nekocore-mind",
-            "enabled": true,
-            "path": "apps/non-core/core/tab-nekocore-mind.html",
-            "label": "NekoCore Mind",
-            "icon": "⚡",
-            "navTarget": "#navOptionalAppsHost"
-        },
-        {
             "tabId": "bugtracker",
             "enabled": true,
             "path": "apps/non-core/core/tab-bugtracker.html",

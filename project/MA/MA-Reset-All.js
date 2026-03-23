@@ -20,14 +20,12 @@ const TARGETS = [
   { path: 'MA-Config/model-performance.json', type: 'file', label: 'Model performance data' },
   // Chores / scheduled tasks
   { path: 'MA-Config/chores.json', type: 'file', label: 'Chores schedule' },
-  // Entity memories
-  { path: 'MA-entity/entity_ma/memories', type: 'dir', label: 'MA memories' },
-  // Entity memory index
-  { path: 'MA-entity/entity_ma/index', type: 'dir', label: 'MA memory index' },
-  // Entity archives
-  { path: 'MA-entity/entity_ma/archives', type: 'dir', label: 'MA memory archives' },
-  // Workspace temp files (preserves built projects with PROJECT-MANIFEST.json)
-  { path: 'MA-workspace', type: 'dir-shallow', label: 'Workspace temp files' },
+  // Full MA entity (memories, index, archives, entity.json — recreated on boot)
+  { path: 'MA-entity/entity_ma', type: 'dir', label: 'MA entity (full wipe — recreated on boot)' },
+  // All agent directories (recreated on boot from defaults)
+  { path: 'MA-entity', type: 'agents', label: 'Agent roster (full wipe — recreated on boot)' },
+  // Workspace (full wipe — projects now in separate repo)
+  { path: 'MA-workspace', type: 'dir', label: 'Workspace (full wipe)' },
   // Pulse health log
   { path: 'MA-logs/pulse-health.log', type: 'file', label: 'Pulse health log' },
 ];
@@ -38,8 +36,6 @@ const PRESERVE = [
   'MA-Config/cmd-whitelist.json',
   'MA-Config/pulse-config.json',
   'MA-Config/model-roster.json',
-  'MA-entity/entity_ma/entity.json',
-  'MA-entity/entity_ma/skills',
 ];
 
 function deleteDir(dirPath) {
@@ -89,6 +85,21 @@ function deleteFile(filePath) {
   return true;
 }
 
+// Delete all agent_* directories inside MA-entity/
+function deleteAgents(entityDir) {
+  if (!fs.existsSync(entityDir)) return 0;
+  let count = 0;
+  for (const entry of fs.readdirSync(entityDir)) {
+    if (!entry.startsWith('agent_')) continue;
+    const full = path.join(entityDir, entry);
+    if (!fs.statSync(full).isDirectory()) continue;
+    count += deleteDir(full);
+    fs.rmdirSync(full);
+    count++; // count the dir itself
+  }
+  return count;
+}
+
 async function confirm(prompt) {
   const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
   return new Promise(resolve => {
@@ -109,9 +120,16 @@ async function main() {
   const actions = [];
   for (const t of TARGETS) {
     const full = path.join(ROOT, t.path);
-    const exists = fs.existsSync(full);
+    let exists;
+    if (t.type === 'agents') {
+      // Only count as existing if there are agent_* dirs
+      exists = fs.existsSync(full) &&
+        fs.readdirSync(full).some(e => e.startsWith('agent_'));
+    } else {
+      exists = fs.existsSync(full);
+    }
     const mark = exists ? '\x1b[33m✦\x1b[0m' : '\x1b[90m·\x1b[0m';
-    console.log(`  ${mark} ${t.label.padEnd(28)} ${exists ? t.path : '(not found)'}`);
+    console.log(`  ${mark} ${t.label.padEnd(44)} ${exists ? t.path : '(not found)'}`);
     if (exists) actions.push(t);
   }
 
@@ -120,17 +138,6 @@ async function main() {
     const exists = fs.existsSync(path.join(ROOT, p));
     console.log(`    \x1b[32m✓\x1b[0m ${p}${exists ? '' : ' (not found)'}`);
   }
-  // Show workspace projects that will be preserved
-  const wsDir = path.join(ROOT, 'MA-workspace');
-  if (fs.existsSync(wsDir)) {
-    for (const entry of fs.readdirSync(wsDir)) {
-      const manifest = path.join(wsDir, entry, 'PROJECT-MANIFEST.json');
-      if (fs.existsSync(manifest)) {
-        console.log(`    \x1b[32m✓\x1b[0m MA-workspace/${entry}/ (has PROJECT-MANIFEST.json)`);
-      }
-    }
-  }
-
   if (!actions.length) {
     console.log('\n  Nothing to reset — already clean.\n');
     return;
@@ -155,6 +162,10 @@ async function main() {
       fs.mkdirSync(full, { recursive: true });
       console.log(`  \x1b[31m✗\x1b[0m ${t.label}: removed ${count} file(s)`);
       totalFiles += count;
+    } else if (t.type === 'agents') {
+      const count = deleteAgents(full);
+      console.log(`  \x1b[31m✗\x1b[0m ${t.label}: removed ${count} item(s)`);
+      totalFiles += count;
     } else if (t.type === 'dir-shallow') {
       const { deleted, preserved } = deleteDirShallow(full);
       console.log(`  \x1b[31m✗\x1b[0m ${t.label}: removed ${deleted} file(s)`);
@@ -170,7 +181,8 @@ async function main() {
     }
   }
 
-  console.log(`\n  Done — removed ${totalFiles} file(s). MA is ready for a fresh start.\n`);
+  console.log(`\n  Done — removed ${totalFiles} file(s). MA is ready for a fresh start.`);
+  console.log('  Entity and agents will be auto-provisioned on next boot.\n');
 }
 
 main().catch(e => { console.error('Reset error:', e.message); process.exit(1); });
