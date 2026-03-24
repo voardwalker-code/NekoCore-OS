@@ -113,7 +113,7 @@ const TOOL_DEFS = [
       type: 'object',
       properties: {
         query: { type: 'string', description: 'Search query for memory.' },
-        limit: { type: 'number', description: 'Max results (1-20, default 5).' }
+        limit: { type: 'number', description: 'Max results (1-50, default 5).' }
       },
       required: ['query']
     }

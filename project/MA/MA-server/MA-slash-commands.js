@@ -28,7 +28,9 @@ async function handleSlashCommand(line) {
         const q = parts.slice(2).join(' ');
         if (!q) return { type: 'system', text: 'Usage: /memory search <query>' };
         const mem = core.getMemory();
-        const results = mem ? mem.search(q, 5) : [];
+        const cfg = core.getConfig();
+        const limit = (cfg && cfg.memoryLimit > 0) ? cfg.memoryLimit : 5;
+        const results = mem ? mem.search(q, limit) : [];
         if (!results.length) return { type: 'system', text: 'No results.' };
         const text = results.map(r => `[${r.score.toFixed(2)}] ${(r.summary || '').slice(0, 120)}`).join('\n');
         return { type: 'system', text };

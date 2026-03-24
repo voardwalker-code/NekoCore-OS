@@ -38,16 +38,46 @@ async function callLLM(config, messages, opts = {}) {
   return _callOpenRouter(config, messages, { temperature, maxTokens, timeout, responseFormat: opts.responseFormat, tools: opts.tools });
 }
 
+function _sanitizeString(value) {
+  let out = '';
+  for (let index = 0; index < value.length; index += 1) {
+    const code = value.charCodeAt(index);
+    if (code >= 0xD800 && code <= 0xDBFF) {
+      const next = value.charCodeAt(index + 1);
+      if (next >= 0xDC00 && next <= 0xDFFF) {
+        out += value[index] + value[index + 1];
+        index += 1;
+      } else {
+        out += '\uFFFD';
+      }
+    } else if (code >= 0xDC00 && code <= 0xDFFF) {
+      out += '\uFFFD';
+    } else {
+      out += value[index];
+    }
+  }
+  return out;
+}
+
+function _sanitizeJsonValue(value) {
+  if (typeof value === 'string') return _sanitizeString(value);
+  if (Array.isArray(value)) return value.map(_sanitizeJsonValue);
+  if (!value || typeof value !== 'object') return value;
+  const out = {};
+  for (const [key, inner] of Object.entries(value)) out[key] = _sanitizeJsonValue(inner);
+  return out;
+}
+
 // ── OpenRouter / OpenAI-compatible ──────────────────────────────────────────
 async function _callOpenRouter(config, messages, opts) {
-  const body = JSON.stringify({
+  const body = JSON.stringify(_sanitizeJsonValue({
     model:       config.model,
     messages,
     temperature: opts.temperature,
     max_tokens:  opts.maxTokens,
     ...(opts.responseFormat === 'json' ? { response_format: { type: 'json_object' } } : {}),
     ...(opts.tools && opts.tools.length ? { tools: opts.tools } : {})
-  });
+  }));
 
   const url = new URL(config.endpoint);
   const headers = {
@@ -98,7 +128,7 @@ async function _callOllama(config, messages, opts) {
     return m;
   });
 
-  const body = JSON.stringify({
+  const body = JSON.stringify(_sanitizeJsonValue({
     model:   config.model,
     messages: ollamaMessages,
     stream:  false,
@@ -107,7 +137,7 @@ async function _callOllama(config, messages, opts) {
       num_predict: opts.maxTokens,
       num_ctx:     opts.maxTokens * 2
     }
-  });
+  }));
 
   const headers = { 'Content-Type': 'application/json' };
   const raw = await _fetch(url, body, headers, opts.timeout);
@@ -156,11 +186,15 @@ async function _callAnthropic(config, messages, opts) {
     // Haiku: skip thinking (speed-optimized)
   }
 
+  const effectiveMaxTokens = thinkingParam
+    ? Math.max(opts.maxTokens, thinkingParam.budget_tokens)
+    : opts.maxTokens;
+
   const reqBody = {
     model:      config.model,
     system:     systemBlocks.length ? systemBlocks : undefined,
     messages:   anthropicMessages,
-    max_tokens: opts.maxTokens
+    max_tokens: effectiveMaxTokens
   };
 
   // Native tool use: include tools array in request
@@ -172,11 +206,14 @@ async function _callAnthropic(config, messages, opts) {
   if (thinkingParam) {
     reqBody.thinking = thinkingParam;
     console.log(`  ⟐ MA: Extended thinking active (budget: ${thinkingParam.budget_tokens})`);
+    if (effectiveMaxTokens !== opts.maxTokens) {
+      console.log(`  ⟐ MA: Raised max_tokens to ${effectiveMaxTokens} to satisfy thinking budget`);
+    }
   } else {
     reqBody.temperature = opts.temperature;
   }
 
-  const body = JSON.stringify(reqBody);
+  const body = JSON.stringify(_sanitizeJsonValue(reqBody));
 
   const headers = {
     'Content-Type':      'application/json',
@@ -186,7 +223,7 @@ async function _callAnthropic(config, messages, opts) {
 
   // Extended cache: adds beta header for 1-hour TTL support
   if (useExtendedCache) {
-    headers['anthropic-beta'] = 'prompt-caching-2024-12-20';
+    headers['anthropic-beta'] = 'prompt-caching-2024-07-31';
     console.log('  ⟐ MA: Extended cache (1h) active');
   }
 

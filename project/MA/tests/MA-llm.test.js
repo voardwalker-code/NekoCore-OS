@@ -24,11 +24,13 @@ function startMockServer() {
       const chunks = [];
       req.on('data', c => chunks.push(c));
       req.on('end', () => {
+        const rawBody = Buffer.concat(chunks).toString('utf8');
         lastRequest = {
           method: req.method,
           url: req.url,
           headers: { ...req.headers },
-          body: JSON.parse(Buffer.concat(chunks).toString('utf8'))
+          rawBody,
+          body: JSON.parse(rawBody)
         };
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify(mockResponse));
@@ -687,7 +689,7 @@ describe('MA-llm callLLM() — Anthropic path', () => {
       { role: 'user', content: 'Hello' }
     ]);
 
-    assert.equal(lastRequest.headers['anthropic-beta'], 'prompt-caching-2024-12-20');
+    assert.equal(lastRequest.headers['anthropic-beta'], 'prompt-caching-2024-07-31');
   });
 
   it('sets cache_control TTL to 3600 when extendedCache is true', async () => {
@@ -826,6 +828,45 @@ describe('MA-llm callLLM() — Anthropic extended thinking', () => {
     await callLLM(config, [{ role: 'user', content: 'Think' }], { thinking: true });
 
     assert.equal(lastRequest.body.thinking.budget_tokens, 16384);
+  });
+
+  it('raises max_tokens to match thinkingBudget when needed', async () => {
+    setMockResponse({
+      content: [{ type: 'text', text: 'ok' }],
+      usage: { input_tokens: 10, output_tokens: 5 }
+    });
+
+    const config = {
+      type: 'anthropic',
+      endpoint: `http://127.0.0.1:${mockPort}/v1/messages`,
+      apiKey: 'sk-ant-test',
+      model: 'claude-sonnet-4-6',
+      capabilities: { extendedThinking: true, thinkingBudget: 16384 }
+    };
+
+    await callLLM(config, [{ role: 'user', content: 'Think deeply' }], { thinking: true, maxTokens: 4096 });
+
+    assert.equal(lastRequest.body.thinking.budget_tokens, 16384);
+    assert.equal(lastRequest.body.max_tokens, 16384);
+  });
+
+  it('sanitizes lone surrogate characters before sending Anthropic JSON', async () => {
+    setMockResponse({
+      content: [{ type: 'text', text: 'ok' }],
+      usage: { input_tokens: 10, output_tokens: 5 }
+    });
+
+    const config = {
+      type: 'anthropic',
+      endpoint: `http://127.0.0.1:${mockPort}/v1/messages`,
+      apiKey: 'sk-ant-test',
+      model: 'claude-sonnet-4-6'
+    };
+
+    await callLLM(config, [{ role: 'user', content: 'broken surrogate: \uD83D here' }], { maxTokens: 4096 });
+
+    assert.ok(!lastRequest.rawBody.includes('\\ud83d'));
+    assert.equal(lastRequest.body.messages[0].content, 'broken surrogate: � here');
   });
 
   it('does NOT add thinking for Haiku (speed-optimized)', async () => {

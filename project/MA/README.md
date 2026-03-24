@@ -50,7 +50,18 @@ On first launch, MA copies `ma-config.example.json` → `MA-Config/ma-config.jso
 | **Pulse Engine** | Timer-driven recurring tasks: health scans, chore execution |
 | **Chores System** | Repeating tasks delegated to agents, graded by MA |
 | **Health Scanner** | 20-file integrity check with critical/warning reporting |
-| **User Guide** | Built-in HTML user guide accessible from the GUI (? button) |
+| **Left Navigation Rail** | Persistent sidebar shortcuts for Chat, Activity, Blueprints, Projects, Tasks, Todos, Chores |
+| **Rail Utilities** | Terminal, Ingest, and Settings buttons at the bottom of the left rail |
+| **Persistent Inspector** | Session, Activity, Blueprints, Projects, Tasks, Todos, and Chores stay visible beside chat instead of replacing it |
+| **Dropdown Menu Bar** | File (New/Open/Save), Edit, View (section navigation + Terminal), Terminal (toggle), Help (Guide + GitHub) |
+| **Built-in IDE Editor** | Tabbed file editor with syntax highlighting, Markdown/HTML preview, edit mode, and unsaved-change tracking |
+| **Terminal Panel** | In-browser terminal at the bottom of the editor area — runs whitelisted commands in the workspace |
+| **Workspace File Tree** | Real directory tree from `MA-workspace/` with collapsible folders, file-type icons, and click-to-edit |
+| **Chat Session Management** | Session picker with last-4 chips, date-grouped history dropdown, independent per-session message storage |
+| **Memory Ingest** | Ingest entire project folders into memory with live progress, abort control, archive tracking, and relevance boosting |
+| **Memory Recall Controls** | Adjustable recall slider (6–50 memories) and toggle to disable recall entirely |
+| **Theme Switcher** | Dark / Light / System with localStorage persistence and live OS-preference sync |
+| **User Guide** | Built-in HTML user guide accessible from Help → User Guide |
 
 ---
 
@@ -77,7 +88,17 @@ MA/
 │   ├── MA-bm25.js         BM25 search scoring
 │   └── MA-yake.js         YAKE keyword extraction
 ├── MA-client/             Browser GUI
-│   └── MA-index.html      Single-file SPA
+│   ├── MA-index.html      SPA shell
+│   ├── css/ma-ui.css      Stylesheet
+│   └── js/                8 modular scripts
+│       ├── ma-ui.js           Globals, theme, editor state, init
+│       ├── ma-ui-chat.js      Chat history, messaging, SSE streaming
+│       ├── ma-ui-nav.js       Navigation rail, menus, terminal panel
+│       ├── ma-ui-config.js    Config panel, whitelist, Ollama, API keys
+│       ├── ma-ui-editor.js    IDE editor, workspace tree, section scaffolding
+│       ├── ma-ui-workspace.js Activity, tasks, session, projects, blueprints, todos, chores
+│       ├── ma-ui-input.js     Chat input, slash commands, file drag-and-drop
+│       └── ma-ui-bootstrap.js Bootstrap and initialization
 ├── MA-Config/             Runtime config (gitignored)
 ├── MA-entity/             Entity definitions + agent roster
 ├── MA-knowledge/          Reference documentation (9 docs)
@@ -223,6 +244,14 @@ MA uses smart port management: if port 3850 is occupied, the server identifies w
 | `/api/memory/store` | POST | `{ type, content, meta }` | Store a memory |
 | `/api/memory/stats` | GET | — | Memory statistics |
 | `/api/memory/ingest` | POST | `{ filePath }` | Ingest file to memory |
+| `/api/memory/ingest/folder` | POST | `{ folderPath, archiveName }` | Ingest entire folder to memory (SSE progress) |
+| `/api/chat/sessions` | GET | — | List all chat sessions |
+| `/api/chat/session/:id` | GET | — | Load a specific chat session |
+| `/api/chat/session` | POST | `{ id, messages }` | Create or update a chat session |
+| `/api/workspace/tree` | GET | — | Get workspace directory tree |
+| `/api/workspace/save` | POST | `{ path, content }` | Save file to workspace |
+| `/api/workspace/mkdir` | POST | `{ path }` | Create directory in workspace |
+| `/api/terminal/exec` | POST | `{ command }` | Execute command via sandboxed executor |
 
 ---
 
@@ -260,6 +289,8 @@ Reports: file count, critical errors, warnings. Checks JS syntax, JSON validity,
 ## Version
 
 MA v1.0 — Part of NekoCore OS.
+
+**Standalone repository:** [github.com/voardwalker-code/MA-Memory-Architect](https://github.com/voardwalker-code/MA-Memory-Architect)
 
 ## License
 

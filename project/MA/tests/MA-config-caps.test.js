@@ -13,7 +13,8 @@ const os     = require('os');
 // Strategy: use a temp directory and override CONFIG_PATH via a fresh require.
 
 function makeTmpMA() {
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'ma-caps-test-'));
+  const tmpParent = fs.mkdtempSync(path.join(os.tmpdir(), 'ma-caps-test-'));
+  const tmp = path.join(tmpParent, 'MA');
   const dirs = [
     'MA-Config',
     'MA-entity/entity_ma/memories/episodic',
@@ -25,9 +26,11 @@ function makeTmpMA() {
     'MA-server',
     'MA-skills'
   ];
+  fs.mkdirSync(tmp, { recursive: true });
   for (const d of dirs) {
     fs.mkdirSync(path.join(tmp, d), { recursive: true });
   }
+  fs.mkdirSync(path.join(tmpParent, 'Config'), { recursive: true });
   return tmp;
 }
 
@@ -38,6 +41,11 @@ function writeConfig(tmpRoot, cfg) {
 
 function readSavedConfig(tmpRoot) {
   const cfgPath = path.join(tmpRoot, 'MA-Config', 'ma-config.json');
+  return JSON.parse(fs.readFileSync(cfgPath, 'utf8'));
+}
+
+function readSavedGlobalConfig(tmpRoot) {
+  const cfgPath = path.join(tmpRoot, '..', 'Config', 'ma-config.json');
   return JSON.parse(fs.readFileSync(cfgPath, 'utf8'));
 }
 
@@ -199,6 +207,33 @@ describe('setConfig wires resolveCapabilities', () => {
       assert.deepStrictEqual(saved.capabilities, { extendedThinking: false });
     } finally {
       fs.rmSync(tmpRoot, { recursive: true, force: true });
+    }
+  });
+
+  it('persists maxTokens and vision in unified profile.ma config', async () => {
+    const tmpRoot = makeTmpMA();
+    try {
+      writeConfig(tmpRoot, { type: 'ollama', endpoint: 'http://localhost:11434', model: 'llama3' });
+      const core = requireFreshCore(tmpRoot);
+      core.boot();
+      core.setConfig({
+        type: 'anthropic',
+        endpoint: 'https://api.anthropic.com/v1/messages',
+        apiKey: 'sk-test',
+        model: 'claude-sonnet-4-6',
+        maxTokens: 16384,
+        vision: true,
+        _userCapabilities: { extendedThinking: true, thinkingBudget: 16384 }
+      });
+
+      const savedGlobal = readSavedGlobalConfig(tmpRoot);
+      const runtime = savedGlobal.profiles[savedGlobal.lastActive].ma;
+      assert.equal(runtime.maxTokens, 16384);
+      assert.equal(runtime.vision, true);
+      assert.deepStrictEqual(runtime.capabilities, { extendedThinking: true, thinkingBudget: 16384 });
+    } finally {
+      fs.rmSync(tmpRoot, { recursive: true, force: true });
+      fs.rmSync(path.join(tmpRoot, '..', 'Config'), { recursive: true, force: true });
     }
   });
 

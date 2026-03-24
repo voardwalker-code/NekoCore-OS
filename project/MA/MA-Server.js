@@ -19,6 +19,7 @@ const { renderMarkdownToHtml } = require('./MA-server/MA-markdown');
 
 // ── Paths ───────────────────────────────────────────────────────────────────
 const CLIENT_DIR    = path.join(core.MA_ROOT, 'MA-client');
+const BLUEPRINT_DIR = path.join(core.MA_ROOT, 'MA-blueprints');
 const DEFAULT_PORT  = 3850;
 const FALLBACK_PORT = 3851;
 
@@ -41,6 +42,58 @@ function readBody(req) {
     req.on('data', c => { size += c.length; if (size > 10485760) { reject(new Error('Body too large')); req.destroy(); } chunks.push(c); });
     req.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
     req.on('error', reject);
+  });
+}
+
+function resolveInsideRoot(rootDir, requestedPath) {
+  const normalized = String(requestedPath || '').replace(/\\/g, '/').replace(/^\/+/, '');
+  const resolved = path.resolve(rootDir, normalized);
+  const base = path.resolve(rootDir);
+  if (resolved !== base && !resolved.startsWith(base + path.sep)) {
+    throw new Error('Path escapes allowed root');
+  }
+  return resolved;
+}
+
+function listMarkdownFiles(rootDir, currentDir = rootDir, bucket = []) {
+  if (!fs.existsSync(currentDir)) return bucket;
+  const entries = fs.readdirSync(currentDir, { withFileTypes: true });
+  for (const entry of entries) {
+    const fullPath = path.join(currentDir, entry.name);
+    if (entry.isDirectory()) {
+      listMarkdownFiles(rootDir, fullPath, bucket);
+      continue;
+    }
+    if (!entry.name.toLowerCase().endsWith('.md')) continue;
+    const relativePath = path.relative(rootDir, fullPath).replace(/\\/g, '/');
+    bucket.push({
+      path: relativePath,
+      name: entry.name,
+      group: relativePath.includes('/') ? relativePath.split('/')[0] : 'root'
+    });
+  }
+  return bucket;
+}
+
+function listWorkspaceTree(rootDir, currentDir = rootDir, depth = 0) {
+  if (!fs.existsSync(currentDir)) return [];
+  if (depth > 6) return [];
+  const entries = fs.readdirSync(currentDir, { withFileTypes: true })
+    .filter(entry => !entry.name.startsWith('.'))
+    .sort((a, b) => {
+      if (a.isDirectory() !== b.isDirectory()) return a.isDirectory() ? -1 : 1;
+      return a.name.localeCompare(b.name);
+    });
+
+  return entries.map(entry => {
+    const fullPath = path.join(currentDir, entry.name);
+    const relativePath = path.relative(rootDir, fullPath).replace(/\\/g, '/');
+    return {
+      name: entry.name,
+      path: relativePath,
+      type: entry.isDirectory() ? 'directory' : 'file',
+      children: entry.isDirectory() ? listWorkspaceTree(rootDir, fullPath, depth + 1) : undefined
+    };
   });
 }
 
@@ -107,24 +160,66 @@ async function handleRequest(req, res) {
       return json(res, 200, result);
     }
 
-    // ── Chat history persistence (survives page refresh) ──────────────
-    if (url.pathname === '/api/chat/history' && method === 'GET') {
-      const histFile = path.join(path.dirname(core.CONFIG_PATH), 'chat-history.json');
-      if (fs.existsSync(histFile)) {
+    // ── Chat session persistence ────────────────────────────────────
+    const sessionsDir = path.join(path.dirname(core.CONFIG_PATH), 'chat-sessions');
+
+    // List all sessions (id, createdAt, updatedAt, preview) — newest first
+    if (url.pathname === '/api/chat/sessions' && method === 'GET') {
+      if (!fs.existsSync(sessionsDir)) return json(res, 200, { sessions: [] });
+      const files = fs.readdirSync(sessionsDir).filter(f => f.endsWith('.json'));
+      const sessions = [];
+      for (const f of files) {
         try {
-          const data = JSON.parse(fs.readFileSync(histFile, 'utf8'));
-          return json(res, 200, data);
-        } catch { return json(res, 200, { messages: [] }); }
+          const raw = JSON.parse(fs.readFileSync(path.join(sessionsDir, f), 'utf8'));
+          sessions.push({ id: raw.id, createdAt: raw.createdAt, updatedAt: raw.updatedAt, preview: raw.preview || '' });
+        } catch { /* skip corrupt files */ }
       }
-      return json(res, 200, { messages: [] });
+      sessions.sort((a, b) => (b.updatedAt || b.createdAt || '').localeCompare(a.updatedAt || a.createdAt || ''));
+      return json(res, 200, { sessions });
     }
 
-    if (url.pathname === '/api/chat/history' && method === 'POST') {
+    // Get a single session's full messages
+    if (url.pathname.startsWith('/api/chat/session/') && method === 'GET') {
+      const id = decodeURIComponent(url.pathname.slice('/api/chat/session/'.length));
+      if (!id || /[\/\\]/.test(id)) return json(res, 400, { error: 'invalid id' });
+      const fp = path.join(sessionsDir, id + '.json');
+      if (!fs.existsSync(fp)) return json(res, 404, { error: 'session not found' });
+      try {
+        const data = JSON.parse(fs.readFileSync(fp, 'utf8'));
+        return json(res, 200, data);
+      } catch { return json(res, 500, { error: 'corrupt session file' }); }
+    }
+
+    // Save/update a session (POST with id in body)
+    if (url.pathname === '/api/chat/session' && method === 'POST') {
       const body = JSON.parse(await readBody(req));
-      const histFile = path.join(path.dirname(core.CONFIG_PATH), 'chat-history.json');
-      const messages = (body.messages || []).slice(-8); // Keep last 8 messages (4 exchanges)
-      fs.writeFileSync(histFile, JSON.stringify({ messages, savedAt: new Date().toISOString() }, null, 2));
-      return json(res, 200, { ok: true, saved: messages.length });
+      fs.mkdirSync(sessionsDir, { recursive: true });
+      const id = body.id || ('ses_' + Date.now());
+      if (/[\/\\]/.test(id)) return json(res, 400, { error: 'invalid id' });
+      const fp = path.join(sessionsDir, id + '.json');
+      let existing = {};
+      if (fs.existsSync(fp)) {
+        try { existing = JSON.parse(fs.readFileSync(fp, 'utf8')); } catch { /* overwrite */ }
+      }
+      const messages = body.messages || existing.messages || [];
+      const preview = messages.find(m => m.role === 'user')?.content?.slice(0, 80) || '';
+      const session = {
+        id,
+        createdAt: existing.createdAt || new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        preview,
+        messages
+      };
+      fs.writeFileSync(fp, JSON.stringify(session, null, 2));
+      return json(res, 200, { ok: true, id, preview });
+    }
+
+    // Legacy endpoint — kept for backward compat, returns empty
+    if (url.pathname === '/api/chat/history' && method === 'GET') {
+      return json(res, 200, { messages: [] });
+    }
+    if (url.pathname === '/api/chat/history' && method === 'POST') {
+      return json(res, 200, { ok: true, saved: 0 });
     }
 
     // ── Mode toggle (Chat / Work) ────────────────────────────────────
@@ -160,6 +255,8 @@ async function handleRequest(req, res) {
         capabilities: src?.capabilities || null,
         hasApiKey,
         apiKeyMasked: hasApiKey ? '********' : '',
+        memoryLimit: src?.memoryLimit || 6,
+        memoryRecall: src?.memoryRecall !== false,
         ...(revealKey && hasApiKey ? { apiKey: key } : {})
       });
     }
@@ -168,15 +265,23 @@ async function handleRequest(req, res) {
       const body = JSON.parse(await readBody(req));
       if (!body.type || !body.endpoint || !body.model) return json(res, 400, { error: 'Need type, endpoint, model' });
       const maxTokens = parseInt(body.maxTokens, 10);
+      const thinkingBudget = parseInt(body.capabilities?.thinkingBudget, 10);
+      const minThinkingTokens = (body.type === 'anthropic' && body.capabilities?.extendedThinking === true)
+        ? Math.max(1024, thinkingBudget > 0 ? thinkingBudget : 4096)
+        : 1024;
+      const normalizedMaxTokens = (maxTokens > 0 && maxTokens <= 1000000) ? maxTokens : 12288;
       // Preserve existing apiKey if the new one is blank (password fields don't pre-fill)
       const existingConfig = core.getConfig();
       const incomingKey = String(body.apiKey || '').trim();
       const apiKey = incomingKey && incomingKey !== '********' ? incomingKey : (existingConfig?.apiKey || '');
+      const memoryLimit = Math.min(50, Math.max(6, parseInt(body.memoryLimit, 10) || 6));
       core.setConfig({
         type: body.type, endpoint: body.endpoint, apiKey, model: body.model,
-        maxTokens: (maxTokens > 0 && maxTokens <= 1000000) ? maxTokens : 12288,
+        maxTokens: Math.max(normalizedMaxTokens, minThinkingTokens),
         vision: body.vision === true,
         workspacePath: body.workspacePath || '',
+        memoryLimit,
+        memoryRecall: body.memoryRecall !== false,
         ...(body.capabilities ? { capabilities: body.capabilities } : {})
       });
       return json(res, 200, { ok: true });
@@ -332,6 +437,83 @@ async function handleRequest(req, res) {
       return json(res, 200, core.worklog.getState());
     }
 
+    if (url.pathname === '/api/worklog' && method === 'POST') {
+      const body = JSON.parse(await readBody(req));
+      const current = core.worklog.getState();
+      const next = {
+        ...current,
+        activeProject: body.activeProject ?? current.activeProject,
+        activeProjectStatus: body.activeProjectStatus ?? current.activeProjectStatus,
+        currentTask: body.currentTask ?? current.currentTask,
+        taskPlan: Array.isArray(body.taskPlan)
+          ? body.taskPlan.map(step => ({ done: !!step.done, description: String(step.description || '').trim() })).filter(step => step.description)
+          : current.taskPlan,
+        recentWork: Array.isArray(body.recentWork) ? body.recentWork : current.recentWork,
+        resumePoint: body.resumePoint ?? current.resumePoint,
+        lastActivity: new Date().toISOString()
+      };
+      core.worklog.write(next);
+      return json(res, 200, { ok: true, state: core.worklog.getState() });
+    }
+
+    if (url.pathname === '/api/projects' && method === 'GET') {
+      const projects = core.projectArchive.listProjects().sort((a, b) => {
+        const aTime = new Date(a.updatedAt || a.createdAt || 0).getTime();
+        const bTime = new Date(b.updatedAt || b.createdAt || 0).getTime();
+        return bTime - aTime;
+      });
+      return json(res, 200, { projects });
+    }
+
+    if (url.pathname === '/api/projects/state' && method === 'POST') {
+      const body = JSON.parse(await readBody(req));
+      if (!body.id || !body.action) return json(res, 400, { error: 'Need project id and action' });
+      try {
+        const project = body.action === 'close'
+          ? core.projectArchive.closeProject(body.id)
+          : body.action === 'resume'
+            ? core.projectArchive.resumeProject(body.id)
+            : null;
+        if (!project) return json(res, 400, { error: 'Unsupported action' });
+        return json(res, 200, { ok: true, project });
+      } catch (e) {
+        return json(res, 400, { error: e.message });
+      }
+    }
+
+    if (url.pathname === '/api/blueprints' && method === 'GET') {
+      const files = listMarkdownFiles(BLUEPRINT_DIR).sort((a, b) => a.path.localeCompare(b.path));
+      return json(res, 200, { files });
+    }
+
+    if (url.pathname === '/api/blueprints/file' && method === 'GET') {
+      const requestedPath = url.searchParams.get('path');
+      if (!requestedPath) return json(res, 400, { error: 'Need blueprint path' });
+      try {
+        const fullPath = resolveInsideRoot(BLUEPRINT_DIR, requestedPath);
+        if (!fs.existsSync(fullPath)) return json(res, 404, { error: 'Blueprint not found' });
+        return json(res, 200, {
+          path: path.relative(BLUEPRINT_DIR, fullPath).replace(/\\/g, '/'),
+          content: fs.readFileSync(fullPath, 'utf8')
+        });
+      } catch (e) {
+        return json(res, 400, { error: e.message });
+      }
+    }
+
+    if (url.pathname === '/api/blueprints/file' && method === 'POST') {
+      const body = JSON.parse(await readBody(req));
+      if (!body.path || typeof body.content !== 'string') return json(res, 400, { error: 'Need blueprint path and content' });
+      try {
+        const fullPath = resolveInsideRoot(BLUEPRINT_DIR, body.path);
+        if (!fs.existsSync(fullPath)) return json(res, 404, { error: 'Blueprint not found' });
+        fs.writeFileSync(fullPath, body.content, 'utf8');
+        return json(res, 200, { ok: true, path: path.relative(BLUEPRINT_DIR, fullPath).replace(/\\/g, '/') });
+      } catch (e) {
+        return json(res, 400, { error: e.message });
+      }
+    }
+
     if (url.pathname === '/api/commands' && method === 'GET') {
       return json(res, 200, [
         { cmd: '/health', desc: 'Run system health scan', usage: '/health' },
@@ -426,7 +608,105 @@ async function handleRequest(req, res) {
       return json(res, 200, { chunks: count });
     }
 
+    // Folder ingest with SSE progress
+    if (url.pathname === '/api/memory/ingest-folder' && method === 'POST') {
+      const body = JSON.parse(await readBody(req));
+      if (!body.folderPath) return json(res, 400, { error: 'Need folderPath' });
+      const resolved = path.resolve(body.folderPath);
+      if (!fs.existsSync(resolved) || !fs.statSync(resolved).isDirectory()) {
+        return json(res, 400, { error: 'Not a valid directory' });
+      }
+      res.writeHead(200, {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive'
+      });
+      const sse = (event, data) => {
+        if (!res.writableEnded) res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
+      };
+      const abortState = { aborted: false };
+      req.on('close', () => { abortState.aborted = true; });
+      try {
+        const mem = core.getMemory();
+        const result = mem.ingestFolder(resolved, {
+          archive: body.archive || path.basename(resolved),
+          onProgress: (info) => sse('progress', info),
+          abort: abortState
+        });
+        if (abortState.aborted) {
+          sse('error', { error: 'Ingest stopped by user' });
+        } else {
+          sse('done', result);
+        }
+      } catch (e) {
+        sse('error', { error: e.message });
+      }
+      if (!res.writableEnded) {
+        res.write('event: close\ndata: {}\n\n');
+        res.end();
+      }
+      return;
+    }
+
+    // List archives
+    if (url.pathname === '/api/memory/archives' && method === 'GET') {
+      const mem = core.getMemory();
+      return json(res, 200, mem ? mem.listArchives() : {});
+    }
+
     // ── Workspace file serving (for clickable file links in chat) ───
+    if (url.pathname === '/api/workspace/tree' && method === 'GET') {
+      return json(res, 200, { root: core.WORKSPACE_DIR, items: listWorkspaceTree(core.WORKSPACE_DIR) });
+    }
+
+    if (url.pathname === '/api/workspace/read' && method === 'GET') {
+      const reqPath = url.searchParams.get('path');
+      if (!reqPath) return json(res, 400, { error: 'Need path param' });
+      const wsRoot = path.resolve(core.WORKSPACE_DIR);
+      const safe = path.resolve(wsRoot, reqPath);
+      if (!safe.startsWith(wsRoot + path.sep) && safe !== wsRoot) return json(res, 403, { error: 'Path outside workspace' });
+      if (!fs.existsSync(safe) || !fs.statSync(safe).isFile()) return json(res, 404, { error: 'File not found' });
+      return json(res, 200, {
+        path: path.relative(wsRoot, safe).replace(/\\/g, '/'),
+        content: fs.readFileSync(safe, 'utf8')
+      });
+    }
+
+    if (url.pathname === '/api/workspace/save' && method === 'POST') {
+      const body = JSON.parse(await readBody(req));
+      if (!body.path || typeof body.content !== 'string') return json(res, 400, { error: 'Need path and content' });
+      const wsRoot = path.resolve(core.WORKSPACE_DIR);
+      const safe = path.resolve(wsRoot, body.path);
+      if (!safe.startsWith(wsRoot + path.sep) && safe !== wsRoot) return json(res, 403, { error: 'Path outside workspace' });
+      fs.mkdirSync(path.dirname(safe), { recursive: true });
+      fs.writeFileSync(safe, body.content, 'utf8');
+      return json(res, 200, { ok: true, path: path.relative(wsRoot, safe).replace(/\\/g, '/') });
+    }
+
+    if (url.pathname === '/api/workspace/mkdir' && method === 'POST') {
+      const body = JSON.parse(await readBody(req));
+      if (!body.path) return json(res, 400, { error: 'Need path' });
+      const wsRoot = path.resolve(core.WORKSPACE_DIR);
+      const safe = path.resolve(wsRoot, body.path);
+      if (!safe.startsWith(wsRoot + path.sep) && safe !== wsRoot) return json(res, 403, { error: 'Path outside workspace' });
+      fs.mkdirSync(safe, { recursive: true });
+      return json(res, 200, { ok: true, path: path.relative(wsRoot, safe).replace(/\\/g, '/') });
+    }
+
+    // ── Terminal command execution ───────────────────────────────────
+    if (url.pathname === '/api/terminal/exec' && method === 'POST') {
+      const body = JSON.parse(await readBody(req));
+      if (!body.command || typeof body.command !== 'string') return json(res, 400, { error: 'Need command' });
+      try {
+        const parsed = cmdExec.parseCommand(body.command);
+        if (!parsed.ok) return json(res, 200, { error: parsed.error });
+        const result = await cmdExec.execCommand(body.command, core.WORKSPACE_DIR);
+        return json(res, 200, { stdout: result.stdout || '', stderr: result.stderr || '', code: result.code });
+      } catch (e) {
+        return json(res, 200, { error: e.message });
+      }
+    }
+
     if (url.pathname === '/api/workspace/file' && method === 'GET') {
       const reqPath = url.searchParams.get('path');
       if (!reqPath) return json(res, 400, { error: 'Need path param' });

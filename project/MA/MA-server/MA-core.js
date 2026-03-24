@@ -216,13 +216,17 @@ function _normalizeRuntime(raw) {
   if (!raw || typeof raw !== 'object') return null;
   const type = String(raw.type || '').toLowerCase().trim();
   if (!type || !raw.model) return null;
+  const maxTokens = Number.parseInt(raw.maxTokens, 10);
+  const vision = raw.vision === true;
 
   if (type === 'ollama') {
     return {
       type: 'ollama',
       endpoint: String(raw.endpoint || 'http://localhost:11434').trim(),
       model: String(raw.model || '').trim(),
-      workspacePath: String(raw.workspacePath || '').trim() || undefined
+      workspacePath: String(raw.workspacePath || '').trim() || undefined,
+      ...(maxTokens > 0 ? { maxTokens } : {}),
+      ...(vision ? { vision: true } : {})
     };
   }
 
@@ -236,6 +240,8 @@ function _normalizeRuntime(raw) {
       apiKey: key,
       model: String(raw.model || '').trim(),
       workspacePath: String(raw.workspacePath || '').trim() || undefined,
+      ...(maxTokens > 0 ? { maxTokens } : {}),
+      ...(vision ? { vision: true } : {}),
       ...(raw.capabilities && typeof raw.capabilities === 'object' ? { capabilities: raw.capabilities } : {})
     };
   }
@@ -246,6 +252,8 @@ function _normalizeRuntime(raw) {
     apiKey: key,
     model: String(raw.model || '').trim(),
     workspacePath: String(raw.workspacePath || '').trim() || undefined,
+    ...(maxTokens > 0 ? { maxTokens } : {}),
+    ...(vision ? { vision: true } : {}),
     ...(raw.capabilities && typeof raw.capabilities === 'object' ? { capabilities: raw.capabilities } : {})
   };
 }
@@ -278,7 +286,7 @@ function _writeUnifiedRuntimeConfig(newConfig) {
   }
 
   const profile = global.profiles[global.lastActive];
-  const existing = _normalizeRuntime(profile.ma) || _normalizeRuntime(profile.nekocore) || {};
+  const existing = _normalizeRuntime(profile.ma) || _normalizeRuntime(profile.nekocore) || _normalizeRuntime(config) || {};
   const type = String(newConfig.type || existing.type || '').toLowerCase().trim();
 
   const endpoint = String(newConfig.endpoint || existing.endpoint || '').trim();
@@ -286,6 +294,12 @@ function _writeUnifiedRuntimeConfig(newConfig) {
   const incomingKey = String(newConfig.apiKey || '').trim();
   const existingKey = String(existing.apiKey || '').trim();
   const apiKey = incomingKey || existingKey;
+  const requestedMaxTokens = Number.parseInt(newConfig.maxTokens ?? existing.maxTokens, 10);
+  const maxTokens = requestedMaxTokens > 0 ? requestedMaxTokens : undefined;
+  const vision = newConfig.vision === true || (newConfig.vision === undefined && existing.vision === true);
+  const userCapabilities = (newConfig.capabilities && typeof newConfig.capabilities === 'object')
+    ? newConfig.capabilities
+    : ((newConfig._userCapabilities && typeof newConfig._userCapabilities === 'object') ? newConfig._userCapabilities : undefined);
 
   if (!type || !endpoint || !model) {
     throw new Error('Need type, endpoint, model');
@@ -299,7 +313,9 @@ function _writeUnifiedRuntimeConfig(newConfig) {
     endpoint,
     model,
     ...(type === 'ollama' ? {} : { apiKey }),
-    ...(newConfig.capabilities && typeof newConfig.capabilities === 'object' ? { capabilities: newConfig.capabilities } : {})
+    ...(maxTokens ? { maxTokens } : {}),
+    ...(vision ? { vision: true } : {}),
+    ...(userCapabilities ? { capabilities: userCapabilities } : {})
   };
 
   profile.ma = next;
@@ -322,7 +338,7 @@ function setConfig(newConfig) {
   config = { ...unifiedConfig, ...(newConfig.workspacePath ? { workspacePath: newConfig.workspacePath } : {}) };
   // Resolve capabilities for the new config
   config.capabilities = resolveCapabilities(config);
-  config.contextWindow = config.contextWindow || _inferContextWindow(config);
+  config.contextWindow = Number.parseInt(newConfig.contextWindow, 10) || config.contextWindow || _inferContextWindow(config);
   // Persist local mirror for backward compatibility (single MA install path).
   // Source of truth is Config/ma-config.json (profile.ma).
   const toSave = { ...config };
@@ -500,8 +516,11 @@ async function handleChat({ message, history = [], attachments = [], onStep, onA
     }
   }
 
-  // Retrieve relevant memories
-  const memResults = memory ? memory.search(message, 3) : [];
+  // Retrieve relevant memories (user-configurable limit + recall toggle)
+  // Search short-term first, then check archives for related context
+  const memLimit = (config && config.memoryLimit > 0) ? config.memoryLimit : 6;
+  const memRecall = config ? config.memoryRecall !== false : true;
+  const memResults = (memRecall && memory) ? memory.searchWithArchives(message, memLimit) : [];
   const memCtx = memResults.length
     ? '\n[Relevant Memories]\n' + memResults.map(m => `- ${(m.summary || m.content || '').slice(0, 200)}`).join('\n')
     : '';

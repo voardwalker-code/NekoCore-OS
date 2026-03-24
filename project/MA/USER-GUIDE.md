@@ -28,7 +28,10 @@ This guide covers everything you need to use MA from the browser GUI and the ter
 20. [Deep Research](#deep-research)
 21. [Entity Genesis Skill](#entity-genesis-skill)
 22. [NekoCore OS Integration](#nekocore-os-integration)
-23. [Tips & Best Practices](#tips--best-practices)
+23. [Chat Sessions](#chat-sessions)
+24. [Memory Ingest](#memory-ingest)
+25. [Theme Switching](#theme-switching)
+26. [Tips & Best Practices](#tips--best-practices)
 
 ---
 
@@ -102,13 +105,74 @@ node MA-cli.js
 
 ## Browser GUI
 
-The web GUI at `http://localhost:3850` provides:
+The web GUI at `http://localhost:3850` provides a full IDE-style workspace.
 
-### Header
+### Menu Bar
+
+The top menu bar provides dropdown menus:
+
+| Menu | Items |
+|------|-------|
+| **File** | New File, New Folder, Open File, Open Folder, Save, Save All, Settings |
+| **Edit** | Save, Save All |
+| **View** | Workspace, Blueprints, Projects, Activity, Terminal, Reset Layout |
+| **Terminal** | Toggles the terminal panel (direct click) |
+| **Help** | User Guide, GitHub |
+
+**File menu** actions are context-aware — they operate on whichever section you're currently viewing (workspace, project, etc.).
+
+### Toolbar
 - **Status dot** — Green = LLM configured, Red = not configured
 - **Status text** — Shows your provider/model (e.g., `openrouter/anthropic/claude-sonnet-4`)
-- **❓ Help button** — Opens this user guide in a new browser tab
-- **⚙ Gear button** — Opens the settings panel
+- **Mode pill** — Work / Chat mode toggle
+- **Activity button** — Opens the activity feed
+
+### Left Sidebar
+- **Chat** — Returns focus to the main conversation view
+- **Session** — Shows the current session summary and recent work
+- **Activity** — Opens the live activity feed and task telemetry
+- **Blueprints** — Opens the blueprint browser and editor
+- **Projects** — Shows project archives and lets you resume or close them
+- **Tasks** — Shows the current task workspace and editable plan
+- **Todos** — Provides a quick persistent scratch todo list in the browser
+- **Chores** — Shows and manages recurring chore entries
+- **Mode pill** — Mirrors the current Work/Chat mode
+
+**Rail Utilities** (bottom of left sidebar):
+- **💻 Terminal** — Toggles the terminal panel
+- **📥 Ingest** — Opens the memory ingest panel
+- **⚙ Settings** — Opens the LLM settings tab
+
+### Built-in IDE Editor
+
+Files from the workspace tree open in tabbed editor panes:
+
+- **Markdown files** — Rendered preview with a Preview/Raw toggle
+- **HTML files** — Iframe preview with a Preview/Source toggle
+- **Code files** (.js, .ts, .py, .rs, .cs, .css, .json, etc.) — Syntax-highlighted read-only view with line numbers and an Edit toggle to switch to a writeable textarea
+- **Tabs** track unsaved changes (dot indicator) and Save writes back via the workspace API
+- Chat file-link chips open in the editor instead of a new browser tab
+
+### Terminal Panel
+
+A terminal panel sits at the bottom of the editor area. Toggle it from:
+- The **Terminal** menu item in the menu bar
+- The **💻** button in the left rail utilities
+- The **View → Terminal** dropdown
+
+Type shell commands and press Enter or click Run. Output appears in the scrollable terminal output area with color-coded command echo, stdout, and stderr. Commands execute in the MA workspace directory through the sandboxed command executor (same whitelist rules apply).
+
+### Workspace File Tree
+
+The Workspace section in the left sidebar loads the real directory tree from `MA-workspace/`:
+- Collapsible folders with expand/collapse icons
+- File-type icons for common extensions
+- Click a file to open it in the built-in editor
+- Use **File → New File** or **File → New Folder** to create new items
+
+### Center Chat Stage
+- The chat is isolated in a centered conversation stage instead of stretching edge-to-edge across large screens
+- The inspector stays visible beside the conversation
 
 ### Chat Area
 - Your messages appear on the right (blue)
@@ -131,7 +195,7 @@ Text below shows: `Context: ~X / Y tokens (Z%) · Response reserve: W`
 
 ### Activity Monitor (Right Sidebar)
 
-A collapsible panel on the right side of the screen showing real-time LLM activity:
+A persistent inspector pane on the right side of the screen showing real-time LLM activity:
 
 - **Tool calls** — Workspace reads, writes, web searches, command executions
 - **LLM calls** — Each model invocation with provider and token usage
@@ -140,17 +204,19 @@ A collapsible panel on the right side of the screen showing real-time LLM activi
 - **Task plan** — When a task is running, the plan is displayed with checkboxes
 - **Session worklog** — Summary of work done this session
 
-The panel auto-opens when a task starts and shows timestamped entries. Click the panel header to collapse/expand.
+### Settings Panel
 
-### Settings Panel (⚙)
+Accessed from **File → Settings**, the **⚙** rail utility button, or the left sidebar.
 
 **LLM Tab:**
 - Provider (OpenRouter / Ollama)
 - Endpoint URL
 - API Key
 - Model name (text input for OpenRouter, dropdown for Ollama)
-- Max Tokens slider (1024–1,000,000 — auto-set from Ollama model info)
+- Max Tokens slider (1,024–1,000,000 — auto-set from Ollama model info)
+- **Memory Recall** — Slider (6–50) controlling how many memories MA retrieves per message, plus a toggle to disable recall entirely
 - **Workspace Path** — Configurable working directory (defaults to `MA-workspace/`)
+- **Theme** — Dark / Light / System selector
 - **Ollama extras:** refresh model list button, pull new models, model info display (family, size, quantization, context length)
 
 **Command Whitelist Tab:**
@@ -922,6 +988,61 @@ Both servers use smart port management — if the default port is busy, the serv
 
 ---
 
+## Chat Sessions
+
+MA supports multiple named chat sessions with persistent history.
+
+### Session Picker
+The chat panel shows the last 4 sessions as clickable chips above the chat area. A **History ▾** dropdown lists all older sessions grouped by date. Selecting a session loads its messages; typing without selecting starts a new session automatically.
+
+### How Sessions Work
+- Sessions are stored as individual JSON files under `MA-Config/chat-sessions/`
+- Each session stores its own message history independently
+- Chat no longer auto-loads the last session on page load — you choose which session to resume or start fresh
+- Session endpoints: `GET /api/chat/sessions`, `GET /api/chat/session/:id`, `POST /api/chat/session`
+
+---
+
+## Memory Ingest
+
+MA can ingest entire project codebases into its memory for enhanced context during conversations.
+
+### Opening the Ingest Panel
+Click the **📥 Ingest** button in the left rail utilities.
+
+### External Folder Ingest
+Feed any project folder into MA's memory with a custom archive name:
+1. Enter the folder path and an archive name
+2. Click **Ingest**
+3. Watch live file-by-file progress with a progress bar and scrolling log
+4. Use the **Stop** button to abort if needed (uses AbortController — both client and server respect the abort)
+5. When complete (or stopped/errored), click **Close** to return
+
+### Archives
+Each ingested folder gets its own tracked archive. Archives are listed in the ingest panel with file and chunk counts. Chat search uses `searchWithArchives` — episodic (short-term) searched first, then semantic memories with archive relevance boosting.
+
+### Error Handling
+If ingest encounters errors, a styled error panel appears with details. The ingest can be retried after reviewing errors.
+
+---
+
+## Theme Switching
+
+MA supports three appearance modes:
+
+| Mode | Behavior |
+|------|----------|
+| **Dark** | Dark background with light text (default) |
+| **Light** | Light background with dark text |
+| **System** | Follows your OS/browser preferred color scheme |
+
+### Configuring
+Go to **File → Settings** (or **⚙** in the rail), then find the **Theme** selector. Your choice persists in localStorage and applies immediately.
+
+When set to **System**, a live media-query listener keeps the theme in sync if your OS appearance changes while MA is open.
+
+---
+
 ## Tips & Best Practices
 
 ### For Coding Tasks
@@ -948,8 +1069,10 @@ Both servers use smart port management — if the default port is busy, the serv
 
 ### General
 - Type `/` to see all available commands
-- Use the gear ⚙ to adjust settings anytime
+- Use **File → Settings** or the **⚙** rail button to adjust settings anytime
 - MA remembers previous conversations through its memory store
 - Drop documentation files into the chat for MA to reference
-- Click the ❓ button in the header to open this guide in a new browser tab
+- Open the **Help → User Guide** menu to access this guide in a new tab
 - Use `/pulse` and `/chores` to manage automated recurring tasks
+- Use the terminal panel for quick shell commands without leaving the GUI
+- Switch themes from Settings to match your preference

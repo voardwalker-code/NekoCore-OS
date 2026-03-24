@@ -21,7 +21,7 @@ const ToolSchemas = {
   web_search:     z.object({ query: z.string() }),
   web_fetch:      z.object({ url: z.string() }),
   cmd_run:        z.object({ cmd: z.string() }),
-  memory_search:  z.object({ query: z.string(), limit: z.number().int().min(1).max(20).default(5) }),
+  memory_search:  z.object({ query: z.string(), limit: z.number().int().min(1).max(50).default(5) }),
 };
 
 // ── Regex patterns ──────────────────────────────────────────────────────────

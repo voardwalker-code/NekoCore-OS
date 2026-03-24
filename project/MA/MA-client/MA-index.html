@@ -4,223 +4,197 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MA — Memory Architect</title>
-<style>
-  *{margin:0;padding:0;box-sizing:border-box}
-  :root{--bg:#0d1117;--surface:#161b22;--border:#30363d;--text:#c9d1d9;--dim:#8b949e;--accent:#58a6ff;--user:#1f6feb;--ma:#238636;--err:#f85149}
-  html,body{height:100%;overflow:hidden}
-  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);display:flex;flex-direction:column}
-  header{background:var(--surface);border-bottom:1px solid var(--border);padding:6px 12px;display:flex;align-items:center;gap:8px;flex-shrink:0}
-  header h1{font-size:14px;font-weight:600}
-  header .status{font-size:11px;color:var(--dim)}
-  header .dot{width:8px;height:8px;border-radius:50%;background:var(--err);display:inline-block}
-  header .dot.ok{background:var(--ma)}
-  .gear{cursor:pointer;font-size:18px;color:var(--dim);background:none;border:none}
-  .gear:hover{color:var(--accent)}
-
-  /* Chat area */
-  #chat{flex:1;overflow-y:auto;padding:8px 12px;display:flex;flex-direction:column;gap:8px;min-height:0}
-  .msg{max-width:85%;padding:8px 12px;border-radius:10px;font-size:13px;line-height:1.45;word-wrap:break-word;white-space:pre-wrap}
-  .msg.user{align-self:flex-end;background:var(--user);color:#fff;border-bottom-right-radius:4px}
-  .msg.ma{align-self:flex-start;background:var(--surface);border:1px solid var(--border);border-bottom-left-radius:4px}
-  .msg.system{align-self:center;font-size:12px;color:var(--dim);background:transparent;padding:4px 0}
-  .msg .meta{font-size:11px;color:var(--dim);margin-top:4px}
-  .typing{align-self:flex-start;color:var(--dim);font-size:13px;font-style:italic;padding:4px 14px}
-
-  /* Input bar */
-  #input-bar{background:var(--surface);border-top:1px solid var(--border);padding:6px 12px;display:flex;gap:8px;position:relative;flex-shrink:0}
-  #input-bar textarea{flex:1;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:8px 10px;font-size:13px;font-family:inherit;resize:none;min-height:36px;max-height:80px}
-  #input-bar textarea:focus{outline:none;border-color:var(--accent)}
-  #input-bar button{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:0 20px;font-size:14px;cursor:pointer;font-weight:600}
-  #input-bar button:hover{opacity:.9}
-  #input-bar button:disabled{opacity:.4;cursor:default}
-
-  /* Config panel */
-  #config-panel{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:10;justify-content:center;align-items:center}
-  #config-panel.show{display:flex}
-  .config-box{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;width:400px;max-width:90vw;max-height:85vh;overflow-y:auto}
-  .config-box h2{font-size:16px;margin-bottom:16px}
-  .config-box label{display:block;font-size:13px;color:var(--dim);margin:10px 0 4px}
-  .config-box input,.config-box select{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:8px 12px;font-size:14px}
-  .config-box input:focus,.config-box select:focus{outline:none;border-color:var(--accent)}
-  .key-row{display:flex;gap:8px;align-items:center}
-  .key-row input{flex:1}
-  .key-toggle{background:var(--border);color:var(--text);border:none;border-radius:6px;padding:8px 12px;font-size:13px;cursor:pointer;white-space:nowrap}
-  .key-toggle:hover{background:var(--accent);color:#fff}
-  .btn-row{display:flex;gap:10px;margin-top:18px}
-  .btn-row button{flex:1;padding:10px;border:none;border-radius:6px;font-size:14px;cursor:pointer;font-weight:600}
-  .btn-save{background:var(--accent);color:#fff}
-  .btn-cancel{background:var(--border);color:var(--text)}
-
-  /* Slash command popup */
-  #cmd-popup{display:none;position:absolute;bottom:100%;left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:4px;max-height:260px;overflow-y:auto;z-index:5}
-  #cmd-popup.show{display:block}
-  .cmd-item{padding:8px 14px;cursor:pointer;font-size:13px;display:flex;gap:10px;align-items:baseline}
-  .cmd-item:hover,.cmd-item.active{background:rgba(88,166,255,.15)}
-  .cmd-item .cmd-name{color:var(--accent);font-weight:600;min-width:120px}
-  .cmd-item .cmd-desc{color:var(--dim);font-size:12px}
-
-  /* Config tabs */
-  .cfg-tabs{display:flex;gap:0;margin-bottom:16px;border-bottom:1px solid var(--border)}
-  .cfg-tab{padding:8px 16px;cursor:pointer;font-size:13px;color:var(--dim);border-bottom:2px solid transparent;background:none;border-top:none;border-left:none;border-right:none}
-  .cfg-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
-  .cfg-tab:hover{color:var(--text)}
-  .cfg-pane{display:none}
-  .cfg-pane.active{display:block}
-
-  /* Whitelist styles */
-  .wl-list{max-height:200px;overflow-y:auto;margin:8px 0}
-  .wl-item{display:flex;align-items:center;justify-content:space-between;padding:6px 10px;border-bottom:1px solid var(--border);font-size:13px}
-  .wl-item:hover{background:rgba(88,166,255,.05)}
-  .wl-item .wl-bin{color:var(--accent);font-weight:600;min-width:80px}
-  .wl-item .wl-subs{color:var(--dim);flex:1;margin:0 8px;font-size:12px}
-  .wl-item button{background:var(--err);color:#fff;border:none;border-radius:4px;padding:2px 8px;font-size:11px;cursor:pointer}
-  .wl-add{display:flex;gap:8px;margin-top:8px}
-  .wl-add input{flex:1;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:6px 10px;font-size:13px}
-  .wl-add input:focus{outline:none;border-color:var(--accent)}
-  .wl-add button{background:var(--ma);color:#fff;border:none;border-radius:6px;padding:6px 14px;font-size:13px;cursor:pointer}
-
-  /* Drop zone */
-  #drop-overlay{display:none;position:fixed;inset:0;background:rgba(88,166,255,.12);border:3px dashed var(--accent);z-index:20;justify-content:center;align-items:center;pointer-events:none}
-  #drop-overlay.show{display:flex}
-  #drop-overlay span{background:var(--surface);color:var(--accent);padding:16px 32px;border-radius:12px;font-size:16px;font-weight:600;border:1px solid var(--border)}
-
-  /* File chips */
-  #file-chips{display:flex;flex-wrap:wrap;gap:6px;padding:0}
-  #file-chips:empty{display:none}
-  .file-chip{display:inline-flex;align-items:center;gap:4px;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:3px 8px;font-size:12px;color:var(--accent)}
-  .file-chip img{height:28px;width:28px;object-fit:cover;border-radius:4px}
-  .file-chip button{background:none;border:none;color:var(--err);cursor:pointer;font-size:14px;padding:0 2px;line-height:1}
-  .chat-img{max-width:300px;max-height:200px;border-radius:8px;margin:4px 0;display:block}
-
-  /* File links */
-  .file-links{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)}
-  .file-link{display:inline-flex;align-items:center;gap:4px;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:12px;color:var(--accent);text-decoration:none;cursor:pointer;transition:background .15s,border-color .15s}
-  .file-link:hover{background:var(--hover);border-color:var(--accent)}
-  .file-link .fl-icon{font-size:14px}
-  .file-link .fl-name{max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-
-  /* Token usage bar */
-  #token-bar{height:3px;background:var(--border);position:relative;overflow:hidden}
-  #token-bar .fill{height:100%;background:var(--accent);transition:width .3s;width:0}
-  #token-bar .fill.warn{background:#d29922}
-  #token-bar .fill.crit{background:var(--err)}
-  #token-info{font-size:11px;color:var(--dim);padding:2px 20px 0;text-align:right}
-
-  /* Continue button */
-  .continue-bar{display:flex;justify-content:center;padding:4px 0}
-  .continue-bar button{background:var(--accent);color:#fff;border:none;border-radius:6px;padding:6px 20px;font-size:13px;cursor:pointer;font-weight:600}
-  .continue-bar button:hover{opacity:.9}
-
-  /* Ollama model management */
-  .model-row{display:flex;gap:8px;align-items:center}
-  .model-row select{flex:1;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:8px 12px;font-size:14px}
-  .model-row select:focus{outline:none;border-color:var(--accent)}
-  .model-row button{background:var(--border);color:var(--text);border:none;border-radius:6px;padding:8px 12px;font-size:14px;cursor:pointer}
-  .model-row button:hover{background:var(--accent);color:#fff}
-  .pull-row{display:flex;gap:8px;margin-top:8px}
-  .pull-row input{flex:1;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:6px 10px;font-size:13px}
-  .pull-row input:focus{outline:none;border-color:var(--accent)}
-  .pull-row button{background:var(--ma);color:#fff;border:none;border-radius:6px;padding:6px 14px;font-size:13px;cursor:pointer;white-space:nowrap}
-  .pull-row button:hover{opacity:.9}
-  #pull-status{font-size:12px;color:var(--dim);margin-top:4px;min-height:16px}
-  #model-info{font-size:12px;color:var(--dim);margin-top:4px}
-
-  /* Capabilities section */
-  .caps-section{margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
-  .caps-section h3{font-size:13px;color:var(--accent);margin-bottom:8px;font-weight:600}
-  .caps-section .caps-notice{font-size:12px;color:var(--dim);padding:8px 10px;background:rgba(88,166,255,.06);border-radius:6px;line-height:1.4}
-  .cap-toggle{display:flex;align-items:center;justify-content:space-between;padding:6px 0}
-  .cap-toggle label{font-size:13px;color:var(--text);cursor:pointer;display:flex;align-items:center;gap:6px}
-  .cap-toggle input[type=checkbox]{accent-color:var(--accent)}
-  .cap-toggle .cap-desc{font-size:11px;color:var(--dim)}
-  .cap-budget{display:flex;align-items:center;gap:8px;padding:4px 0 6px 24px}
-  .cap-budget label{font-size:12px;color:var(--dim);white-space:nowrap}
-  .cap-budget input[type=range]{flex:1;accent-color:var(--accent)}
-  .cap-budget .cap-val{font-size:12px;color:var(--accent);min-width:40px;text-align:right}
-
-  /* Task progress */
-  .task-progress{align-self:flex-start;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 16px;font-size:13px;max-width:75%;width:320px}
-  .task-progress .tp-header{display:flex;align-items:center;gap:8px;margin-bottom:8px;color:var(--accent);font-weight:600;font-size:13px}
-  .task-progress .tp-header .tp-spinner{width:14px;height:14px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
-  @keyframes spin{to{transform:rotate(360deg)}}
-  .task-progress .tp-bar{height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin-bottom:6px}
-  .task-progress .tp-bar .tp-fill{height:100%;background:var(--accent);transition:width .4s ease;border-radius:2px}
-  .task-progress .tp-step{font-size:12px;color:var(--dim);padding:2px 0;display:flex;gap:6px;align-items:baseline}
-  .task-progress .tp-step.done{color:var(--ma)}
-  .task-progress .tp-step.active{color:var(--accent)}
-  .task-progress .tp-step .tp-icon{min-width:14px;text-align:center}
-
-  /* Activity Monitor */
-  #main-wrap{display:flex;flex:1;overflow:hidden;min-height:0}
-  #activity-panel{width:0;overflow:hidden;transition:width .3s ease;background:var(--surface);border-left:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0}
-  #activity-panel.open{width:340px}
-  .act-header{padding:10px 14px;font-size:13px;font-weight:600;color:var(--accent);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
-  .act-header button{background:none;border:none;color:var(--dim);cursor:pointer;font-size:18px;line-height:1}
-  .act-header button:hover{color:var(--text)}
-  .act-section{padding:8px 14px;border-bottom:1px solid var(--border);flex-shrink:0}
-  .act-section h3{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
-  .act-plan-item{font-size:12px;padding:2px 0;display:flex;gap:6px;align-items:baseline;color:var(--dim)}
-  .act-plan-item.done{color:var(--ma)}
-  .act-plan-item.active{color:var(--accent)}
-  .act-plan-item .icon{min-width:14px;text-align:center;font-size:11px}
-  #act-feed{flex:1;overflow-y:auto;padding:8px 14px}
-  .act-entry{font-size:11px;padding:3px 0;display:flex;gap:6px;color:var(--dim);border-bottom:1px solid rgba(48,54,61,.3)}
-  .act-entry .act-time{min-width:46px;font-size:10px;opacity:.7;font-family:monospace}
-  .act-entry .act-icon{min-width:16px;text-align:center}
-  .act-entry .act-text{flex:1;word-break:break-word}
-  .act-entry.tool-call{color:var(--accent)}
-  .act-entry.tool-result{color:var(--ma)}
-  .act-entry.llm-call{color:#d2a8ff}
-  .act-entry.error{color:var(--err)}
-  .act-toggle{cursor:pointer;margin-left:auto;font-size:12px;color:var(--dim);background:none;border:1px solid var(--border);border-radius:6px;padding:4px 12px;font-weight:600}
-  .act-toggle:hover{color:var(--accent);border-color:var(--accent)}
-  .act-toggle.active{color:var(--accent);border-color:var(--accent);background:rgba(88,166,255,.1)}
-
-  /* Mode toggle */
-  .mode-toggle{display:flex;border:1px solid var(--border);border-radius:6px;overflow:hidden;margin-left:8px;font-size:11px;font-weight:600}
-  .mode-btn{cursor:pointer;padding:3px 10px;background:none;border:none;color:var(--dim);transition:all .15s}
-  .mode-btn:hover{color:var(--text)}
-  .mode-btn.active{background:var(--accent);color:#fff}
-  .mode-btn.active.chat-active{background:var(--ma)}
-</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/ma-ui.css">
 </head>
 <body>
 
-<header>
-  <span class="dot" id="status-dot"></span>
-  <h1>MA</h1>
-  <span class="status" id="status-text">Connecting...</span>
+<div id="menu-bar">
+  <div class="menu-item" id="menu-file">
+    <button class="menu-btn" onclick="toggleMenu('file')">File</button>
+    <div class="menu-dropdown" id="menu-file-dropdown">
+      <button onclick="menuNewFile()">New File</button>
+      <button onclick="menuNewFolder()">New Folder</button>
+      <div class="menu-sep"></div>
+      <button onclick="menuOpenFile()">Open File...</button>
+      <button onclick="menuOpenFolder()">Open Folder...</button>
+      <div class="menu-sep"></div>
+      <button onclick="menuSave()">Save</button>
+      <button onclick="menuSaveAll()">Save All</button>
+      <div class="menu-sep"></div>
+      <button onclick="openConfig()">Settings</button>
+    </div>
+  </div>
+  <div class="menu-item" id="menu-edit">
+    <button class="menu-btn" onclick="toggleMenu('edit')">Edit</button>
+    <div class="menu-dropdown" id="menu-edit-dropdown">
+      <button onclick="menuSave()">Save</button>
+      <button onclick="menuSaveAll()">Save All</button>
+    </div>
+  </div>
+  <div class="menu-item" id="menu-view">
+    <button class="menu-btn" onclick="toggleMenu('view')">View</button>
+    <div class="menu-dropdown" id="menu-view-dropdown">
+      <button onclick="selectWorkspaceSection('workspace')">Workspace</button>
+      <button onclick="selectWorkspaceSection('blueprints')">Blueprints</button>
+      <button onclick="selectWorkspaceSection('projects')">Projects</button>
+      <button onclick="selectWorkspaceSection('activity')">Activity</button>
+      <div class="menu-sep"></div>
+      <button onclick="toggleTerminalPanel()">Terminal</button>
+      <div class="menu-sep"></div>
+      <button onclick="resetWorkspaceLayout()">Reset Layout</button>
+    </div>
+  </div>
+  <div class="menu-item" id="menu-terminal">
+    <button class="menu-btn" onclick="toggleTerminalPanel()">Terminal</button>
+  </div>
+  <div class="menu-item" id="menu-help">
+    <button class="menu-btn" onclick="toggleMenu('help')">Help</button>
+    <div class="menu-dropdown" id="menu-help-dropdown">
+      <button onclick="window.open('/user-guide','_blank')">User Guide</button>
+      <button onclick="window.open('https://github.com/voardwalker-code/MA-Memory-Architect','_blank')">GitHub</button>
+    </div>
+  </div>
+</div>
+
+<header id="workspace-toolbar">
+  <div class="workspace-brand">
+    <span class="dot" id="status-dot"></span>
+    <h1>MA Workspace</h1>
+    <span class="status" id="status-text">Connecting...</span>
+  </div>
   <div class="mode-toggle" id="mode-toggle">
     <button class="mode-btn active" data-mode="work" onclick="switchMode('work')">Work</button>
     <button class="mode-btn" data-mode="chat" onclick="switchMode('chat')">Chat</button>
   </div>
-  <button class="act-toggle" onclick="toggleActivity()" title="Activity Monitor">Activity</button>
-  <button class="gear" onclick="window.open('/user-guide','_blank')" title="User Guide" style="font-size:15px">&#x2753;</button>
-  <button class="gear" onclick="openConfig()" title="Settings">&#9881;</button>
+  <div class="toolbar-actions">
+    <button class="act-toggle" onclick="selectWorkspaceSection('activity')" title="Activity Feed">Activity</button>
+  </div>
 </header>
 
 <div id="main-wrap">
-<div id="chat"></div>
-<div id="activity-panel">
-  <div class="act-header"><span>Activity Monitor</span><button onclick="toggleActivity()" title="Close">&times;</button></div>
-  <div class="act-section" id="act-worklog-section"><h3>Session</h3><div id="act-worklog"><span style="font-size:12px;color:var(--dim)">No session history.</span></div></div>
-  <div class="act-section" id="act-plan-section" style="display:none"><h3>Task Plan</h3><div id="act-plan"></div></div>
-  <div class="act-section" style="flex-shrink:0;border-bottom:1px solid var(--border)"><h3>Activity Feed</h3></div>
-  <div id="act-feed"></div>
-</div>
-</div>
+  <aside id="left-rail">
+    <div class="rail-brand">
+      <div class="logo">MA</div>
+    </div>
+    <nav class="rail-nav" aria-label="Workspace Sections">
+      <button class="rail-btn active" id="rail-workspace" data-label="Workspace Files" onclick="selectWorkspaceSection('workspace')">
+        <span class="icon">📁</span>
+        <span class="label">Workspace</span>
+      </button>
+      <button class="rail-btn" id="rail-blueprints" data-label="Blueprints" onclick="selectWorkspaceSection('blueprints')">
+        <span class="icon">🧠</span>
+        <span class="label">Blueprints</span>
+      </button>
+      <button class="rail-btn" id="rail-projects" data-label="Projects" onclick="selectWorkspaceSection('projects')">
+        <span class="icon">📦</span>
+        <span class="label">Projects</span>
+      </button>
+      <button class="rail-btn" id="rail-tasks" data-label="Tasks" onclick="selectWorkspaceSection('tasks')">
+        <span class="icon">🗂</span>
+        <span class="label">Tasks</span>
+      </button>
+      <button class="rail-btn" id="rail-todos" data-label="Todos" onclick="selectWorkspaceSection('todos')">
+        <span class="icon">✅</span>
+        <span class="label">Todos</span>
+      </button>
+      <button class="rail-btn" id="rail-chores" data-label="Chores" onclick="selectWorkspaceSection('chores')">
+        <span class="icon">🛡</span>
+        <span class="label">Chores</span>
+      </button>
+      <button class="rail-btn" id="rail-session" data-label="Session History" onclick="selectWorkspaceSection('session')">
+        <span class="icon">🧾</span>
+        <span class="label">Session</span>
+      </button>
+      <button class="rail-btn" id="rail-activity" data-label="Activity Feed" onclick="selectWorkspaceSection('activity')">
+        <span class="icon">📡</span>
+        <span class="label">Activity</span>
+      </button>
+    </nav>
+    <div class="rail-spacer"></div>
+    <div class="rail-utils">
+      <button class="rail-btn" id="rail-terminal" title="Terminal" onclick="toggleTerminalPanel()">
+        <span class="icon">&#x1F4BB;</span>
+        <span class="label">Terminal</span>
+      </button>
+      <button class="rail-btn" id="rail-ingest" title="Memory Ingest" onclick="toggleIngestPanel()">
+        <span class="icon">&#x1F4E5;</span>
+        <span class="label">Ingest</span>
+      </button>
+      <button class="rail-btn" id="rail-settings" title="Settings" onclick="openConfig()">
+        <span class="icon">&#9881;</span>
+        <span class="label">Settings</span>
+      </button>
+    </div>
+    <div class="rail-mode">
+      <div class="mode-pill" id="rail-mode-pill">WORK</div>
+    </div>
+  </aside>
 
-<div id="token-bar"><div class="fill"></div></div>
-<div id="token-info"></div>
+  <aside id="explorer-panel">
+    <div class="workspace-pane-header">
+      <div>
+        <div class="pane-kicker">Explorer</div>
+        <h2 id="explorer-title">Workspace Files</h2>
+      </div>
+      <button class="side-refresh" onclick="refreshWorkspaceSection()">Refresh</button>
+    </div>
+    <div id="explorer-body"></div>
+  </aside>
+
+  <div class="pane-splitter" id="splitter-left" title="Resize explorer"></div>
+
+  <section id="editor-panel">
+    <div id="editor-tabs"></div>
+    <div id="editor-content">
+      <div id="editor-empty">Select a file or workspace item to open it in the editor.</div>
+    </div>
+    <div id="terminal-panel" class="hidden">
+      <div class="terminal-header">
+        <span>Terminal</span>
+        <button class="terminal-close" onclick="toggleTerminalPanel()" title="Close terminal">&times;</button>
+      </div>
+      <div id="terminal-output"></div>
+      <div class="terminal-input-row">
+        <span class="terminal-prompt">&gt;</span>
+        <input id="terminal-input" placeholder="Type a command..." onkeydown="if(event.key==='Enter')runTerminalCmd()">
+        <button class="btn-save" onclick="runTerminalCmd()" style="padding:4px 10px;font-size:12px">Run</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="pane-splitter" id="splitter-right" title="Resize chat"></div>
+
+  <section id="chat-panel">
+    <div id="chat-toolbar">
+      <div>
+        <div class="chat-kicker">Assistant</div>
+        <h2>Chat</h2>
+      </div>
+      <div class="chat-hint">The workspace stays visible while you chat, inspect files, and edit documents.</div>
+    </div>
+    <div id="session-picker">
+      <div id="session-recent-bar"></div>
+      <div id="session-dropdown-wrap">
+        <button id="session-dropdown-btn" onclick="toggleSessionDropdown()">History ▾</button>
+        <div id="session-dropdown" class="hidden"></div>
+      </div>
+    </div>
+    <div id="chat"></div>
+    <div id="token-bar"><div class="fill"></div></div>
+    <div id="token-info"></div>
+    <div id="input-bar">
+      <div id="cmd-popup"></div>
+      <div id="file-chips"></div>
+      <textarea id="msg-input" placeholder="Message MA... (type / for commands, or drag files here)" rows="1" onkeydown="handleKey(event)" oninput="handleInput()"></textarea>
+      <button id="send-btn" onclick="send()">Send</button>
+    </div>
+  </section>
+</div>
 
 <div id="drop-overlay"><span>Drop files here</span></div>
-
-<div id="input-bar">
-  <div id="cmd-popup"></div>
-  <div id="file-chips"></div>
-  <textarea id="msg-input" placeholder="Message MA... (type / for commands, or drag files here)" rows="1" onkeydown="handleKey(event)" oninput="handleInput()"></textarea>
-  <button id="send-btn" onclick="send()">Send</button>
-</div>
 
 <!-- Config panel -->
 <div id="config-panel">
@@ -264,9 +238,22 @@
       </div>
       <label>Max Tokens <span id="cfg-tokens-val" style="color:var(--accent)">12288</span></label>
       <input id="cfg-tokens" type="range" min="1024" max="1000000" step="1024" value="12288" oninput="document.getElementById('cfg-tokens-val').textContent=this.value" style="accent-color:var(--accent)">
+      <div id="cfg-tokens-hint" style="font-size:12px;color:var(--dim);margin-top:4px">20% of Max Tokens is reserved for MA's reply.</div>
       <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input id="cfg-vision" type="checkbox" style="accent-color:var(--accent)"> Vision (model supports images)</label>
       <label>Workspace Path <span style="color:var(--dim);font-size:11px">(blank = default MA-workspace/)</span></label>
       <input id="cfg-workspace" placeholder="MA-workspace">
+      <label>Theme</label>
+      <select id="cfg-theme">
+        <option value="system">Use Browser Preference</option>
+        <option value="dark">Dark</option>
+        <option value="light">Light</option>
+      </select>
+      <label>Memory Recall <span id="cfg-mem-limit-val" style="color:var(--accent)">6</span></label>
+      <input id="cfg-mem-limit" type="range" min="6" max="50" step="1" value="6" oninput="document.getElementById('cfg-mem-limit-val').textContent=this.value" style="accent-color:var(--accent)">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input id="cfg-mem-recall" type="checkbox" checked style="accent-color:var(--accent)"> Enable memory recall in chat</label>
+      <div class="btn-row" style="margin-top:10px">
+        <button class="btn-cancel" type="button" onclick="resetWorkspaceLayout()">Reset Workspace Layout</button>
+      </div>
 
       <!-- Capabilities section -->
       <div id="caps-section" class="caps-section" style="display:none">
@@ -319,991 +306,54 @@
   </div>
 </div>
 
-<script>
-const chatEl    = document.getElementById('chat');
-const inputEl   = document.getElementById('msg-input');
-const sendBtn   = document.getElementById('send-btn');
-const statusDot = document.getElementById('status-dot');
-const statusTxt = document.getElementById('status-text');
-const cfgPanel  = document.getElementById('config-panel');
-
-let history = [];
-let sending = false;
-let pendingFiles = []; // { name, content } from drag-and-drop
-let lastContinuation = null; // stores continuation point for "continue" button
-const MA_MASKED_KEY = '********';
-
-// ── Init ──────────────────────────────────────────────────────────────────
-checkConfig();
-loadHistory();
-syncMode();
-
-async function checkConfig() {
-  try {
-    const r = await fetch('/api/config');
-    const d = await r.json();
-    if (d.configured) {
-      statusDot.classList.add('ok');
-      statusTxt.textContent = `${d.type}/${d.model}`;
-    } else {
-      statusTxt.textContent = d.hasFile ? 'Needs API key' : 'Not configured';
-      addSystem('No LLM configured. Click ⚙ to set up.');
-      // Pre-fill from existing config if file exists
-      if (d.endpoint) document.getElementById('cfg-endpoint').value = d.endpoint;
-      if (d.model) document.getElementById('cfg-model').value = d.model;
-      if (d.hasApiKey) setMaskedCfgKey();
-      if (d.type) {
-        document.getElementById('cfg-type').value = d.type;
-        document.getElementById('cfg-type').dispatchEvent(new Event('change'));
-      }
-      if (d.maxTokens) { document.getElementById('cfg-tokens').value = d.maxTokens; document.getElementById('cfg-tokens-val').textContent = d.maxTokens; }
-      toggleConfig();
-    }
-  } catch (e) {
-    statusTxt.textContent = 'Offline';
-    addSystem('Cannot reach server.');
-  }
-}
-
-function setMaskedCfgKey() {
-  const keyEl = document.getElementById('cfg-key');
-  const toggleEl = document.getElementById('cfg-key-toggle');
-  if (!keyEl) return;
-  keyEl.type = 'password';
-  keyEl.value = MA_MASKED_KEY;
-  keyEl.dataset.hasStoredKey = 'true';
-  keyEl.dataset.revealed = 'false';
-  if (toggleEl) toggleEl.textContent = 'See';
-}
-
-function clearCfgKeyMaskState() {
-  const keyEl = document.getElementById('cfg-key');
-  const toggleEl = document.getElementById('cfg-key-toggle');
-  if (!keyEl) return;
-  if (keyEl.value !== MA_MASKED_KEY) {
-    keyEl.dataset.revealed = 'false';
-    if (toggleEl) toggleEl.textContent = 'See';
-  }
-}
-
-async function toggleCfgKeyVisibility() {
-  const keyEl = document.getElementById('cfg-key');
-  const toggleEl = document.getElementById('cfg-key-toggle');
-  if (!keyEl || !toggleEl) return;
-
-  const isRevealed = keyEl.dataset.revealed === 'true';
-  const hasStoredKey = keyEl.dataset.hasStoredKey === 'true';
-
-  if (isRevealed) {
-    keyEl.type = 'password';
-    if (hasStoredKey) {
-      keyEl.value = MA_MASKED_KEY;
-    }
-    keyEl.dataset.revealed = 'false';
-    toggleEl.textContent = 'See';
-    return;
-  }
-
-  if (hasStoredKey) {
-    try {
-      const r = await fetch('/api/config?revealKey=1');
-      const d = await r.json();
-      if (d && d.apiKey) {
-        keyEl.type = 'text';
-        keyEl.value = d.apiKey;
-        keyEl.dataset.revealed = 'true';
-        toggleEl.textContent = 'Hide';
-        return;
-      }
-    } catch (_) {}
-  }
-
-  keyEl.type = 'text';
-  keyEl.dataset.revealed = 'true';
-  toggleEl.textContent = 'Hide';
-}
-
-// ── Chat history persistence ──────────────────────────────────────────────
-async function loadHistory() {
-  try {
-    const r = await fetch('/api/chat/history');
-    const d = await r.json();
-    if (d.messages && d.messages.length) {
-      history = d.messages;
-      for (const msg of d.messages) {
-        if (msg.role === 'user') addMsg('user', msg.content);
-        else if (msg.role === 'assistant') addMsg('ma', msg.content);
-      }
-    }
-  } catch (_) { /* server may be down — no-op */ }
-}
-
-function saveHistory() {
-  const last8 = history.slice(-8);
-  fetch('/api/chat/history', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ messages: last8 })
-  }).catch(() => {});
-}
-
-// ── Chat ──────────────────────────────────────────────────────────────────
-function addMsg(role, text) {
-  const div = document.createElement('div');
-  div.className = 'msg ' + role;
-  if (role === 'ma') {
-    // Render MA messages with basic formatting
-    const bubble = document.createElement('div');
-    bubble.className = 'bubble';
-    bubble.textContent = text;
-    div.appendChild(bubble);
-  } else {
-    div.textContent = text;
-  }
-  chatEl.appendChild(div);
-  chatEl.scrollTop = chatEl.scrollHeight;
-  return div;
-}
-
-function addSystem(text) {
-  const div = document.createElement('div');
-  div.className = 'msg system';
-  div.textContent = text;
-  chatEl.appendChild(div);
-}
-
-function showTyping() {
-  const div = document.createElement('div');
-  div.className = 'typing';
-  div.id = 'typing';
-  div.textContent = 'MA is thinking...';
-  chatEl.appendChild(div);
-  chatEl.scrollTop = chatEl.scrollHeight;
-}
-
-function hideTyping() {
-  const el = document.getElementById('typing');
-  if (el) el.remove();
-}
-
-// ── Task progress widget ────────────────────────────────────────────
-function createProgressWidget() {
-  const widget = document.createElement('div');
-  widget.className = 'task-progress';
-  widget.id = 'task-progress';
-  widget.innerHTML = '<div class="tp-header"><div class="tp-spinner"></div><span>Working...</span></div>' +
-    '<div class="tp-bar"><div class="tp-fill" style="width:0%"></div></div>' +
-    '<div class="tp-steps"></div>';
-  chatEl.appendChild(widget);
-  chatEl.scrollTop = chatEl.scrollHeight;
-  return widget;
-}
-
-function updateProgress(widget, stepInfo) {
-  const pct = Math.round(((stepInfo.stepIndex + 1) / stepInfo.stepTotal) * 100);
-  const fill = widget.querySelector('.tp-fill');
-  const header = widget.querySelector('.tp-header span');
-  const steps = widget.querySelector('.tp-steps');
-
-  fill.style.width = pct + '%';
-  header.textContent = `Step ${stepInfo.stepIndex + 1} of ${stepInfo.stepTotal}`;
-
-  // Mark previous steps as done
-  const existing = steps.querySelectorAll('.tp-step.active');
-  existing.forEach(el => { el.classList.remove('active'); el.classList.add('done'); el.querySelector('.tp-icon').textContent = '✓'; });
-
-  // Add current step
-  const stepEl = document.createElement('div');
-  stepEl.className = 'tp-step active';
-  stepEl.innerHTML = '<span class="tp-icon">►</span><span>' + escHtml(stepInfo.description) + '</span>';
-  steps.appendChild(stepEl);
-  chatEl.scrollTop = chatEl.scrollHeight;
-}
-
-function finalizeProgress(widget) {
-  const spinner = widget.querySelector('.tp-spinner');
-  if (spinner) spinner.remove();
-  const header = widget.querySelector('.tp-header span');
-  header.textContent = 'Complete';
-  const active = widget.querySelectorAll('.tp-step.active');
-  active.forEach(el => { el.classList.remove('active'); el.classList.add('done'); el.querySelector('.tp-icon').textContent = '✓'; });
-  const fill = widget.querySelector('.tp-fill');
-  fill.style.width = '100%';
-}
-
-function escHtml(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
-
-// ── Activity Monitor ────────────────────────────────────────────────────
-const actPanel = document.getElementById('activity-panel');
-const actFeed = document.getElementById('act-feed');
-const actPlan = document.getElementById('act-plan');
-
-function toggleActivity() {
-  actPanel.classList.toggle('open');
-  document.querySelector('.act-toggle').classList.toggle('active');
-  if (actPanel.classList.contains('open')) loadWorklog();
-}
-
-function addActivity(category, detail, data) {
-  const iconMap = {
-    memory_search: '\u{1F50D}', knowledge_load: '\u{1F4D6}', workspace_scan: '\u{1F4C2}',
-    tool_call: '\u{1F527}', tool_result: '\u2705', llm_call: '\u{1F916}',
-    plan: '\u{1F4CB}', step_start: '\u25B6', step_done: '\u2713',
-    file_verify: '\u{1F4C4}', agent_dispatch: '\u{1F464}', worklog: '\u{1F4DD}', error: '\u274C'
-  };
-  const classMap = {
-    tool_call: 'tool-call', tool_result: 'tool-result',
-    llm_call: 'llm-call', error: 'error'
-  };
-  const now = new Date();
-  const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-  const entry = document.createElement('div');
-  entry.className = 'act-entry ' + (classMap[category] || '');
-  entry.innerHTML = '<span class="act-time">' + time + '</span><span class="act-icon">' + (iconMap[category] || '\u00B7') + '</span><span class="act-text">' + escHtml(detail || '') + '</span>';
-  actFeed.appendChild(entry);
-  actFeed.scrollTop = actFeed.scrollHeight;
-}
-
-function setTaskPlan(steps) {
-  const section = document.getElementById('act-plan-section');
-  section.style.display = '';
-  actPlan.innerHTML = steps.map(function(s, i) {
-    return '<div class="act-plan-item" data-idx="' + i + '"><span class="icon">\u2610</span><span>' + escHtml(s) + '</span></div>';
-  }).join('');
-}
-
-function markPlanStep(idx, status) {
-  const items = actPlan.querySelectorAll('.act-plan-item');
-  if (items[idx]) {
-    items[idx].className = 'act-plan-item ' + status;
-    items[idx].querySelector('.icon').textContent = status === 'done' ? '\u2713' : status === 'active' ? '\u25B6' : '\u2610';
-  }
-}
-
-async function loadWorklog() {
-  try {
-    const r = await fetch('/api/worklog');
-    const d = await r.json();
-    const wl = document.getElementById('act-worklog');
-    if (!d || (!d.activeProject && !d.resumePoint && (!d.recentWork || !d.recentWork.length))) {
-      wl.innerHTML = '<span style="font-size:12px;color:var(--dim)">No session history yet.</span>';
-      return;
-    }
-    let html = '';
-    if (d.activeProject) html += '<div style="font-size:12px">Project: <strong style="color:var(--accent)">' + escHtml(d.activeProject) + '</strong></div>';
-    if (d.currentTask) html += '<div style="font-size:12px;color:var(--text)">Task: ' + escHtml(d.currentTask) + '</div>';
-    if (d.resumePoint) html += '<div style="font-size:11px;color:var(--dim);margin-top:4px">Resume: ' + escHtml(d.resumePoint) + '</div>';
-    if (d.recentWork && d.recentWork.length) {
-      html += '<div style="font-size:11px;color:var(--dim);margin-top:6px">Recent:</div>';
-      for (const w of d.recentWork.slice(-3)) {
-        html += '<div style="font-size:11px;color:var(--dim);padding-left:8px">' + escHtml(w.task) + ' \u2014 ' + escHtml(w.status) + '</div>';
-      }
-    }
-    wl.innerHTML = html;
-  } catch (e) {
-    document.getElementById('act-worklog').innerHTML = '<span style="font-size:12px;color:var(--dim)">Could not load worklog.</span>';
-  }
-}
-
-// ── Mode toggle (Chat / Work) ────────────────────────────────────────────
-let currentMode = localStorage.getItem('ma-mode') || 'work';
-
-async function switchMode(mode) {
-  if (mode !== 'chat' && mode !== 'work') return;
-  try {
-    const r = await fetch('/api/mode', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ mode })
-    });
-    const d = await r.json();
-    if (d.ok) {
-      currentMode = d.mode;
-      localStorage.setItem('ma-mode', currentMode);
-      updateModeUI();
-    }
-  } catch (e) {
-    console.error('Mode switch failed:', e);
-  }
-}
-
-function updateModeUI() {
-  const btns = document.querySelectorAll('.mode-btn');
-  btns.forEach(b => {
-    b.classList.remove('active', 'chat-active');
-    if (b.dataset.mode === currentMode) {
-      b.classList.add('active');
-      if (currentMode === 'chat') b.classList.add('chat-active');
-    }
-  });
-}
-
-async function syncMode() {
-  try {
-    const r = await fetch('/api/mode');
-    const d = await r.json();
-    currentMode = d.mode || 'work';
-    localStorage.setItem('ma-mode', currentMode);
-    updateModeUI();
-  } catch { /* ignore — will default to work */ }
-}
-
-async function send() {
-  const text = inputEl.value.trim();
-  if (!text && !pendingFiles.length) return;
-  if (sending) return;
-
-  sending = true;
-  sendBtn.disabled = true;
-
-  // Build display text: message + filenames
-  const fileNames = pendingFiles.map(f => f.name);
-  const imageFiles = pendingFiles.filter(f => f.type === 'image');
-  const displayText = fileNames.length
-    ? (text ? text + '\n📎 ' + fileNames.join(', ') : '📎 ' + fileNames.join(', '))
-    : text;
-  addMsg('user', displayText);
-  // Show image thumbnails inline in the chat
-  if (imageFiles.length) {
-    const lastBubble = chatEl.querySelector('.msg:last-child .bubble');
-    if (lastBubble) {
-      for (const img of imageFiles) {
-        const el = document.createElement('img');
-        el.src = img.content; el.className = 'chat-img'; el.alt = img.name;
-        lastBubble.appendChild(el);
-      }
-    }
-  }
-  inputEl.value = '';
-  inputEl.style.height = 'auto';
-
-  const msgText = text || ('I attached these files: ' + fileNames.join(', '));
-  history.push({ role: 'user', content: msgText });
-  showTyping();
-
-  // Capture and clear attachments
-  const attachments = pendingFiles.slice();
-  pendingFiles = [];
-  document.getElementById('file-chips').innerHTML = '';
-
-  const payload = JSON.stringify({
-    message: msgText,
-    history: history.slice(-10),
-    attachments: attachments.length ? attachments : undefined
-  });
-
-  try {
-    // Use SSE streaming endpoint for step progress
-    const r = await fetch('/api/chat/stream', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: payload
-    });
-
-    if (!r.ok) {
-      // Fallback: try regular endpoint
-      hideTyping();
-      const r2 = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: payload });
-      const d = await r2.json();
-      if (d.error) { addSystem('Error: ' + d.error); }
-      else { handleChatResult(d); }
-      sending = false; sendBtn.disabled = false; inputEl.focus(); return;
-    }
-
-    const reader = r.body.getReader();
-    const decoder = new TextDecoder();
-    let buffer = '';
-    let progressWidget = null;
-    let gotSteps = false;
-    let eventType = null;
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      buffer += decoder.decode(value, { stream: true });
-
-      // Parse SSE events from buffer
-      const lines = buffer.split('\n');
-      buffer = lines.pop() || ''; // keep incomplete line in buffer
-      for (const line of lines) {
-        if (line.startsWith('event: ')) {
-          eventType = line.slice(7).trim();
-        } else if (line.startsWith('data: ') && eventType) {
-          try {
-            const data = JSON.parse(line.slice(6));
-            if (eventType === 'activity') {
-              addActivity(data.category, data.detail, data.data);
-              if (data.category === 'plan' && data.data && data.data.steps) setTaskPlan(data.data.steps);
-              if (!actPanel.classList.contains('open')) {
-                actPanel.classList.add('open');
-                document.querySelector('.act-toggle').classList.add('active');
-              }
-            } else if (eventType === 'step') {
-              if (!gotSteps) {
-                hideTyping();
-                progressWidget = createProgressWidget();
-                gotSteps = true;
-              }
-              updateProgress(progressWidget, data);
-            } else if (eventType === 'done') {
-              hideTyping();
-              if (progressWidget) finalizeProgress(progressWidget);
-              handleChatResult(data);
-            } else if (eventType === 'error') {
-              hideTyping();
-              if (progressWidget) finalizeProgress(progressWidget);
-              addSystem('Error: ' + (data.error || 'Unknown error'));
-            }
-          } catch (_) { /* skip parse errors */ }
-          eventType = null;
-        } else if (line === '') {
-          eventType = null; // reset on blank line
-        }
-      }
-    }
-
-    // If no events came through at all, handle gracefully
-    if (!gotSteps) hideTyping();
-
-  } catch (e) {
-    hideTyping();
-    addSystem('Network error: ' + e.message);
-  }
-
-  sending = false;
-  sendBtn.disabled = false;
-  inputEl.focus();
-}
-
-function handleChatResult(d) {
-  const reply = d.reply || '(empty response)';
-  const msgDiv = addMsg('ma', reply);
-  history.push({ role: 'assistant', content: reply });
-
-  // Render clickable file links for created/modified files
-  console.log('[MA-UI] handleChatResult filesChanged:', d.filesChanged);
-  if (d.filesChanged && d.filesChanged.length > 0) {
-    const container = msgDiv.querySelector('.bubble') || msgDiv;
-    const linksDiv = document.createElement('div');
-    linksDiv.className = 'file-links';
-    const extIcons = { '.js': '\u{1F4DC}', '.ts': '\u{1F4DC}', '.json': '\u{1F4CB}', '.md': '\u{1F4D6}', '.html': '\u{1F310}', '.css': '\u{1F3A8}', '.py': '\u{1F40D}', '.rs': '\u2699', '.txt': '\u{1F4C4}' };
-    for (const fp of d.filesChanged) {
-      const ext = '.' + fp.split('.').pop().toLowerCase();
-      const icon = extIcons[ext] || '\u{1F4C4}';
-      const name = fp.split('/').pop();
-      const a = document.createElement('a');
-      a.className = 'file-link';
-      a.href = '/api/workspace/file?path=' + encodeURIComponent(fp);
-      a.target = '_blank';
-      a.title = fp;
-      a.innerHTML = '<span class="fl-icon">' + icon + '</span><span class="fl-name">' + escHtml(name) + '</span>';
-      linksDiv.appendChild(a);
-    }
-    container.appendChild(linksDiv);
-  }
-
-  if (d.taskType) addSystem('Task: ' + d.taskType + ' (' + (d.steps || 0) + ' steps)');
-  if (d.contextUsage) updateTokenBar(d.contextUsage);
-  if (d.continuationPoint) {
-    lastContinuation = d.continuationPoint;
-    showContinueButton(d.continuationPoint);
-  } else {
-    lastContinuation = null;
-  }
-  if (actPanel && actPanel.classList.contains('open')) loadWorklog();
-  saveHistory();
-}
-
-function handleKey(e) {
-  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
-  // Auto-resize
-  setTimeout(() => {
-    inputEl.style.height = 'auto';
-    inputEl.style.height = Math.min(inputEl.scrollHeight, 120) + 'px';
-  }, 0);
-}
-
-// ── Config ────────────────────────────────────────────────────────────────
-function toggleConfig() {
-  cfgPanel.classList.toggle('show');
-}
-
-async function openConfig() {
-  if (cfgPanel.classList.contains('show')) { cfgPanel.classList.remove('show'); return; }
-  try {
-    const r = await fetch('/api/config');
-    const d = await r.json();
-    if (d.type) document.getElementById('cfg-type').value = d.type;
-    if (d.endpoint) document.getElementById('cfg-endpoint').value = d.endpoint;
-    if (d.model) document.getElementById('cfg-model').value = d.model;
-    const keyEl = document.getElementById('cfg-key');
-    if (keyEl) {
-      if (d.hasApiKey) setMaskedCfgKey();
-      else {
-        keyEl.value = '';
-        keyEl.dataset.hasStoredKey = 'false';
-        keyEl.dataset.revealed = 'false';
-        keyEl.type = 'password';
-        const toggleEl = document.getElementById('cfg-key-toggle');
-        if (toggleEl) toggleEl.textContent = 'See';
-      }
-    }
-    if (d.maxTokens) { document.getElementById('cfg-tokens').value = d.maxTokens; document.getElementById('cfg-tokens-val').textContent = d.maxTokens; }
-    document.getElementById('cfg-vision').checked = d.vision === true;
-    if (d.workspacePath) document.getElementById('cfg-workspace').value = d.workspacePath;
-    // Hydrate capabilities toggles
-    if (d.capabilities) {
-      const c = d.capabilities;
-      document.getElementById('cap-cache').checked = c.extendedCache !== false;
-      document.getElementById('cap-compaction').checked = c.compaction === true || c.compaction === 'api' || c.compaction === 'prompt';
-      document.getElementById('cap-thinking').checked = c.extendedThinking === true;
-      if (c.thinkingBudget) {
-        document.getElementById('cap-thinking-budget').value = c.thinkingBudget;
-        document.getElementById('cap-thinking-val').textContent = c.thinkingBudget;
-      }
-      document.getElementById('cap-native-tools').checked = c.nativeToolUse !== false;
-      document.getElementById('thinking-budget-row').style.display = c.extendedThinking ? '' : 'none';
-    }
-    document.getElementById('cfg-type').dispatchEvent(new Event('change'));
-  } catch (_) {}
-  cfgPanel.classList.add('show');
-}
-
-async function saveConfig() {
-  const type = document.getElementById('cfg-type').value;
-  const keyEl = document.getElementById('cfg-key');
-  const rawKey = keyEl ? keyEl.value.trim() : '';
-  const hasStoredKey = keyEl?.dataset.hasStoredKey === 'true';
-  const normalizedKey = (rawKey && rawKey !== MA_MASKED_KEY) ? rawKey : (hasStoredKey ? '' : rawKey);
-  const body = {
-    type,
-    endpoint: document.getElementById('cfg-endpoint').value.trim(),
-    apiKey: normalizedKey,
-    model: document.getElementById('cfg-model').value.trim(),
-    maxTokens: parseInt(document.getElementById('cfg-tokens').value, 10) || 12288,
-    vision: document.getElementById('cfg-vision').checked,
-    workspacePath: document.getElementById('cfg-workspace').value.trim()
-  };
-
-  // Include capabilities for Anthropic
-  if (type === 'anthropic') {
-    body.capabilities = {
-      extendedCache: document.getElementById('cap-cache').checked,
-      compaction: document.getElementById('cap-compaction').checked,
-      extendedThinking: document.getElementById('cap-thinking').checked,
-      thinkingBudget: parseInt(document.getElementById('cap-thinking-budget').value, 10) || 4096,
-      nativeToolUse: document.getElementById('cap-native-tools').checked
-    };
-  }
-
-  if (!body.endpoint || !body.model) { alert('Need endpoint and model'); return; }
-
-  try {
-    const r = await fetch('/api/config', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
-    });
-    const d = await r.json();
-    if (d.ok) {
-      toggleConfig();
-      statusDot.classList.add('ok');
-      statusTxt.textContent = `${body.type}/${body.model}`;
-      if (keyEl && type !== 'ollama') setMaskedCfgKey();
-      addSystem('LLM configured. Ready to chat.');
-    } else {
-      alert('Save failed: ' + (d.error || 'unknown'));
-    }
-  } catch (e) {
-    alert('Save error: ' + e.message);
-  }
-}
-
-document.getElementById('cfg-key').addEventListener('input', clearCfgKeyMaskState);
-
-// Pre-fill defaults
-document.getElementById('cfg-endpoint').value = 'https://openrouter.ai/api/v1/chat/completions';
-document.getElementById('cfg-model').value = 'anthropic/claude-sonnet-4';
-
-// ── Config Tab Switching ────────────────────────────────────────────────
-function switchCfgTab(tab) {
-  document.querySelectorAll('.cfg-tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.cfg-pane').forEach(p => p.classList.remove('active'));
-  if (tab === 'llm') {
-    document.querySelector('.cfg-tab:nth-child(1)').classList.add('active');
-    document.getElementById('cfg-llm').classList.add('active');
-  } else {
-    document.querySelector('.cfg-tab:nth-child(2)').classList.add('active');
-    document.getElementById('cfg-whitelist').classList.add('active');
-    wlLoad();
-  }
-}
-
-// ── Whitelist Management ────────────────────────────────────────────────
-async function wlLoad() {
-  try {
-    const r = await fetch('/api/whitelist');
-    const wl = await r.json();
-    const el = document.getElementById('wl-list');
-    if (!Object.keys(wl).length) { el.innerHTML = '<p style="color:var(--dim);padding:8px">No commands whitelisted.</p>'; return; }
-    el.innerHTML = Object.entries(wl).map(([bin, subs]) =>
-      `<div class="wl-item"><span class="wl-bin">${bin}</span><span class="wl-subs">${subs ? subs.join(', ') : '(all)'}</span><button onclick="wlRemove('${bin}')">✕</button></div>`
-    ).join('');
-  } catch (e) { console.error('whitelist load:', e); }
-}
-
-async function wlAdd() {
-  const bin = document.getElementById('wl-bin').value.trim();
-  if (!bin) { alert('Enter a binary name'); return; }
-  const subsRaw = document.getElementById('wl-subs').value.trim();
-  const subs = subsRaw ? subsRaw.split(',').map(s => s.trim()).filter(Boolean) : null;
-  try {
-    const r = await fetch('/api/whitelist/add', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ binary: bin, subcommands: subs }) });
-    const d = await r.json();
-    if (d.error) { alert(d.error); return; }
-    document.getElementById('wl-bin').value = '';
-    document.getElementById('wl-subs').value = '';
-    wlLoad();
-  } catch (e) { alert('Error: ' + e.message); }
-}
-
-async function wlRemove(bin) {
-  try {
-    await fetch('/api/whitelist/remove', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ binary: bin }) });
-    wlLoad();
-  } catch (e) { alert('Error: ' + e.message); }
-}
-
-async function wlReset() {
-  if (!confirm('Reset command whitelist to defaults?')) return;
-  try {
-    await fetch('/api/whitelist/reset', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
-    wlLoad();
-  } catch (e) { alert('Error: ' + e.message); }
-}
-
-// ── Ollama Model Management ─────────────────────────────────────────────
-document.getElementById('cfg-type').addEventListener('change', function() {
-  const type = this.value;
-  const isOllama = type === 'ollama';
-  const isAnthropic = type === 'anthropic';
-  document.getElementById('model-text-wrap').style.display = isOllama ? 'none' : '';
-  document.getElementById('model-ollama-wrap').style.display = isOllama ? '' : 'none';
-
-  // Capabilities section visibility
-  const capsSection = document.getElementById('caps-section');
-  const capsToggles = document.getElementById('caps-toggles');
-  const capsNotice = document.getElementById('caps-notice');
-
-  if (isAnthropic) {
-    capsSection.style.display = '';
-    capsToggles.style.display = '';
-    capsNotice.style.display = 'none';
-    // Default endpoint
-    const ep = document.getElementById('cfg-endpoint');
-    if (!ep.value || ep.value.includes('openrouter.ai') || ep.value.includes('localhost')) {
-      ep.value = 'https://api.anthropic.com/v1/messages';
-    }
-    // Populate Anthropic model datalist
-    const dl = document.getElementById('cfg-model-datalist');
-    dl.innerHTML = '<option value="claude-opus-4-6"><option value="claude-sonnet-4-6"><option value="claude-haiku-4-5">';
-  } else if (type === 'openrouter') {
-    capsSection.style.display = '';
-    capsToggles.style.display = 'none';
-    capsNotice.style.display = '';
-    capsNotice.textContent = 'Advanced capabilities like extended thinking and native tool use are available with Anthropic Direct.';
-    const ep = document.getElementById('cfg-endpoint');
-    if (!ep.value || ep.value.includes('anthropic.com') || ep.value.includes('localhost')) {
-      ep.value = 'https://openrouter.ai/api/v1/chat/completions';
-    }
-    document.getElementById('cfg-model-datalist').innerHTML = '';
-  } else {
-    // Ollama
-    capsSection.style.display = '';
-    capsToggles.style.display = 'none';
-    capsNotice.style.display = '';
-    capsNotice.textContent = 'Advanced capabilities like prompt caching and extended thinking are available with Anthropic Direct.';
-    const ep = document.getElementById('cfg-endpoint');
-    if (!ep.value || ep.value.includes('openrouter.ai') || ep.value.includes('anthropic.com')) {
-      ep.value = 'http://localhost:11434';
-    }
-    document.getElementById('cfg-model-datalist').innerHTML = '';
-    loadOllamaModels();
-  }
-});
-
-// Thinking toggle visibility
-document.getElementById('cap-thinking').addEventListener('change', function() {
-  document.getElementById('thinking-budget-row').style.display = this.checked ? '' : 'none';
-});
-
-async function loadOllamaModels() {
-  const endpoint = document.getElementById('cfg-endpoint').value.trim();
-  if (!endpoint) return;
-  const sel = document.getElementById('cfg-model-select');
-  sel.innerHTML = '<option value="">Loading...</option>';
-  sel.disabled = true;
-  try {
-    const r = await fetch('/api/ollama/models?endpoint=' + encodeURIComponent(endpoint));
-    const d = await r.json();
-    if (d.error) throw new Error(d.error);
-    const models = d.models || [];
-    sel.innerHTML = '<option value="">-- select a model (' + models.length + ' available) --</option>';
-    for (const m of models) {
-      const sizeGB = m.size ? (m.size / 1073741824).toFixed(1) + ' GB' : '';
-      const opt = document.createElement('option');
-      opt.value = m.name;
-      opt.textContent = m.name + (sizeGB ? ' (' + sizeGB + ')' : '');
-      sel.appendChild(opt);
-    }
-    const cur = document.getElementById('cfg-model').value;
-    if (cur) sel.value = cur;
-  } catch (e) {
-    sel.innerHTML = '<option value="">Could not reach Ollama</option>';
-    document.getElementById('model-info').textContent = e.message;
-  }
-  sel.disabled = false;
-}
-
-async function onOllamaModelSelect() {
-  const sel = document.getElementById('cfg-model-select');
-  const model = sel.value;
-  const info = document.getElementById('model-info');
-  document.getElementById('cfg-model').value = model;
-  if (!model) { info.textContent = ''; return; }
-  const endpoint = document.getElementById('cfg-endpoint').value.trim();
-  info.textContent = 'Fetching model info...';
-  try {
-    const r = await fetch('/api/ollama/show', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ endpoint, model })
-    });
-    const d = await r.json();
-    if (d.error) { info.textContent = ''; return; }
-    const parts = [];
-    if (d.family) parts.push(d.family);
-    if (d.parameterSize) parts.push(d.parameterSize);
-    if (d.quantization) parts.push(d.quantization);
-    if (d.contextLength) {
-      parts.push('context: ' + d.contextLength.toLocaleString());
-      const tok = Math.min(d.contextLength, 65536);
-      document.getElementById('cfg-tokens').value = tok;
-      document.getElementById('cfg-tokens-val').textContent = tok;
-    }
-    info.textContent = parts.length ? parts.join(' \u00B7 ') : '';
-  } catch (_) { info.textContent = ''; }
-}
-
-async function pullOllamaModel() {
-  const nameEl = document.getElementById('cfg-pull-name');
-  const model = nameEl.value.trim();
-  if (!model) { alert('Enter a model name to pull'); return; }
-  const endpoint = document.getElementById('cfg-endpoint').value.trim();
-  if (!endpoint) { alert('Enter an Ollama endpoint first'); return; }
-  const status = document.getElementById('pull-status');
-  status.textContent = 'Pulling ' + model + '... this may take a while';
-  status.style.color = 'var(--accent)';
-  try {
-    const r = await fetch('/api/ollama/pull', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ endpoint, model })
-    });
-    const d = await r.json();
-    if (d.error) {
-      status.textContent = 'Pull failed: ' + d.error;
-      status.style.color = 'var(--err)';
-    } else {
-      status.textContent = model + ' pulled successfully';
-      status.style.color = 'var(--ma)';
-      nameEl.value = '';
-      loadOllamaModels();
-    }
-  } catch (e) {
-    status.textContent = 'Pull error: ' + e.message;
-    status.style.color = 'var(--err)';
-  }
-}
-
-// ── Slash Commands ──────────────────────────────────────────────────────
-const cmdPopup = document.getElementById('cmd-popup');
-let slashCommands = [];
-let cmdActiveIdx = -1;
-
-// Load commands from server
-fetch('/api/commands').then(r => r.json()).then(cmds => { slashCommands = cmds; }).catch(() => {});
-
-function handleInput() {
-  const val = inputEl.value;
-  if (val.startsWith('/')) {
-    const filter = val.slice(1).toLowerCase();
-    const matches = slashCommands.filter(c => c.cmd.slice(1).toLowerCase().startsWith(filter) || c.usage.toLowerCase().includes(filter));
-    if (matches.length > 0) {
-      cmdPopup.innerHTML = matches.map((c, i) =>
-        `<div class="cmd-item${i === cmdActiveIdx ? ' active' : ''}" data-idx="${i}" onclick="pickCmd('${c.usage}')">`
-        + `<span class="cmd-name">${c.usage}</span><span class="cmd-desc">${c.desc}</span></div>`
-      ).join('');
-      cmdPopup.classList.add('show');
-      return;
-    }
-  }
-  cmdPopup.classList.remove('show');
-  cmdActiveIdx = -1;
-}
-
-function pickCmd(usage) {
-  inputEl.value = usage;
-  cmdPopup.classList.remove('show');
-  cmdActiveIdx = -1;
-  inputEl.focus();
-}
-
-// Override handleKey for arrow navigation in popup and slash dispatch
-const _origHandleKey = handleKey;
-handleKey = function(e) {
-  if (cmdPopup.classList.contains('show')) {
-    const items = cmdPopup.querySelectorAll('.cmd-item');
-    if (e.key === 'ArrowDown') { e.preventDefault(); cmdActiveIdx = Math.min(cmdActiveIdx + 1, items.length - 1); _highlightCmd(items); return; }
-    if (e.key === 'ArrowUp') { e.preventDefault(); cmdActiveIdx = Math.max(cmdActiveIdx - 1, 0); _highlightCmd(items); return; }
-    if (e.key === 'Tab' || (e.key === 'Enter' && cmdActiveIdx >= 0 && !e.shiftKey)) {
-      e.preventDefault();
-      if (cmdActiveIdx >= 0 && items[cmdActiveIdx]) {
-        inputEl.value = items[cmdActiveIdx].querySelector('.cmd-name').textContent;
-        cmdPopup.classList.remove('show');
-        cmdActiveIdx = -1;
-      }
-      return;
-    }
-    if (e.key === 'Escape') { cmdPopup.classList.remove('show'); cmdActiveIdx = -1; return; }
-  }
-  // Slash command execution on Enter
-  if (e.key === 'Enter' && !e.shiftKey && inputEl.value.trim().startsWith('/')) {
-    e.preventDefault();
-    execSlash(inputEl.value.trim());
-    return;
-  }
-  _origHandleKey(e);
-};
-
-function _highlightCmd(items) {
-  items.forEach((el, i) => el.classList.toggle('active', i === cmdActiveIdx));
-  if (items[cmdActiveIdx]) items[cmdActiveIdx].scrollIntoView({ block: 'nearest' });
-}
-
-async function execSlash(command) {
-  cmdPopup.classList.remove('show');
-  addMsg('user', command);
-  inputEl.value = '';
-  inputEl.style.height = 'auto';
-  try {
-    const r = await fetch('/api/slash', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ command })
-    });
-    const d = await r.json();
-    addMsg(d.type || 'system', d.text || '(no output)');
-  } catch (e) {
-    addSystem('Command error: ' + e.message);
-  }
-}
-
-// ── Token Usage Indicator ────────────────────────────────────────────────
-function updateTokenBar(usage) {
-  const fill = document.querySelector('#token-bar .fill');
-  const info = document.getElementById('token-info');
-  if (!usage || !usage.contextBudget) return;
-  const pct = Math.min(100, Math.round((usage.contextTokens / usage.contextBudget) * 100));
-  fill.style.width = pct + '%';
-  fill.className = 'fill' + (pct >= 85 ? ' crit' : pct >= 65 ? ' warn' : '');
-  info.textContent = `Context: ~${usage.contextTokens} / ${usage.contextBudget} tokens (${pct}%) · Response reserve: ${usage.responseReserve}`;
-}
-
-// ── Continue Button ─────────────────────────────────────────────────────
-function showContinueButton(point) {
-  const bar = document.createElement('div');
-  bar.className = 'continue-bar';
-  bar.innerHTML = `<button onclick="sendContinue()">Continue from: ${point.slice(0, 60)}</button>`;
-  chatEl.appendChild(bar);
-  chatEl.scrollTop = chatEl.scrollHeight;
-}
-
-function sendContinue() {
-  if (!lastContinuation) return;
-  inputEl.value = `Continue from where you left off: ${lastContinuation}`;
-  lastContinuation = null;
-  // Remove continue buttons
-  chatEl.querySelectorAll('.continue-bar').forEach(el => el.remove());
-  send();
-}
-
-// ── Drag & Drop File Attach ─────────────────────────────────────────────
-const dropOverlay = document.getElementById('drop-overlay');
-const fileChips   = document.getElementById('file-chips');
-let dragCounter = 0;
-
-document.addEventListener('dragenter', e => {
-  e.preventDefault();
-  dragCounter++;
-  if (e.dataTransfer.types.includes('Files')) dropOverlay.classList.add('show');
-});
-
-document.addEventListener('dragleave', e => {
-  e.preventDefault();
-  dragCounter--;
-  if (dragCounter <= 0) { dragCounter = 0; dropOverlay.classList.remove('show'); }
-});
-
-document.addEventListener('dragover', e => { e.preventDefault(); });
-
-const IMAGE_TYPES = new Set(['image/png','image/jpeg','image/jpg','image/gif','image/webp','image/svg+xml']);
-const MAX_FILE_SIZE = 524288; // 512KB
-const MAX_IMAGE_SIZE = 5242880; // 5MB
-
-document.addEventListener('drop', e => {
-  e.preventDefault();
-  dragCounter = 0;
-  dropOverlay.classList.remove('show');
-  if (!e.dataTransfer.files.length) return;
-  for (const file of e.dataTransfer.files) {
-    const isImage = IMAGE_TYPES.has(file.type);
-    const limit = isImage ? MAX_IMAGE_SIZE : MAX_FILE_SIZE;
-    const limitLabel = isImage ? '5MB' : '512KB';
-    if (file.size > limit) {
-      addSystem(`Skipped "${file.name}" — too large (max ${limitLabel})`);
-      continue;
-    }
-    if (pendingFiles.length >= 5) {
-      addSystem('Max 5 files at a time');
-      break;
-    }
-    const reader = new FileReader();
-    if (isImage) {
-      reader.onload = () => {
-        pendingFiles.push({ name: file.name, content: reader.result, type: 'image', mime: file.type });
-        renderFileChips();
-      };
-      reader.readAsDataURL(file);
-    } else {
-      reader.onload = () => {
-        pendingFiles.push({ name: file.name, content: reader.result, type: 'text' });
-        renderFileChips();
-      };
-      reader.readAsText(file);
-    }
-  }
-});
-
-function renderFileChips() {
-  fileChips.innerHTML = pendingFiles.map((f, i) => {
-    const thumb = f.type === 'image' ? `<img src="${f.content}" alt="${f.name}">` : '';
-    return `<span class="file-chip">${thumb}${f.name}<button onclick="removeFile(${i})" title="Remove">✕</button></span>`;
-  }).join('');
-}
-
-function removeFile(idx) {
-  pendingFiles.splice(idx, 1);
-  renderFileChips();
-}
-</script>
+<!-- Ingest panel -->
+<div id="ingest-panel">
+  <div class="config-box" style="width:500px">
+    <h2 style="margin:0 0 12px;font-size:18px;color:var(--text)">Memory Ingest</h2>
+    <div class="ingest-section">
+      <p style="font-size:13px;color:var(--dim);margin:0 0 10px">Ingest a folder. All text files will be chunked and stored as a named archive.</p>
+      <label>Folder Path</label>
+      <input id="ingest-folder-path" placeholder="C:\\Projects\\my-app">
+      <label>Archive Name <span style="color:var(--dim);font-size:11px">(blank = folder name)</span></label>
+      <input id="ingest-archive-name" placeholder="my-app">
+      <button class="btn-save" id="ingest-folder-btn" onclick="ingestFolder()" style="margin-top:8px">Ingest Folder</button>
+    </div>
+    <hr style="border:none;border-top:1px solid var(--border);margin:14px 0">
+    <div class="ingest-section">
+      <h3 style="font-size:14px;margin:0 0 8px;color:var(--text)">Archives</h3>
+      <div id="ingest-archives-list" style="font-size:12px;color:var(--dim)">Loading...</div>
+    </div>
+    <div class="btn-row" style="margin-top:12px">
+      <button class="btn-cancel" onclick="toggleIngestPanel()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Ingest progress overlay -->
+<div id="ingest-progress-overlay">
+  <div class="config-box" style="width:520px">
+    <div class="ingest-prog-header">
+      <span id="ingest-prog-label">Ingesting...</span>
+      <span id="ingest-prog-pct" style="margin-left:auto;font-variant-numeric:tabular-nums"></span>
+    </div>
+    <div class="ingest-prog-bar"><div class="ingest-prog-fill" id="ingest-prog-fill"></div></div>
+    <div id="ingest-prog-detail" class="ingest-prog-detail"></div>
+    <div id="ingest-prog-log" class="ingest-prog-log"></div>
+    <div id="ingest-prog-error" class="ingest-prog-error hidden"></div>
+    <div class="btn-row" style="margin-top:12px;gap:8px">
+      <button class="btn-cancel" id="ingest-kill-btn" onclick="killIngest()">Stop</button>
+      <button class="btn-cancel hidden" id="ingest-close-btn" onclick="closeIngestProgress()">Close</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/ma-ui.js"></script>
+<script src="js/ma-ui-chat.js"></script>
+<script src="js/ma-ui-nav.js"></script>
+<script src="js/ma-ui-config.js"></script>
+<script src="js/ma-ui-editor.js"></script>
+<script src="js/ma-ui-workspace.js"></script>
+<script src="js/ma-ui-input.js"></script>
+<script src="js/ma-ui-bootstrap.js"></script>
 </body>
 </html>

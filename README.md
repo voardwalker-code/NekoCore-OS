@@ -118,7 +118,7 @@ Slash commands (<code>/task</code>, <code>/skill</code>, <code>/project</code>, 
 <tr>
 <td width="33%" valign="top">
 <strong>🏗️ Memory Architect (MA)</strong><br><br>
-Built-in AI coding assistant with blueprint-driven project execution, agent delegation, deep research, and workspace management. Ships with full blueprints for two companion projects: REM System Core and NekoCore Cognitive Mind.
+Built-in AI coding assistant with a full browser IDE, blueprint-driven project execution, agent delegation, deep research, terminal access, and workspace management. Ships with full blueprints for two companion projects: REM System Core and NekoCore Cognitive Mind.
 </td>
 <td width="33%" valign="top">
 <strong>🐛 Developer Tools</strong><br><br>
@@ -516,7 +516,7 @@ NekoCore includes a full self-healing chain for disaster recovery:
 
 ### Memory Architect (MA)
 
-MA is a built-in AI coding assistant that lives at `project/MA/`. It can build entire Node.js projects from blueprints, delegate to specialized agents, run deep research, and manage a workspace of in-progress builds.
+MA is a built-in AI coding assistant that lives at `project/MA/`. It features a full browser IDE with tabbed editing, syntax highlighting, a built-in terminal, dropdown menus, session management, memory ingest, and theme switching. MA builds entire Node.js projects from blueprints, delegates to specialized agents, runs deep research, and manages a workspace of in-progress builds.
 
 **Start MA from NekoCore OS:**
 - Use the `/ma` slash command in any entity chat, or
@@ -529,6 +529,15 @@ npm install
 npm start
 ```
 
+**Browser GUI highlights:**
+- Dropdown menu bar (File, Edit, View, Terminal, Help)
+- Built-in file editor with syntax highlighting and preview modes
+- Terminal panel for running shell commands
+- Session picker with chat history management
+- Memory ingest with live progress and archive tracking
+- Dark / Light / System theme switching
+- Workspace file tree with collapsible folders
+
 MA ships with blueprints for two companion projects:
 - **REM System Core** — a 26-module memory/cognition server (port 3860)
 - **NekoCore Cognitive Mind** — a 97-module cognitive engine (port 3870)
@@ -536,6 +545,8 @@ MA ships with blueprints for two companion projects:
 Both are starter scaffolds with `PROJECT-MANIFEST.json`, `BUILD-ORDER.md`, and `package.json`. MA builds the actual source code from the blueprints.
 
 See [project/MA/README.md](project/MA/README.md) for the full MA guide.
+
+MA is also available as a [standalone repository](https://github.com/voardwalker-code/MA-Memory-Architect).
 
 ### Telegram Integration
 
@@ -566,6 +577,7 @@ NekoCore-OS/
     ├── MA/                    # Memory Architect — AI coding assistant
     │   ├── MA-Server.js       #   MA HTTP server (port 3850)
     │   ├── MA-server/         #   Core modules (LLM, memory, tasks, agents)
+    │   ├── MA-client/         #   Browser GUI (8 modular JS + CSS)
     │   ├── MA-blueprints/     #   Build blueprints (NekoCore + REM System)
     │   ├── MA-knowledge/      #   Injected knowledge base
     │   ├── MA-skills/         #   MA skill plugins

@@ -46,12 +46,12 @@ Emergency exception log:
 
 ## Stop/Resume Snapshot — 2026-03-24 (v0.9.0-alpha.5 release)
 
-- **Current phase:** `Release prep — v0.9.0-alpha.5`
-- **Current slice:** `Documentation + test fixes + git push`
-- **Last completed work:** `README, CHANGELOG, package.json updated for v0.9.0-alpha.5. Fixed 3 broken tests (system-apps qachecklist, single-llm search window, llm-interface compaction assertion). 2,505 tests pass (0 real failures).`
-- **In-progress item:** `Git push to main + staging`
+- **Current phase:** `MA bugfix follow-up`
+- **Current slice:** `Documentation update`
+- **Last completed work:** `Factory reset (node reset-all.js) + full documentation update. Updated root README.md (MA section now covers browser IDE, terminal, dropdown menus, session management, memory ingest, theme switching; architecture tree shows 8-script modular client; added standalone repo link). Updated MA/README.md (new features table with 12 new entries for menus/editor/terminal/sessions/ingest/themes/rail-utils; architecture diagram shows 8 JS modules + CSS instead of single-file SPA; 9 new API endpoints; GitHub standalone repo link). Updated MA/USER-GUIDE.md (26 sections, new Menu Bar/Toolbar/IDE Editor/Terminal Panel/Workspace File Tree/Chat Sessions/Memory Ingest/Theme Switching sections; rewrote Settings Panel access paths; updated Tips). Updated CHANGELOG.md with 5 new [Unreleased] entries for dropdown menus, terminal panel, section scaffolding, rail utilities.`
+- **In-progress item:** `none`
 - **Blocking issue:** `none`
-- **Next action on resume:** `Post-push verification — confirm main and staging are in sync.`
+- **Next action on resume:** `Manual MA browser smoke test after fresh reset. Copy MA directory to standalone MA-Memory-Architect repo and verify it works independently.`
 - **Active plans:**
   - `Documents/current/PLAN-PREDICTIVE-MEMORY-v1.md` — Phase 5: Predictive Memory Topology — `COMPLETE — all 13 slices (-0 through 11), archived`
   - `Documents/current/PLAN-RESOURCE-MANAGER-APP-v1.md` — Resource Manager App — `Complete`
@@ -69,6 +69,118 @@ Emergency exception log:
   - `Documents/current/PLAN-INTROSPECTION-LOOP-v1.md` — 6-axis self-inquiry brain-loop phase with local model
 - **Prior plan (paused):** `Documents/current/PLAN-SLASH-COMMAND-SYSTEM-v1.md — A0/A1/A2 complete; A3/A4 future`
 - **MA workspace projects:** `Moved to separate repo — MA-workspace is now fully cleared on reset`
+
+---
+
+## Session Ledger — 2026-03-24 (Factory reset + documentation update)
+
+Status: `Complete`
+
+- **Request:** Run reset-all, update root README for entire project, update MA USER-GUIDE.md and MA README.md for standalone repo copy.
+- **Files changed:** `README.md`, `project/MA/README.md`, `project/MA/USER-GUIDE.md`, `CHANGELOG.md`, `WORKLOG.md`
+- **Implementation:** (1) Ran `node reset-all.js` — cleared entities, memories, accounts, sessions, MA workspace, chores, model perf, entity, agents, pulse logs, config. (2) Root README: updated MA capability description to mention browser IDE/terminal/menus/sessions/ingest/themes, updated architecture tree from single-file SPA to 8-script modular client, added standalone GitHub repo link. (3) MA README: added 12 new feature table entries (dropdown menus, IDE editor, terminal panel, workspace tree, sessions, memory ingest, recall controls, theme switcher, rail utilities), rewrote architecture diagram to show 8 JS modules + CSS, added 9 new API endpoints (chat sessions, workspace tree/save/mkdir, terminal exec, folder ingest), added standalone repo link. (4) MA USER-GUIDE: expanded to 26 sections — added Menu Bar, Toolbar, IDE Editor, Terminal Panel, Workspace File Tree, Chat Sessions, Memory Ingest, Theme Switching sections; rewrote Settings Panel access paths; updated Tips. (5) CHANGELOG: added 5 new [Unreleased] entries.
+- **Validation:** All documentation reviewed for consistency with implemented features.
+
+## Session Ledger — 2026-03-24 (MA UI overhaul — menus, sections, terminal)
+
+Status: `Complete`
+
+- **Request:** Fix broken left-rail sections (blueprints/projects/tasks/todos/chores not rendering), rework non-functional top menu bar, add context-aware File menu, move toolbar icons to left rail, add terminal panel.
+- **Files changed:** `project/MA/MA-client/MA-index.html`, `project/MA/MA-client/js/ma-ui-editor.js`, `project/MA/MA-client/js/ma-ui-workspace.js`, `project/MA/MA-client/js/ma-ui-nav.js`, `project/MA/MA-Server.js`, `project/MA/MA-client/css/ma-ui.css`, `WORKLOG.md`
+- **Implementation:** (1) Added `_scaffoldSection()` to ma-ui-editor.js that injects DOM scaffold for each section type into explorerBodyEl before load functions run. (2) Fixed `loadWorklog()` in ma-ui-workspace.js to query session-summary/session-recent fresh from DOM. (3) Replaced static menu buttons in HTML with dropdown menu system (File/Edit/View/Terminal/Help with sub-items). (4) Added menu toggle/close logic and File menu action functions (new file/folder, open, save/saveAll) to ma-ui-nav.js. (5) Moved Ingest/Settings/Terminal to rail-utils section at left rail bottom. (6) Added terminal panel HTML + toggleTerminalPanel/runTerminalCmd in JS. (7) Added /api/terminal/exec and /api/workspace/mkdir server endpoints. (8) Added CSS for menu dropdowns, terminal panel, rail-utils, bp-editor-area.
+- **Validation:** All 4 modified JS files pass `node -c` parse check. CSS and HTML verified for presence of all new structures.
+
+## Session Ledger — 2026-03-24 (MA UI script modular split pass 2)
+
+Status: `Complete`
+
+- **Request:** Further refactor `ma-ui.js` — still too much in one file (~924 lines).
+- **Extraction:** Created `ma-ui-chat.js` (287 lines — chat history, messaging, SSE streaming, progress widget), `ma-ui-nav.js` (117 lines — rail, inspector, mode toggle), `ma-ui-config.js` (441 lines — config panel, whitelist, Ollama, API key masking). Trimmed `ma-ui.js` to 83 lines (globals, theme, editor state, init).
+- **Files changed:** `project/MA/MA-client/MA-index.html`, `project/MA/MA-client/js/ma-ui.js`, `project/MA/MA-client/js/ma-ui-chat.js` (new), `project/MA/MA-client/js/ma-ui-nav.js` (new), `project/MA/MA-client/js/ma-ui-config.js` (new), `CHANGELOG.md`, `WORKLOG.md`
+- **Load order (8 scripts):** ma-ui.js → ma-ui-chat.js → ma-ui-nav.js → ma-ui-config.js → ma-ui-editor.js → ma-ui-workspace.js → ma-ui-input.js → ma-ui-bootstrap.js
+
+## Session Ledger — 2026-03-24 (MA UI script modular split)
+
+Status: `Complete`
+
+- **Request:** Refactor `ma-ui.js` into smaller scripts.
+- **Files changed:** `project/MA/MA-client/MA-index.html`, `project/MA/MA-client/js/ma-ui.js`, `project/MA/MA-client/js/ma-ui-editor.js`, `project/MA/MA-client/js/ma-ui-workspace.js`, `project/MA/MA-client/js/ma-ui-input.js`, `project/MA/MA-client/js/ma-ui-bootstrap.js`, `CHANGELOG.md`, `WORKLOG.md`
+- **Implementation:** Extracted editor/tree logic, workspace/surfaces logic, and input/slash/attachment logic into dedicated files; left core/chat/config in `ma-ui.js`; replaced eager top-level init calls with `initializeMAUI()` and invoked it from `ma-ui-bootstrap.js`; updated HTML script tags to preserve dependency order.
+- **Validation:** `get_errors` on all affected MA client files → `No errors found`.
+
+---
+
+## Session Ledger — 2026-03-24 (MA theme + workspace tree + built-in editor)
+
+Status: `Complete`
+
+- **Request:** Finish the three features started in the workspace shell: theme switcher (dark/light/system), workspace file tree navigation, and a built-in IDE-style editor with smart rendering per file type.
+- **Files changed:** `project/MA/MA-client/js/ma-ui.js`, `CHANGELOG.md`, `WORKLOG.md`
+- **Implementation:**
+  - Theme system: `applyTheme()` reads localStorage or falls back to `prefers-color-scheme` media query. The Settings > Theme dropdown persists the choice. A live media-query listener keeps "system" mode in sync.
+  - Workspace tree: `loadWorkspaceTree()` fetches `/api/workspace/tree`, renders collapsible `tree-node` elements with file-type icons. Clicking a file calls `openFileInEditor()`.
+  - Editor: Tab management (`openTabs[]`, `activateTab`, `closeTab`), smart rendering per file type (Markdown: preview/raw toggle; HTML: iframe preview/source toggle; Code: syntax-highlighted read-only view with line numbers/Edit toggle). `renderMarkdown()` does lightweight MD→HTML. `highlightLine()` does regex-based syntax coloring for JS/TS/Python/Rust/C#/CSS/JSON/HTML. `saveEditorTab()` writes back via `/api/workspace/save`. Chat file-link chips now open in the editor instead of new browser tabs.
+- **Validation:** `get_errors` → `No errors found` on all 3 client files.
+
+---
+
+## Session Ledger — 2026-03-24 (MA client shell extraction + workspace guard pass)
+
+Status: `Complete`
+
+- **Request:** Stop growing `MA-index.html` as a monolith and match the NekoCore client template by moving inline CSS/JS out into dedicated files.
+- **Root cause:** MA workspace work had accumulated large inline `<style>` and `<script>` blocks directly in `MA-index.html`, making iteration brittle and obscuring migration state.
+- **Files fixed:** `project/MA/MA-client/MA-index.html`, `project/MA/MA-client/css/ma-ui.css`, `project/MA/MA-client/js/ma-ui.js`, `CHANGELOG.md`, `WORKLOG.md`
+- **Fix:** Externalized MA browser assets to `css/ma-ui.css` and `js/ma-ui.js`, rewired `MA-index.html` to link those files, and added workspace-shell safety guards in `ma-ui.js` so missing legacy inspector DOM elements no longer throw during load while workspace views are being migrated.
+- **Validation:** `get_errors project/MA/MA-client/MA-index.html project/MA/MA-client/js/ma-ui.js project/MA/MA-client/css/ma-ui.css` → `No errors found`.
+
+---
+
+## Session Ledger — 2026-03-24 (MA GUI persistent inspector + centered chat)
+
+Status: `Complete`
+
+- **Request:** Keep chat visible while exposing session history, activity, and current workspace surfaces like blueprints, projects, tasks, todos, and chores at the same time.
+- **Root cause:** The MA GUI previously stretched chat too wide on large screens and treated side information as a single overloaded view, so users could not inspect workspace state beside the conversation.
+- **Files fixed:** `project/MA/MA-client/MA-index.html`, `project/MA/MA-Server.js`, `project/MA/USER-GUIDE.md`, `project/MA/README.md`
+- **Fix:** Rebuilt the MA browser layout into a centered chat stage plus a persistent right-side inspector. Split session history from live activity telemetry, exposed separate left-rail tabs for Blueprints, Projects, Tasks, Todos, and Chores, added MA API endpoints for project archive browsing and blueprint file browse/save, and wired task workspace editing through the worklog API.
+- **Validation:** `get_errors project/MA/MA-client/MA-index.html project/MA/MA-Server.js` → `No errors found`.
+
+---
+
+## Session Ledger — 2026-03-24 (MA GUI left-rail restoration)
+
+Status: `Complete`
+
+- **Request:** Verify whether the MA browser GUI actually had the promised left menu bar and fix the layout if it was missing.
+- **Root cause:** The current MA SPA only had a top header plus the right-side Activity Monitor; no left navigation rail had actually been implemented, so the reported menu did not exist.
+- **Files fixed:** `project/MA/MA-client/MA-index.html`, `project/MA/USER-GUIDE.md`, `project/MA/README.md`
+- **Fix:** Added a persistent left rail with direct Chat, Activity, Settings, Whitelist, and Guide actions, plus a mode pill that mirrors Work/Chat state. Reused the existing Activity Monitor, settings modal, whitelist tab, and help route instead of introducing a second navigation system.
+- **Validation:** `get_errors project/MA/MA-client/MA-index.html` → `No errors found`.
+
+---
+
+## Session Ledger — 2026-03-24 (MA Anthropic prompt-caching header parity)
+
+Status: `Complete`
+
+- **Request:** MA Anthropic extended cache fails with `Unexpected value(s) ... for the 'anthropic-beta' header`; compare with NekoCore and fix MA to match the working implementation.
+- **Root cause:** MA was sending `prompt-caching-2024-12-20` while NekoCore uses the accepted `prompt-caching-2024-07-31` beta header for Anthropic prompt caching.
+- **Files fixed:** `project/MA/MA-server/MA-llm.js`, `project/MA/tests/MA-llm.test.js`
+- **Fix:** Aligned MA to the NekoCore prompt-caching beta header value and updated the MA LLM regression test to lock the working header in place.
+- **Validation:** `node --test tests/MA-llm.test.js` → `54 pass, 0 fail`.
+
+---
+
+## Session Ledger — 2026-03-24 (MA thinking-budget visibility + Anthropic JSON sanitization)
+
+Status: `Complete`
+
+- **Request:** In MA, surface the minimum Max Tokens required by Anthropic thinking budget, and fix intermittent `request body is not valid JSON: no low surrogate in string` errors.
+- **Root cause:** MA settings exposed the thinking budget slider but did not display or enforce the required `maxTokens >= thinkingBudget` relationship. Separately, MA Anthropic requests serialized raw message/tool strings without sanitizing malformed surrogate pairs, so invalid Unicode could reach the provider.
+- **Files fixed:** `project/MA/MA-client/MA-index.html`, `project/MA/MA-server/MA-core.js`, `project/MA/MA-Server.js`, `project/MA/MA-server/MA-llm.js`, `project/MA/tests/MA-llm.test.js`, `project/MA/tests/MA-config-caps.test.js`
+- **Fix:** Added a settings hint and live sync so Anthropic extended thinking shows and enforces `Max Tokens >= thinkingBudget`; persisted `maxTokens` and `vision` in unified `profile.ma` config; used in-memory config as a fallback during `setConfig`; preserved explicit `contextWindow` overrides in memory; sanitized lone surrogates before JSON serialization; and auto-raised Anthropic `max_tokens` to the active thinking budget when needed.
+- **Validation:** `node --test tests/MA-config-caps.test.js tests/MA-llm.test.js` → `66 pass, 0 fail`.
 
 ---
 
