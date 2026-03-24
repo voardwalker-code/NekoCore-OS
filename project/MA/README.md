@@ -2,7 +2,7 @@
 
 **MA** is the standalone AI development agent for [NekoCore OS](../README.md). It builds, researches, writes code, manages projects, runs recurring tasks, and maintains its own memory — all from a browser GUI or terminal CLI.
 
-MA runs as a self-contained Node.js server with zero npm dependencies.
+MA runs as a self-contained Node.js server with a single dependency: [Zod](https://zod.dev) for schema validation. Run `npm install` to set up.
 
 ---
 

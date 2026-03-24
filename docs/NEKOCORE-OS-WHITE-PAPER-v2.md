@@ -12,7 +12,7 @@
 
 ---
 
-**NekoCore OS** is a zero-dependency Node.js cognitive operating system that gives AI entities persistent memory, evolving identity, belief formation, dream processing, and per-user relationship tracking across sessions. This white paper defines the architecture, runtime specification, scaling characteristics, and research roadmap of a system designed around one conviction: an entity should be shaped by what it has experienced, not only by what it was told on day one.
+**NekoCore OS** is a near-zero-dependency Node.js cognitive operating system that gives AI entities persistent memory, evolving identity, belief formation, dream processing, and per-user relationship tracking across sessions. Its single required dependency is Zod (schema validation). This white paper defines the architecture, runtime specification, scaling characteristics, and research roadmap of a system designed around one conviction: an entity should be shaped by what it has experienced, not only by what it was told on day one.
 
 </div>
 
@@ -151,7 +151,7 @@ Five architectural convictions guide every decision in the system:
 | Transport | HTTP REST + Server-Sent Events (SSE) |
 | Test suite | 866+ tests on Node.js built-in `node:test` |
 
-The zero-dependency constraint is enforced at the server level. The only optional dependencies (`@napi-rs/canvas`, `gif-encoder-2`) are lazy-loaded for pixel art generation and are not required for core operation.
+The near-zero-dependency constraint is enforced at the server level. The only required dependency is Zod (schema validation). The only optional dependencies (`@napi-rs/canvas`, `gif-encoder-2`) are lazy-loaded for pixel art generation and are not required for core operation.
 
 ---
 
@@ -1435,7 +1435,7 @@ This is a Phase 5 research direction. Echo Future currently exists as an index c
 | Parallel 1A + 1D | Subconscious and intuition are independent; parallel saves wall-clock time | Serial pipeline (pre-v0.5.2) |
 | Bounded memory injection | Constant token cost per turn regardless of archive size | Unbounded RAG injection |
 | Atomic file writes | Prevents partial-write corruption on crash | Direct overwrite |
-| Zero framework dependencies | Total control over runtime behavior; no upgrade-breakage surface | Express/Fastify |
+| Near-zero dependencies (Zod only) | Total control over runtime behavior; no upgrade-breakage surface | Express/Fastify |
 | Worker fallback to native | Users never see degraded output from worker failures | Error propagation |
 | Trust cap ±0.08/turn | Prevents relationship whiplash from single exchanges | Uncapped deltas |
 | Dream no-write enforcement | Clear architecture boundary; prevents live-path side effects | Honor-system separation |

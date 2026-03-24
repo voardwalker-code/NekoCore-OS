@@ -77,7 +77,7 @@ After setup completes, you land on the desktop with the Chat app ready.
 ### 4. Requirements
 
 - **Node.js 18+** (tested with Node.js 24)
-- **No other runtime dependencies** — zero `npm install` required
+- **One runtime dependency** — only [Zod](https://zod.dev) for schema validation (`npm install` once)
 - **LLM access** — OpenRouter API key OR a local Ollama instance
 - **Browser** — any modern browser (Chrome, Firefox, Edge, Safari)
 

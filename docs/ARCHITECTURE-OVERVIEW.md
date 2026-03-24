@@ -7,7 +7,7 @@ Last updated: 2026-03-22
 
 ## What REM Is
 
-REM (Recursive Echo Memory) is a zero-dependency Node.js cognitive architecture that sits between a user interface and one or more LLM providers. It gives AI language model instances a persistent, evolving inner life — continuous memory, emotional baseline, belief formation, dreaming, and per-user relationship tracking that all survive across sessions.
+REM (Recursive Echo Memory) is a near-zero-dependency Node.js cognitive architecture that sits between a user interface and one or more LLM providers. It gives AI language model instances a persistent, evolving inner life — continuous memory, emotional baseline, belief formation, dreaming, and per-user relationship tracking that all survive across sessions.
 
 Core design conviction: an entity should be shaped by what it has experienced, not only by what it was told on day one.
 

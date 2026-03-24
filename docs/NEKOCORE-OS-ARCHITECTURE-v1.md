@@ -8,7 +8,7 @@
 
 ## Abstract
 
-NekoCore OS is a zero-dependency Node.js cognitive operating system that provides persistent AI entities with continuous memory, evolving identity, belief formation, dream processing, and per-user relationship tracking across sessions. The system sits between a desktop-style web interface and one or more LLM providers, treating each entity not as a stateless chatbot but as a long-lived agent whose operational identity is shaped by accumulated experience. This paper presents the complete architecture of NekoCore OS, covering its four-stage parallel cognitive pipeline, multi-layer memory system with bounded token injection, dual dream architecture, contract-governed extensibility model, and policy-controlled orchestration layer. All descriptions reference implemented, running code unless explicitly marked as planned.
+NekoCore OS is a near-zero-dependency Node.js cognitive operating system that provides persistent AI entities with continuous memory, evolving identity, belief formation, dream processing, and per-user relationship tracking across sessions. Its single required dependency is Zod (schema validation). The system sits between a desktop-style web interface and one or more LLM providers, treating each entity not as a stateless chatbot but as a long-lived agent whose operational identity is shaped by accumulated experience. This paper presents the complete architecture of NekoCore OS, covering its four-stage parallel cognitive pipeline, multi-layer memory system with bounded token injection, dual dream architecture, contract-governed extensibility model, and policy-controlled orchestration layer. All descriptions reference implemented, running code unless explicitly marked as planned.
 
 ---
 
@@ -84,7 +84,7 @@ NekoCore OS is organized into six architectural layers, from the user-facing she
 | Transport | HTTP REST + Server-Sent Events (SSE) |
 | Test framework | Node.js built-in `node:test` |
 
-The zero-dependency constraint is enforced at the server level. The only optional dependencies (`@napi-rs/canvas`, `gif-encoder-2`) are lazy-loaded for pixel art generation and are not required for core operation.
+The near-zero-dependency constraint is enforced at the server level. The only required dependency is Zod (schema validation). The only optional dependencies (`@napi-rs/canvas`, `gif-encoder-2`) are lazy-loaded for pixel art generation and are not required for core operation.
 
 ### 2.3 Subsystem Map
 
@@ -1112,7 +1112,7 @@ flowchart TD
 
 ## 20. Conclusion
 
-NekoCore OS implements a persistent-agent cognitive architecture where AI entities maintain continuous memory, evolving identity, emergent beliefs, and per-user relationships across sessions. The system decomposes cognitive work into parallel contributors governed by contracts and policy guards, achieving inspectable and failure-isolated pipeline execution. Bounded memory injection ensures constant per-turn token cost regardless of archive size. A dual dream architecture separates live creative intuition from offline memory consolidation. The complete system runs as a zero-dependency Node.js server with a desktop-style web interface, validated by 866+ tests across boundary enforcement, contract validation, policy behavior, and integration correctness.
+NekoCore OS implements a persistent-agent cognitive architecture where AI entities maintain continuous memory, evolving identity, emergent beliefs, and per-user relationships across sessions. The system decomposes cognitive work into parallel contributors governed by contracts and policy guards, achieving inspectable and failure-isolated pipeline execution. Bounded memory injection ensures constant per-turn token cost regardless of archive size. A dual dream architecture separates live creative intuition from offline memory consolidation. The complete system runs as a near-zero-dependency Node.js server (Zod only) with a desktop-style web interface, validated by 866+ tests across boundary enforcement, contract validation, policy behavior, and integration correctness.
 
 ---
 
@@ -1159,7 +1159,7 @@ NekoCore OS implements a persistent-agent cognitive architecture where AI entiti
 | Parallel 1A + 1D | Subconscious and intuition are independent; parallel saves wall-clock time | Serial pipeline (pre-v0.5.2) |
 | Bounded memory injection | Constant token cost per turn regardless of archive size | Unbounded RAG injection |
 | Atomic file writes | Prevents partial-write corruption on crash | Direct overwrite |
-| Zero framework dependencies | Total control over runtime behavior; no upgrade-breakage surface | Express/Fastify |
+| Near-zero dependencies (Zod only) | Total control over runtime behavior; no upgrade-breakage surface | Express/Fastify |
 | Worker fallback to native | Users never see degraded output from worker failures | Error propagation |
 | Trust cap ±0.08/turn | Prevents relationship whiplash from single exchanges | Uncapped deltas |
 | Dream no-write enforcement | Clear architecture boundary; prevents live-path side effects | Honor-system separation |

@@ -46,9 +46,9 @@ Emergency exception log:
 
 ## Stop/Resume Snapshot — 2026-03-24 (v0.9.0-alpha.5 release)
 
-- **Current phase:** `MA bugfix follow-up`
-- **Current slice:** `Documentation update`
-- **Last completed work:** `Factory reset (node reset-all.js) + full documentation update. Updated root README.md (MA section now covers browser IDE, terminal, dropdown menus, session management, memory ingest, theme switching; architecture tree shows 8-script modular client; added standalone repo link). Updated MA/README.md (new features table with 12 new entries for menus/editor/terminal/sessions/ingest/themes/rail-utils; architecture diagram shows 8 JS modules + CSS instead of single-file SPA; 9 new API endpoints; GitHub standalone repo link). Updated MA/USER-GUIDE.md (26 sections, new Menu Bar/Toolbar/IDE Editor/Terminal Panel/Workspace File Tree/Chat Sessions/Memory Ingest/Theme Switching sections; rewrote Settings Panel access paths; updated Tips). Updated CHANGELOG.md with 5 new [Unreleased] entries for dropdown menus, terminal panel, section scaffolding, rail utilities.`
+- **Current phase:** `Documentation accuracy pass`
+- **Current slice:** `Zero-deps claim correction`
+- **Last completed work:** `Fixed all "zero dependencies" claims across the codebase. Zod (^4.3.6) is a required dependency in both package.json files. Updated root README.md (badge, stats table, convictions, tech spec), MA/README.md, docs/USER-GUIDE.md, docs/NEKOCORE-OS-WHITE-PAPER-v2.md (abstract, constraint paragraph, design-decisions table), docs/NEKOCORE-OS-ARCHITECTURE-v1.md (abstract, constraint paragraph, conclusion, design-decisions table), docs/ARCHITECTURE-OVERVIEW.md, project/Neko-Core.html (hero stat 0→1).`
 - **In-progress item:** `none`
 - **Blocking issue:** `none`
 - **Next action on resume:** `Manual MA browser smoke test after fresh reset. Copy MA directory to standalone MA-Memory-Architect repo and verify it works independently.`
@@ -71,6 +71,15 @@ Emergency exception log:
 - **MA workspace projects:** `Moved to separate repo — MA-workspace is now fully cleared on reset`
 
 ---
+
+## Session Ledger — 2026-03-24 (Zero-deps claim correction)
+
+Status: `Complete`
+
+- **Request:** Fix all "zero dependencies" claims — Zod (^4.3.6) is a required dependency in both package.json files.
+- **Files changed:** `README.md`, `project/MA/README.md`, `docs/USER-GUIDE.md`, `docs/NEKOCORE-OS-WHITE-PAPER-v2.md`, `docs/NEKOCORE-OS-ARCHITECTURE-v1.md`, `docs/ARCHITECTURE-OVERVIEW.md`, `project/Neko-Core.html`, `WORKLOG.md`
+- **Implementation:** (1) Root README: badge "dependencies-0" → "dependencies-1%20(zod)", stats table "0 Runtime Dependencies" → "1 Runtime Dependency", convictions "Zero dependencies" → "Near-zero dependencies" with Zod mention, tech spec updated. (2) MA README: "zero npm dependencies" → "single dependency: Zod". (3) docs/USER-GUIDE: "zero npm install required" → "only Zod (npm install once)". (4) White paper: abstract, constraint paragraph, and design-decisions table all updated. (5) Architecture v1: abstract, constraint paragraph, conclusion, and design-decisions table all updated. (6) Architecture overview: "zero-dependency" → "near-zero-dependency". (7) Neko-Core.html: hero stat "0 Dependencies" → "1 Dependency". All "Zero framework dependencies" claims examined — updated to "Near-zero dependencies (Zod only)" since Zod is the sole required package.
+- **Validation:** All changes verified against both package.json files.
 
 ## Session Ledger — 2026-03-24 (Factory reset + documentation update)
 

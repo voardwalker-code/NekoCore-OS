@@ -18,7 +18,7 @@
   &nbsp;
   <img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"/>
   &nbsp;
-  <img src="https://img.shields.io/badge/dependencies-0-brightgreen?style=flat-square" alt="zero deps"/>
+  <img src="https://img.shields.io/badge/dependencies-1%20(zod)-brightgreen?style=flat-square" alt="1 dep (zod)"/>
   &nbsp;
   <img src="https://img.shields.io/badge/tests-2%2C505%20passing-brightgreen?style=flat-square" alt="2,505 tests passing"/>
 </p>
@@ -37,9 +37,9 @@
 
 <div align="center">
 
-| 2,505 | 0 | 5 | 20+ |
+| 2,505 | 1 | 5 | 20+ |
 |:-----:|:-:|:-:|:----:|
-| **Tests Passing** | **Runtime Dependencies** | **Pipeline Phases** | **Desktop Apps** |
+| **Tests Passing** | **Runtime Dependency** | **Pipeline Phases** | **Desktop Apps** |
 
 </div>
 
@@ -230,7 +230,7 @@ The brain loop ticks independently of conversation:
 
 > **Layered cognition** — subconscious, dream-intuition, and conscious phases run in formation; parallel where it counts, sequential where it must.
 
-> **Zero dependencies** — the entire runtime is pure Node.js (no Express, no frameworks). No vector database. No external SDKs. File-system JSON persistence.
+> **Near-zero dependencies** — the entire runtime is pure Node.js (no Express, no frameworks) with a single dependency: [Zod](https://zod.dev) for schema validation. No vector database. No external SDKs. File-system JSON persistence. Run `npm install` once and you're set.
 
 > **Open architecture** — every subsystem is observable via the SSE cognitive bus. Nothing the entity thinks is hidden from the developer.
 
@@ -240,7 +240,7 @@ The brain loop ticks independently of conversation:
 
 | Capability | Detail |
 |---|---|
-| **Runtime** | Pure Node.js 18+ — zero external runtime dependencies (no Express) |
+| **Runtime** | Pure Node.js 18+ — one dependency (Zod), no Express, no frameworks |
 | **Persistence** | File-system JSON — no database required |
 | **Memory types** | Episodic · Semantic · Long-Term (compressed chatlog chunks) |
 | **Pipeline phases** | 1A (subconscious) · 1D (dream) · 1C (conscious) · Final · Brain Loop |
