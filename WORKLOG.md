@@ -46,9 +46,9 @@ Emergency exception log:
 
 ## Stop/Resume Snapshot — 2026-03-24 (v0.9.0-alpha.5 release)
 
-- **Current phase:** `Documentation accuracy pass`
-- **Current slice:** `Zero-deps claim correction`
-- **Last completed work:** `Fixed all "zero dependencies" claims across the codebase. Zod (^4.3.6) is a required dependency in both package.json files. Updated root README.md (badge, stats table, convictions, tech spec), MA/README.md, docs/USER-GUIDE.md, docs/NEKOCORE-OS-WHITE-PAPER-v2.md (abstract, constraint paragraph, design-decisions table), docs/NEKOCORE-OS-ARCHITECTURE-v1.md (abstract, constraint paragraph, conclusion, design-decisions table), docs/ARCHITECTURE-OVERVIEW.md, project/Neko-Core.html (hero stat 0→1).`
+- **Current phase:** `Landing page overhaul`
+- **Current slice:** `Neko-Core.html professional update`
+- **Last completed work:** `Major Neko-Core.html update: added MA showcase section (purple-themed, 6 feature cards), About/Bio section (cyan-themed, projects + professional interests), Contact section (gold-themed, general email + Remote Work Inquiry with mailto: links), updated CTA with both repo links. Updated nav (Features/Architecture/Pipeline/MA/About/Contact + GitHub profile link), roadmap (Phases 1-5 all done, v0.9 current, Setup Wizard next), architecture title ("Near-zero dependencies"), footer (GitHub profile + both repos + White Paper + Contact). Added CSS for purple/cyan/gold themes, bio-grid, contact-grid, GitHub profile button.`
 - **In-progress item:** `none`
 - **Blocking issue:** `none`
 - **Next action on resume:** `Manual MA browser smoke test after fresh reset. Copy MA directory to standalone MA-Memory-Architect repo and verify it works independently.`
@@ -71,6 +71,15 @@ Emergency exception log:
 - **MA workspace projects:** `Moved to separate repo — MA-workspace is now fully cleared on reset`
 
 ---
+
+## Session Ledger — 2026-03-24 (Landing page professional overhaul)
+
+Status: `Complete`
+
+- **Request:** Update Neko-Core.html to be more professional, add MA section, About/Bio, Contact with email (VoardWalker-Code@proton.me), Remote Work Inquiry section, links to both GitHub repos and GitHub user profile.
+- **Files changed:** `project/Neko-Core.html`, `WORKLOG.md`, `CHANGELOG.md`
+- **Implementation:** (1) Added 3 new themed sections: MA (purple, 6 feature cards — Browser IDE, Terminal, Chat Sessions, Memory Ingest, Workspace Tree, Modular Architecture), About/Bio (cyan, Projects list + Professional Interests list + GitHub Profile button), Contact (gold, General Contact email + Remote Work Inquiry with mailto: subject line). (2) Updated nav: replaced Roadmap/White Paper links with MA/About/Contact; GitHub button now links to user profile. (3) Fixed architecture title "Zero framework dependencies" → "Near-zero dependencies." (4) Updated roadmap: Phase 4 consolidated, Phase 5 marked done, MA as Tooling milestone, v0.9 as current, Setup Wizard as next. (5) Updated CTA: second button now links to MA repo. (6) Updated footer: GitHub profile, both repo links, White Paper, Contact email, "2026 VoardWalker" copyright. (7) Added CSS for purple/cyan/gold section themes, bio-grid, contact-grid, btn-github-profile, responsive rules.
+- **Validation:** File structure verified. All new sections use scroll-reveal animations consistent with existing page.
 
 ## Session Ledger — 2026-03-24 (Zero-deps claim correction)
 

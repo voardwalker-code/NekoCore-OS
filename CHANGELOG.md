@@ -8,6 +8,9 @@ Built with MA (Memory Architect v1).
 ### Fixed
 - **Dependency accuracy** — All "zero dependencies" claims across README, docs, white paper, architecture docs, and landing page corrected to reflect that Zod (`^4.3.6`) is a required dependency. Hero stat on Neko-Core.html updated from "0 Dependencies" to "1 Dependency".
 
+### Changed
+- **Neko-Core.html landing page overhaul** — Added MA showcase section (purple-themed, 6 feature cards for Browser IDE, Terminal, Chat Sessions, Memory Ingest, Workspace Tree, Modular Architecture), About/Bio section (projects list + professional interests), Contact section (general email + Remote Work Inquiry with mailto: links). Updated nav with MA/About/Contact links and GitHub profile button. Refreshed roadmap (Phases 1–5 all done, v0.9 current). Updated CTA with both repo links. Updated footer with GitHub profile, both repo links, contact email, and copyright.
+
 ### Added
 - **MA chat session picker** — Chat panel now shows the last 4 sessions as clickable chips above the chat area. A "History ▾" dropdown lists all older sessions grouped by date. Selecting a session loads its messages; typing without selecting starts a new session automatically. Sessions are stored as individual JSON files under `MA-Config/chat-sessions/`.
 - **MA multi-session server API** — New endpoints: `GET /api/chat/sessions` (session list), `GET /api/chat/session/:id` (load session), `POST /api/chat/session` (create/update session). Each session stores its own messages independently.

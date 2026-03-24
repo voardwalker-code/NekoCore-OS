@@ -199,7 +199,59 @@ footer::before{content:'';display:block;height:1px;margin:-41px auto 40px;max-wi
 .reveal.visible{opacity:1;transform:translateY(0)}
 .reveal-d1{transition-delay:.1s}.reveal-d2{transition-delay:.2s}
 
-@media(max-width:640px){.hero-stats{flex-direction:column;gap:20px}.pipeline-flow{flex-direction:column;align-items:stretch}.pipe-arrow{width:2px;height:28px;margin:0 auto;background:linear-gradient(180deg,transparent,var(--glow-fire),transparent)}.pipe-arrow::after{display:none}.arch-layer{flex-wrap:wrap}.arch-name{min-width:auto}.footer-inner{justify-content:center;text-align:center}.nature-burst{display:none}}
+/* Purple — MA section */
+.glow-sep.gs-purple{background:linear-gradient(90deg,transparent,var(--purple),transparent)}.glow-sep.gs-purple::before{background:rgba(167,139,250,.12)}
+.sg-purple{background:radial-gradient(circle,rgba(167,139,250,.06),transparent 70%)}
+.sl-purple{color:var(--purple)}
+.st-purple{background:linear-gradient(180deg,#e8d5ff 0%,#a78bfa 50%,#7c3aed 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.fc-purple::before{background:linear-gradient(90deg,transparent,var(--purple),transparent)}
+.fc-purple .fc-icon{background:rgba(167,139,250,.06);border-color:rgba(167,139,250,.15)}
+
+/* Cyan — About section */
+.glow-sep.gs-cyan{background:linear-gradient(90deg,transparent,var(--cyan),transparent)}.glow-sep.gs-cyan::before{background:rgba(34,211,238,.12)}
+.sg-cyan{background:radial-gradient(circle,rgba(34,211,238,.06),transparent 70%)}
+.sl-cyan{color:var(--cyan)}
+.st-cyan{background:linear-gradient(180deg,#e0fcff 0%,#22d3ee 50%,#0891b2 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+
+/* Gold — Contact section */
+.glow-sep.gs-gold{background:linear-gradient(90deg,transparent,var(--gold),transparent)}.glow-sep.gs-gold::before{background:rgba(251,191,36,.12)}
+.sg-gold{background:radial-gradient(circle,rgba(251,191,36,.06),transparent 70%)}
+.sl-gold{color:var(--gold)}
+.st-gold{background:linear-gradient(180deg,#fff8e1 0%,#fbbf24 50%,#d97706 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+
+/* MA actions row */
+.ma-actions{margin-top:36px;display:flex;gap:16px;flex-wrap:wrap}
+
+/* Bio grid */
+.bio-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;margin-top:48px}
+.bio-card{background:var(--bg-card);border:1px solid rgba(34,211,238,.08);border-radius:var(--radius-md);padding:32px 28px;transition:border-color .3s,box-shadow .3s}
+.bio-card:hover{border-color:rgba(34,211,238,.2);box-shadow:0 0 30px rgba(34,211,238,.04)}
+.bio-card-title{font-family:var(--font-display);font-size:15px;font-weight:700;color:var(--cyan);margin-bottom:14px}
+.bio-card ul{list-style:none;display:flex;flex-direction:column;gap:10px}
+.bio-card li{font-size:14px;color:var(--text-secondary);line-height:1.5;padding-left:20px;position:relative}
+.bio-card li::before{content:'\203A';position:absolute;left:0;color:var(--cyan);font-weight:700;font-size:16px}
+.bio-card li strong{color:var(--text-primary);font-weight:600}
+
+/* Contact grid */
+.contact-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px;margin-top:48px}
+.contact-card{background:var(--bg-card);border:1px solid rgba(251,191,36,.08);border-radius:var(--radius-md);padding:36px 30px;text-align:center;transition:border-color .3s,box-shadow .3s}
+.contact-card:hover{border-color:rgba(251,191,36,.2);box-shadow:0 0 30px rgba(251,191,36,.04)}
+.contact-card-icon{font-size:32px;margin-bottom:16px}
+.contact-card-title{font-family:var(--font-display);font-size:17px;font-weight:700;color:var(--gold);margin-bottom:10px}
+.contact-card-desc{font-size:14px;color:var(--text-secondary);line-height:1.65;margin-bottom:16px}
+.contact-link{display:inline-flex;align-items:center;gap:8px;padding:10px 24px;border-radius:8px;font-size:14px;font-weight:600;transition:all .25s}
+.contact-link-email{background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.2);color:var(--gold)}
+.contact-link-email:hover{background:rgba(251,191,36,.15);border-color:rgba(251,191,36,.4);color:#fcd34d;box-shadow:0 0 20px rgba(251,191,36,.1)}
+.contact-link-work{background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.2);color:var(--accent)}
+.contact-link-work:hover{background:rgba(52,211,153,.15);border-color:rgba(52,211,153,.4);color:#5eead4;box-shadow:0 0 20px rgba(52,211,153,.1)}
+.contact-subject{font-family:var(--font-mono);font-size:12px;color:var(--text-tertiary);margin-top:10px}
+
+/* GitHub profile button */
+.btn-github-profile{display:inline-flex;align-items:center;gap:10px;padding:12px 28px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid var(--border-chrome);color:var(--chrome-light);font-weight:600;font-size:14px;font-family:var(--font-display);transition:all .3s;text-decoration:none}
+.btn-github-profile:hover{border-color:rgba(180,190,210,.3);color:#fff;box-shadow:0 0 20px rgba(180,190,210,.06);transform:translateY(-2px)}
+.btn-github-profile svg{width:16px;height:16px}
+
+@media(max-width:640px){.hero-stats{flex-direction:column;gap:20px}.pipeline-flow{flex-direction:column;align-items:stretch}.pipe-arrow{width:2px;height:28px;margin:0 auto;background:linear-gradient(180deg,transparent,var(--glow-fire),transparent)}.pipe-arrow::after{display:none}.arch-layer{flex-wrap:wrap}.arch-name{min-width:auto}.footer-inner{justify-content:center;text-align:center}.nature-burst{display:none}.bio-grid{grid-template-columns:1fr}.contact-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -213,9 +265,10 @@ footer::before{content:'';display:block;height:1px;margin:-41px auto 40px;max-wi
     <a href="#features">Features</a>
     <a href="#architecture">Architecture</a>
     <a href="#pipeline">Pipeline</a>
-    <a href="#roadmap">Roadmap</a>
-    <a href="https://github.com/voardwalker-code/NekoCore-OS/blob/main/docs/NEKOCORE-OS-WHITE-PAPER-v2.md" target="_blank">White Paper</a>
-    <a href="https://github.com/voardwalker-code/NekoCore-OS" target="_blank" class="nav-github"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path></svg>GitHub</a>
+    <a href="#ma">MA</a>
+    <a href="#about">About</a>
+    <a href="#contact">Contact</a>
+    <a href="https://github.com/voardwalker-code" target="_blank" class="nav-github"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path></svg>GitHub</a>
   </div>
   <button class="nav-hamburger" onclick="document.getElementById(&#39;navLinks&#39;).classList.toggle(&#39;open&#39;)"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg></button>
 </nav>
@@ -260,7 +313,7 @@ footer::before{content:'';display:block;height:1px;margin:-41px auto 40px;max-wi
 <div class="glow-sep gs-red"></div>
 
 <section id="architecture"><div class="section-glow sg-red"></div><div class="section-inner">
-  <div class="reveal"><div class="section-label sl-red">System Design</div><div class="section-title st-red">Six-layer stack.<br>Zero framework dependencies.</div><p class="section-desc">Pure Node.js server + vanilla HTML/CSS/JS client. Each layer communicates only with its neighbors. The cognitive pipeline never touches the DOM.</p></div>
+  <div class="reveal"><div class="section-label sl-red">System Design</div><div class="section-title st-red">Six-layer stack.<br>Near-zero dependencies.</div><p class="section-desc">Pure Node.js server + vanilla HTML/CSS/JS client. One dependency (Zod). Each layer communicates only with its neighbors. The cognitive pipeline never touches the DOM.</p></div>
   <div class="arch-stack reveal reveal-d1">
     <div class="arch-layer"><div class="arch-bar" style="color:#b0b8c8;background:#b0b8c8"></div><div class="arch-depth">01</div><div class="arch-name">Desktop Shell</div><div class="arch-detail">Window manager, app launcher, taskbar, theme engine, settings, browser</div></div>
     <div class="arch-layer"><div class="arch-bar" style="color:#ff6666;background:#ff6666"></div><div class="arch-depth">02</div><div class="arch-name">Client Application</div><div class="arch-detail">Chat UI, entity management, neural visualizer, timeline playback, diagnostics</div></div>
@@ -323,10 +376,82 @@ footer::before{content:'';display:block;height:1px;margin:-41px auto 40px;max-wi
   <div class="reveal"><div class="section-label sl-green">The Path Forward</div><div class="section-title st-chrome">Measured constraints.<br>Concrete next moves.</div></div>
   <div class="roadmap reveal reveal-d1">
     <div class="roadmap-item done"><div class="roadmap-dot"></div><div class="roadmap-content"><div class="roadmap-phase">Phase 1–3</div><div class="roadmap-name">Foundation &amp; Modularization</div><div class="roadmap-desc">Bug fixes, refactor, app folder modularization. 1369 tests, 0 failures.</div></div></div>
-    <div class="roadmap-item done"><div class="roadmap-dot"></div><div class="roadmap-content"><div class="roadmap-phase">Phase 4.5–4.6</div><div class="roadmap-name">Memory Expansion &amp; Sharded Archives</div><div class="roadmap-desc">Intelligent memory expansion, sharded topic archive, voice profiles.</div></div></div>
-    <div class="roadmap-item current"><div class="roadmap-dot"></div><div class="roadmap-content"><div class="roadmap-phase">Phase 4.7 — Current</div><div class="roadmap-name">Agent Echo: Multi-Index Retrieval</div><div class="roadmap-desc">Echo Now (hot window), Echo Past (index-narrowed archive), async deep retrieval during typing delay.</div></div></div>
-    <div class="roadmap-item"><div class="roadmap-dot"></div><div class="roadmap-content"><div class="roadmap-phase">Phase 5</div><div class="roadmap-name">Predictive Memory Topology</div><div class="roadmap-desc">Anticipating what an entity needs before it asks. Blocked on Phase 4.7.</div></div></div>
+    <div class="roadmap-item done"><div class="roadmap-dot"></div><div class="roadmap-content"><div class="roadmap-phase">Phase 4</div><div class="roadmap-name">Memory Expansion &amp; Entity Orchestration</div><div class="roadmap-desc">Intelligent memory expansion, sharded archives, multi-index retrieval, entity orchestration, token optimization, and cognitive state integration.</div></div></div>
+    <div class="roadmap-item done"><div class="roadmap-dot"></div><div class="roadmap-content"><div class="roadmap-phase">Phase 5</div><div class="roadmap-name">Predictive Memory Topology</div><div class="roadmap-desc">All 13 slices complete. Anticipates what an entity needs before it asks — topology-aware retrieval and pre-fetch.</div></div></div>
+    <div class="roadmap-item done"><div class="roadmap-dot"></div><div class="roadmap-content"><div class="roadmap-phase">Tooling</div><div class="roadmap-name">MA — Memory Architect</div><div class="roadmap-desc">Standalone AI development agent with browser IDE, terminal, chat sessions, and codebase memory ingest.</div></div></div>
+    <div class="roadmap-item current"><div class="roadmap-dot"></div><div class="roadmap-content"><div class="roadmap-phase">v0.9 — Current</div><div class="roadmap-name">Public Release &amp; Documentation</div><div class="roadmap-desc">Documentation accuracy pass, standalone MA repo, landing page, open-source preparation.</div></div></div>
+    <div class="roadmap-item"><div class="roadmap-dot"></div><div class="roadmap-content"><div class="roadmap-phase">Next</div><div class="roadmap-name">Setup Wizard &amp; Onboarding</div><div class="roadmap-desc">Guided first-run experience for entity creation, provider configuration, and system initialization.</div></div></div>
     <div class="roadmap-item"><div class="roadmap-dot"></div><div class="roadmap-content"><div class="roadmap-phase">Research</div><div class="roadmap-name">Distributed Social-Cognition</div><div class="roadmap-desc">Multi-entity experiments across separate machines with relay hub, perspective shards, and structural state capture.</div></div></div>
+  </div>
+</div></section>
+
+<div class="glow-sep gs-purple"></div>
+
+<section id="ma"><div class="section-glow sg-purple"></div><div class="section-inner">
+  <div class="reveal"><div class="section-label sl-purple">Developer Tooling</div><div class="section-title st-purple">Memory Architect.</div><p class="section-desc">A standalone AI development agent with a browser-based IDE, integrated terminal, multi-session chat, and codebase memory ingest. Built to work alongside NekoCore OS or independently.</p></div>
+  <div class="feature-grid reveal reveal-d1">
+    <div class="feature-card fc-purple"><div class="fc-icon">🖥️</div><div class="fc-title">Browser IDE</div><div class="fc-desc">Tabbed code editor with syntax highlighting, line numbers, and Markdown/HTML live preview. Open, edit, and save workspace files without leaving the browser.</div></div>
+    <div class="feature-card fc-purple"><div class="fc-icon">💻</div><div class="fc-title">Terminal Panel</div><div class="fc-desc">In-browser terminal with sandboxed command execution, color-coded output, and scrollable history. Run build scripts, git commands, and project tools directly.</div></div>
+    <div class="feature-card fc-purple"><div class="fc-icon">💬</div><div class="fc-title">Chat Sessions</div><div class="fc-desc">Multiple conversation threads with per-session message history, date-grouped archives, and automatic persistence. Pick up any conversation where you left off.</div></div>
+    <div class="feature-card fc-purple"><div class="fc-icon">📥</div><div class="fc-title">Memory Ingest</div><div class="fc-desc">Feed entire codebases into searchable memory archives. SSE-streamed progress shows real-time file processing. Chat retrieval boosts results from ingested archives.</div></div>
+    <div class="feature-card fc-purple"><div class="fc-icon">📁</div><div class="fc-title">Workspace Tree</div><div class="fc-desc">Live file tree loaded from the real workspace directory. Collapsible folders, file-type icons, and click-to-open integration with the built-in editor.</div></div>
+    <div class="feature-card fc-purple"><div class="fc-icon">🧩</div><div class="fc-title">Modular Architecture</div><div class="fc-desc">8 focused JavaScript modules loaded in dependency order. Clean separation between chat, navigation, config, editor, workspace, input, and bootstrap concerns.</div></div>
+  </div>
+  <div class="ma-actions reveal reveal-d2">
+    <a href="https://github.com/voardwalker-code/MA-Memory-Architect" target="_blank" class="btn-secondary"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style="margin-right:2px"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path></svg>View MA on GitHub</a>
+    <a href="https://github.com/voardwalker-code/NekoCore-OS/blob/main/docs/NEKOCORE-OS-WHITE-PAPER-v2.md" target="_blank" class="btn-secondary">Read the White Paper</a>
+  </div>
+</div></section>
+
+<div class="glow-sep gs-cyan"></div>
+
+<section id="about"><div class="section-glow sg-cyan"></div><div class="section-inner">
+  <div class="reveal"><div class="section-label sl-cyan">About</div><div class="section-title st-cyan">VoardWalker</div><p class="section-desc">Independent developer building cognitive AI systems, developer tooling, and open-source infrastructure.</p></div>
+  <div class="bio-grid reveal reveal-d1">
+    <div class="bio-card">
+      <div class="bio-card-title">Projects</div>
+      <ul>
+        <li><strong>NekoCore OS</strong> — Cognitive WebOS for persistent AI identity with multi-layer memory, belief formation, dream processing, and a 4-stage parallel cognitive pipeline</li>
+        <li><strong>MA (Memory Architect)</strong> — Standalone AI development agent with browser IDE, integrated terminal, chat sessions, and codebase memory ingest</li>
+      </ul>
+    </div>
+    <div class="bio-card">
+      <div class="bio-card-title">Professional Interests</div>
+      <ul>
+        <li>Cognitive AI architecture &amp; persistent agent systems</li>
+        <li>Memory system design &amp; retrieval optimization</li>
+        <li>Node.js server engineering &amp; near-zero-dependency design</li>
+        <li>Contract-driven, boundary-enforced software architecture</li>
+        <li>Full-stack development with vanilla technologies</li>
+        <li>Developer tooling &amp; IDE engineering</li>
+        <li>Test-driven development &amp; continuous validation</li>
+        <li>Open-source development</li>
+      </ul>
+    </div>
+  </div>
+  <div class="ma-actions reveal reveal-d2" style="justify-content:center">
+    <a href="https://github.com/voardwalker-code" target="_blank" class="btn-github-profile"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path></svg>GitHub Profile</a>
+  </div>
+</div></section>
+
+<div class="glow-sep gs-gold"></div>
+
+<section id="contact"><div class="section-glow sg-gold"></div><div class="section-inner">
+  <div class="reveal"><div class="section-label sl-gold">Get in Touch</div><div class="section-title st-gold">Let's connect.</div><p class="section-desc">Whether you have questions about the architecture, want to collaborate, or are looking for someone to build cognitive systems for your team.</p></div>
+  <div class="contact-grid reveal reveal-d1">
+    <div class="contact-card">
+      <div class="contact-card-icon">✉️</div>
+      <div class="contact-card-title">General Contact</div>
+      <div class="contact-card-desc">Questions, feedback, or collaboration ideas — reach out anytime.</div>
+      <a href="mailto:VoardWalker-Code@proton.me" class="contact-link contact-link-email">VoardWalker-Code@proton.me</a>
+    </div>
+    <div class="contact-card">
+      <div class="contact-card-icon">💼</div>
+      <div class="contact-card-title">Remote Work</div>
+      <div class="contact-card-desc">If you like what you see and are looking for a developer to join your team remotely, I'd love to hear from you.</div>
+      <a href="mailto:VoardWalker-Code@proton.me?subject=Remote%20Work%20Inquiry" class="contact-link contact-link-work">Send Work Inquiry</a>
+      <div class="contact-subject">Subject: "Remote Work Inquiry"</div>
+    </div>
   </div>
 </div></section>
 
@@ -341,14 +466,20 @@ footer::before{content:'';display:block;height:1px;margin:-41px auto 40px;max-wi
       <div class="nature-burst"><svg viewBox="-60 -80 340 260" xmlns="http://www.w3.org/2000/svg"><path class="vine" d="M20,50 Q-10,30 -20,5 Q-30,-20 -15,-45" stroke="#4a8c20" stroke-width="2.5" fill="none" stroke-linecap="round"></path><path class="vine" d="M200,50 Q230,25 240,0 Q250,-25 235,-50" stroke="#4a8c20" stroke-width="2.5" fill="none" stroke-linecap="round" style="transition-delay:.15s"></path><path class="vine" d="M110,30 Q105,5 115,-20 Q125,-45 110,-65" stroke="#3d7a18" stroke-width="2" fill="none" stroke-linecap="round" style="transition-delay:.08s"></path><ellipse class="leaf" cx="-10" cy="15" rx="10" ry="5" fill="#5aaa25" transform="rotate(-40 -10 15)" opacity="0"></ellipse><ellipse class="leaf" cx="-22" cy="-15" rx="8" ry="4" fill="#6bbb30" transform="rotate(-55 -22 -15)" opacity="0"></ellipse><ellipse class="leaf" cx="-5" cy="-40" rx="9" ry="4.5" fill="#4d9920" transform="rotate(-30 -5 -40)" opacity="0"></ellipse><ellipse class="leaf" cx="230" cy="10" rx="10" ry="5" fill="#5aaa25" transform="rotate(35 230 10)" opacity="0"></ellipse><ellipse class="leaf" cx="242" cy="-20" rx="8" ry="4" fill="#6bbb30" transform="rotate(50 242 -20)" opacity="0"></ellipse><ellipse class="leaf" cx="100" cy="-10" rx="9" ry="4.5" fill="#5aaa25" transform="rotate(-15 100 -10)" opacity="0"></ellipse><ellipse class="leaf" cx="120" cy="-45" rx="8" ry="4" fill="#4d9920" transform="rotate(20 120 -45)" opacity="0"></ellipse><ellipse class="leaf" cx="105" cy="-60" rx="7" ry="3.5" fill="#6bbb30" transform="rotate(-10 105 -60)" opacity="0"></ellipse><circle class="sparkle" cx="-30" cy="-30" r="2" fill="#aafe55" opacity="0"></circle><circle class="sparkle" cx="250" cy="-10" r="2.5" fill="#88ee33" opacity="0"></circle><circle class="sparkle" cx="90" cy="-55" r="2" fill="#ccff88" opacity="0"></circle><circle class="sparkle" cx="140" cy="-30" r="1.5" fill="#aafe55" opacity="0"></circle></svg></div>
       <a href="https://github.com/voardwalker-code/NekoCore-OS" target="_blank" class="btn-nature"><svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path></svg>View on GitHub</a>
     </div>
-    <a href="https://github.com/voardwalker-code/NekoCore-OS/blob/main/docs/NEKOCORE-OS-WHITE-PAPER-v2.md" target="_blank" class="btn-secondary">Read the White Paper</a>
+    <a href="https://github.com/voardwalker-code/MA-Memory-Architect" target="_blank" class="btn-secondary">View MA on GitHub</a>
   </div>
 </div></section>
 
 <footer><div class="footer-inner">
   <div class="footer-brand"><svg viewBox="0 0 32 32" fill="none"><path d="M16 4 L10 10 L8 8 L4 14 L8 18 L6 22 L10 28 L14 24 L16 28 L18 24 L22 28 L26 22 L24 18 L28 14 L24 8 L22 10 L16 4Z" fill="none" stroke="#8a92a0" stroke-width="1.5" stroke-linejoin="round" opacity=".4"></path></svg>NekoCore OS</div>
-  <div class="footer-links"><a href="https://github.com/voardwalker-code/NekoCore-OS" target="_blank">GitHub</a><a href="https://github.com/voardwalker-code/NekoCore-OS/blob/main/docs/NEKOCORE-OS-WHITE-PAPER-v2.md" target="_blank">White Paper</a><a href="https://github.com/voardwalker-code/NekoCore-OS/discussions" target="_blank">Discussions</a></div>
-  <div class="footer-copy">Built on the REM System (Recursive Echo Memory) — March 2026</div>
+  <div class="footer-links">
+    <a href="https://github.com/voardwalker-code" target="_blank">GitHub</a>
+    <a href="https://github.com/voardwalker-code/NekoCore-OS" target="_blank">NekoCore OS</a>
+    <a href="https://github.com/voardwalker-code/MA-Memory-Architect" target="_blank">MA Repo</a>
+    <a href="https://github.com/voardwalker-code/NekoCore-OS/blob/main/docs/NEKOCORE-OS-WHITE-PAPER-v2.md" target="_blank">White Paper</a>
+    <a href="mailto:VoardWalker-Code@proton.me">Contact</a>
+  </div>
+  <div class="footer-copy">Built on the REM System (Recursive Echo Memory) — 2026 VoardWalker</div>
 </div></footer>
 
 <script>
