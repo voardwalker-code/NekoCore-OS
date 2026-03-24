@@ -122,6 +122,14 @@ async function getAuthBootstrap() {
 
 function beginAuthFlow(preferredTab = 'login') {
   switchLoginTab(preferredTab === 'register' ? 'register' : 'login');
+
+function clearFirstRunThemeLocalState(bootstrap) {
+  if (!bootstrap || bootstrap.hasAccounts !== false) return;
+  const keys = ['rem-ui-user-themes', 'rem-ui-theme-custom', 'rem-ui-theme'];
+  keys.forEach((key) => {
+    try { localStorage.removeItem(key); } catch (_) {}
+  });
+}
   clearLoginErrors();
   showLoginOverlay();
   const existing = getCurrentAccount();
@@ -217,6 +225,15 @@ async function handleLogout() {
 // ── Init: check for existing session on page load ────────────────────────────
 async function initLogin(options = {}) {
   const { showOverlayOnFail = true } = options;
+
+  try {
+    const bootstrap = await getAuthBootstrap();
+    clearFirstRunThemeLocalState(bootstrap);
+    if (bootstrap.ok && bootstrap.authenticated && bootstrap.account) {
+      _onAuthSuccess(bootstrap.account);
+      return { authenticated: true, account: bootstrap.account };
+    }
+  } catch (_) {}
 
   try {
     const resp = await fetch('/api/auth/me');

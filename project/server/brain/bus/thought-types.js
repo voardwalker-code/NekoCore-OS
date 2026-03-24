@@ -111,7 +111,10 @@ const ThoughtTypes = {
   INTERACTION_NEGATIVE: 'interaction_negative',
   INTERACTION_BONDING: 'interaction_bonding',
   INTERACTION_CONFLICT: 'interaction_conflict',
-  INTERACTION_INSIGHT: 'interaction_insight'
+  INTERACTION_INSIGHT: 'interaction_insight',
+
+  // Predictive Memory (Phase 5)
+  ECHO_FUTURE_HIT: 'echo_future_hit'
 };
 
 /**

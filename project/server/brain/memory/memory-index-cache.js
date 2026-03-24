@@ -98,7 +98,8 @@ class MemoryIndexCache {
       emotionalTag: meta.emotionalTag || null,
       type: meta.type || 'episodic',
       userId: meta.userId || null,
-      userName: meta.userName || null
+      userName: meta.userName || null,
+      shape: meta.shape || 'unclassified'
     };
 
     // 2. topicIndex

@@ -9,6 +9,8 @@ const path = require('path');
 
 const { callLLM }           = require('./MA-llm');
 const { createMemoryStore } = require('./MA-memory');
+const { resolveCapabilities, hasCapability } = require('./MA-capabilities');
+const { buildToolSchemas }  = require('./MA-tool-adapter');
 const tasks                 = require('./MA-tasks');
 const wsTools               = require('./MA-workspace-tools');
 const health                = require('./MA-health');
@@ -21,15 +23,25 @@ const { DEFAULT_AGENTS, DEFAULT_ENTITY } = require('../MA-scripts/agent-definiti
 // ── Paths ───────────────────────────────────────────────────────────────────
 const MA_ROOT       = path.join(__dirname, '..');
 const CONFIG_PATH   = path.join(MA_ROOT, 'MA-Config', 'ma-config.json');
+const GLOBAL_CONFIG_PATH = path.join(MA_ROOT, '..', 'Config', 'ma-config.json');
 const ENTITY_DIR    = path.join(MA_ROOT, 'MA-entity', 'entity_ma');
 let   WORKSPACE_DIR = path.join(MA_ROOT, 'MA-workspace');
 const KNOWLEDGE_DIR = path.join(MA_ROOT, 'MA-knowledge');
 
 // ── State ───────────────────────────────────────────────────────────────────
-let config = null;    // { type, endpoint, apiKey, model, vision? }
+let config = null;    // { type, endpoint, apiKey, model, vision?, capabilities? }
 let memory = null;    // memory store instance
 let entity = null;    // entity.json contents
 let skills = [];      // loaded skill contents [{ name, content }]
+let maMode = 'work';  // 'work' (full tool access) or 'chat' (read-only, no tasks)
+
+// Tools allowed in chat mode (read-only + search)
+const CHAT_MODE_ALLOWED = new Set(['ws_list', 'ws_read', 'web_search', 'web_fetch', 'memory_search']);
+// Tools blocked in chat mode (write, delete, execute)
+const CHAT_MODE_BLOCKED = new Set(['ws_write', 'ws_append', 'ws_delete', 'ws_mkdir', 'ws_move', 'cmd_run']);
+
+function getMode() { return maMode; }
+function setMode(m) { maMode = (m === 'chat') ? 'chat' : 'work'; }
 
 // ── Bootstrap ───────────────────────────────────────────────────────────────
 
@@ -57,7 +69,13 @@ function loadConfig() {
   }
 
   try {
-    if (fs.existsSync(CONFIG_PATH)) {
+    const global = _readGlobalConfig();
+    const globalRuntime = _extractUnifiedRuntimeConfig(global);
+    if (globalRuntime) {
+      config = globalRuntime;
+      console.log(`  Config loaded from NekoCore profile: ${config.type}/${config.model}`);
+    } else if (fs.existsSync(CONFIG_PATH)) {
+      // Backward-compat fallback for older MA-only installs.
       const raw = JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8'));
       if (raw.apiKey && raw.apiKey !== 'YOUR_API_KEY_HERE') {
         config = raw;
@@ -68,18 +86,37 @@ function loadConfig() {
       } else {
         console.log('  Config file exists but needs API key — configure via GUI or CLI');
       }
-      // Apply workspace path override from config
-      if (config && config.workspacePath) {
-        const resolved = path.resolve(config.workspacePath);
-        if (fs.existsSync(resolved)) {
-          WORKSPACE_DIR = resolved;
-          console.log(`  Workspace path: ${WORKSPACE_DIR}`);
-        } else {
-          console.warn(`  Workspace path not found: ${resolved} — using default`);
-        }
+    }
+
+    // Apply workspace path override from unified/global config when available.
+    const workspacePath = String(global?.workspacePath || config?.workspacePath || '').trim();
+    if (workspacePath) {
+      const resolved = path.resolve(workspacePath);
+      if (fs.existsSync(resolved)) {
+        WORKSPACE_DIR = resolved;
+        console.log(`  Workspace path: ${WORKSPACE_DIR}`);
+      } else {
+        console.warn(`  Workspace path not found: ${resolved} — using default`);
       }
     }
   } catch (e) { console.warn('  Config load failed:', e.message); }
+
+  // Resolve provider capabilities + context window
+  if (config) {
+    config.capabilities = resolveCapabilities(config);
+    config.contextWindow = config.contextWindow || _inferContextWindow(config);
+    console.log(`  Capabilities resolved: ${Object.entries(config.capabilities).filter(([,v]) => v && v !== false).map(([k]) => k).join(', ') || 'none'}`);
+  }
+}
+
+/** Infer context window size from provider and model. */
+function _inferContextWindow(cfg) {
+  if (cfg.type === 'anthropic') {
+    if (/haiku/i.test(cfg.model)) return 200000;
+    return 1000000;  // Opus 4.6 / Sonnet 4.6: 1M context
+  }
+  if (cfg.type === 'ollama') return 32768;  // conservative default; actual varies by model
+  return 128000;  // OpenRouter default
 }
 
 function loadEntity() {
@@ -166,13 +203,139 @@ function getMemory()    { return memory; }
 function getEntity()    { return entity; }
 function isConfigured() { return !!config; }
 
+function _readGlobalConfig() {
+  try {
+    if (!fs.existsSync(GLOBAL_CONFIG_PATH)) return null;
+    return JSON.parse(fs.readFileSync(GLOBAL_CONFIG_PATH, 'utf8'));
+  } catch (_) {
+    return null;
+  }
+}
+
+function _normalizeRuntime(raw) {
+  if (!raw || typeof raw !== 'object') return null;
+  const type = String(raw.type || '').toLowerCase().trim();
+  if (!type || !raw.model) return null;
+
+  if (type === 'ollama') {
+    return {
+      type: 'ollama',
+      endpoint: String(raw.endpoint || 'http://localhost:11434').trim(),
+      model: String(raw.model || '').trim(),
+      workspacePath: String(raw.workspacePath || '').trim() || undefined
+    };
+  }
+
+  const key = String(raw.apiKey || raw.key || '').trim();
+  if (!key) return null;
+
+  if (type === 'anthropic') {
+    return {
+      type: 'anthropic',
+      endpoint: String(raw.endpoint || 'https://api.anthropic.com/v1/messages').trim(),
+      apiKey: key,
+      model: String(raw.model || '').trim(),
+      workspacePath: String(raw.workspacePath || '').trim() || undefined,
+      ...(raw.capabilities && typeof raw.capabilities === 'object' ? { capabilities: raw.capabilities } : {})
+    };
+  }
+
+  return {
+    type: 'openrouter',
+    endpoint: String(raw.endpoint || 'https://openrouter.ai/api/v1/chat/completions').trim(),
+    apiKey: key,
+    model: String(raw.model || '').trim(),
+    workspacePath: String(raw.workspacePath || '').trim() || undefined,
+    ...(raw.capabilities && typeof raw.capabilities === 'object' ? { capabilities: raw.capabilities } : {})
+  };
+}
+
+function _extractUnifiedRuntimeConfig(globalCfg) {
+  if (!globalCfg || typeof globalCfg !== 'object') return null;
+  const profileName = String(globalCfg.lastActive || '').trim() || 'default-multi-llm';
+  const profile = globalCfg.profiles && globalCfg.profiles[profileName];
+  if (!profile || typeof profile !== 'object') return null;
+
+  // MA runtime is profile.ma. profile.nekocore is a legacy fallback only.
+  const candidate = _normalizeRuntime(profile.ma) || _normalizeRuntime(profile.nekocore);
+  if (!candidate) return null;
+
+  if (globalCfg.workspacePath && !candidate.workspacePath) {
+    candidate.workspacePath = String(globalCfg.workspacePath).trim();
+  }
+  return candidate;
+}
+
+function _writeUnifiedRuntimeConfig(newConfig) {
+  let global = _readGlobalConfig();
+  if (!global || typeof global !== 'object') {
+    global = { configVersion: 1, lastActive: 'default-multi-llm', profiles: {} };
+  }
+  if (!global.profiles || typeof global.profiles !== 'object') global.profiles = {};
+  if (!global.lastActive || typeof global.lastActive !== 'string') global.lastActive = 'default-multi-llm';
+  if (!global.profiles[global.lastActive] || typeof global.profiles[global.lastActive] !== 'object') {
+    global.profiles[global.lastActive] = {};
+  }
+
+  const profile = global.profiles[global.lastActive];
+  const existing = _normalizeRuntime(profile.ma) || _normalizeRuntime(profile.nekocore) || {};
+  const type = String(newConfig.type || existing.type || '').toLowerCase().trim();
+
+  const endpoint = String(newConfig.endpoint || existing.endpoint || '').trim();
+  const model = String(newConfig.model || existing.model || '').trim();
+  const incomingKey = String(newConfig.apiKey || '').trim();
+  const existingKey = String(existing.apiKey || '').trim();
+  const apiKey = incomingKey || existingKey;
+
+  if (!type || !endpoint || !model) {
+    throw new Error('Need type, endpoint, model');
+  }
+  if (type !== 'ollama' && !apiKey) {
+    throw new Error('API key is required');
+  }
+
+  const next = {
+    type,
+    endpoint,
+    model,
+    ...(type === 'ollama' ? {} : { apiKey }),
+    ...(newConfig.capabilities && typeof newConfig.capabilities === 'object' ? { capabilities: newConfig.capabilities } : {})
+  };
+
+  profile.ma = next;
+  if (!profile._activeTypes || typeof profile._activeTypes !== 'object') {
+    profile._activeTypes = {};
+  }
+  profile._activeTypes.ma = type;
+
+  if (newConfig.workspacePath && String(newConfig.workspacePath).trim()) {
+    global.workspacePath = String(newConfig.workspacePath).trim();
+  }
+
+  fs.mkdirSync(path.dirname(GLOBAL_CONFIG_PATH), { recursive: true });
+  fs.writeFileSync(GLOBAL_CONFIG_PATH, JSON.stringify(global, null, 2));
+  return next;
+}
+
 function setConfig(newConfig) {
-  config = newConfig;
+  const unifiedConfig = _writeUnifiedRuntimeConfig(newConfig);
+  config = { ...unifiedConfig, ...(newConfig.workspacePath ? { workspacePath: newConfig.workspacePath } : {}) };
+  // Resolve capabilities for the new config
+  config.capabilities = resolveCapabilities(config);
+  config.contextWindow = config.contextWindow || _inferContextWindow(config);
+  // Persist local mirror for backward compatibility (single MA install path).
+  // Source of truth is Config/ma-config.json (profile.ma).
+  const toSave = { ...config };
+  delete toSave.capabilities;
+  delete toSave.contextWindow;
+  // Re-add user-level capability overrides if they existed in the input
+  if (newConfig._userCapabilities) toSave.capabilities = newConfig._userCapabilities;
   fs.mkdirSync(path.dirname(CONFIG_PATH), { recursive: true });
-  fs.writeFileSync(CONFIG_PATH, JSON.stringify(config, null, 2));
+  fs.writeFileSync(CONFIG_PATH, JSON.stringify(toSave, null, 2));
   // Apply workspace path if changed
-  if (newConfig.workspacePath) {
-    const resolved = path.resolve(newConfig.workspacePath);
+  const workspacePath = String(newConfig.workspacePath || '').trim();
+  if (workspacePath) {
+    const resolved = path.resolve(workspacePath);
     if (fs.existsSync(resolved)) WORKSPACE_DIR = resolved;
   } else {
     WORKSPACE_DIR = path.join(MA_ROOT, 'MA-workspace');
@@ -197,6 +360,14 @@ function listKnowledge() {
   return fs.readdirSync(KNOWLEDGE_DIR).filter(f => f.endsWith('.md'));
 }
 
+// ── Thinking tag utilities ──────────────────────────────────────────────────
+
+/** Strip <thinking>...</thinking> blocks from LLM output (prompt-based fallback). */
+function stripThinkingTags(text) {
+  if (!text) return text;
+  return text.replace(/<thinking>[\s\S]*?<\/thinking>/gi, '').trim();
+}
+
 // ── Token estimation ────────────────────────────────────────────────────────
 // Rough heuristic: 1 token ≈ 4 characters for English text
 function estimateTokens(text) {
@@ -215,13 +386,14 @@ function estimateMessagesTokens(messages) {
 // ── History compression ─────────────────────────────────────────────────────
 // When history is too large for the context window, compress older turns into
 // a single summary message, keeping recent turns verbatim.
+// Capability-aware: uses context window from config when available.
 async function compressHistory(hist, maxHistoryTokens, llmConfig) {
   if (!hist.length) return hist;
   const totalTokens = estimateMessagesTokens(hist);
   if (totalTokens <= maxHistoryTokens) return hist;
 
-  // Keep the most recent 4 turns verbatim, compress the rest
-  const keepRecent = Math.min(4, hist.length);
+  // Keep the most recent 6 turns verbatim (up from 4 — more context = fewer re-reads)
+  const keepRecent = Math.min(6, hist.length);
   const recent = hist.slice(-keepRecent);
   const older  = hist.slice(0, -keepRecent);
 
@@ -241,9 +413,9 @@ async function compressHistory(hist, maxHistoryTokens, llmConfig) {
   try {
     const compressPrompt = older.map(m => `${m.role}: ${(m.content || '').slice(0, 300)}`).join('\n');
     const summary = await callLLM(llmConfig, [
-      { role: 'system', content: 'Summarize this conversation history in 3-5 bullet points. Be extremely concise. Focus on key decisions, files modified, and current task state.' },
+      { role: 'system', content: 'Summarize this conversation history preserving: key decisions made, files created or modified, current task state, error context and workarounds, the user\'s goals and preferences. Use structured bullet points. Be concise but complete — this summary replaces the original messages.' },
       { role: 'user', content: compressPrompt }
-    ], { temperature: 0.3, maxTokens: 512 });
+    ], { temperature: 0.3, maxTokens: 768 });
     return [
       { role: 'system', content: `[Compressed Earlier Conversation]\n${summary}` },
       ...recent
@@ -265,7 +437,8 @@ async function handleChat({ message, history = [], attachments = [], onStep, onA
   if (!message) throw new Error('No message');
 
   const entityName = entity?.name || 'MA';
-  const intent = tasks.classify(message);
+  const isChatMode = maMode === 'chat';
+  const intent = isChatMode ? { intent: 'conversation', taskType: null, confidence: 0 } : tasks.classify(message);
   const chainId = `chain_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 
   // ── Inline file-path detection ──────────────────────────────────────
@@ -416,14 +589,24 @@ async function handleChat({ message, history = [], attachments = [], onStep, onA
   const maxTokens = config.maxTokens || 12288;
 
   // ── Token budget estimation ─────────────────────────────────────────
-  // Reserve 20% of maxTokens for the response, rest is context budget
+  // Use context window (from Slice 3) if available, otherwise fall back to maxTokens math
   const responseReserve = Math.floor(maxTokens * 0.20);
-  const contextBudget   = maxTokens - responseReserve;
+  const contextWindow   = config.contextWindow || maxTokens;
+  const contextBudget   = Math.min(contextWindow, maxTokens * 4) - responseReserve;
 
   let sysPrompt = `You are ${entityName}, a minimal Memory Architect. You help with memory storage, research, coding, and self-repair.
+${isChatMode ? `
+[MODE: Chat Mode]
+You are in Chat Mode. You may read files, search the web, follow links, and search your memories.
+You CANNOT create, write, edit, or delete files, run commands, or execute research/writing tasks.
+Available tools: ws_list, ws_read, web_search, web_fetch, memory_search
+If the user asks you to do something that requires file creation, editing, deletion, running commands, or task execution, politely tell them: "I'm currently in Chat Mode — I can read and search, but I can't make changes or run tasks. Please switch to Work Mode to do that!"
+Do NOT attempt to use ws_write, ws_append, ws_delete, ws_mkdir, ws_move, or cmd_run.
 
 [Available Tools]
-ws_list, ws_read, ws_write, ws_append, ws_delete, ws_mkdir, ws_move, web_search, web_fetch, cmd_run, memory_search
+ws_list, ws_read, web_search, web_fetch, memory_search` : `
+[Available Tools]
+ws_list, ws_read, ws_write, ws_append, ws_delete, ws_mkdir, ws_move, web_search, web_fetch, cmd_run, memory_search`}
 
 [Tool Syntax — STRICT]
 Tools use JSON parameters. Two formats:
@@ -439,13 +622,13 @@ file content here
 Examples:
 [TOOL:ws_list {"path":"myproject"}]
 [TOOL:ws_read {"path":"myproject/package.json"}]
-[TOOL:ws_write {"path":"myproject/hello.txt"}]
+${isChatMode ? '' : `[TOOL:ws_write {"path":"myproject/hello.txt"}]
 Hello world content here
 [/TOOL]
 [TOOL:ws_delete {"path":"old-file.js"}]
 [TOOL:ws_move {"src":"old.js","dst":"new.js"}]
 [TOOL:cmd_run {"cmd":"npm test"}]
-[TOOL:web_search {"query":"node.js streams"}]
+`}[TOOL:web_search {"query":"node.js streams"}]
 [TOOL:memory_search {"query":"previous conversation about APIs"}]
 
 RULES:
@@ -454,7 +637,7 @@ RULES:
 - Do NOT put file content inside the JSON — use the block format
 - Do NOT wrap tool calls in code fences, quotes, or backticks
 - One tool per block. Do NOT nest tool calls.
-
+${isChatMode ? '' : `
 [Code Output — MANDATORY]
 ALWAYS write code to workspace files using [TOOL:ws_write]. NEVER paste raw code blocks into the chat.
 If the user asks you to write, create, build, or implement code — use ws_write to put it in a file.
@@ -474,7 +657,7 @@ After you finish writing or editing ANY script/code file:
 2. Check for: missing closing brackets, incomplete functions, truncated content, syntax errors
 3. If the file is incomplete or has errors, continue writing the missing parts using [TOOL:ws_append {"path":"file"}] with [/TOOL] then verify again
 4. Only tell the user you're done AFTER you've verified the file is complete
-
+`}
 [Token Budget Awareness]
 Your max response is ~${responseReserve} tokens (~${responseReserve * 4} chars). Context budget: ~${contextBudget} tokens.
 If you are writing a long response or large file and feel you are getting close to your limit:
@@ -544,6 +727,17 @@ Do NOT try to rush or compress your output to fit — it's better to stop cleanl
   }
   if (convoBP) sysPrompt += convoBP;
 
+  // Prompt-based thinking fallback for non-Anthropic providers
+  const usePromptThinking = hasCapability(config, 'extendedThinking') === false &&
+    config.capabilities && config.capabilities.extendedThinking !== false;
+  // Actually: prompt-based if provider doesn't have native thinking but user wants it
+  // For non-Anthropic: append thinking instruction so the model reasons in tags
+  const wantsThinking = config.capabilities && config.capabilities.extendedThinking;
+  const hasNativeThinking = config.type === 'anthropic' && hasCapability(config, 'extendedThinking');
+  if (wantsThinking && !hasNativeThinking) {
+    sysPrompt += '\n\nBefore responding, reason through your approach step by step inside <thinking>...</thinking> tags. Only text OUTSIDE these tags will be shown to the user and parsed for tool calls.';
+  }
+
   // Compress history if it's too large for context budget
   const sysTokens = estimateTokens(sysPrompt);
   const msgTokens = estimateTokens(message);
@@ -573,18 +767,52 @@ Do NOT try to rush or compress your output to fit — it's better to stop cleanl
   // Log context usage for awareness
   const totalContextTokens = estimateMessagesTokens(messages);
 
-  let reply = await callLLM(config, messages, { temperature: 0.7, maxTokens: responseReserve });
+  // Enable native thinking for Anthropic on conversational path when capability is active
+  const thinkingOpt = hasNativeThinking ? { thinking: true } : {};
 
-  const toolResults = await wsTools.executeToolCalls(reply, {
-    workspacePath: WORKSPACE_DIR, webFetchEnabled: true, cmdRunEnabled: true,
-    memorySearch: memory ? (q, l) => memory.search(q, l) : null
+  // ── Tool execution: native function calling vs text-based parsing ───
+  const useNativeTools = hasCapability(config, 'nativeToolUse');
+  let nativeToolSchemas = useNativeTools ? buildToolSchemas(config.type) : null;
+  // In chat mode, filter out blocked tools from native schemas
+  if (nativeToolSchemas && isChatMode) {
+    nativeToolSchemas = nativeToolSchemas.filter(t => {
+      const name = t.name || (t.function && t.function.name);
+      return !CHAT_MODE_BLOCKED.has(name);
+    });
+  }
+
+  let reply = await callLLM(config, messages, {
+    temperature: 0.7, maxTokens: responseReserve, ...thinkingOpt,
+    ...(nativeToolSchemas ? { tools: nativeToolSchemas } : {})
   });
+
+  const toolOpts = {
+    workspacePath: WORKSPACE_DIR, webFetchEnabled: true, cmdRunEnabled: !isChatMode,
+    memorySearch: memory ? (q, l) => memory.search(q, l) : null,
+    ...(isChatMode ? { blockedTools: CHAT_MODE_BLOCKED } : {})
+  };
+
+  let toolResults = [];
+  let replyText;
+
+  if (reply && typeof reply === 'object' && reply.toolCalls && reply.toolCalls.length) {
+    // Native tool use path — structured tool calls from API
+    replyText = reply.content || '';
+    toolResults = await wsTools.executeNativeToolCalls(reply.toolCalls, toolOpts);
+  } else {
+    // Text-based tool parsing path (Ollama, or native provider returned no tool calls)
+    replyText = typeof reply === 'object' ? (reply.content || '') : (reply || '');
+    replyText = stripThinkingTags(replyText);
+    toolResults = await wsTools.executeToolCalls(replyText, toolOpts);
+  }
+
+  reply = replyText;
 
   if (toolResults.length > 0) {
     if (onActivity) {
       for (const r of toolResults) await onActivity(r.ok ? 'tool_result' : 'error', `${r.tool}: ${r.result || (r.ok ? '' : 'FAILED')}`);
     }
-    const clean = wsTools.stripToolCalls(reply);
+    const clean = useNativeTools ? reply : wsTools.stripToolCalls(reply);
     const toolBlock = wsTools.formatToolResults(toolResults);
 
     // Auto-verify: if any ws_write/ws_append happened, auto-read the written files
@@ -655,6 +883,8 @@ module.exports = {
   boot, ensureDirs, loadConfig, loadEntity, initMemory,
   // State
   getConfig, getMemory, getEntity, isConfigured, setConfig,
+  // Mode
+  getMode, setMode,
   // Chat
   handleChat,
   // Knowledge
@@ -662,5 +892,5 @@ module.exports = {
   // Re-exports for convenience
   health, tasks, wsTools, agentCatalog, projectArchive, modelRouter, worklog,
   // Paths
-  MA_ROOT, CONFIG_PATH, ENTITY_DIR, WORKSPACE_DIR, KNOWLEDGE_DIR
+  MA_ROOT, CONFIG_PATH, GLOBAL_CONFIG_PATH, ENTITY_DIR, WORKSPACE_DIR, KNOWLEDGE_DIR
 };

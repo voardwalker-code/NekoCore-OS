@@ -1,7 +1,7 @@
 # WORKLOG
 
 Status: active architecture refactor tracking.
-Last updated: 2026-03-20
+Last updated: 2026-03-24
 
 Repository packaging note:
 1. The runnable source tree now lives under `project/`.
@@ -18,7 +18,7 @@ Feature work is now authorized. Active mandate below is satisfied.
 
 **Phase 4.5 status:** `Documents/current/PLAN-IME-v1.md` — Intelligent Memory Expansion (`Complete` by user declaration on 2026-03-18; detailed exit summary can be backfilled if needed)
 **Active bounded cleanup workstream:** `Documents/current/PLAN-APP-MANIFEST-SHADOW-REFACTOR-v1.md` — HTML shadow cleanup (guard-first)
-**Active Phase 5 plan:** `Documents/current/PLAN-PREDICTIVE-MEMORY-v1.md` — Predictive Memory Topology (held until HTML shadow cleanup checkpoint and Phase 4.5 exit audit are recorded)
+**Active Phase 5 plan:** `Documents/current/PLAN-PREDICTIVE-MEMORY-v1.md` — Predictive Memory Topology (`Active — Slice -0 not started`)
 
 ---
 
@@ -44,18 +44,22 @@ Emergency exception log:
 
 ---
 
-## Stop/Resume Snapshot — 2026-03-22 (Settings app API key fix)
+## Stop/Resume Snapshot — 2026-03-24 (v0.9.0-alpha.5 release)
 
-- **Current phase:** `Phase 4 — Feature work`
-- **Current slice:** `Settings app config save fix`
-- **Last completed work:** `Fixed block-scoping bug in simpleSaveConfig() — keyEl/typedKey were const inside else block but used outside. Hoisted to function scope + added server-side stored-key fallback. 2,248 tests, 1 pre-existing fail.`
-- **In-progress item:** `none`
+- **Current phase:** `Release prep — v0.9.0-alpha.5`
+- **Current slice:** `Documentation + test fixes + git push`
+- **Last completed work:** `README, CHANGELOG, package.json updated for v0.9.0-alpha.5. Fixed 3 broken tests (system-apps qachecklist, single-llm search window, llm-interface compaction assertion). 2,505 tests pass (0 real failures).`
+- **In-progress item:** `Git push to main + staging`
 - **Blocking issue:** `none`
-- **Next action on resume:** `Proceed to next plan (Setup Wizard full redesign or next feature).`
+- **Next action on resume:** `Post-push verification — confirm main and staging are in sync.`
 - **Active plans:**
+  - `Documents/current/PLAN-PREDICTIVE-MEMORY-v1.md` — Phase 5: Predictive Memory Topology — `COMPLETE — all 13 slices (-0 through 11), archived`
   - `Documents/current/PLAN-RESOURCE-MANAGER-APP-v1.md` — Resource Manager App — `Complete`
   - `Documents/current/PLAN-BUG-TRACKER-APP-v1.md` — Bug Tracker App — `Complete`
   - `Documents/current/PLAN-SETUP-WIZARD-v1.md` — Setup Wizard — `Plan ready, awaiting review`
+  - `Documents/current/PLAN-ANTHROPIC-BATCH-API-v1.md` — Anthropic Batch API — `In planning — async latency concerns for tight-loop call sites need design resolution`
+  - `Documents/current/PLAN-PROVIDER-AGNOSTIC-CAPABILITIES-v1.md` — Provider-Agnostic Capabilities Layer — `Complete (all 11 slices: -0 through 10) — awaiting archive`
+  - `Documents/current/PLAN-MA-PROVIDER-AGNOSTIC-CAPABILITIES-v1.md` — MA Provider-Agnostic Capabilities — `Complete (all 10 slices)`
   - `Documents/current/PLAN-OS-TOOL-UPGRADE-v1.md` — OS Tool Upgrade — `Complete`
   - `Documents/current/PLAN-ENTITY-GENESIS-v1.md` — Entity Genesis Skill — `Complete`
   - `Documents/current/PLAN-MA-BRIDGE-v1.md` — MA Bridge Slash Command — `Complete`
@@ -64,8 +68,387 @@ Emergency exception log:
   - `Documents/current/PLAN-COGNITIVE-STATE-INTEGRATION-v1.md` — COMPLETE (all 4 phases, 14 slices)
   - `Documents/current/PLAN-INTROSPECTION-LOOP-v1.md` — 6-axis self-inquiry brain-loop phase with local model
 - **Prior plan (paused):** `Documents/current/PLAN-SLASH-COMMAND-SYSTEM-v1.md — A0/A1/A2 complete; A3/A4 future`
-- **Phase 5 plan:** `PLAN-PREDICTIVE-MEMORY-v1.md — held`
 - **MA workspace projects:** `Moved to separate repo — MA-workspace is now fully cleared on reset`
+
+---
+
+## Session Ledger — 2026-03-24 (v0.9.0-alpha.5 release prep)
+
+Status: `Complete`
+
+- **Request:** Update documentation, fix broken tests, version bump, push to main + staging.
+- **Work done:**
+  - README updated: test badge 2,248→2,505, version bump to v0.9.0-alpha.5, Phase 5 + Phase 4.25/4.26 marked complete on roadmap, Anthropic Direct provider added to config examples/prerequisites/feature table, Predictive Memory + QA Checklist added to capability grid, Memory Topology added to tech spec.
+  - CHANGELOG: Unreleased items tagged as `[0.9.0-alpha.5] — 2026-03-24`.
+  - package.json (root + project): version bumped to `0.9.0-alpha.5`.
+  - Fixed 3 broken tests: system-apps-manifest-guards (`qachecklist` added to expected list), single-llm-mode-guards (search window widened from 3000→6000 chars), llm-interface-guards (compaction assertion updated for hard-disable).
+  - 2,505 tests passing, 0 real failures (2 file-level Node 24 runner deserialization artifacts).
+- **Files changed:** `README.md`, `CHANGELOG.md`, `WORKLOG.md`, `package.json`, `project/package.json`, `project/tests/unit/system-apps-manifest-guards.test.js`, `project/tests/unit/single-llm-mode-guards.test.js`, `project/tests/unit/llm-interface-guards.test.js`
+
+---
+
+## Session Ledger — 2026-03-24 (Theme wallpaper immediate preview)
+
+Status: `Complete`
+
+- **Request:** Selecting a background image in the Themes tab should show on the desktop immediately instead of only after saving.
+- **Root cause:** Theme customizer only applied wallpaper changes during save/apply flows; background controls had no live preview hook.
+- **Files fixed:** `project/client/js/apps/optional/theme-manager.js`
+- **Fix:** Added `_previewCustomizerForm()` and wired background controls (`themeBgStart`, `themeBgEnd`, `themeBgOpacity`, `themeWallpaperImage`, `themeWallpaperCustom`) to apply a live desktop preview as the user changes them, without persisting until save.
+
+---
+
+## Session Ledger — 2026-03-24 (Taskbar icon right-click target fix)
+
+Status: `Complete`
+
+- **Request:** Right-clicking taskbar icons should open app-specific menu; currently it often shows generic taskbar options.
+- **Root cause:** Context-menu icon matcher did not include dynamic running-window buttons (`.os-running-app`), so those clicks fell through to taskbar-area branch.
+- **Files fixed:** `project/client/js/context-menu.js`
+- **Fix:** Expanded taskbar app selector to include `.os-running-app` and unified icon-menu branch so pinned/dash/overflow/running buttons all resolve to app-level `Open/Close` actions.
+
+---
+
+## Session Ledger — 2026-03-24 (Taskbar icon right-click Open + Close)
+
+Status: `Complete`
+
+- **Request:** Users need right-click on taskbar app icons to expose both `Open` and `Close`.
+- **Root cause:** Taskbar icon menu only exposed `Open` (plus pin/shortcut options), with no direct close action.
+- **Files fixed:** `project/client/js/context-menu.js`
+- **Fix:** Updated taskbar icon context menu branch (`.os-pinned-app`, `.os-dash-app`, `.os-overflow-app`) to include explicit `Open <app>` and `Close <app>` actions. `Close` calls `closeWindow(tab)` directly from the taskbar context menu.
+
+---
+
+## Session Ledger — 2026-03-24 (Theme customizer save target + desktop customize shortcut)
+
+Status: `Complete`
+
+- **Request:** If a custom theme card is active, user must be able to choose between saving updates to that active theme or creating a new one; desktop right-click should include a direct customize-desktop action that opens the Themes customizer.
+- **Root cause:** Theme customizer only exposed `Save As New Theme`; desktop context menu had no direct route to theme customization.
+- **Files fixed:** `project/client/apps/non-core/core/tab-themes.html`, `project/client/js/apps/optional/theme-manager.js`, `project/client/js/context-menu.js`
+- **Fix:** Added `Save to Active Theme` button (enabled only when active theme is a user theme) and overwrite flow for the currently active custom theme; retained `Save As New Theme` for clone/new behavior. Added global `openThemeCustomizer()` helper and wired desktop context menus (`.os-desktop-files`, `.os-home`, fallback background) with `Customize Desktop` action that opens Themes and focuses the customizer.
+
+---
+
+## Session Ledger — 2026-03-24 (Themes app delete button for custom themes)
+
+Status: `Complete`
+
+- **Bug:** Users could not remove stale custom theme cards from the Themes gallery.
+- **Root cause:** Gallery had apply-only cards with no delete action for `isUserTheme` entries.
+- **Files fixed:** `project/client/js/apps/optional/theme-manager.js`, `project/client/css/ui-v2.css`
+- **Fix:** Added `Delete` action on user-theme cards; deleting active custom theme now falls back to `neko-default` and removes persisted theme entry from `rem-ui-user-themes`.
+
+---
+
+## Session Ledger — 2026-03-24 (MA dedicated config slot + compaction safety default)
+
+Status: `Complete`
+
+- **Request:** MA must use its own config field (not shared with main runtime), and MA compaction should be default-disabled pending stability.
+- **Root cause:** MA config read/write was bound to `profiles[*].nekocore` and MA Anthropic capability/UI defaulted compaction on.
+- **Files fixed:** `project/MA/MA-server/MA-core.js`, `project/client/js/apps/core/setup-ui.js`, `project/Config/ma-config.example.json`, `project/MA/MA-server/MA-capabilities.js`, `project/MA/MA-client/MA-index.html`, `project/MA/tests/MA-capabilities.test.js`, `CURRENT-BUGS.md`
+- **Fix:** MA now reads/writes `profiles[lastActive].ma` (legacy fallback from `profiles[*].nekocore` for compatibility), setup wizard seeds `profile.ma` instead of `profile.nekocore`, example config blueprint now models `ma`, Anthropic MA compaction defaults to `false`, MA settings compaction toggle defaults unchecked and only hydrates enabled when explicitly true/mode, and CURRENT-BUGS now records MA-side compaction mitigation.
+
+---
+
+## Session Ledger — 2026-03-24 (MA/NekoCore unified config + masked key reveal)
+
+Status: `Complete`
+
+- **Request:** Make MA use NekoCore OS config by default, wire MA settings to the same config source, add MA setup visibility in wizard/settings, and auto-hydrate API keys as masked with reveal.
+- **Root cause:** MA had a separate config file (`MA/MA-Config/ma-config.json`) and UI path, causing config drift and key UX mismatch.
+- **Files fixed:** `project/MA/MA-server/MA-core.js`, `project/MA/MA-Server.js`, `project/MA/MA-client/MA-index.html`, `project/client/js/auth.js`, `project/client/apps/core/tab-settings.html`, `project/client/apps/core/overlays/setup-wizard.html`, `project/client/js/apps/core/setup-ui.js`
+- **Fix:** MA now reads/writes NekoCore global config (`project/Config/ma-config.json`) using `profile.nekocore` (fallback `profile.main`). MA settings `/api/config` now returns masked-key state (`hasApiKey`, `apiKeyMasked`) and supports explicit reveal fetch (`revealKey=1`), with client-side See/Hide toggle. NekoCore settings now auto-hydrates stored keys as `********` with See/Hide controls and preserves existing keys when masked values are submitted. Setup wizard now states MA inheritance and seeds `profile.nekocore` from first-run main provider defaults when unset.
+
+---
+
+## Session Ledger — 2026-03-24 (Example config blueprint + QA Checklist registration)
+
+Status: `Complete`
+
+- **Request:** Ensure the example config reflects the new unified config blueprint and verify QA Checklist app availability.
+- **Root cause:** `ma-config.example.json` lagged the unified schema fields used in runtime (`nekocore`, `_activeType`, `workspacePath`), and QA Checklist was present in non-core manifest but missing in launcher/system app registries.
+- **Files fixed:** `project/Config/ma-config.example.json`, `project/client/js/app.js`, `project/client/js/apps/system-apps.json`
+- **Fix:** Example config now includes `profiles[*].nekocore`, `_activeType`, expanded `_activeTypes`, and top-level `workspacePath`. QA Checklist app is now registered in legacy launcher metadata (`WINDOW_APPS`, `APP_CATEGORY_BY_TAB`) and in `system-apps.json`, aligning windowing/start-menu compatibility paths.
+
+---
+
+## Session Ledger — 2026-03-24 (Task Manager phase/token telemetry reliability)
+
+Status: `Complete`
+
+- **Request:** Task Manager did not consistently show pipeline phase and last token usage, especially after provider/runtime path changes.
+- **Root cause:** Single-LLM chat path did not emit orchestration/phase SSE telemetry at all, and client telemetry reset token counters to zero whenever bypass routes emitted `orchestration_complete` with `tokenUsage: null`.
+- **Files fixed:** `project/server/services/chat-pipeline.js`, `project/client/js/apps/core/telemetry-ui.js`
+- **Fix:** Added SSE telemetry emits (`orchestration_start`, `phase_start`, `phase_complete`, `orchestration_complete`) to single-LLM processing with real usage (`returnUsage: true`) and model/timing payloads. Updated Task Manager telemetry reducer to keep last valid token totals when a null-usage bypass event arrives.
+
+---
+
+## Session Ledger — 2026-03-24 (Custom themes persisting after reset-all)
+
+Status: `Complete`
+
+- **Bug:** User-created custom themes continued to appear in Themes app after `reset-all`.
+- **Root cause:** Theme user entries were persisted in browser localStorage (`rem-ui-user-themes`, `rem-ui-theme-custom`, `rem-ui-theme`), which filesystem reset does not remove.
+- **Files fixed:** `project/client/js/login.js`
+- **Fix:** On auth bootstrap when `hasAccounts === false` (true first-run/reset state), login init now clears theme localStorage keys before normal auth/session flow.
+
+---
+
+## Session Ledger — 2026-03-24 (Taskbar quick-message persistence)
+
+Status: `Complete`
+
+- **Bug:** Previously typed messages in the taskbar quick-message field kept appearing after reset cycles.
+- **Root cause:** Browser autofill/history was still enabled on `nkQuickInput`, so entries were persisted by browser profile state outside runtime reset data.
+- **Files fixed:** `project/client/index.html`
+- **Fix:** Added `autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"` to the taskbar quick-message input.
+
+---
+
+## Session Ledger — 2026-03-24 (Anthropic cache_control TTL Bugfix)
+
+Status: `Complete`
+
+- **Bug:** Anthropic API rejecting all LLM calls with `invalid_request_error: system.0.cache_control.ephemeral.ttl: Input should be '5m' or '1h'`
+- **Root cause:** Extended cache TTL was sent as numeric `3600` instead of string `'1h'`
+- **Files fixed:** `server/services/llm-interface.js`, `MA/MA-server/MA-llm.js`
+- **Tests updated:** `tests/unit/llm-interface-guards.test.js`, `MA/tests/MA-llm.test.js`
+- **Also fixed:** Added `api.anthropic.com` to ALLOWED_HOSTS in `server/routes/config-routes.js` and `server/server.js` (proxy allowlist for connection test)
+- **Suite result:** 44/44 pass (llm-interface-guards)
+
+---
+
+## Session Ledger — 2026-03-24 (QA Checklist App)
+
+Status: `Complete`
+
+- **Feature:** QA Checklist app — comprehensive test checklist that complements Bug Tracker
+- **Files created:** `client/apps/non-core/core/tab-qachecklist.html` (~620 lines)
+- **Files modified:** `client/apps/non-core/non-core-apps.manifest.json` (added qachecklist entry)
+- **Summary:** New non-core app with ~270 test items across 40 sections covering full NekoCore OS test surface: boot/auth, setup wizard, shell UI (header, sidebar, taskbar, start menu, window management, context menu, desktop), all 10 core tabs, 3 overlays, all 14 non-core tabs, and integration tests (entity lifecycle, sleep pipeline, memory system, provider switching, skills, themes, backup/restore, edge cases). Each item has Pass/Fail buttons. Fail opens Bug Tracker tab and auto-creates a new bug pre-filled with title ("QA FAIL: ..."), area (matched from checklist section), description, and steps. Pass records timestamp. Progress bar + stats in toolbar. Filter by status (all/untested/pass/fail). Collapse/expand sections. Results persist in localStorage. Save/Load as `.qacheck.json` files. Reset with confirmation.
+
+---
+
+## Session Ledger — 2026-03-24 (MA Chat Mode vs Work Mode)
+
+Status: `Complete`
+
+- **Feature:** MA Chat Mode / Work Mode toggle
+- **Files changed:** `MA/MA-server/MA-core.js` (mode state, getMode/setMode, chat-mode routing bypass, system prompt adaptation, native tool schema filtering, blockedTools in toolOpts), `MA/MA-server/MA-workspace-tools.js` (blockedTools check in executeToolCalls + executeNativeToolCalls), `MA/MA-server/MA-Server.js` (GET/POST /api/mode routes), `MA/MA-index.html` (Work/Chat toggle buttons, switchMode/updateModeUI/syncMode JS, localStorage persistence)
+- **Summary:** Added dual-mode system. Chat Mode: forces conversation intent (no task classification), restricts to 5 read-only tools (ws_list, ws_read, web_search, web_fetch, memory_search), blocks 6 write/execute tools (ws_write, ws_append, ws_delete, ws_mkdir, ws_move, cmd_run), hides code-output instructions from system prompt. Work Mode: full tool access + task routing (default). Tool blocking enforced at 3 layers: (1) native schemas filtered before LLM sees them, (2) text-parsed tool calls checked at execution time, (3) native tool calls checked at execution time. Blocked tools return friendly "switch to Work Mode" message. Mode persists via server state + client localStorage.
+
+---
+
+## Session Ledger — 2026-03-24 (Predictive Memory Slice 11: Legacy Memory Migration)
+
+Status: `Complete`
+
+- **Slice:** Slice 11 — Legacy Memory Migration
+- **Files changed:** `server/tools/migrate-memory-agents.js` (new ~230 lines), `package.json` (+migrate:memory-agents npm script), `tests/unit/predictive-memory-guards.test.js` (+8 tests)
+- **Summary:** Created CLI migration tool for v1→v2 memory backfill. Scans entity episodic+semantic directories for log.json files. Phase 1: classify shapes via heuristic classifyShape(). Phase 2: build duck-typed mini-index (with normalizeTopics parity with MemoryIndexCache) and seed edges via seedEdges(). Phase 3: write updated log.json (only with --apply). Preserves userId/userName after normalizeMemoryRecord for temporal_adjacent edge detection. Idempotent — skips memories already at v2 with valid non-unclassified shape. Exports main/migrateEntity/scanMemories/buildMiniIndex for testing. Bug found + fixed during test: buildMiniIndex was storing raw topics (not normalized), causing topic_sibling edge detection to fail vs the normalized newTopicSet in seedEdges.
+- **Suite result:** 2,599 tests, 2,596 pass, 3 pre-existing deserialization warnings
+
+---
+
+## Session Ledger — 2026-03-24 (Predictive Memory Slice 10: Dream Reconsolidation)
+
+Status: `Complete`
+
+- **Slice:** Slice 10 — Dream Reconsolidation
+- **Files changed:** `server/brain/memory/reconsolidation.js` (new ~240 lines), `server/brain/cognition/phases/phase-dreams.js` (reconsolidation wiring at every 4th dream cycle), `tests/unit/predictive-memory-guards.test.js` (+12 tests)
+- **Summary:** Created reconsolidation.js with reconsolidate(entityId, indexCache, beliefGraph, opts). Three stages: (1) Edge strength adjustment — recently accessed memories have edges strengthened to co-accessed neighbors (+0.1) and weakened to un-accessed neighbors (-0.05, floor 0.1). (2) Cluster detection — union-find on mutual strong edges (>0.5 threshold) with dominant topic tagging. (3) Anticipatory stub creation — beliefs reinforced 3+ times in 48h with source memories in a detected cluster generate anticipatory memory stubs (type:anticipatory, shape:anticipatory, edges to cluster members, importance = confidence × 0.5). Wired into phase-dreams.js with cadence gate (every 4th dream cycle ≈ every 20 brain loops). Injectable _getEdges/_setEdges/_createStub for test isolation. No LLM calls.
+- **Suite result:** 2,593 tests, 2,590 pass, 3 pre-existing deserialization warnings
+
+---
+
+## Session Ledger — 2026-03-24 (Predictive Memory Slice 9: Belief-Linked Activation)
+
+Status: `Complete`
+
+- **Slice:** Slice 9 — Belief-Linked Activation
+- **Files changed:** `server/brain/knowledge/beliefGraph.js` (+getAttentionBoosts method), `server/services/memory-retrieval.js` (+belief activation before scoring), `server/brain/memory/edge-builder.js` (+seedBeliefEdges function), `server/services/memory-operations.js` (+belief_linked edges in both create functions), `server/server.js` (+getBeliefGraph getter), `tests/unit/predictive-memory-guards.test.js` (+10 tests), `tests/unit/echo-future-stub-guards.test.js` (stub test updated null→[])
+- **Summary:** Added getAttentionBoosts(topics) to beliefGraph.js — returns [{beliefId, confidence, sourceMemIds, boost}] where boost = BELIEF_ACTIVATION_BOOST (0.2) × confidence. Wired into memory-retrieval.js — before scoring, calls getAttentionBoosts then activate(srcMemId, boost) for each belief source memory. Added seedBeliefEdges(newMemId, beliefs, existingTargets) to edge-builder.js — creates belief_linked edges from new memory to belief source memories (strength 0.5 × confidence, skip < 0.01, dedup, respects MAX_EDGES). Wired into both createCoreMemory and createSemanticKnowledge via creationContext.activeBeliefIds. Added getBeliefGraph getter to server.js factory call. No LLM calls.
+- **Suite result:** 2,581 tests, 2,579 pass, 2 pre-existing deserialization warnings
+
+---
+
+## Session Ledger — 2026-03-24 (Predictive Memory Slice 8: Echo Future Implementation)
+
+Status: `Complete`
+
+- **Slice:** Slice 8 — Echo Future Implementation
+- **Files changed:** `server/brain/agent-echo.js` (replaced echoFuture stub with working implementation ~55 lines), `server/services/memory-retrieval.js` (echoFuture merge + SSE event), `server/brain/bus/thought-types.js` (+ECHO_FUTURE_HIT), `tests/unit/predictive-memory-guards.test.js` (+11 new tests, 5 stub tests updated), `tests/unit/agent-echo-guards.test.js` (1 stub test updated)
+- **Summary:** Replaced echoFuture() stub with working implementation. Steps: (1) getPreActivated(indexCache, 0.15, 20) for candidates, (2) topic overlap filter if topics provided, (3) +0.2 activation boost for anticipatory shape memories, (4) sort by activation descending, return top-N (default 5). Returns [{id, topics, shape, activationLevel, creationContext}]. Wired into memory-retrieval.js after echoPast merge — results tagged with _source: 'echo_future' for observability. ECHO_FUTURE_HIT thought type emitted via cognitive bus when echoFuture contributes results. No LLM calls.
+- **Suite result:** 2,593 tests, 2,591 pass, 2 pre-existing deserialization warnings
+
+---
+
+## Session Ledger — 2026-03-24 (Predictive Memory Slice 7: Wire Activation into Retrieval Path)
+
+Status: `Complete`
+
+- **Slice:** Slice 7 — Wire Activation into Retrieval Path
+- **Files changed:** `server/services/memory-retrieval.js` (activation boost in scoring + propagation trigger after retrieval), `server/brain/cognition/phases/phase-decay.js` (decayAllActivations every cycle, fixed require path), `tests/unit/predictive-memory-guards.test.js` (+6 tests)
+- **Summary:** Wired activation network into the live retrieval and decay paths. In memory-retrieval.js scoring: if activationLevel > 0.15, adds activationLevel × 0.25 score boost (up to 25%). After topConnections built, triggers activate(conn.id, 0.8) for top 12 connections — primes neighbors for next turn. In phase-decay.js: added decayAllActivations(indexCache, 0.3) BEFORE the 24h daily gate, so activation decays every brain loop cycle (much faster than the daily 0.01 memory decay). Fixed a require path bug: phases/ needed ../../memory/ not ../memory/ to reach activation-network.js. No LLM calls.
+- **Suite result:** 2,557 tests, 2,554 pass, 3 pre-existing deserialization warnings
+
+---
+
+## Session Ledger — 2026-03-24 (Predictive Memory Slice 6: Activation Propagation Engine)
+
+Status: `Complete`
+
+- **Slice:** Slice 6 — Activation Propagation Engine
+- **Files changed:** `server/brain/memory/activation-network.js` (new ~130 lines), `tests/unit/predictive-memory-guards.test.js` (+13 tests)
+- **Summary:** Created activation-network.js with three exports: activate(memId, energy, indexCache, opts) propagates activation energy through 2 hops — hop-1 gets energy×strength×0.5, hop-2 gets hop1Energy×strength×0.25. Energy is additive and caps at 1.0. Loop-back to source prevented. decayAllActivations(indexCache, rate) multiplies all levels by (1-rate), default 0.3, floors at 0. getPreActivated(indexCache, threshold, limit) returns memIds above threshold sorted by energy descending. activationLevel stored transiently on indexCache memoryIndex entries (resets to 0 on index rebuild). No LLM calls.
+- **Suite result:** 2,551 tests, 2,549 pass, 2 pre-existing deserialization warnings
+
+---
+
+## Session Ledger — 2026-03-24 (Predictive Memory Slice 5: Edge Seeding at Creation)
+
+Status: `Complete`
+
+- **Slice:** Slice 5 — Edge Seeding at Creation
+- **Files changed:** `server/brain/memory/edge-builder.js` (new ~95 lines), `server/services/memory-operations.js` (added _patchReverseEdge, edges/userId/userName in log, seedEdges call + bidirectional patching in both create functions), `tests/unit/predictive-memory-guards.test.js` (+13 tests: 10 seedEdges unit + 3 integration)
+- **Summary:** Created edge-builder.js with seedEdges(newMemId, newMeta, indexCache) that scans last 50 memories from recencyIndex and discovers edges via 3 rules: temporal_adjacent (same userId within 10 min, strength 0.9), emotional_echo (same emotion + shared topic within 7 days, 0.7), topic_sibling (2+ shared topics within 24h, 0.6). Strongest rule wins per candidate. Max 8 edges per memory. Wired into createCoreMemory and createSemanticKnowledge — seedEdges runs after log object build, before write. Bidirectional patching via _patchReverseEdge (read→append→write connected memory log.json, respects 8-edge cap and dedup). Added userId/userName to log.json top level from creationContext. Topics normalized via normalizeTopics for correct matching against index. No LLM calls.
+- **Suite result:** 2,538 tests, 2,535 pass, 3 pre-existing deserialization warnings
+
+---
+
+## Session Ledger — 2026-03-24 (Predictive Memory Slice 4: Shape Index Implementation)
+
+Status: `Complete`
+
+- **Slice:** Slice 4 — Shape Index Implementation
+- **Files changed:** `server/brain/utils/archive-indexes.js` (rebuildShapeIndexes stub → full implementation ~45 lines), `server/brain/cognition/phases/phase-archive-index.js` (logs shape count), `tests/unit/predictive-memory-guards.test.js` (+4 net tests: 8 shape index tests replacing 4 stub tests)
+- **Summary:** Filled the Phase 5 stub in archive-indexes.js. rebuildShapeIndexes() reads all archive bucket entries via _listBucketFilenames()/_readBucketEntries(), classifies each by shape (uses pre-existing entry.shape if available, otherwise runs classifyShape() heuristic on emotion/importance/type), groups memIds into a Map by shape label, writes one .idx.json per shape via writeIndex(entityId, 'shape', label, memIds, opts). Deduplicates via Set. Returns total unique memIds indexed. Phase loop now logs count. Tests verify: empty entity returns 0, accepts opts, synchronous, exports intact, classifies + writes index files, respects pre-existing shape, deduplicates across buckets, intersectIndexes works with shape axis. No LLM calls.
+- **Suite result:** 2,526 tests, 2,523 pass, 3 pre-existing deserialization warnings
+
+---
+
+## Session Ledger — 2026-03-24 (Predictive Memory Slice 3: Creation Context Capture)
+
+Status: `Complete`
+
+- **Slice:** Slice 3 — Creation Context Capture
+- **Files changed:** `server/services/chat-pipeline.js` (4 call sites: added `beliefGraph` param), `server/services/post-response-memory.js` (added `classifyShape` import, `buildCreationContext` helper, wired creationContext + shape into all 3 createCoreMemory/createSemanticKnowledge calls), `server/services/memory-operations.js` (expanded createCoreMemory + createSemanticKnowledge signatures, added creationContext + shape to log.json), `server/brain/memory/memory-index-cache.js` (added shape to memoryIndex entry in addMemory), `tests/unit/predictive-memory-guards.test.js` (+7 tests: 2 index cache shape tests, 5 filesystem-backed memory-operations tests)
+- **Summary:** New memories now capture the full creation context (mood, emotions, tone, activeBeliefIds from beliefGraph, conversationTopics, userId, userName) and are classified by shape (emotional/anticipatory/reflective/factual/narrative/unclassified) at creation time. Both fields persisted to log.json and indexed in memory cache. beliefGraph threaded from brain through all 4 pipeline call sites. Backward compatible — old code paths that omit these fields get null/unclassified defaults. No LLM calls added.
+- **Suite result:** 2,523 tests, 2,520 pass, 3 pre-existing deserialization warnings
+
+---
+
+## Session Ledger — 2026-03-24 (Predictive Memory Slice 2: Shape Classifier)
+
+Status: `Complete`
+
+- **Slice:** Slice 2 — Shape Classifier
+- **Files created:** `server/brain/memory/shape-classifier.js` (~85 lines)
+- **Files changed:** `tests/unit/predictive-memory-guards.test.js` (+17 tests, 1 new describe block)
+- **Summary:** Pure-heuristic shape classifier with strict priority chain: emotional (strong emotion set: anger/joy/sadness/fear/love/grief + expanded set, or importance >= 0.85) > anticipatory (13 future-oriented markers) > reflective (12 self-referential markers) > factual (semantic_knowledge type, or neutral/absent emotion + importance < 0.6) > narrative (default fallback). Case-insensitive emotion and semantic matching. SHAPE_LABELS re-exported from VALID_SHAPES (single source of truth in memory-schema.js). No LLM calls.
+- **Suite result:** 2,512 tests, 2,510 pass, 2 pre-existing deserialization warnings
+
+---
+
+## Session Ledger — 2026-03-24 (Predictive Memory Slice 1: Memory Schema v2)
+
+Status: `Complete`
+
+- **Slice:** Slice 1 — Memory Schema v2
+- **Files changed:** `server/contracts/memory-schema.js`, `tests/unit/predictive-memory-guards.test.js`
+- **Summary:** Bumped MEMORY_SCHEMA_VERSION from 1 to 2. Added 5 new fields to normalizeMemoryRecord (creationContext, shape, edges, activationLevel, lastActivationContext) with backward-compatible defaults. Added normalizeEdges() helper that filters malformed entries. Added VALID_SHAPES frozen array export. Shape validated against enum, activationLevel clamped [0,1], memorySchemaVersion always stamps as current version (2). Guard tests updated from 25 to 39: v1 backward compat block (12 tests) + v2 fields block (13 tests). All v1 field behaviors preserved.
+- **Suite result:** 2,510 tests, 2,507 pass, 3 pre-existing deserialization warnings
+
+---
+
+## Session Ledger — 2026-03-24 (Predictive Memory Slice -0: Guard Tests)
+
+Status: `Complete`
+
+- **Slice:** Slice -0 — Guard tests
+- **Files created:** `tests/unit/predictive-memory-guards.test.js` (25 tests, 4 describe blocks)
+- **Guard coverage:**
+  - `normalizeMemoryRecord()` — 11 fields, all defaults, v1 shape frozen, topic filtering, option fallbacks, non-finite clamping, v2 field absence
+  - `echoFuture()` — returns null (not undefined/[]/{}), export shape (4 exports)
+  - `rebuildShapeIndexes()` — returns 0, synchronous, export shape (8 exports)
+  - `MemoryIndexCache.addMemory()` — v1 field storage, topicIndex/recencyIndex population, default application, v2 field absence in index entries
+- **Suite result:** 2,480 tests, 2,477 pass, 3 pre-existing deserialization warnings (port-guard, llm-interface-guards)
+- **Summary:** All current contracts locked. No implementation code written. Phase 5 can now safely modify these modules with regression detection.
+
+---
+
+## Session Ledger — 2026-03-24 (Phase 5 Plan: Predictive Memory Topology)
+
+Status: `Complete`
+
+- **Purpose:** Create comprehensive Phase 5 plan document: PLAN-PREDICTIVE-MEMORY-v1.md
+- **Research:** Analyzed MiroFish/OASIS swarm intelligence engine (agent-from-graph-node spawning, Zep Cloud graph memory with live feedback loop). Validated memory-as-agent pattern at scale. Compared with NekoCore's 9 memory subsystems. Language decision: stay Node.js (BM25 25K in 70ms, Rust NAPI reserved for 50K+ scaling).
+- **Plan structure:** 4 phases, 12 slices (-0 through 11)
+  - P1 (Slices -0 to 3): Schema v2 + Creation Context + Shape Classifier + Shape Index
+  - P2 (Slices 4–6): Edge Seeding + Activation Propagation + Retrieval Wiring
+  - P3 (Slices 7–8): Echo Future Implementation + Prediction Pipeline
+  - P4 (Slices 9–11): Belief Integration + Dream Reconsolidation + Legacy Migration
+- **Files created:** `Documents/current/PLAN-PREDICTIVE-MEMORY-v1.md` (~500 lines)
+- **Files changed:** `WORKLOG.md` (snapshot + ledger + Phase 5 activation)
+- **Key design decisions:** Memory schema v2 (backward-compatible, 5 new fields), 5 shape labels + unclassified, 6 edge types, 2-hop activation cap (energy halves per hop), 0.3 activation decay rate, heuristic shape classification (no LLM), dream reconsolidation creates anticipatory stub nodes
+- **Suite result:** No code changes — plan only
+
+---
+
+## Session Ledger — 2026-03-23 (Provider-Agnostic Capabilities Slice 10)
+
+Status: `Complete`
+
+- **Slice:** Slice 10 — Native tool use migration
+- **Files created:** `server/services/tool-use-adapter.js` (~280 lines), `tests/unit/tool-use-adapter-guards.test.js` (30 tests)
+- **Files changed:** `server/services/llm-interface.js`, `server/brain/core/orchestrator.js`, `server/services/memory-tool-bridge.js`, `server/services/chat-pipeline.js`, `server/services/nekocore-pipeline.js`
+- **Suite result:** 2,494 pass, 0 real failures (1 pre-existing deserialization warning on port-guard test)
+- **Summary:** Created tool-use-adapter.js with 16 workspace tool definitions (ws_*, web_*, skill_*, search_archive, profile_update, cmd_run), provider-specific schema builders (Anthropic input_schema + OpenRouter function wrapper), response parsers, result formatters, and createToolExecutor bridge that routes native tool calls through existing workspace-tools.executeToolCalls via synthetic text. Added OpenRouter tool_use loop to llm-interface.js (mirrors Anthropic pattern from Slice 8). Orchestrator conscious phase now passes workspace tool schemas + executor to callLLM when runtime supports nativeToolUse. Memory bridge updated for composable tool merging (existing + memory tools + composite handler). Both pipelines wire tool schemas + executor into Orchestrator. Ollama falls through gracefully (buildToolSchemas returns null). Text-tag fallback system untouched for non-native providers.
+
+---
+
+## Session Ledger — 2026-03-23 (Provider-Agnostic Capabilities Slice 9)
+
+Status: `Complete`
+
+- **Slice:** Slice 9 — Settings UI: capability toggles
+- **Files changed:** `client/apps/core/tab-settings.html`, `client/js/apps/core/simple-provider.js`, `server/routes/config-routes.js`
+- **Summary:** Added collapsible Capabilities section to Anthropic settings panel with 4 toggles (extended cache, compaction, memory tool bridge, extended thinking) + thinking budget slider (1024–16384). OpenRouter/Ollama get informational notice about Anthropic-exclusive features. Fixed `normalizeIncomingRuntimeConfig()` to handle `anthropic` type (was falling through to `openrouter`). Capabilities elevated from aspect config to `profile.capabilities` for the `resolveCapabilities()` pipeline. Hydration reads from `profile.capabilities` on page load.
+
+---
+
+## Session Ledger — 2026-03-23 (Provider-Agnostic Capabilities Slice 8)
+
+Status: `Complete`
+
+- **Slice:** Slice 8 — Memory Tool Bridge
+- **Files created:** `server/services/memory-tool-bridge.js` (~190 lines)
+- **Files changed:** `server/services/llm-interface.js`, `server/services/chat-pipeline.js`, `server/services/nekocore-pipeline.js`
+- **Tests created:** `tests/unit/memory-tool-bridge-guards.test.js` (41 tests), `tests/unit/llm-tool-use-loop-guards.test.js` (6 tests)
+- **Suite result:** 2,428 pass, 0 real failures (3 pre-existing deserialization warnings on mock-HTTP tests)
+- **Summary:** Created Anthropic native memory tool bridge. 4 tool schemas (memory_search, memory_store, memory_read, memory_list) exposed via Anthropic tool_use API. `createMemoryToolBridge(deps)` returns `wrapCallLLM()` wrapper that transparently injects tools for Anthropic with `memoryTool` capability. llm-interface.js handles tool_use loop (max 3 rounds) with `executeToolCall` callback. Both chat-pipeline and nekocore-pipeline wrap callLLM with the bridge. Non-Anthropic providers pass through unchanged.
+
+---
+
+## Session Ledger — 2026-03-23 (Anthropic Direct + Prompt Caching)
+
+Status: `Complete`
+
+- **Purpose:** Add Anthropic Direct as a third provider type (alongside OpenRouter and Ollama) with native prompt caching support, saving up to 90% on input tokens for repeated system prompts.
+- **Changes:**
+  1. **llm-interface.js** — Added `anthropic` branch in `callLLMWithRuntime()`. Converts OpenAI-style messages to Anthropic Messages API format (separate `system` parameter, alternating user/assistant roles). Annotates the last system block with `cache_control: { type: "ephemeral" }` for prompt caching. Logs cache read/creation token counts. Maps Anthropic usage fields (`input_tokens`/`output_tokens`) to the standard usage shape.
+  2. **config-runtime.js** — Added `anthropic` type recognition in `normalizeAspectRuntimeConfig()` with default endpoint `https://api.anthropic.com/v1/messages`.
+  3. **orchestrator.js** — Updated `isRuntimeUsable()` to check for API key on `anthropic` type (same pattern as `openrouter`).
+  4. **setup-wizard.html** — Added "Anthropic Direct" provider button and form fields (API key, model datalist with Claude models, prompt caching callout).
+  5. **tab-settings.html** — Added "Anthropic Direct" provider button and panel with key/model inputs and caching notice.
+  6. **index.html** — Updated setupRequiredModal to include Anthropic Direct button and description.
+  7. **setup-ui.js** — Updated `isApiConfigured()`, `setupSelectProviderForAspect()`, `setupTestConnectionForAspect()`, `clearSetupFormFields()`, and `goToSetupTab()` to handle `anthropic` provider type.
+  8. **simple-provider.js** — Updated `simplePickProvider()`, `simpleSaveConfig()`, and `initSimpleProviderUI()` with Anthropic branch. Anthropic config seeds all pipeline aspects with the same Anthropic model on first setup.
+  9. **pipeline.js** (client) — Added `anthropic` type to `normalizeRuntimeConfig()`.
+- **Tests:** 2,249 tests, 1 pre-existing fail (port-guard.test.js)
 
 ---
 

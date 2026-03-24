@@ -30,6 +30,25 @@ function semanticAbstract(text) {
   return trExtract(text, 3) || text.slice(0, 600);
 }
 
+// Slice 5: patch a connected memory's log.json with a reverse edge
+function _patchReverseEdge(targetMemId, reverseEdge, entityId) {
+  try {
+    const entityPathsMod = require('../entityPaths');
+    const baseDir = targetMemId.startsWith('sem_')
+      ? entityPathsMod.getSemanticMemoryPath(entityId)
+      : entityPathsMod.getEpisodicMemoryPath(entityId);
+    const logPath = path.join(baseDir, targetMemId, 'log.json');
+    if (!fs.existsSync(logPath)) return;
+    const existing = JSON.parse(fs.readFileSync(logPath, 'utf8'));
+    const edges = Array.isArray(existing.edges) ? existing.edges : [];
+    if (edges.some(e => e.targetId === reverseEdge.targetId)) return;
+    if (edges.length >= 8) return;
+    edges.push(reverseEdge);
+    existing.edges = edges;
+    fs.writeFileSync(logPath, JSON.stringify(existing, null, 2), 'utf8');
+  } catch { /* edge patching is non-critical */ }
+}
+
 /**
  * @param {{
  *   getCurrentEntityId: Function,
@@ -40,7 +59,7 @@ function semanticAbstract(text) {
  */
 function createMemoryOperations({ getCurrentEntityId, getMemoryStorage, getMemoryGraph, logTimeline }) {
 
-  function createCoreMemory({ semantic, narrative, emotion, topics, importance }) {
+  function createCoreMemory({ semantic, narrative, emotion, topics, importance, creationContext, shape }) {
     const currentEntityId = getCurrentEntityId();
     const memoryStorage = getMemoryStorage();
     const memoryGraph = getMemoryGraph();
@@ -117,9 +136,52 @@ function createMemoryOperations({ getCurrentEntityId, getMemoryStorage, getMemor
         decay: 0.005, // Very slow decay for core memories
         topics: topics || [],
         access_count: 0,
-        type: 'core_memory'
+        type: 'core_memory',
+        userId: (creationContext && creationContext.userId) || null,
+        userName: (creationContext && creationContext.userName) || null,
+        creationContext: creationContext || null,
+        shape: shape || 'unclassified',
+        edges: []
       };
+
+      // Slice 5: seed edges to nearby memories
+      if (memoryStorage.indexCache) {
+        try {
+          const { seedEdges } = require('../brain/memory/edge-builder');
+          const result = seedEdges(memId, log, memoryStorage.indexCache);
+          log.edges = result.edges;
+        } catch (e) {
+          console.warn('  ⚠ Edge seeding failed:', e.message);
+        }
+      }
+
+      // Slice 9: seed belief_linked edges from active beliefs
+      const activeBeliefIds = creationContext && creationContext.activeBeliefIds;
+      if (activeBeliefIds && activeBeliefIds.length > 0 && currentEntityId) {
+        try {
+          const { seedBeliefEdges, MAX_EDGES } = require('../brain/memory/edge-builder');
+          const BeliefGraph = require('../beliefs/beliefGraph');
+          const bg = new BeliefGraph({ entityId: currentEntityId });
+          const beliefs = activeBeliefIds.map(id => bg.getBelief(id)).filter(Boolean);
+          if (beliefs.length > 0) {
+            const existingTargets = new Set(log.edges.map(e => e.targetId));
+            const beliefEdges = seedBeliefEdges(memId, beliefs, existingTargets);
+            const remaining = MAX_EDGES - log.edges.length;
+            for (const be of beliefEdges.slice(0, Math.max(0, remaining))) {
+              log.edges.push(be);
+            }
+          }
+        } catch (e) {
+          console.warn('  ⚠ Belief edge seeding failed:', e.message);
+        }
+      }
+
       fs.writeFileSync(path.join(memDir, 'log.json'), JSON.stringify(log, null, 2), 'utf8');
+
+      // Slice 5: patch connected memories with reverse edges
+      for (const edge of log.edges) {
+        _patchReverseEdge(edge.targetId, { targetId: memId, relation: edge.relation, strength: edge.strength }, currentEntityId);
+      }
 
       // Update index cache
       if (memoryStorage.indexCache) {
@@ -158,7 +220,7 @@ function createMemoryOperations({ getCurrentEntityId, getMemoryStorage, getMemor
     }
   }
 
-  function createSemanticKnowledge({ knowledge, topics, importance, sourceMemId }) {
+  function createSemanticKnowledge({ knowledge, topics, importance, sourceMemId, creationContext, shape }) {
     const currentEntityId = getCurrentEntityId();
     const memoryStorage = getMemoryStorage();
     const memoryGraph = getMemoryGraph();
@@ -233,9 +295,52 @@ function createMemoryOperations({ getCurrentEntityId, getMemoryStorage, getMemor
         topics: topics || [],
         access_count: 0,
         type: 'semantic_knowledge',
-        sourceMemId: sourceMemId || null
+        sourceMemId: sourceMemId || null,
+        userId: (creationContext && creationContext.userId) || null,
+        userName: (creationContext && creationContext.userName) || null,
+        creationContext: creationContext || null,
+        shape: shape || 'unclassified',
+        edges: []
       };
+
+      // Slice 5: seed edges to nearby memories
+      if (memoryStorage.indexCache) {
+        try {
+          const { seedEdges } = require('../brain/memory/edge-builder');
+          const result = seedEdges(memId, log, memoryStorage.indexCache);
+          log.edges = result.edges;
+        } catch (e) {
+          console.warn('  ⚠ Edge seeding failed:', e.message);
+        }
+      }
+
+      // Slice 9: seed belief_linked edges from active beliefs
+      const skActiveBeliefIds = creationContext && creationContext.activeBeliefIds;
+      if (skActiveBeliefIds && skActiveBeliefIds.length > 0 && currentEntityId) {
+        try {
+          const { seedBeliefEdges, MAX_EDGES } = require('../brain/memory/edge-builder');
+          const BeliefGraph = require('../beliefs/beliefGraph');
+          const bg = new BeliefGraph({ entityId: currentEntityId });
+          const beliefs = skActiveBeliefIds.map(id => bg.getBelief(id)).filter(Boolean);
+          if (beliefs.length > 0) {
+            const existingTargets = new Set(log.edges.map(e => e.targetId));
+            const beliefEdges = seedBeliefEdges(memId, beliefs, existingTargets);
+            const remaining = MAX_EDGES - log.edges.length;
+            for (const be of beliefEdges.slice(0, Math.max(0, remaining))) {
+              log.edges.push(be);
+            }
+          }
+        } catch (e) {
+          console.warn('  ⚠ Belief edge seeding failed:', e.message);
+        }
+      }
+
       fs.writeFileSync(path.join(memDir, 'log.json'), JSON.stringify(log, null, 2), 'utf8');
+
+      // Slice 5: patch connected memories with reverse edges
+      for (const edge of log.edges) {
+        _patchReverseEdge(edge.targetId, { targetId: memId, relation: edge.relation, strength: edge.strength }, currentEntityId);
+      }
 
       // Update index cache
       if (memoryStorage.indexCache) {

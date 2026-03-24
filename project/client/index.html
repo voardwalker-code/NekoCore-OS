@@ -182,11 +182,14 @@
       <h4 class="mb-3">Configure an LLM Provider</h4>
       <p class="text-tertiary-c mb-5">
         Before you can create or load entities, you need to set up an API connection. 
-        Choose OpenRouter (cloud-based) or Ollama (local AI).
+        Choose OpenRouter (cloud-based), Anthropic Direct (Claude + prompt caching), or Ollama (local AI).
       </p>
       <div class="flex gap-4 justify-center flex-wrap">
         <button class="btn bp flex-1 nk-s-0022" onclick="goToSetupTab('openrouter')">
           ?? Set Up OpenRouter
+        </button>
+        <button class="btn bp flex-1 nk-s-0022" onclick="goToSetupTab('anthropic')">
+          ?? Anthropic Direct
         </button>
         <button class="btn bg flex-1 nk-s-0022" onclick="goToSetupTab('ollama')">
           ?? Set Up Ollama
@@ -194,6 +197,7 @@
       </div>
       <p class="text-tertiary-c text-sm-c mt-5">
         <strong>OpenRouter:</strong> Cloud-based, supports GPT-4, Claude, Llama, and more. Requires API key.<br>
+        <strong>Anthropic Direct:</strong> Claude models with prompt caching — up to 90% savings on repeated system prompts.<br>
         <strong>Ollama:</strong> Local AI models, free and private. Requires Ollama running on your machine.
       </p>
     </div>
@@ -605,7 +609,7 @@
         <div class="os-taskbar-running" id="osTaskbarRunning"></div>
       </div>
       <div class="nk-quick-bar" id="nkQuickBar" title="Ask NekoCore OS">
-        <input id="nkQuickInput" class="nk-quick-input" type="text" placeholder="Ask NekoCore�" maxlength="400"
+        <input id="nkQuickInput" class="nk-quick-input" type="text" placeholder="Ask NekoCore�" maxlength="400" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
           onkeydown="if(event.key==='Enter'){event.preventDefault();openNekoCoreWithMessage(this.value);}">
         <button class="nk-quick-send" onclick="openNekoCoreWithMessage(document.getElementById('nkQuickInput').value)">Ask</button>
       </div>

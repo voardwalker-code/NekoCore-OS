@@ -19,6 +19,9 @@ const {
   storeNekoConversationSnapshot,
   encodeNekoConversationMemory
 } = require('./nekocore-memory');
+const { createThinkingLog } = require('./thinking-log');
+const { createMemoryToolBridge } = require('./memory-tool-bridge');
+const { buildToolSchemas, createToolExecutor } = require('./tool-use-adapter');
 
 const NEKOCORE_ID = 'nekocore';
 
@@ -208,10 +211,33 @@ function createNekoCoreChat(deps) {
       } catch (e) { return { ok: false, error: 'Archive search failed: ' + e.message }; }
     };
 
+    // Wrap callLLM with memory tool bridge for Anthropic native tool_use
+    const memoryToolCallLLM = createMemoryToolBridge({
+      memorySearch: memorySearchFn,
+      memoryCreate: memoryCreateFn,
+      memoryStorage: nekoCoreMemStorage
+    })(callLLMWithRuntime);
+
+    // Build native tool schemas + executor for providers that support it
+    const nekoMainRuntime = aspectConfigs.conscious || aspectConfigs.main;
+    const nekoProviderType = nekoMainRuntime?.type || 'ollama';
+    const nekoToolSchemas = buildToolSchemas(nekoProviderType);
+    const nekoToolExecutor = nekoToolSchemas ? createToolExecutor({
+      workspacePath: entity.workspacePath || '',
+      webFetch,
+      memorySearch: memorySearchFn,
+      memoryCreate: memoryCreateFn,
+      archiveSearch: archiveSearchFn,
+      skillCreate: skillCreateFn,
+      skillList: skillListFn,
+      skillEdit: skillEditFn,
+      profileUpdate: async () => ({ ok: false, error: 'Profile update not available for NekoCore' })
+    }) : null;
+
     // Construct & run orchestrator
     const orchestrator = new Orchestrator({
       entity,
-      callLLM: callLLMWithRuntime,
+      callLLM: memoryToolCallLLM,
       aspectConfigs,
       getMemoryContext: async (query, topK) => {
         return buildNekoKnowledgeContext(query, nekoCoreMemRoot, { limit: topK || 8 });
@@ -219,17 +245,21 @@ function createNekoCoreChat(deps) {
       getBeliefs: () => [],
       getSomaticState: () => null,
       getConsciousContext: async (topics) => nekoCoreConsciousMemory.getContext(topics, 5),
-      storeConsciousObservation: async (msg, response, topics) => {
-        const summary = response?.slice(0, 300) || msg.slice(0, 300);
-        nekoCoreConsciousMemory.addToStm({ summary, topics, source: 'conscious_observation' });
+      storeConsciousObservation: async (msg, response, topics, thinkingLogId) => {
+        const entry = { summary: response?.slice(0, 300) || msg.slice(0, 300), topics, source: 'conscious_observation' };
+        if (thinkingLogId) entry.thinking_log_id = thinkingLogId;
+        nekoCoreConsciousMemory.addToStm(entry);
         nekoCoreConsciousMemory.reinforce(topics);
       },
+      thinkingLog: createThinkingLog({ getThinkingLogDir: entityPaths.getThinkingLogPath }),
       reconstructedChatlogCache: null,
       reconstructedChatlogTtlMs: 0,
       cognitiveBus: null,
       getTokenLimit,
       getSkillContext: (skillName) => nekoCoreSkillManager.buildSkillsPromptFor(skillName),
-      getEntitySummaries: () => entity.entitySummaries || []
+      getEntitySummaries: () => entity.entitySummaries || [],
+      workspaceToolSchemas: nekoToolSchemas,
+      executeWorkspaceToolCall: nekoToolExecutor
     });
 
     const trimmedChatHistory = Array.isArray(chatHistory) ? chatHistory.slice(-10) : [];

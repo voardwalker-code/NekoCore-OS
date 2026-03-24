@@ -93,11 +93,11 @@ test('agent-echo.js still exports echoFuture as a function (no regression)', () 
     'echoFuture must remain exported from agent-echo.js');
 });
 
-test('echoFuture returns null (stub unchanged — Phase 5 implements body)', () => {
+test('echoFuture returns [] when no indexCache provided (Phase 5 implemented)', () => {
   const { echoFuture } = require(agentEchoPath);
   const result = echoFuture('any_entity');
-  assert.equal(result, null,
-    'echoFuture stub must return null until Phase 5 implements the shape classification body');
+  assert.deepEqual(result, [],
+    'echoFuture must return [] when no indexCache is provided');
 });
 
 // ── E-7-2: doc exit audit ─────────────────────────────────────────────────────

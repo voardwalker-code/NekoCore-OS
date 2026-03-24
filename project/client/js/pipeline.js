@@ -70,6 +70,14 @@ function normalizeRuntimeConfig(config) {
       model: config.model || 'llama3'
     };
   }
+  if (type === 'anthropic') {
+    return {
+      type,
+      endpoint: config.endpoint || 'https://api.anthropic.com/v1/messages',
+      apiKey: config.apiKey || config.key || '',
+      model: config.model || 'claude-sonnet-4-6'
+    };
+  }
   return null;
 }
 

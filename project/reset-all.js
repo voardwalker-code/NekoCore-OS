@@ -2,6 +2,7 @@
 // reset-all.js — Factory reset: clear persisted runtime state for a true first run
 const fs = require('fs');
 const path = require('path');
+const { execFileSync } = require('child_process');
 const { resetNekoCoreRuntime } = require('./server/brain/nekocore/reset-runtime');
 
 const root = path.join(__dirname);
@@ -75,6 +76,30 @@ try {
   console.log('Reset', path.join(root, 'entities', 'entity_nekocore'));
 } catch (e) {
   console.warn('Warning: NekoCore reprovision failed:', e.message);
+}
+
+// Reset MA runtime state too (preserving MA blueprints and static assets)
+try {
+  const maResetScript = path.join(root, 'MA', 'MA-Reset-All.js');
+  if (fs.existsSync(maResetScript)) {
+    execFileSync(process.execPath, [maResetScript, '--yes'], { stdio: 'inherit' });
+  } else {
+    console.warn('Warning: MA reset script not found:', maResetScript);
+  }
+
+  // Force MA to true first-run state by removing active runtime config + pid.
+  const maFilesToDelete = [
+    path.join(root, 'MA', 'MA-Config', 'ma-config.json'),
+    path.join(root, 'MA', 'ma.pid')
+  ];
+
+  for (const f of maFilesToDelete) {
+    if (!fs.existsSync(f)) continue;
+    fs.unlinkSync(f);
+    console.log('Deleted', f);
+  }
+} catch (e) {
+  console.warn('Warning: MA reset failed:', e.message);
 }
 
 console.log('Factory reset complete. Ready for first run setup.');

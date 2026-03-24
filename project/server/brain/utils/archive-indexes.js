@@ -354,34 +354,54 @@ function rebuildSubjectIndexes(entityId, opts = {}) {
   return written;
 }
 
-// ── Echo Future — Shape Index Stub (Phase 5 implements body) ────────────────
+// ── Echo Future — Shape Index Builder (Phase 5 Slice 4) ─────────────────────
 
 /**
- * Stub for Echo Future (Phase 5) shape index rebuild.
+ * Rebuild shape indexes from all registered archive bucket entries.
+ * Groups entries by their memory shape label (emotional, reflective,
+ * narrative, factual, anticipatory, unclassified).
  *
- * Phase 5 will call this with a real implementation that:
- *   1. Reads archive bucket entries and classifies each by memory shape
- *      (narrative arc, reflective, factual, emotional, anticipatory, etc.).
- *   2. Writes per-shape index files at axis='shape', key=<shapeLabel>
- *      (e.g. `shape_narrative.idx.json`, `shape_reflective.idx.json`).
+ * For entries that already carry a `shape` field, uses it directly.
+ * For legacy entries without `shape`, runs the heuristic classifier
+ * on the available metadata (emotion, importance, type).
  *
- * Shape index files follow the same *.idx.json format as temporal and
- * subject indexes — a plain JSON array of memIds.
- *
- * The stub is registered here so:
- *   - `phase-archive-index.js` can call it without import changes in Phase 5.
- *   - `intersectIndexes()` and `narrowByIndex()` work immediately with shape
- *     filters once Phase 5 populates the axis='shape' entries.
- *   - Guard tests lock the export shape and zero-write contract now.
+ * Writes one index per shape label: shape/<label>.idx.json
  *
  * @param {string} entityId
- * @param {Object} [opts]        Accepts opts.baseDir for test isolation.
- * @returns {number} 0 until Phase 5 implements the body.
+ * @param {Object} [opts]
+ * @param {string} [opts.baseDir]  Override entities root (for tests).
+ * @returns {number} Count of unique memIds indexed.
  */
-function rebuildShapeIndexes(entityId, opts = {}) { // eslint-disable-line no-unused-vars
-  // Phase 5 TODO: classify archive entries by memory shape and write
-  // per-shape *.idx.json files into the axis='shape' subdirectory.
-  return 0;
+function rebuildShapeIndexes(entityId, opts = {}) {
+  const { classifyShape } = require('../memory/shape-classifier');
+  const bucketFiles = _listBucketFilenames(entityId, opts);
+  if (!bucketFiles.length) return 0;
+
+  // shape → Set<memId>
+  const byShape = new Map();
+
+  for (const filename of bucketFiles) {
+    const entries = _readBucketEntries(entityId, filename, opts);
+    for (const entry of entries) {
+      const shape = entry.shape || classifyShape({
+        semantic: null,
+        emotion: entry.emotion || 'neutral',
+        topics: entry.topics || [],
+        importance: entry.importance ?? 0.5,
+        type: entry.type || 'episodic'
+      });
+      if (!byShape.has(shape)) byShape.set(shape, new Set());
+      byShape.get(shape).add(entry.memId);
+    }
+  }
+
+  let total = 0;
+  for (const [shape, memIds] of byShape) {
+    const arr = Array.from(memIds);
+    writeIndex(entityId, 'shape', shape, arr, opts);
+    total += arr.length;
+  }
+  return total;
 }
 
 module.exports = {

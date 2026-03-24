@@ -103,6 +103,10 @@ function getConsciousMemoryPath(entityId) {
   return path.join(getMemoryRoot(entityId), 'conscious');
 }
 
+function getThinkingLogPath(entityId) {
+  return path.join(getMemoryRoot(entityId), 'thinking-logs');
+}
+
 // ── Dream sub-directories ───────────────────────────────────
 
 function getDreamEpisodicPath(entityId) {
@@ -216,6 +220,7 @@ module.exports = {
   getLtmPath,
   getDreamMemoryPath,
   getConsciousMemoryPath,
+  getThinkingLogPath,
 
   getDreamEpisodicPath,
   getDreamSemanticPath,

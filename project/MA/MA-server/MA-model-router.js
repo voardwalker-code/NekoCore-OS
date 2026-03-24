@@ -74,6 +74,7 @@ function addModel(entry) {
     costPer1kOut:  entry.costPer1kOut || 0,
     strengths:     entry.strengths || [],
     weaknesses:    entry.weaknesses || [],
+    capabilities:  entry.capabilities || [],
     tier:          entry.tier || (entry.provider === 'ollama' ? 'local' : 'mid'),
     vision:        entry.vision === true,
     enabled:       entry.enabled !== false,
@@ -235,7 +236,19 @@ function evaluateJob(message, taskType, agentRole) {
     preferredTier = 'mid';  // senior agents get at least mid-tier
   }
 
-  return { complexity, language, estimatedContextNeed, minContextWindow, preferredTier, taskType: taskType || 'general' };
+  // Determine which capabilities would benefit this job
+  const desiredCaps = [];
+  if (complexity === 'complex' || taskType === 'architect' || taskType === 'code' || taskType === 'deep_research') {
+    desiredCaps.push('thinking');
+  }
+  if (complexity !== 'simple') {
+    desiredCaps.push('caching');
+  }
+  if (taskType === 'code' || taskType === 'project' || taskType === 'architect') {
+    desiredCaps.push('native-tools');
+  }
+
+  return { complexity, language, estimatedContextNeed, minContextWindow, preferredTier, taskType: taskType || 'general', desiredCaps };
 }
 
 /**
@@ -322,6 +335,24 @@ function selectModel(jobReqs) {
     } else if (cost < 0.01) {
       score += 5;
       reason.push('low cost');
+    }
+
+    // 6. Capability matching — bonus when model has capabilities the job wants
+    const modelCaps = m.capabilities || [];
+    if (modelCaps.length && jobReqs.desiredCaps && jobReqs.desiredCaps.length) {
+      const matched = jobReqs.desiredCaps.filter(c => modelCaps.includes(c));
+      if (matched.includes('thinking')) {
+        score += 15;
+        reason.push('thinking capable');
+      }
+      if (matched.includes('caching')) {
+        score += 10;
+        reason.push('prompt caching');
+      }
+      if (matched.includes('native-tools')) {
+        score += 10;
+        reason.push('native tool use');
+      }
     }
 
     return { model: m, score, reason };

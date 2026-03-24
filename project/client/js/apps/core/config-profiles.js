@@ -48,6 +48,14 @@ function getMainConfigFromProfile(profile) {
         return { type: 'openrouter', endpoint, apiKey, model };
       }
     }
+    if (mType === 'anthropic') {
+      const endpoint = m.endpoint || 'https://api.anthropic.com/v1/messages';
+      const apiKey = m.apiKey || m.key || '';
+      const model = m.model || '';
+      if (endpoint && apiKey && model) {
+        return { type: 'anthropic', endpoint, apiKey, model };
+      }
+    }
     if (mType === 'ollama') {
       const endpoint = m.endpoint || m.ollamaUrl || 'http://localhost:11434';
       const model = m.model || m.ollamaModel || 'llama3';

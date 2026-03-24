@@ -16,6 +16,9 @@ const { createTaskPipelineBridge } = require('../brain/tasks/task-pipeline-bridg
 const cmdExecutor = require('../integrations/cmd-executor');
 const { resumeWithInput } = require('../brain/tasks/task-executor');
 const { stripInternalResumeTag, runtimeLabel } = require('./llm-runtime-utils');
+const { createThinkingLog } = require('./thinking-log');
+const { createMemoryToolBridge } = require('./memory-tool-bridge');
+const { buildToolSchemas, createToolExecutor } = require('./tool-use-adapter');
 const { runPostResponseMemoryEncoding } = require('./post-response-memory');
 const { runCognitiveFeedbackLoop }      = require('./post-response-cognitive-feedback');
 const { postProcessResponse }           = require('./response-postprocess');
@@ -485,7 +488,8 @@ function createChatPipeline(deps) {
                   entityName: entity?.name || null,
                   userName: entity?.persona?.userName || null,
                   activeUserId: entity?.persona?.activeUserId || null,
-                  entityPersona: entity?.persona || null
+                  entityPersona: entity?.persona || null,
+                  beliefGraph: brain.beliefGraph || null
                 });
                 await runCognitiveFeedbackLoop({
                   userMessage: effectiveUserMessage,
@@ -580,7 +584,8 @@ function createChatPipeline(deps) {
                 entityName: entity?.name || null,
                 userName: entity?.persona?.userName || null,
                 activeUserId: entity?.persona?.activeUserId || null,
-                entityPersona: entity?.persona || null
+                entityPersona: entity?.persona || null,
+                beliefGraph: brain.beliefGraph || null
               });
               await runCognitiveFeedbackLoop({
                 userMessage: effectiveUserMessage,
@@ -659,9 +664,36 @@ function createChatPipeline(deps) {
       console.warn('  ⚠ Cognitive snapshot assembly failed, continuing without:', snapErr.message);
     }
 
+    // Wrap callLLM with memory tool bridge for Anthropic native tool_use
+    const { memorySearchFn: bridgeSearchFn, memoryCreateFn: bridgeCreateFn } = buildMemoryCallbacks();
+    const memoryToolCallLLM = createMemoryToolBridge({
+      memorySearch: bridgeSearchFn,
+      memoryCreate: bridgeCreateFn,
+      memoryStorage: brain.memoryStorage
+    })(callLLMWithRuntime);
+
+    // Build native tool schemas + executor for providers that support it
+    const { memorySearchFn: toolSearchFn, memoryCreateFn: toolCreateFn } = buildMemoryCallbacks();
+    const { skillCreateFn: toolSkillCreate, skillListFn: toolSkillList, skillEditFn: toolSkillEdit, profileUpdateFn: toolProfileUpdate } = buildSkillCallbacks();
+    const { archiveSearchFn: toolArchiveSearch } = buildArchiveCallbacks();
+    const mainRuntime = aspectConfigs.conscious || aspectConfigs.main;
+    const providerType = mainRuntime?.type || 'ollama';
+    const nativeToolSchemas = buildToolSchemas(providerType);
+    const nativeToolExecutor = nativeToolSchemas ? createToolExecutor({
+      workspacePath: entity?.workspacePath || '',
+      webFetch,
+      memorySearch: toolSearchFn,
+      memoryCreate: toolCreateFn,
+      archiveSearch: toolArchiveSearch,
+      skillCreate: toolSkillCreate,
+      skillList: toolSkillList,
+      skillEdit: toolSkillEdit,
+      profileUpdate: toolProfileUpdate
+    }) : null;
+
     const orchestrator = new Orchestrator({
       entity,
-      callLLM: callLLMWithRuntime,
+      callLLM: memoryToolCallLLM,
       aspectConfigs,
       getMemoryContext: getSubconsciousMemoryContext,
       getBeliefs: (topics) => {
@@ -684,12 +716,14 @@ function createChatPipeline(deps) {
         ? async (topics) => brain.consciousMemory.getContext(topics, 5)
         : null,
       storeConsciousObservation: brain.consciousMemory
-        ? async (msg, response, topics) => {
-            const summary = response?.slice(0, 300) || msg.slice(0, 300);
-            brain.consciousMemory.addToStm({ summary, topics, source: 'conscious_observation' });
+        ? async (msg, response, topics, thinkingLogId) => {
+            const entry = { summary: response?.slice(0, 300) || msg.slice(0, 300), topics, source: 'conscious_observation' };
+            if (thinkingLogId) entry.thinking_log_id = thinkingLogId;
+            brain.consciousMemory.addToStm(entry);
             brain.consciousMemory.reinforce(topics);
           }
         : null,
+      thinkingLog: createThinkingLog({ getThinkingLogDir: entityPaths.getThinkingLogPath }),
       reconstructedChatlogCache: reconstructionCache,
       reconstructedChatlogTtlMs: reconstructionCacheTtlMs,
       cognitiveBus,
@@ -702,7 +736,9 @@ function createChatPipeline(deps) {
             .map(e => ({ id: e.id, name: e.name, traits: (e.personality_traits || []).slice(0, 3) }));
         } catch (_) { return []; }
       } : null,
-      cognitiveSnapshot: cognitiveSnapshotBlock
+      cognitiveSnapshot: cognitiveSnapshotBlock,
+      workspaceToolSchemas: nativeToolSchemas,
+      executeWorkspaceToolCall: nativeToolExecutor
     });
 
     console.log(`  ℹ Running orchestrator with aspects: main=${runtimeLabel(aspectConfigs.main)}, sub=${runtimeLabel(aspectConfigs.subconscious)}, dream=${runtimeLabel(aspectConfigs.dream)}, orch=${runtimeLabel(aspectConfigs.orchestrator)}`);
@@ -906,7 +942,8 @@ function createChatPipeline(deps) {
           entityName: entity?.name || null,
           userName: entity?.persona?.userName || null,
           activeUserId: entity?.persona?.activeUserId || null,
-          entityPersona: entity?.persona || null
+          entityPersona: entity?.persona || null,
+          beliefGraph: brain.beliefGraph || null
         });
 
         // ── Cognitive feedback loop (C7/C8/C9) ──────────────────────────────
@@ -990,6 +1027,10 @@ function createChatPipeline(deps) {
   // @param {boolean} opts.memorySave    — store conversation exchange after response
 
   async function processSingleLlmChatMessage(userMessage, chatHistory = [], { memoryRecall = false, memorySave = false } = {}) {
+    const orchestrationStartTs = Date.now();
+    broadcastSSE('orchestration_start', { timestamp: orchestrationStartTs, _source: 'single-llm' });
+    broadcastSSE('phase_start', { phase: 'single_llm', timestamp: orchestrationStartTs, source: 'single-llm' });
+
     logTimeline('chat.single_llm.user_message', {
       userMessage: String(userMessage || '').slice(0, 1200),
       memoryRecall,
@@ -1067,8 +1108,41 @@ function createChatPipeline(deps) {
 
     // ── Call LLM ─────────────────────────────────────────────────────────────
     console.log(`  ℹ Single-LLM chat: model=${runtimeLabel(aspectConfigs.main)}, recall=${memoryRecall}, save=${memorySave}`);
-    const response = await callLLMWithRuntime(aspectConfigs.main, messages, { temperature: 0.7 });
-    const finalResponse = String(response || '');
+    const llmResult = await callLLMWithRuntime(aspectConfigs.main, messages, {
+      temperature: 0.7,
+      returnUsage: true
+    });
+    const defaultUsage = { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 };
+    const usage = (llmResult && typeof llmResult === 'object' && !Array.isArray(llmResult) && llmResult.usage)
+      ? llmResult.usage
+      : defaultUsage;
+    const finalResponse = String(
+      (llmResult && typeof llmResult === 'object' && !Array.isArray(llmResult) && Object.prototype.hasOwnProperty.call(llmResult, 'content'))
+        ? (llmResult.content || '')
+        : (llmResult || '')
+    );
+
+    const totalDuration = Date.now() - orchestrationStartTs;
+    broadcastSSE('phase_complete', {
+      phase: 'single_llm',
+      duration: totalDuration,
+      timestamp: Date.now(),
+      source: 'single-llm'
+    });
+    broadcastSSE('orchestration_complete', {
+      totalDuration,
+      timestamp: Date.now(),
+      models: {
+        single_llm: aspectConfigs.main?.model || 'unknown',
+        orchestrator: aspectConfigs.main?.model || 'unknown'
+      },
+      timing: { total_ms: totalDuration },
+      tokenUsage: {
+        single_llm: usage,
+        total: usage
+      },
+      _source: 'single-llm'
+    });
 
     // Optionally save memory (save ON)
     if (memorySave && aspectConfigs.subconscious && brain.entityId) {
@@ -1094,7 +1168,8 @@ function createChatPipeline(deps) {
             entityName: entity?.name || null,
             userName: entity?.persona?.userName || null,
             activeUserId: entity?.persona?.activeUserId || null,
-            entityPersona: entity?.persona || null
+            entityPersona: entity?.persona || null,
+            beliefGraph: brain.beliefGraph || null
           });
 
           // ── Cognitive feedback (single-LLM path) ──────────────────────────

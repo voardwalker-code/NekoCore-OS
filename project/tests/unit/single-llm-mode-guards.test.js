@@ -102,7 +102,7 @@ test('chat-pipeline processSingleLlmChatMessage accepts memorySave flag', () => 
 test('chat-pipeline processSingleLlmChatMessage gates memory recall on flag', () => {
   const src = fs.readFileSync(CHAT_PIPELINE, 'utf8');
   const start = src.indexOf('function processSingleLlmChatMessage(');
-  const block = src.slice(start, start + 3000);
+  const block = src.slice(start, start + 6000);
   assert.ok(
     block.includes('getSubconsciousMemoryContext') && block.includes('memoryRecall'),
     'processSingleLlmChatMessage must gate getSubconsciousMemoryContext on memoryRecall flag'
@@ -112,7 +112,7 @@ test('chat-pipeline processSingleLlmChatMessage gates memory recall on flag', ()
 test('chat-pipeline processSingleLlmChatMessage gates memory save on flag', () => {
   const src = fs.readFileSync(CHAT_PIPELINE, 'utf8');
   const start = src.indexOf('function processSingleLlmChatMessage(');
-  const block = src.slice(start, start + 3000);
+  const block = src.slice(start, start + 6000);
   assert.ok(
     block.includes('runPostResponseMemoryEncoding') && block.includes('memorySave'),
     'processSingleLlmChatMessage must gate runPostResponseMemoryEncoding on memorySave flag'

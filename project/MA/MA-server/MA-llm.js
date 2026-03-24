@@ -1,5 +1,5 @@
 // ── MA LLM Interface ─────────────────────────────────────────────────────────
-// Minimal unified caller for OpenRouter and Ollama.
+// Unified caller for OpenRouter, Ollama, and Anthropic Direct.
 // Single flat config: { type, endpoint, apiKey, model }
 // No profiles, no subconscious, no dream — just callLLM.
 'use strict';
@@ -9,13 +9,15 @@ const https = require('https');
 
 const DEFAULT_TIMEOUT  = 90000;  // 90s
 const DEFAULT_MAX_TOKENS = 12288;
+const ANTHROPIC_API_VERSION = '2023-06-01';
+const ANTHROPIC_DEFAULT_ENDPOINT = 'https://api.anthropic.com/v1/messages';
 
 /**
  * Call an LLM provider.
- * @param {object} config  - { type, endpoint, apiKey, model }
+ * @param {object} config  - { type, endpoint, apiKey, model, capabilities? }
  * @param {Array}  messages - [{ role, content }]
- * @param {object} opts    - { temperature, maxTokens, timeout, responseFormat }
- * @returns {Promise<string>} LLM response text
+ * @param {object} opts    - { temperature, maxTokens, timeout, responseFormat, thinking, tools }
+ * @returns {Promise<string|{content:string, toolCalls:Array}>} String normally; object when tools are active and tool_use blocks returned
  */
 async function callLLM(config, messages, opts = {}) {
   if (!config || !config.type) throw new Error('LLM config missing type');
@@ -29,8 +31,11 @@ async function callLLM(config, messages, opts = {}) {
   if (config.type === 'ollama') {
     return _callOllama(config, messages, { temperature, maxTokens, timeout });
   }
+  if (config.type === 'anthropic') {
+    return _callAnthropic(config, messages, { temperature, maxTokens, timeout, thinking: opts.thinking, tools: opts.tools });
+  }
   // Default: OpenRouter / OpenAI-compatible
-  return _callOpenRouter(config, messages, { temperature, maxTokens, timeout, responseFormat: opts.responseFormat });
+  return _callOpenRouter(config, messages, { temperature, maxTokens, timeout, responseFormat: opts.responseFormat, tools: opts.tools });
 }
 
 // ── OpenRouter / OpenAI-compatible ──────────────────────────────────────────
@@ -40,7 +45,8 @@ async function _callOpenRouter(config, messages, opts) {
     messages,
     temperature: opts.temperature,
     max_tokens:  opts.maxTokens,
-    ...(opts.responseFormat === 'json' ? { response_format: { type: 'json_object' } } : {})
+    ...(opts.responseFormat === 'json' ? { response_format: { type: 'json_object' } } : {}),
+    ...(opts.tools && opts.tools.length ? { tools: opts.tools } : {})
   });
 
   const url = new URL(config.endpoint);
@@ -55,7 +61,21 @@ async function _callOpenRouter(config, messages, opts) {
   if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
   if (!data.choices || !data.choices.length) throw new Error('No choices in LLM response');
 
-  return (data.choices[0].message?.content || '').trim();
+  // If native tools were used and tool_calls are in the response, return structured result
+  const msg = data.choices[0].message;
+  if (opts.tools && opts.tools.length && msg.tool_calls && msg.tool_calls.length) {
+    return {
+      content: (msg.content || '').trim(),
+      toolCalls: msg.tool_calls.map(tc => ({
+        id: tc.id,
+        name: tc.function?.name || '',
+        input: JSON.parse(tc.function?.arguments || '{}')
+      })),
+      _raw: msg  // preserve for re-injection
+    };
+  }
+
+  return (msg?.content || '').trim();
 }
 
 // ── Ollama ──────────────────────────────────────────────────────────────────
@@ -95,6 +115,138 @@ async function _callOllama(config, messages, opts) {
 
   if (data.error) throw new Error(data.error);
   return (data.message?.content || '').trim();
+}
+
+// ── Anthropic Messages API ───────────────────────────────────────────────────
+async function _callAnthropic(config, messages, opts) {
+  const endpoint = config.endpoint || ANTHROPIC_DEFAULT_ENDPOINT;
+  const url = new URL(endpoint);
+
+  // Extract system messages into a separate system parameter (Anthropic requirement)
+  const systemMessages = messages.filter(m => m.role === 'system');
+  const nonSystemMessages = messages.filter(m => m.role !== 'system');
+
+  // Determine if extended cache (1-hour TTL) is active
+  const useExtendedCache = !!(config.capabilities && config.capabilities.extendedCache);
+
+  // Build system content blocks with cache_control on the last block
+  const systemBlocks = systemMessages.map((msg, idx) => {
+    const block = { type: 'text', text: msg.content };
+    if (idx === systemMessages.length - 1) {
+      block.cache_control = useExtendedCache
+        ? { type: 'ephemeral', ttl: '1h' }
+        : { type: 'ephemeral' };
+    }
+    return block;
+  });
+
+  // Ensure alternating user/assistant roles (Anthropic requirement)
+  const anthropicMessages = _enforceAlternatingRoles(nonSystemMessages);
+
+  // Resolve thinking mode: only for Anthropic when capability + opts signal it
+  const caps = config.capabilities || {};
+  const useThinking = !!(opts.thinking && caps.extendedThinking);
+  let thinkingParam;
+  if (useThinking) {
+    if (/opus/i.test(config.model)) {
+      thinkingParam = { type: 'enabled', budget_tokens: caps.thinkingBudget || 10000 };
+    } else if (/sonnet/i.test(config.model)) {
+      thinkingParam = { type: 'enabled', budget_tokens: caps.thinkingBudget || 8192 };
+    }
+    // Haiku: skip thinking (speed-optimized)
+  }
+
+  const reqBody = {
+    model:      config.model,
+    system:     systemBlocks.length ? systemBlocks : undefined,
+    messages:   anthropicMessages,
+    max_tokens: opts.maxTokens
+  };
+
+  // Native tool use: include tools array in request
+  if (opts.tools && opts.tools.length) {
+    reqBody.tools = opts.tools;
+  }
+
+  // Temperature is incompatible with thinking — only include when not thinking
+  if (thinkingParam) {
+    reqBody.thinking = thinkingParam;
+    console.log(`  ⟐ MA: Extended thinking active (budget: ${thinkingParam.budget_tokens})`);
+  } else {
+    reqBody.temperature = opts.temperature;
+  }
+
+  const body = JSON.stringify(reqBody);
+
+  const headers = {
+    'Content-Type':      'application/json',
+    'x-api-key':         config.apiKey,
+    'anthropic-version':  ANTHROPIC_API_VERSION
+  };
+
+  // Extended cache: adds beta header for 1-hour TTL support
+  if (useExtendedCache) {
+    headers['anthropic-beta'] = 'prompt-caching-2024-12-20';
+    console.log('  ⟐ MA: Extended cache (1h) active');
+  }
+
+  const raw = await _fetch(url, body, headers, opts.timeout);
+  const data = JSON.parse(raw);
+
+  if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
+  if (!data.content || !data.content.length) throw new Error('No content in Anthropic response');
+
+  // Log cache performance
+  const cacheRead = data.usage?.cache_read_input_tokens || 0;
+  const cacheCreation = data.usage?.cache_creation_input_tokens || 0;
+  if (cacheRead || cacheCreation) {
+    console.log(`  \u27D0 MA Anthropic cache: ${cacheRead} read, ${cacheCreation} creation tokens`);
+  }
+
+  // Extract text from content blocks (skip thinking blocks)
+  const textParts = data.content.filter(b => b.type === 'text');
+  const text = textParts.map(b => b.text).join('').trim();
+
+  // If native tools were used, check for tool_use blocks
+  if (opts.tools && opts.tools.length) {
+    const toolUseBlocks = data.content.filter(b => b.type === 'tool_use');
+    if (toolUseBlocks.length) {
+      return {
+        content: text,
+        toolCalls: toolUseBlocks.map(b => ({
+          id: b.id,
+          name: b.name,
+          input: b.input || {}
+        })),
+        _stopReason: data.stop_reason
+      };
+    }
+  }
+
+  return text;
+}
+
+// Anthropic requires strictly alternating user/assistant messages.
+// Merge consecutive same-role messages and ensure conversation starts with user.
+function _enforceAlternatingRoles(messages) {
+  if (!messages.length) return [{ role: 'user', content: '.' }];
+
+  const merged = [];
+  for (const msg of messages) {
+    const last = merged[merged.length - 1];
+    if (last && last.role === msg.role) {
+      last.content += '\n\n' + msg.content;
+    } else {
+      merged.push({ role: msg.role, content: msg.content });
+    }
+  }
+
+  // Ensure first message is user role
+  if (merged[0]?.role !== 'user') {
+    merged.unshift({ role: 'user', content: '.' });
+  }
+
+  return merged;
 }
 
 // ── Raw HTTP POST ───────────────────────────────────────────────────────────

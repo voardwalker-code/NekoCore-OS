@@ -81,6 +81,14 @@
             "label": "Resource Manager",
             "icon": "📋",
             "navTarget": "#navOptionalAppsHost"
+        },
+        {
+            "tabId": "qachecklist",
+            "enabled": true,
+            "path": "apps/non-core/core/tab-qachecklist.html",
+            "label": "QA Checklist",
+            "icon": "✅",
+            "navTarget": "#navOptionalAppsHost"
         }
     ],
     "customApps": [

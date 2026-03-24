@@ -195,7 +195,10 @@ function reportPipelinePhase(phase, status, detail) {
 }
 
 function reportOrchestrationMetrics(data) {
-  runtimeTelemetry.tokenUsage = data?.tokenUsage?.total || null;
+  const usage = data?.tokenUsage?.total || data?.tokenUsage || null;
+  if (usage && Number.isFinite(Number(usage.total_tokens || 0))) {
+    runtimeTelemetry.tokenUsage = usage;
+  }
   runtimeTelemetry.models = data?.models || runtimeTelemetry.models;
   runtimeTelemetry.totalDurationMs = data?.totalDuration || data?.timing?.total_ms || 0;
   const activeTab = runtimeTelemetry.activeWindowTab || getFocusedWindowTab();

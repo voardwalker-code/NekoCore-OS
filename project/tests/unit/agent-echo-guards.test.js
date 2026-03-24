@@ -124,10 +124,10 @@ test('echoPast returns an array (stub for E-2)', () => {
 
 // ── echoFuture stub ───────────────────────────────────────────────────────────
 
-test('echoFuture returns null (stub for Phase 5)', () => {
+test('echoFuture returns [] when no indexCache provided', () => {
   const { echoFuture } = require(agentEchoPath);
   const result = echoFuture('test_entity');
-  assert.equal(result, null, 'echoFuture stub must return null');
+  assert.deepEqual(result, [], 'echoFuture must return [] when no indexCache');
 });
 
 // ── ConsciousMemory STM_MAX_ENTRIES cap ──────────────────────────────────────

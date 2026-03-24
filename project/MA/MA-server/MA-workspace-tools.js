@@ -192,6 +192,11 @@ async function executeToolCalls(text, opts = {}) {
       results.push({ tool: call.name, result: call.error, ok: false });
       continue;
     }
+    // Block tools restricted by current mode
+    if (opts.blockedTools && opts.blockedTools.has(call.name)) {
+      results.push({ tool: call.name, result: `I'm currently in Chat Mode and can't use ${call.name}. Please switch to Work Mode to use this tool.`, ok: false });
+      continue;
+    }
     try {
       let result;
       const p = call.params;
@@ -335,4 +340,83 @@ async function _cmdRun(wp, cmd) {
   return out;
 }
 
-module.exports = { extractToolCalls, executeToolCalls, formatToolResults, stripToolCalls, ToolSchemas };
+/**
+ * Execute pre-parsed native tool calls (from function calling APIs).
+ * Takes structured calls instead of parsing text — used when nativeToolUse capability is active.
+ * @param {Array<{ id: string, name: string, input: object }>} toolCalls
+ * @param {object} opts - { workspacePath, webFetchEnabled, cmdRunEnabled, memorySearch }
+ * @returns {Promise<Array<{ id: string, tool: string, result: string, ok: boolean }>>}
+ */
+async function executeNativeToolCalls(toolCalls, opts = {}) {
+  if (!toolCalls || !toolCalls.length) return [];
+
+  const wp = opts.workspacePath || '';
+  const results = [];
+
+  for (const call of toolCalls) {
+    const name = _normName(call.name);
+    const schema = ToolSchemas[name];
+    if (!schema) {
+      results.push({ id: call.id, tool: name, result: `Unknown tool: ${name}`, ok: false });
+      continue;
+    }
+
+    const validation = schema.safeParse(call.input || {});
+    if (!validation.success) {
+      const issues = validation.error?.issues || [];
+      const msgs = issues.map(i => `${(i.path || []).join('.') || 'param'}: ${i.message}`);
+      results.push({ id: call.id, tool: name, result: `Schema error: ${msgs.join('; ')}`, ok: false });
+      continue;
+    }
+
+    // Block tools restricted by current mode
+    if (opts.blockedTools && opts.blockedTools.has(name)) {
+      results.push({ id: call.id, tool: name, result: `I'm currently in Chat Mode and can't use ${name}. Please switch to Work Mode to use this tool.`, ok: false });
+      continue;
+    }
+
+    try {
+      let result;
+      const p = validation.data;
+      switch (name) {
+        case 'ws_list':   result = _wsList(wp, p.path); break;
+        case 'ws_read':   result = _wsRead(wp, p.path); break;
+        case 'ws_write':  result = _wsWrite(wp, p.path, p.content); break;
+        case 'ws_append': result = _wsAppend(wp, p.path, p.content); break;
+        case 'ws_delete': result = _wsDelete(wp, p.path); break;
+        case 'ws_mkdir':  result = _wsMkdir(wp, p.path); break;
+        case 'ws_move':   result = _wsMove(wp, p.src, p.dst); break;
+        case 'web_search':
+          if (opts.webFetchEnabled !== false) result = await _webSearch(p.query);
+          else result = 'web_search disabled';
+          break;
+        case 'web_fetch':
+          if (opts.webFetchEnabled !== false) result = await _webFetch(p.url);
+          else result = 'web_fetch disabled';
+          break;
+        case 'cmd_run':
+          if (opts.cmdRunEnabled !== false) result = await _cmdRun(wp, p.cmd);
+          else result = 'cmd_run disabled';
+          break;
+        case 'memory_search':
+          if (opts.memorySearch) {
+            const hits = opts.memorySearch(p.query, p.limit || 5);
+            result = hits.length
+              ? hits.map(m => `- [${m.type || 'memory'}] ${(m.summary || m.content || '').slice(0, 300)}`).join('\n')
+              : 'No matching memories found.';
+          } else {
+            result = 'memory_search: memory module not available';
+          }
+          break;
+        default:
+          result = `Unknown tool: ${name}`;
+      }
+      results.push({ id: call.id, tool: name, result, ok: true });
+    } catch (e) {
+      results.push({ id: call.id, tool: name, result: `Error: ${e.message}`, ok: false });
+    }
+  }
+  return results;
+}
+
+module.exports = { extractToolCalls, executeToolCalls, executeNativeToolCalls, formatToolResults, stripToolCalls, ToolSchemas };

@@ -13,8 +13,8 @@
 // ============================================================
 function isApiConfigured() {
   if (!activeConfig || !activeConfig.model || !activeConfig.endpoint) return false;
-  // OpenRouter requires API key, Ollama does not
-  if (activeConfig.type === 'openrouter') {
+  // OpenRouter and Anthropic require API key, Ollama does not
+  if (activeConfig.type === 'openrouter' || activeConfig.type === 'anthropic') {
     return !!activeConfig.apiKey;
   }
   // Ollama only needs endpoint and model
@@ -54,8 +54,10 @@ function goToSetupTab(provider) {
       const btn = document.querySelector('[onclick="showProviderTab(\'main\', this)"]');
       if (btn) btn.click();
       const tabBtn = document.querySelector('[onclick="switchTab(\'openrouter-main\', this)"]');
-      if (tabBtn) tabBtn.click();
-    } else if (provider === 'ollama') {
+      if (tabBtn) tabBtn.click();    } else if (provider === 'anthropic') {
+      const btn = document.querySelector('[onclick=\"showProviderTab(\'main\', this)\"]');
+      if (btn) btn.click();
+      simplePickProvider('anthropic');    } else if (provider === 'ollama') {
       const btn = document.querySelector('[onclick="showProviderTab(\'main\', this)"]');
       if (btn) btn.click();
       const tabBtn = document.querySelector('[onclick="switchTab(\'ollama-main\', this)"]');
@@ -96,6 +98,7 @@ let setupAspectConfigs = {
   main: null
 };
 let setupSkillSelection = new Set();
+let setupReadyAtMs = 0;
 
 function applyOpenRouterModelSuggestions(fieldId, aspect = 'main') {
   const field = document.getElementById(fieldId);
@@ -144,6 +147,7 @@ function showSetupWizard() {
   if (overlay) overlay.classList.add('active');
   setupActive = true;
   setupStep = SETUP_STEPS.MAIN;
+  setupReadyAtMs = 0;
   setupAspectConfigs = { main: null };
   setupSkillSelection = new Set();
   setupData = { currentAspect: 'main', provider: null };
@@ -183,13 +187,18 @@ function setupSelectProviderForAspect(aspect, type) {
   ['setupOpenrouter', 'setupOpenrouter2', 'setupOpenrouter3'].forEach(id => {
     const el = document.getElementById(id); if (el) el.style.display = 'none';
   });
+  ['setupAnthropic', 'setupAnthropic2', 'setupAnthropic3'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.style.display = 'none';
+  });
   ['setupOllama', 'setupOllama2', 'setupOllama3'].forEach(id => {
     const el = document.getElementById(id); if (el) el.style.display = 'none';
   });
   
   const orSectionId = 'setupOpenrouter' + suffix;
+  const antSectionId = 'setupAnthropic' + suffix;
   const olSectionId = 'setupOllama' + suffix;
   const orSection = document.getElementById(orSectionId);
+  const antSection = document.getElementById(antSectionId);
   const olSection = document.getElementById(olSectionId);
 
   if (type === 'openrouter') {
@@ -197,6 +206,8 @@ function setupSelectProviderForAspect(aspect, type) {
       orSection.style.display = 'block';
       applyOpenRouterModelSuggestions('setupOrModel' + suffix, aspect);
     }
+  } else if (type === 'anthropic') {
+    if (antSection) antSection.style.display = 'block';
   } else {
     if (olSection) olSection.style.display = 'block';
   }
@@ -253,11 +264,58 @@ async function setupTestConnectionForAspect() {
       config = {
         type: 'openrouter',
         endpoint: OPENROUTER_PRESET.ep,
-        key: key,
+        apiKey: key,
         model: model
       };
 
       statusEl.textContent = LLM_ROLES[aspect] + ' connected (' + model.split('/').pop() + ')';
+      statusEl.style.color = 'var(--em)';
+
+    } else if (setupData.provider === 'anthropic') {
+      const keyId = 'setupAnthropicKey' + suffix;
+      const modelId = 'setupAnthropicModel' + suffix;
+
+      const key = document.getElementById(keyId).value.trim();
+      const model = document.getElementById(modelId).value.trim();
+      if (!key) {
+        statusEl.textContent = 'API key is required';
+        statusEl.style.color = 'var(--dn)';
+        return;
+      }
+      if (!model) {
+        statusEl.textContent = 'Model is required';
+        statusEl.style.color = 'var(--dn)';
+        return;
+      }
+
+      // Test with a minimal request via the proxy
+      const resp = await fetch('/api/proxy', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          url: 'https://api.anthropic.com/v1/messages',
+          method: 'POST',
+          headers: {
+            'x-api-key': key,
+            'anthropic-version': '2023-06-01',
+            'Content-Type': 'application/json'
+          },
+          body: { model, max_tokens: 16, messages: [{ role: 'user', content: 'Say "ok"' }] }
+        })
+      });
+      if (!resp.ok) {
+        const errText = await resp.text();
+        throw new Error('API returned ' + resp.status + ': ' + errText.slice(0, 200));
+      }
+
+      config = {
+        type: 'anthropic',
+        endpoint: 'https://api.anthropic.com/v1/messages',
+        apiKey: key,
+        model: model
+      };
+
+      statusEl.textContent = LLM_ROLES[aspect] + ' connected (' + model + ') — prompt caching enabled';
       statusEl.style.color = 'var(--em)';
 
     } else {
@@ -275,8 +333,8 @@ async function setupTestConnectionForAspect() {
 
       config = {
         type: 'ollama',
-        ollamaUrl: url,
-        ollamaModel: model
+        endpoint: url,
+        model: model
       };
 
       statusEl.textContent = LLM_ROLES[aspect] + ' connected (' + model + ')';
@@ -302,6 +360,7 @@ async function setupTestConnectionForAspect() {
  */
 function advanceSetupStep() {
   setupStep = SETUP_STEPS.READY;
+  setupReadyAtMs = Date.now();
   updateSetupSteps(SETUP_STEPS.READY);
   updateSetupSummary();
   setupRefreshSkillSummary();
@@ -332,6 +391,9 @@ function clearSetupFormFields() {
   ['setupOpenrouter', 'setupOpenrouter2', 'setupOpenrouter3'].forEach(id => {
     const el = document.getElementById(id); if (el) el.style.display = 'none';
   });
+  ['setupAnthropic', 'setupAnthropic2', 'setupAnthropic3'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.style.display = 'none';
+  });
   ['setupOllama', 'setupOllama2', 'setupOllama3'].forEach(id => {
     const el = document.getElementById(id); if (el) el.style.display = 'none';
   });
@@ -346,10 +408,15 @@ function clearSetupFormFields() {
  */
 function updateSetupSummary() {
   const summaryMain = document.getElementById('setupSummaryMain');
+  const summaryMA = document.getElementById('setupSummaryMA');
   
   if (summaryMain && setupAspectConfigs.main) {
-    const model = (setupAspectConfigs.main.model || setupAspectConfigs.main.ollamaModel || '').split('/').pop();
+    const model = String(setupAspectConfigs.main.model || '').split('/').pop();
     summaryMain.textContent = setupAspectConfigs.main.type + ' (' + model + ')';
+  }
+  if (summaryMA && setupAspectConfigs.main) {
+    const model = String(setupAspectConfigs.main.model || '').split('/').pop();
+    summaryMA.textContent = setupAspectConfigs.main.type + ' (' + model + ')';
   }
 }
 
@@ -472,6 +539,15 @@ async function setupEnsureDefaultWorkspace() {
 async function setupFinish() {
   const statusEl = document.getElementById('setupStatus');
   const btn = document.querySelector('#setupPanel' + SETUP_STEPS.READY + ' .btn');
+
+  // Guard against accidental click-through when step 1 transitions to step 2.
+  if (setupStep !== SETUP_STEPS.READY) return;
+  if (setupReadyAtMs && (Date.now() - setupReadyAtMs) < 450) {
+    statusEl.textContent = 'Step 2 is ready. Review options, then click Save & Open.';
+    statusEl.style.color = 'var(--wn)';
+    return;
+  }
+
   if (btn) {
     btn.disabled = true;
     btn.textContent = 'Saving...';
@@ -483,29 +559,65 @@ async function setupFinish() {
     const mainConfig = setupAspectConfigs.main;
     if (!mainConfig) throw new Error('Main provider config is missing');
 
+    const normalizedMain = {
+      type: mainConfig.type,
+      endpoint: String(mainConfig.endpoint || '').trim(),
+      model: String(mainConfig.model || '').trim()
+    };
+    if (mainConfig.type !== 'ollama') {
+      normalizedMain.apiKey = String(mainConfig.apiKey || mainConfig.key || '').trim();
+      if (!normalizedMain.apiKey) throw new Error('API key is required');
+    }
+
     const profileName = savedConfig.lastActive || 'default-multi-llm';
     const existing = savedConfig.profiles[profileName] || {};
     const profile = {
       ...existing,
-      main: mainConfig,
-      _activeType: mainConfig.type,
-      _activeTypes: {
-        ...(existing._activeTypes || {}),
-        main: mainConfig.type
-      }
+      main: normalizedMain,
+      // Seed inherited aspect configs so saved profile shape matches ma-config.example.json.
+      subconscious: existing.subconscious && typeof existing.subconscious === 'object'
+        ? existing.subconscious
+        : { ...normalizedMain },
+      dream: existing.dream && typeof existing.dream === 'object'
+        ? existing.dream
+        : { ...normalizedMain },
+      orchestrator: existing.orchestrator && typeof existing.orchestrator === 'object'
+        ? existing.orchestrator
+        : { ...normalizedMain }
     };
 
-    if (mainConfig.type === 'openrouter') {
+    // MA gets its own dedicated config slot unless already customized.
+    if (!profile.ma || typeof profile.ma !== 'object') {
+      profile.ma = { ...normalizedMain };
+    }
+
+    profile._activeType = profile.main.type;
+    profile._activeTypes = {
+      ...(existing._activeTypes || {}),
+      main: profile.main.type,
+      subconscious: profile.subconscious?.type || profile.main.type,
+      dream: profile.dream?.type || profile.main.type,
+      orchestrator: profile.orchestrator?.type || profile.main.type,
+      ma: profile.ma?.type || profile.main.type
+    };
+
+    if (profile.main.type === 'openrouter') {
       profile.apikey = {
-        endpoint: mainConfig.endpoint,
-        key: mainConfig.key,
-        model: mainConfig.model
+        endpoint: profile.main.endpoint,
+        key: profile.main.apiKey,
+        model: profile.main.model
       };
-    } else if (mainConfig.type === 'ollama') {
+      delete profile.ollama;
+    } else if (profile.main.type === 'ollama') {
       profile.ollama = {
-        url: mainConfig.ollamaUrl,
-        model: mainConfig.ollamaModel
+        url: profile.main.endpoint,
+        model: profile.main.model
       };
+      delete profile.apikey;
+    } else if (profile.main.type === 'anthropic') {
+      // Keep legacy fields coherent for older clients that still read _activeType + apikey/ollama.
+      delete profile.apikey;
+      delete profile.ollama;
     }
 
     savedConfig.profiles[profileName] = profile;
@@ -520,11 +632,14 @@ async function setupFinish() {
     // Set main provider as active for UI
     const m = setupAspectConfigs.main;
     if (m.type === 'openrouter') {
-      activeConfig = { type: 'openrouter', endpoint: m.endpoint, apiKey: m.key, model: m.model };
+      activeConfig = { type: 'openrouter', endpoint: m.endpoint, apiKey: (m.apiKey || m.key), model: m.model };
       updateProviderUI('openrouter', true, 'OpenRouter (' + m.model.split('/').pop() + ')');
+    } else if (m.type === 'anthropic') {
+      activeConfig = { type: 'anthropic', endpoint: m.endpoint, apiKey: (m.apiKey || m.key), model: m.model };
+      updateProviderUI('anthropic', true, 'Anthropic (' + m.model + ')');
     } else {
-      activeConfig = { type: 'ollama', endpoint: m.ollamaUrl, model: m.ollamaModel };
-      updateProviderUI('ollama', true, 'Ollama (' + m.ollamaModel + ')');
+      activeConfig = { type: 'ollama', endpoint: m.endpoint, model: m.model };
+      updateProviderUI('ollama', true, 'Ollama (' + m.model + ')');
     }
 
     hideSetupWizard();

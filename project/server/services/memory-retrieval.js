@@ -168,6 +168,7 @@ function createMemoryRetrieval({
   getNeurochemistry,
   getCognitivePulse,
   getCognitiveBus,
+  getBeliefGraph,
   logTimeline,
   callSubconsciousReranker,
   loadAspectRuntimeConfig,
@@ -182,6 +183,7 @@ function createMemoryRetrieval({
     const neurochemistry = getNeurochemistry();
     const cognitivePulse = getCognitivePulse();
     const cognitiveBus = getCognitiveBus();
+    const beliefGraph = typeof getBeliefGraph === 'function' ? getBeliefGraph() : null;
 
     logTimeline('memory.recall.requested', {
       userMessage: String(userMessage || '').slice(0, 400),
@@ -195,6 +197,21 @@ function createMemoryRetrieval({
       || /\b(what|tell me)\b.*\b(remember|recall|know about)\b/i.test(userMessage)
       || /\bmemories?\b.*\b(summary|have|do you|stored|about)\b/i.test(userMessage)
       || /\b(mood|feeling|how are you)\b/i.test(userMessage);
+
+    // Slice 9: Belief-linked activation — pre-activate memories connected to relevant beliefs
+    if (beliefGraph && memoryStorage && memoryStorage.indexCache && topics.length > 0) {
+      try {
+        const boosts = beliefGraph.getAttentionBoosts(topics);
+        if (boosts.length > 0) {
+          const { activate } = require('../brain/memory/activation-network');
+          for (const { sourceMemIds, boost } of boosts) {
+            for (const srcMemId of sourceMemIds) {
+              activate(srcMemId, boost, memoryStorage.indexCache, { entityId: currentEntityId });
+            }
+          }
+        }
+      } catch (_err) { /* belief activation is non-critical */ }
+    }
 
     if (memoryStorage && memoryStorage.indexCache && currentEntityId) {
       const entityPaths = require('../entityPaths');
@@ -246,6 +263,11 @@ function createMemoryRetrieval({
         if (neurochemistry && meta.emotionalTag) {
           const emotionSim = neurochemistry.emotionSimilarity(meta.emotionalTag);
           relevanceScore *= (1 + emotionSim * 0.3); // up to 30% boost for emotional match
+        }
+
+        // Slice 7: Activation boost for pre-activated memories
+        if ((meta.activationLevel || 0) > 0.15) {
+          relevanceScore += meta.activationLevel * 0.25;
         }
 
         connections.push({
@@ -386,11 +408,62 @@ function createMemoryRetrieval({
       }
     }
 
+    // Slice 8: Echo Future — merge pre-activated predictive memories into pool
+    if (currentEntityId && memoryStorage && memoryStorage.indexCache) {
+      try {
+        const { echoFuture } = require('../brain/agent-echo');
+        const futureHits = echoFuture(currentEntityId, topics, {
+          _indexCache: memoryStorage.indexCache,
+          limit: 5
+        });
+        if (futureHits.length > 0) {
+          const existingIds = new Set(connections.map(c => c.id));
+          for (const hit of futureHits) {
+            if (existingIds.has(hit.id)) continue;
+            existingIds.add(hit.id);
+            connections.push({
+              id: hit.id,
+              relevanceScore: hit.activationLevel * 0.6,
+              topics: hit.topics || [],
+              importance: 0.5,
+              decay: 1.0,
+              type: 'episodic',
+              semantic: '',
+              userId: null,
+              userName: null,
+              _source: 'echo_future'
+            });
+          }
+          if (cognitiveBus && typeof cognitiveBus.emitThought === 'function') {
+            cognitiveBus.emitThought({
+              type: ThoughtTypes.ECHO_FUTURE_HIT,
+              source: 'subconscious_recall',
+              count: futureHits.length,
+              memIds: futureHits.map(h => h.id),
+              importance: 0.3
+            });
+          }
+        }
+      } catch (_err) {
+        // non-fatal — echo future is always additive, never blocking
+      }
+    }
+
     const topConnections = connections
       .sort((a, b) => b.relevanceScore - a.relevanceScore)
       // Deduplicate: keep highest-scoring entry per memory ID
       .filter((c, idx, arr) => arr.findIndex(x => x.id === c.id) === idx)
       .slice(0, limit);
+
+    // Slice 7: Trigger activation propagation for retrieved memories
+    if (memoryStorage && memoryStorage.indexCache && currentEntityId) {
+      try {
+        const { activate } = require('../brain/memory/activation-network');
+        for (const conn of topConnections.slice(0, 12)) {
+          activate(conn.id, 0.8, memoryStorage.indexCache, { entityId: currentEntityId });
+        }
+      } catch (_err) { /* activation propagation is non-critical */ }
+    }
 
     // Build a cleaner context subset for prompts: keep strong matches only.
     const topScore = Number(topConnections[0]?.relevanceScore || 0);

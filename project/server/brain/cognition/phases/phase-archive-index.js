@@ -34,8 +34,11 @@ async function archiveIndexPhase(loop) {
       console.log(`  🗂 Archive index: subject rebuild — ${subjectCount} subject clusters written`);
     }
 
-    // Shape index stub — no-op until Phase 5 implements rebuildShapeIndexes() body.
-    rebuildShapeIndexes(entityId);
+    // Shape index — classifies archive entries by memory shape
+    const shapeCount = rebuildShapeIndexes(entityId);
+    if (shapeCount > 0) {
+      console.log(`  🗂 Archive index: shape rebuild — ${shapeCount} entries indexed`);
+    }
   } catch (err) {
     console.warn('  ⚠ Archive index rebuild error:', err.message);
   }

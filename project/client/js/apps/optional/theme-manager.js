@@ -336,6 +336,18 @@ function _setCustomizerStatus(message) {
   if (el) el.textContent = message;
 }
 
+function _syncSaveTargetUi() {
+  const saveActiveBtn = document.getElementById('themeCustomizerSaveActive');
+  if (!saveActiveBtn) return;
+  const activeThemeId = getStoredThemeId();
+  const activeTheme = SHELL_THEMES[activeThemeId];
+  const canOverwriteActive = !!(activeTheme && activeTheme.isUserTheme);
+  saveActiveBtn.disabled = !canOverwriteActive;
+  saveActiveBtn.title = canOverwriteActive
+    ? 'Overwrite the currently active custom theme.'
+    : 'Select a custom theme card first to save over it.';
+}
+
 function _sanitizeThemeName(value) {
   const raw = String(value || '').trim();
   return raw || 'My Custom Theme';
@@ -430,6 +442,51 @@ function _saveCurrentAsUserTheme(custom) {
   return id;
 }
 
+function _saveCurrentToActiveUserTheme(custom) {
+  const activeThemeId = getStoredThemeId();
+  const activeTheme = SHELL_THEMES[activeThemeId];
+  if (!activeTheme || !activeTheme.isUserTheme) return null;
+
+  const userThemes = _readUserThemes();
+  const existingIdx = userThemes.findIndex((entry) => entry && entry.id === activeThemeId);
+  if (existingIdx === -1) return null;
+
+  const themeName = _sanitizeThemeName(document.getElementById('themeCustomName')?.value || userThemes[existingIdx].label);
+  const customData = { ...THEME_CUSTOM_DEFAULTS, ...custom, themeName, enabled: true };
+  userThemes[existingIdx] = {
+    ...userThemes[existingIdx],
+    label: themeName,
+    customData,
+    updatedAt: new Date().toISOString()
+  };
+  _writeUserThemes(userThemes);
+  _injectUserThemes();
+  return activeThemeId;
+}
+
+function _deleteUserThemeById(themeId) {
+  const id = String(themeId || '').trim();
+  if (!id) return false;
+  const currentThemeId = getStoredThemeId();
+  const userThemes = _readUserThemes();
+  const nextUserThemes = userThemes.filter((entry) => entry && entry.id !== id);
+  if (nextUserThemes.length === userThemes.length) return false;
+
+  _writeUserThemes(nextUserThemes);
+  if (SHELL_THEMES[id] && SHELL_THEMES[id].isUserTheme) {
+    delete SHELL_THEMES[id];
+  }
+
+  if (currentThemeId === id) {
+    applyTheme(THEME_FALLBACK_ID);
+  } else {
+    renderThemeGallery();
+  }
+
+  _setCustomizerStatus('Deleted custom theme.');
+  return true;
+}
+
 function _applyThemeWallpaperPreset(themeId) {
   const root = document.documentElement;
   if (!root) return;
@@ -501,6 +558,16 @@ function _collectCustomizerForm() {
   };
 }
 
+function _previewCustomizerForm(statusMessage) {
+  const previewCustom = {
+    ...THEME_CUSTOM_DEFAULTS,
+    ..._collectCustomizerForm(),
+    enabled: true
+  };
+  _applyThemeCustomToDom(previewCustom);
+  if (statusMessage) _setCustomizerStatus(statusMessage);
+}
+
 function _applyThemeCustomToDom(custom) {
   const root = document.documentElement;
   if (!root || !custom) return;
@@ -560,14 +627,16 @@ function applyStoredThemeCustomizer() {
 
 function initThemeCustomizer() {
   const applyBtn = document.getElementById('themeCustomizerApply');
+  const saveActiveBtn = document.getElementById('themeCustomizerSaveActive');
   const resetNekoBtn = document.getElementById('themeCustomizerResetNeko');
   const resetBtn = document.getElementById('themeCustomizerReset');
-  if (!applyBtn || !resetBtn || !resetNekoBtn) return;
+  if (!applyBtn || !saveActiveBtn || !resetBtn || !resetNekoBtn) return;
 
   _renderWallpaperOptions();
 
   const stored = _readStoredThemeCustom();
   _syncCustomizerForm(stored);
+  _syncSaveTargetUi();
 
   const opacityInput = document.getElementById('themeWindowOpacity');
   if (opacityInput) {
@@ -582,8 +651,18 @@ function initThemeCustomizer() {
     bgOpacityInput.addEventListener('input', () => {
       const valueEl = document.getElementById('themeBgOpacityValue');
       if (valueEl) valueEl.textContent = Math.round(Number(bgOpacityInput.value || 0) * 100) + '%';
+      _previewCustomizerForm('Previewing background changes. Save to keep them.');
     });
   }
+
+  ['themeBgStart', 'themeBgEnd', 'themeWallpaperImage', 'themeWallpaperCustom'].forEach((id) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const eventName = id === 'themeWallpaperImage' ? 'change' : 'input';
+    el.addEventListener(eventName, () => {
+      _previewCustomizerForm('Previewing background changes. Save to keep them.');
+    });
+  });
 
   applyBtn.addEventListener('click', () => {
     const custom = _collectCustomizerForm();
@@ -591,6 +670,18 @@ function initThemeCustomizer() {
     _saveThemeCustom({ ...custom, enabled: false });
     applyTheme(newThemeId);
     _setCustomizerStatus('Saved as new theme: ' + _sanitizeThemeName(document.getElementById('themeCustomName')?.value));
+  });
+
+  saveActiveBtn.addEventListener('click', () => {
+    const custom = _collectCustomizerForm();
+    const updatedThemeId = _saveCurrentToActiveUserTheme(custom);
+    if (!updatedThemeId) {
+      _setCustomizerStatus('No active custom theme selected. Choose one from the gallery or use Save As New Theme.');
+      return;
+    }
+    _saveThemeCustom({ ...custom, enabled: false });
+    applyTheme(updatedThemeId);
+    _setCustomizerStatus('Updated active custom theme: ' + _sanitizeThemeName(document.getElementById('themeCustomName')?.value));
   });
 
   resetNekoBtn.addEventListener('click', () => {
@@ -619,6 +710,7 @@ function syncThemeSelectorUI(themeId) {
   });
   updateShellThemeSummary(themeId);
   renderThemeGallery();
+  _syncSaveTargetUi();
 }
 
 function renderThemeGallery() {
@@ -630,10 +722,18 @@ function renderThemeGallery() {
     const p = (theme.preview && theme.preview.bg && theme.preview.fg && theme.preview.accent)
       ? theme.preview
       : { bg: '#222', fg: '#eee', accent: '#888' };
-    const card = document.createElement('button');
+    const card = document.createElement('div');
     card.className = 'theme-card' + (id === currentId ? ' is-active' : '');
-    card.type = 'button';
+    card.setAttribute('role', 'button');
+    card.setAttribute('tabindex', '0');
+    card.setAttribute('aria-label', 'Apply theme: ' + theme.label);
     card.onclick = () => applyTheme(id);
+    card.onkeydown = (event) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        applyTheme(id);
+      }
+    };
     card.innerHTML =
       '<div class="theme-card-preview" style="background:' + p.bg + '">' +
         '<div class="theme-card-bar" style="background:' + p.accent + '"></div>' +
@@ -642,6 +742,22 @@ function renderThemeGallery() {
       '</div>' +
       '<div class="theme-card-label">' + theme.label + '</div>' +
       (id === currentId ? '<div class="theme-card-badge">Active</div>' : '');
+
+    if (theme.isUserTheme) {
+      const deleteBtn = document.createElement('button');
+      deleteBtn.className = 'theme-card-delete';
+      deleteBtn.type = 'button';
+      deleteBtn.title = 'Delete custom theme';
+      deleteBtn.setAttribute('aria-label', 'Delete custom theme: ' + theme.label);
+      deleteBtn.textContent = 'Delete';
+      deleteBtn.onclick = (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        _deleteUserThemeById(id);
+      };
+      card.appendChild(deleteBtn);
+    }
+
     grid.appendChild(card);
   });
 }
@@ -701,6 +817,24 @@ function applyTheme(themeId) {
   }
   syncThemeSelectorUI(selected);
 }
+
+function openThemeCustomizer() {
+  if (typeof switchMainTab === 'function') switchMainTab('themes');
+  const focusCustomizer = () => {
+    const target = document.getElementById('themeCustomName');
+    if (!target) return;
+    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    target.focus();
+    _setCustomizerStatus('Customizer opened from desktop menu.');
+  };
+  if (typeof requestAnimationFrame === 'function') {
+    requestAnimationFrame(() => requestAnimationFrame(focusCustomizer));
+  } else {
+    setTimeout(focusCustomizer, 0);
+  }
+}
+
+window.openThemeCustomizer = openThemeCustomizer;
 
 document.addEventListener('DOMContentLoaded', async () => {
   await loadThemeManifest();

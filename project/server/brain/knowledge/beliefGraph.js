@@ -512,6 +512,25 @@ class BeliefGraph {
   // ── Cognitive Attention Routing ──────────────────────────
 
   /**
+   * Get structured attention boosts for the activation network.
+   * Returns boost data for beliefs relevant to the given topics.
+   * Slice 9: Used by memory-retrieval to pre-activate belief-linked memories.
+   *
+   * @param {string[]} topics — query topics
+   * @returns {Array<{ beliefId: string, confidence: number, sourceMemIds: string[], boost: number }>}
+   */
+  getAttentionBoosts(topics = []) {
+    if (!topics || topics.length === 0) return [];
+    const relevant = this.getRelevantBeliefs(topics, 0.2, 15);
+    return relevant.map(b => ({
+      beliefId: b.belief_id,
+      confidence: b.confidence,
+      sourceMemIds: b.sources || [],
+      boost: BELIEF_ACTIVATION_BOOST * b.confidence
+    }));
+  }
+
+  /**
    * Route attention through the belief graph to bias memory activation scores.
    *
    * Activation formula:

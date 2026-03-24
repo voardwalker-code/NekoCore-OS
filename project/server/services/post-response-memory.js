@@ -1,6 +1,7 @@
 'use strict';
 const { parseJsonBlock } = require('./llm-runtime-utils');
 const { encodeMemory } = require('../brain/utils/memory-encoder-nlp');
+const { classifyShape } = require('../brain/memory/shape-classifier');
 
 async function runPostResponseMemoryEncoding(params = {}) {
   const {
@@ -21,7 +22,8 @@ async function runPostResponseMemoryEncoding(params = {}) {
     entityName,
     userName,
     activeUserId,
-    entityPersona
+    entityPersona,
+    beliefGraph
   } = params;
 
   const emitSSE = (event, data) => {
@@ -50,6 +52,26 @@ async function runPostResponseMemoryEncoding(params = {}) {
     const entityLabel = entityName ? `The entity's name is "${entityName}"` : 'The entity';
     const userLabel = (userName && userName !== 'User') ? `The user's name is "${userName}"` : 'The user is unnamed';
     const nameGuard = `IMPORTANT: ${entityLabel}. ${userLabel}. Do NOT label the user as "${entityName || 'the entity'}". Keep them clearly distinct in the memory summary.`;
+
+    // ── Build creationContext for predictive memory topology ──────────────
+    function buildCreationContext(topics) {
+      let activeBeliefIds = [];
+      if (beliefGraph && typeof beliefGraph.getRelevantBeliefs === 'function') {
+        try {
+          const beliefs = beliefGraph.getRelevantBeliefs(topics || [], 0.3, 5);
+          activeBeliefIds = (beliefs || []).map(b => b.belief_id).filter(Boolean);
+        } catch (_) {}
+      }
+      return {
+        mood: entityPersona?.mood || null,
+        emotions: entityPersona?.emotions || null,
+        tone: entityPersona?.tone || null,
+        activeBeliefIds,
+        conversationTopics: topics || [],
+        userId: activeUserId || null,
+        userName: userName || null
+      };
+    }
 
     // ── NLP vs LLM encoding toggle ────────────────────────────────────────
     // When useNLP is true (default), skip the LLM call entirely and use
@@ -104,6 +126,8 @@ Return ONLY this JSON (no other text, no markdown, no explanation):
           topics: [],
           importance: 0.4
         };
+        fallbackData.creationContext = buildCreationContext(fallbackData.topics);
+        fallbackData.shape = classifyShape(fallbackData);
         const coreResult = createCoreMemory(fallbackData);
         if (coreResult.ok) {
           console.log(`  🧠 Episodic memory created (fallback): ${coreResult.memId}`);
@@ -169,12 +193,24 @@ Return ONLY this JSON (no other text, no markdown, no explanation):
       return;
     }
 
+    const coreTopics = episodic.topics || [];
+    const coreCreationContext = buildCreationContext(coreTopics);
+    const coreShape = classifyShape({
+      semantic: episodic.semantic,
+      emotion: episodic.emotion || 'neutral',
+      topics: coreTopics,
+      importance: episodic.importance || 0.5,
+      type: 'core_memory'
+    });
+
     const coreResult = createCoreMemory({
       semantic: episodic.semantic,
       narrative: episodic.narrative || episodic.semantic,
       emotion: episodic.emotion || 'neutral',
-      topics: episodic.topics || [],
-      importance: episodic.importance || 0.5
+      topics: coreTopics,
+      importance: episodic.importance || 0.5,
+      creationContext: coreCreationContext,
+      shape: coreShape
     });
 
     if (!coreResult.ok) {
@@ -216,11 +252,21 @@ Return ONLY this JSON (no other text, no markdown, no explanation):
     });
 
     if (knowledge && knowledge.length >= 10) {
+      const semTopics = episodic.topics || [];
+      const semShape = classifyShape({
+        semantic: knowledge,
+        emotion: 'neutral',
+        topics: semTopics,
+        importance: Math.min(1.0, (episodic.importance || 0.5) + 0.1),
+        type: 'semantic_knowledge'
+      });
       const semResult = createSemanticKnowledge({
         knowledge,
-        topics: episodic.topics || [],
+        topics: semTopics,
         importance: Math.min(1.0, (episodic.importance || 0.5) + 0.1),
-        sourceMemId: coreResult.memId
+        sourceMemId: coreResult.memId,
+        creationContext: coreCreationContext,
+        shape: semShape
       });
       if (semResult.ok) {
         console.log(`  💡 Semantic knowledge created: ${semResult.memId}`);

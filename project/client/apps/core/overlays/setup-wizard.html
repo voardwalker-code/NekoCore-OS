@@ -20,6 +20,11 @@
           <div class="setup-provider-name">OpenRouter</div>
           <div class="setup-provider-desc">Cloud LLMs via API key</div>
         </button>
+        <button class="setup-provider-btn" onclick="setupSelectProviderForAspect('main', 'anthropic')">
+          <div class="setup-provider-icon">&#9880;</div>
+          <div class="setup-provider-name">Anthropic Direct</div>
+          <div class="setup-provider-desc">Claude API + prompt caching</div>
+        </button>
         <button class="setup-provider-btn" onclick="setupSelectProviderForAspect('main', 'ollama')">
           <div class="setup-provider-icon">&#129302;</div>
           <div class="setup-provider-name">Ollama</div>
@@ -51,6 +56,27 @@
             BYOK is supported: in Settings, you can point endpoint/key/model to any OpenAI-compatible provider.
           </p>
         </div>
+        <div id="setupAnthropic" style="display:none">
+          <div class="fl mb-3">
+            <label>Anthropic API Key</label>
+            <input type="password" id="setupAnthropicKey" placeholder="sk-ant-..." autocomplete="off" data-lpignore="true" spellcheck="false" style="background:#ffffff;color:#111111;-webkit-text-fill-color:#111111;caret-color:#111111;">
+          </div>
+          <p class="text-xs-c text-secondary-c" style="margin:-.2rem 0 .75rem">
+            Get your API key at <a href="https://console.anthropic.com" target="_blank" rel="noopener noreferrer">console.anthropic.com &#8599;</a>
+          </p>
+          <div class="fl mb-3">
+            <label>Model</label>
+            <input type="text" id="setupAnthropicModel" list="setupAnthropicModelList" placeholder="claude-sonnet-4-6">
+            <datalist id="setupAnthropicModelList">
+              <option value="claude-opus-4-6"></option>
+              <option value="claude-sonnet-4-6"></option>
+              <option value="claude-haiku-4-5"></option>
+            </datalist>
+          </div>
+          <p class="text-xs-c" style="margin-top:-.15rem;color:var(--em)">
+            &#9889; Prompt Caching enabled — system prompts are cached server-side for up to 90% input-token savings on repeated calls.
+          </p>
+        </div>
         <div id="setupOllama" style="display:none">
           <div class="fl mb-3">
             <label>Ollama URL</label>
@@ -68,13 +94,14 @@
     <!-- Step 2: Ready to Go -->
     <div class="setup-panel" id="setupPanel2" style="display:none">
       <h2 class="setup-panel-title">Ready to Go</h2>
-      <p class="text-secondary-c text-sm-c mb-5">Your Main Mind is connected. The other cognitive roles will inherit this runtime until you customize them later in Settings.</p>
+      <p class="text-secondary-c text-sm-c mb-5">Your Main Mind is connected. The other cognitive roles and MA will inherit this runtime until you customize them later in Settings.</p>
       <p class="text-xs-c text-secondary-c" style="margin-top:-1rem;margin-bottom:1.1rem">
         Pipeline tip: avoid using one model for both Main Mind and Orchestrator. Mercury 2 + Claude Sonnet 4/4.6 tends to preserve character consistency better.
       </p>
       <div class="summary-card">
         <div class="summary-row" style="margin-bottom:.5rem"><strong>Configuration Summary:</strong></div>
         <div class="summary-row">Main Mind: <span id="setupSummaryMain">Configured</span></div>
+        <div class="summary-row">MA (Memory Architect): <span id="setupSummaryMA">Inherit from NekoCore OS</span></div>
       </div>
       <div class="summary-card" style="margin-top:.75rem">
         <div class="summary-row" style="margin-bottom:.4rem"><strong>Skills (Safe Default):</strong></div>

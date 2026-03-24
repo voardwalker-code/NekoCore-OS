@@ -71,6 +71,18 @@ function initSimpleProviderUI() {
             const sel = document.getElementById('simpleOllamaModel');
             if (sel && mainCfg.model) sel.value = mainCfg.model;
           });
+        } else if (mainCfg.type === 'anthropic') {
+          simplePickProvider('anthropic');
+          const keyEl = document.getElementById('simpleAnthropicKey');
+          const modelEl = document.getElementById('simpleAnthropicModel');
+          if (keyEl) {
+            keyEl.value = '';
+            keyEl.dataset.hasStoredKey = mainCfg.apiKey ? 'true' : 'false';
+            if (mainCfg.apiKey) keyEl.placeholder = 'Saved API key on file';
+          }
+          if (modelEl && mainCfg.model) modelEl.value = mainCfg.model;
+          // Hydrate capability toggles from saved profile
+          if (profile.capabilities) _hydrateCapabilityToggles(profile.capabilities);
         } else {
           simplePickProvider('openrouter');
           const keyEl = document.getElementById('simpleOrKey');
@@ -105,17 +117,23 @@ function initSimpleProviderUI() {
     keyEl.dataset.hasStoredKey = hasStoredKey ? 'true' : 'false';
     if (hasStoredKey && !keyEl.value) keyEl.placeholder = 'Saved API key on file';
   }
+
+  _initCapabilityToggles();
 }
 
 function simplePickProvider(provider) {
   simpleActiveProvider = provider;
   const orBtn = document.getElementById('simpleProviderBtn-openrouter');
+  const antBtn = document.getElementById('simpleProviderBtn-anthropic');
   const olBtn = document.getElementById('simpleProviderBtn-ollama');
   const orPanel = document.getElementById('simplePanel-openrouter');
+  const antPanel = document.getElementById('simplePanel-anthropic');
   const olPanel = document.getElementById('simplePanel-ollama');
   if (orBtn) orBtn.classList.toggle('on', provider === 'openrouter');
+  if (antBtn) antBtn.classList.toggle('on', provider === 'anthropic');
   if (olBtn) olBtn.classList.toggle('on', provider === 'ollama');
   if (orPanel) orPanel.style.display = provider === 'openrouter' ? '' : 'none';
+  if (antPanel) antPanel.style.display = provider === 'anthropic' ? '' : 'none';
   if (olPanel) olPanel.style.display = provider === 'ollama' ? '' : 'none';
 }
 
@@ -178,6 +196,7 @@ async function simpleFetchOllamaModels() {
 
 async function simpleSaveConfig() {
   const isOllama = simpleActiveProvider === 'ollama';
+  const isAnthropic = simpleActiveProvider === 'anthropic';
   let mainModel, mainEndpoint, mainKey, mainType;
   let keyEl = null;
   let typedKey = '';
@@ -189,6 +208,34 @@ async function simpleSaveConfig() {
     mainKey = '';
     if (!mainModel) {
       simpleShowStatus('ollamaStatus', 'Pick a model first', 'var(--dn)');
+      return;
+    }
+  } else if (isAnthropic) {
+    mainType = 'anthropic';
+    mainEndpoint = 'https://api.anthropic.com/v1/messages';
+    keyEl = document.getElementById('simpleAnthropicKey');
+    typedKey = (keyEl?.value || '').trim();
+    const hasStoredKey = keyEl?.dataset.hasStoredKey === 'true';
+    mainKey = typedKey || (hasStoredKey ? SIMPLE_PROVIDER_REDACTED_KEY : '');
+
+    if (!mainKey) {
+      try {
+        const existingResp = await fetch('/api/entity-config?provider=main');
+        if (existingResp.ok) {
+          const existing = await existingResp.json();
+          const storedKey = String(existing?.apiKey || existing?.key || '').trim();
+          if (storedKey) mainKey = SIMPLE_PROVIDER_REDACTED_KEY;
+        }
+      } catch (_) {}
+    }
+
+    mainModel = (document.getElementById('simpleAnthropicModel')?.value || '').trim();
+    if (!mainKey) {
+      simpleShowStatus('anthropicStatus', 'API key is required', 'var(--dn)');
+      return;
+    }
+    if (!mainModel) {
+      simpleShowStatus('anthropicStatus', 'Pick or paste a model', 'var(--dn)');
       return;
     }
   } else {
@@ -222,13 +269,19 @@ async function simpleSaveConfig() {
     }
   }
 
-  const statusKey = isOllama ? 'ollamaStatus' : 'orStatus';
+  const statusKey = isOllama ? 'ollamaStatus' : (isAnthropic ? 'anthropicStatus' : 'orStatus');
   simpleShowStatus(statusKey, 'Saving...', 'var(--wn)');
 
   try {
-    const cfg = isOllama
-      ? { type: 'ollama', endpoint: mainEndpoint, model: mainModel }
-      : { type: 'openrouter', endpoint: mainEndpoint, apiKey: mainKey, model: mainModel };
+    let cfg;
+    if (isOllama) {
+      cfg = { type: 'ollama', endpoint: mainEndpoint, model: mainModel };
+    } else if (isAnthropic) {
+      cfg = { type: 'anthropic', endpoint: mainEndpoint, apiKey: mainKey, model: mainModel,
+        capabilities: _readCapabilityToggles() };
+    } else {
+      cfg = { type: 'openrouter', endpoint: mainEndpoint, apiKey: mainKey, model: mainModel };
+    }
     const resp = await fetch('/api/entity-config', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -254,7 +307,7 @@ async function simpleSaveConfig() {
     }
 
     // On first setup, seed any unconfigured aspects with role-appropriate default models
-    if (!isOllama && mainKey) {
+    if (!isOllama && !isAnthropic && mainKey) {
       const profile = (savedConfig?.profiles?.[savedConfig?.lastActive]) || {};
       const aspectDefaults = [
         ['subconscious', OPENROUTER_ROLE_MODELS.subconscious.def],
@@ -278,8 +331,29 @@ async function simpleSaveConfig() {
       if (seeded) await refreshSavedConfig();
     }
 
+    // For Anthropic: seed other aspects with the same Anthropic config (no OpenRouter model presets)
+    if (isAnthropic && mainKey) {
+      const profile = (savedConfig?.profiles?.[savedConfig?.lastActive]) || {};
+      let seeded = false;
+      for (const aspect of ['subconscious', 'dream', 'orchestrator']) {
+        if (!profile[aspect]) {
+          await fetch('/api/entity-config', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              provider: aspect,
+              config: { type: 'anthropic', endpoint: mainEndpoint, apiKey: mainKey, model: mainModel }
+            })
+          }).catch(() => {});
+          seeded = true;
+        }
+      }
+      if (seeded) await refreshSavedConfig();
+    }
+
     // Update provider UI
-    const label = (isOllama ? 'Ollama' : 'OpenRouter') + ' (' + mainModel.split('/').pop() + ')';
+    const providerLabel = isOllama ? 'Ollama' : (isAnthropic ? 'Anthropic' : 'OpenRouter');
+    const label = providerLabel + ' (' + mainModel.split('/').pop() + ')';
     updateProviderUI(mainType, true, label);
 
     simpleShowStatus(statusKey, '✓ Connected — ' + mainModel, 'var(--em)');
@@ -298,4 +372,61 @@ function simpleShowStatus(suffix, text, color) {
     el.textContent = text;
     el.style.color = color || '';
   }
+}
+
+// ============================================================
+// CAPABILITY TOGGLES (Anthropic-specific)
+// ============================================================
+
+function _initCapabilityToggles() {
+  const thinkingCb = document.getElementById('capExtendedThinking');
+  const budgetRow = document.getElementById('capThinkingBudgetRow');
+  if (thinkingCb && budgetRow) {
+    thinkingCb.addEventListener('change', () => {
+      budgetRow.style.display = thinkingCb.checked ? '' : 'none';
+    });
+  }
+}
+
+function _readCapabilityToggles() {
+  const extCache = document.getElementById('capExtendedCache');
+  const compact = document.getElementById('capCompaction');
+  const memTool = document.getElementById('capMemoryTool');
+  const thinking = document.getElementById('capExtendedThinking');
+  const budget = document.getElementById('capThinkingBudget');
+  if (compact) {
+    compact.checked = false;
+    compact.disabled = true;
+  }
+  return {
+    extendedCache: extCache ? extCache.checked : true,
+    compaction: false,
+    memoryTool: memTool ? memTool.checked : true,
+    extendedThinking: thinking ? thinking.checked : false,
+    thinkingBudget: budget ? parseInt(budget.value, 10) || 4096 : 4096
+  };
+}
+
+function _hydrateCapabilityToggles(caps) {
+  if (!caps || typeof caps !== 'object') return;
+  const extCache = document.getElementById('capExtendedCache');
+  const compact = document.getElementById('capCompaction');
+  const memTool = document.getElementById('capMemoryTool');
+  const thinking = document.getElementById('capExtendedThinking');
+  const budget = document.getElementById('capThinkingBudget');
+  const budgetLabel = document.getElementById('capThinkingBudgetLabel');
+  const budgetRow = document.getElementById('capThinkingBudgetRow');
+
+  if (extCache && caps.extendedCache !== undefined) extCache.checked = !!caps.extendedCache;
+  if (compact) {
+    compact.checked = false;
+    compact.disabled = true;
+  }
+  if (memTool && caps.memoryTool !== undefined) memTool.checked = !!caps.memoryTool;
+  if (thinking && caps.extendedThinking !== undefined) thinking.checked = !!caps.extendedThinking;
+  if (budget && caps.thinkingBudget) {
+    budget.value = String(caps.thinkingBudget);
+    if (budgetLabel) budgetLabel.textContent = String(caps.thinkingBudget);
+  }
+  if (budgetRow) budgetRow.style.display = (thinking && thinking.checked) ? '' : 'none';
 }

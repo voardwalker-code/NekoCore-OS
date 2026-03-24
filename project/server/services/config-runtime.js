@@ -5,7 +5,7 @@
  *
  * Runtime configuration helpers for aspect-based LLM profile resolution.
  *
- * Pure helpers (no external deps):
+ * Pure helpers (no external deps except provider-capabilities):
  *   normalizeSubconsciousRuntimeConfig, normalizeAspectRuntimeConfig, mapAspectKey,
  *   resolveProfileAspectConfigs
  *
@@ -20,6 +20,8 @@
  */
 
 // ── Pure helpers ──────────────────────────────────────────────────────────────
+
+const { resolveCapabilities } = require('./provider-capabilities');
 
 function normalizeSubconsciousRuntimeConfig(rawConfig) {
   if (!rawConfig || typeof rawConfig !== 'object') return null;
@@ -66,6 +68,15 @@ function normalizeAspectRuntimeConfig(rawConfig) {
     return { type: 'ollama', endpoint, model };
   }
 
+  if (type === 'anthropic') {
+    const endpoint = String(rawConfig.endpoint || '').trim()
+      || 'https://api.anthropic.com/v1/messages';
+    const apiKey = String(rawConfig.apiKey || rawConfig.key || '').trim();
+    const model = String(rawConfig.model || rawConfig.modelId || '').trim();
+    if (!apiKey || !model) return null;
+    return { type: 'anthropic', endpoint, apiKey, model };
+  }
+
   // Inferred type — entity configs saved from UI may lack a `type` field
   if (!type && rawConfig.endpoint && (rawConfig.key || rawConfig.apiKey) && rawConfig.model) {
     return {
@@ -101,10 +112,12 @@ function mapAspectKey(aspectOrRole) {
 /**
  * Resolve aspect configs from a profile, handling both multi-aspect and legacy single-provider formats.
  * Returns { main, subconscious, dream, orchestrator } with normalised runtime configs.
+ * Attaches resolved capabilities from profile-level overrides.
  */
 function resolveProfileAspectConfigs(profile) {
   if (!profile) return {};
   const configs = {};
+  const profileCaps = profile.capabilities || null;
 
   // Multi-aspect format (profile.main / .subconscious / .dream / .orchestrator / .background)
   if (profile.main) {
@@ -115,6 +128,12 @@ function resolveProfileAspectConfigs(profile) {
     configs.background = normalizeAspectRuntimeConfig(profile.background) || configs.main;
     // nekocore is a dedicated system slot — does NOT fall back to main if unconfigured
     configs.nekocore = normalizeAspectRuntimeConfig(profile.nekocore) || null;
+    // Attach capabilities to each resolved config
+    for (const key of Object.keys(configs)) {
+      if (configs[key]) {
+        configs[key] = { ...configs[key], capabilities: resolveCapabilities(configs[key].type, profileCaps) };
+      }
+    }
     return configs;
   }
 
@@ -128,11 +147,13 @@ function resolveProfileAspectConfigs(profile) {
       model: profile.apikey.model
     });
     if (legacyMain) {
-      configs.main = legacyMain;
-      configs.subconscious = legacyMain;
-      configs.dream = legacyMain;
-      configs.orchestrator = legacyMain;
-      configs.background = legacyMain;
+      const caps = resolveCapabilities(legacyMain.type, profileCaps);
+      const withCaps = { ...legacyMain, capabilities: caps };
+      configs.main = withCaps;
+      configs.subconscious = withCaps;
+      configs.dream = withCaps;
+      configs.orchestrator = withCaps;
+      configs.background = withCaps;
     }
   } else if (activeType === 'ollama' && profile.ollama) {
     const legacyMain = normalizeAspectRuntimeConfig({
@@ -141,11 +162,13 @@ function resolveProfileAspectConfigs(profile) {
       model: profile.ollama.model
     });
     if (legacyMain) {
-      configs.main = legacyMain;
-      configs.subconscious = legacyMain;
-      configs.dream = legacyMain;
-      configs.orchestrator = legacyMain;
-      configs.background = legacyMain;
+      const caps = resolveCapabilities(legacyMain.type, profileCaps);
+      const withCaps = { ...legacyMain, capabilities: caps };
+      configs.main = withCaps;
+      configs.subconscious = withCaps;
+      configs.dream = withCaps;
+      configs.orchestrator = withCaps;
+      configs.background = withCaps;
     }
   }
 
@@ -166,10 +189,12 @@ function createConfigRuntime({ getConfig } = {}) {
     // 1) Request-scoped configs (e.g., setup wizard hatch payload).
     if (inlineAspectConfigs && typeof inlineAspectConfigs === 'object') {
       const inlineConfig = normalizeAspectRuntimeConfig(inlineAspectConfigs[aspect]);
-      if (inlineConfig) return inlineConfig;
+      if (inlineConfig) {
+        return { ...inlineConfig, capabilities: resolveCapabilities(inlineConfig.type) };
+      }
       if (aspect === 'dream') {
         const dreamAlt = normalizeAspectRuntimeConfig(inlineAspectConfigs.dreams);
-        if (dreamAlt) return dreamAlt;
+        if (dreamAlt) return { ...dreamAlt, capabilities: resolveCapabilities(dreamAlt.type) };
       }
     }
 
@@ -178,23 +203,27 @@ function createConfigRuntime({ getConfig } = {}) {
     const preferredProfileName = globalConfig?.lastActive;
     const profile = globalConfig?.profiles?.[preferredProfileName];
     if (profile) {
+      const profileCaps = profile.capabilities || null;
       const profileMain = normalizeAspectRuntimeConfig(profile.main);
       if (profileMain) {
-        if (aspect === 'main') return profileMain;
+        const attachCaps = (rt) => rt ? { ...rt, capabilities: resolveCapabilities(rt.type, profileCaps) } : null;
+        if (aspect === 'main') return attachCaps(profileMain);
         if (aspect === 'dream') {
-          return normalizeAspectRuntimeConfig(profile.dream)
+          return attachCaps(
+            normalizeAspectRuntimeConfig(profile.dream)
             || normalizeAspectRuntimeConfig(profile.dreams)
-            || profileMain;
+            || profileMain
+          );
         }
-        return normalizeAspectRuntimeConfig(profile[aspect]) || profileMain;
+        return attachCaps(normalizeAspectRuntimeConfig(profile[aspect]) || profileMain);
       }
 
       // Multi-aspect format
       const profileAspect = normalizeAspectRuntimeConfig(profile[aspect]);
-      if (profileAspect) return profileAspect;
+      if (profileAspect) return { ...profileAspect, capabilities: resolveCapabilities(profileAspect.type, profileCaps) };
       if (aspect === 'dream') {
         const profileDreamAlt = normalizeAspectRuntimeConfig(profile.dreams);
-        if (profileDreamAlt) return profileDreamAlt;
+        if (profileDreamAlt) return { ...profileDreamAlt, capabilities: resolveCapabilities(profileDreamAlt.type, profileCaps) };
       }
 
       // Legacy single-provider format (main only, reused for all aspects)
@@ -206,7 +235,7 @@ function createConfigRuntime({ getConfig } = {}) {
           apiKey: profile.apikey.key,
           model: profile.apikey.model
         });
-        if (legacyMain) return legacyMain;
+        if (legacyMain) return { ...legacyMain, capabilities: resolveCapabilities(legacyMain.type, profileCaps) };
       }
       if (activeType === 'ollama' && profile.ollama) {
         const legacyMain = normalizeAspectRuntimeConfig({
@@ -214,7 +243,7 @@ function createConfigRuntime({ getConfig } = {}) {
           endpoint: profile.ollama.url,
           model: profile.ollama.model
         });
-        if (legacyMain) return legacyMain;
+        if (legacyMain) return { ...legacyMain, capabilities: resolveCapabilities(legacyMain.type, profileCaps) };
       }
     }
 

@@ -1,0 +1,1005 @@
+<div class="tab-content" id="tab-qachecklist">
+  <div class="qa-container">
+    <!-- Toolbar -->
+    <div class="qa-toolbar">
+      <div class="qa-toolbar-left">
+        <button class="qa-btn" id="qaLoadBtn" title="Load QA results file">📂 Load</button>
+        <button class="qa-btn" id="qaSaveBtn" title="Save QA results file">💾 Save</button>
+        <button class="qa-btn" id="qaResetBtn" title="Reset all results">🔄 Reset</button>
+        <button class="qa-btn" id="qaCollapseAllBtn" title="Collapse all sections">⊟ Collapse</button>
+        <button class="qa-btn" id="qaExpandAllBtn" title="Expand all sections">⊞ Expand</button>
+      </div>
+      <div class="qa-toolbar-right">
+        <select class="qa-select" id="qaFilterStatus">
+          <option value="all">All Items</option>
+          <option value="untested">Untested</option>
+          <option value="pass">Passed</option>
+          <option value="fail">Failed</option>
+        </select>
+        <span class="qa-progress" id="qaProgress">0 / 0</span>
+        <span class="qa-pass-count" id="qaPassCount">✅ 0</span>
+        <span class="qa-fail-count" id="qaFailCount">❌ 0</span>
+      </div>
+    </div>
+
+    <!-- Progress bar -->
+    <div class="qa-progress-bar-track">
+      <div class="qa-progress-bar-fill" id="qaProgressFill" style="width:0%"></div>
+    </div>
+
+    <!-- Hidden file input -->
+    <input type="file" id="qaLoadInput" accept=".json,.qacheck.json" style="display:none">
+
+    <!-- Checklist body -->
+    <div class="qa-body" id="qaBody"></div>
+  </div>
+
+  <style>
+    /* ── QA Checklist — scoped styles ───────────────────── */
+    .qa-container {
+      display: flex; flex-direction: column; height: 100%;
+      font-family: var(--font-family, 'Segoe UI', sans-serif);
+      color: var(--text-primary, #e0e0e0);
+      background: var(--window-bg, rgba(24,24,32,0.95));
+      overflow: hidden;
+    }
+    .qa-toolbar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 12px; gap: 8px;
+      background: var(--toolbar-bg, rgba(30,30,42,0.9));
+      border-bottom: 1px solid var(--border-color, rgba(255,255,255,0.08));
+      flex-wrap: wrap;
+    }
+    .qa-toolbar-left, .qa-toolbar-right { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .qa-btn {
+      background: var(--btn-bg, rgba(255,255,255,0.06)); color: var(--text-primary, #e0e0e0);
+      border: 1px solid var(--border-color, rgba(255,255,255,0.1)); border-radius: 6px;
+      padding: 5px 10px; cursor: pointer; font-size: 12px; white-space: nowrap;
+      transition: background 0.15s;
+    }
+    .qa-btn:hover { background: var(--btn-hover-bg, rgba(255,255,255,0.12)); }
+    .qa-btn-pass {
+      background: rgba(40,167,69,0.2); border-color: rgba(40,167,69,0.4); color: #6fdc8c;
+    }
+    .qa-btn-pass:hover { background: rgba(40,167,69,0.35); }
+    .qa-btn-pass.qa-active { background: rgba(40,167,69,0.5); border-color: #28a745; }
+    .qa-btn-fail {
+      background: rgba(220,53,69,0.2); border-color: rgba(220,53,69,0.4); color: #f5a0a8;
+    }
+    .qa-btn-fail:hover { background: rgba(220,53,69,0.35); }
+    .qa-btn-fail.qa-active { background: rgba(220,53,69,0.5); border-color: #dc3545; }
+    .qa-select {
+      background: var(--btn-bg, rgba(255,255,255,0.06)); color: var(--text-primary, #e0e0e0);
+      border: 1px solid var(--border-color, rgba(255,255,255,0.1)); border-radius: 6px;
+      padding: 5px 8px; font-size: 12px;
+    }
+    .qa-progress { font-size: 13px; font-weight: 600; opacity: 0.8; }
+    .qa-pass-count { font-size: 12px; color: #6fdc8c; }
+    .qa-fail-count { font-size: 12px; color: #f5a0a8; }
+
+    .qa-progress-bar-track {
+      height: 4px; background: rgba(255,255,255,0.06); flex-shrink: 0;
+    }
+    .qa-progress-bar-fill {
+      height: 100%; background: linear-gradient(90deg, #28a745, #6fdc8c);
+      transition: width 0.3s ease;
+    }
+
+    .qa-body {
+      flex: 1; overflow-y: auto; padding: 8px 12px 20px;
+    }
+
+    /* Section */
+    .qa-section {
+      margin-bottom: 6px; border: 1px solid var(--border-color, rgba(255,255,255,0.06));
+      border-radius: 8px; overflow: hidden;
+    }
+    .qa-section-header {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 12px; cursor: pointer; user-select: none;
+      background: var(--toolbar-bg, rgba(30,30,42,0.7));
+      transition: background 0.15s;
+    }
+    .qa-section-header:hover { background: rgba(255,255,255,0.06); }
+    .qa-section-arrow { font-size: 10px; transition: transform 0.2s; }
+    .qa-section-header.qa-collapsed .qa-section-arrow { transform: rotate(-90deg); }
+    .qa-section-title { font-size: 13px; font-weight: 600; flex: 1; }
+    .qa-section-badge {
+      font-size: 11px; padding: 2px 8px; border-radius: 10px;
+      background: rgba(255,255,255,0.06);
+    }
+    .qa-section-badge-done { background: rgba(40,167,69,0.2); color: #6fdc8c; }
+    .qa-section-body { padding: 4px 0; }
+    .qa-section-header.qa-collapsed + .qa-section-body { display: none; }
+
+    /* Item row */
+    .qa-item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 5px 12px 5px 20px; font-size: 12px;
+      border-bottom: 1px solid rgba(255,255,255,0.03);
+      transition: background 0.1s;
+    }
+    .qa-item:last-child { border-bottom: none; }
+    .qa-item:hover { background: rgba(255,255,255,0.03); }
+    .qa-item-label { flex: 1; line-height: 1.4; }
+    .qa-item-status {
+      font-size: 11px; padding: 2px 8px; border-radius: 10px;
+      min-width: 60px; text-align: center;
+    }
+    .qa-status-untested { background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.4); }
+    .qa-status-pass { background: rgba(40,167,69,0.2); color: #6fdc8c; }
+    .qa-status-fail { background: rgba(220,53,69,0.2); color: #f5a0a8; }
+    .qa-item-actions { display: flex; gap: 4px; }
+    .qa-item-actions .qa-btn { padding: 3px 8px; font-size: 11px; }
+    .qa-item.qa-item-pass { opacity: 0.65; }
+    .qa-item.qa-item-fail .qa-item-label { color: #f5a0a8; }
+    .qa-item-time { font-size: 10px; opacity: 0.4; margin-left: 4px; }
+
+    /* Hide filtered items */
+    .qa-item.qa-hidden { display: none; }
+    .qa-section.qa-hidden { display: none; }
+  </style>
+
+  <script>
+  (function() {
+    if (window.__qaChecklistInit) return;
+    window.__qaChecklistInit = true;
+
+    /* ══════════════════════════════════════════════════════
+       QA CHECKLIST DATA — NekoCore OS Full Test Matrix
+       ══════════════════════════════════════════════════════ */
+    const CHECKLIST = [
+      /* ── BOOT & AUTH ─────────────────────────────────────── */
+      { section: 'Boot & Authentication', area: 'Server', items: [
+        'Boot overlay displays with gradient background',
+        'Boot progress bar animates 0–100%',
+        'Phase label updates during boot sequence',
+        'Boot overlay disappears when loading completes',
+        'Login overlay appears when not authenticated',
+        'NekoCore OS title and Cognitive WebOS subtitle display',
+        'Sign In tab active by default',
+        'Username and password fields accept input',
+        'Sign In button authenticates valid credentials',
+        'Invalid credentials show error message',
+        'Create Account tab switches correctly',
+        'Create account form: display name, about, username, password',
+        'Account creation succeeds with valid input',
+        'Login works with newly created account',
+        'Session persists across page refresh',
+        'Logout signs out and shows login overlay',
+      ]},
+
+      /* ── SETUP WIZARD ────────────────────────────────────── */
+      { section: 'Setup Wizard', area: 'Wizard', items: [
+        'Setup wizard appears on first run (no provider configured)',
+        'Step 1 title: "Main Mind (Conscious)"',
+        'Three provider buttons: OpenRouter, Anthropic, Ollama',
+        'OpenRouter section: API key and model inputs',
+        'Anthropic section: API key and model inputs',
+        'Ollama section: URL and model inputs',
+        'Test & Continue validates connection',
+        'Invalid credentials show connection error',
+        'Step 2 shows configuration summary',
+        'Skill summary loads available skills',
+        'Save & Open NekoCore OS completes setup',
+      ]},
+
+      /* ── HEADER BAR ──────────────────────────────────────── */
+      { section: 'Header Bar (Shell)', area: 'UI General', items: [
+        'NK logo displays correctly',
+        'Entity name shows when entity loaded',
+        'Version number displays',
+        'Brain status icon and label update in real-time',
+        'Deep sleep badge shows cycle count',
+        'Provider dot color matches status (green/orange/gray)',
+        'Provider name displays current LLM provider',
+        'Reset button visible and functional',
+        'Visualizer button opens Neural Visualizer tab',
+        'Power button (⏻) shuts down server',
+        'Account badge shows username when logged in',
+        'Logout button in account badge signs out user',
+      ]},
+
+      /* ── NAVIGATION SIDEBAR ──────────────────────────────── */
+      { section: 'Navigation Sidebar', area: 'UI General', items: [
+        'Entities section shows list of available entities',
+        'Creator button opens Entity Creator tab',
+        'Release button visible based on active entity',
+        'Physical status widget shows somatic state',
+        'Chat button (default active) switches to chat',
+        'Settings button opens LLM config',
+        'Entity Activity button opens activity feed',
+        'Debug Core button opens debug timeline',
+        'Archive button opens memory search & ingest',
+        'Sleep & Tokens button opens advanced settings',
+        'Power Off Server button with confirmation',
+        'Sidebar collapse/expand toggle works',
+        'Sidebar hides labels when collapsed',
+      ]},
+
+      /* ── TASKBAR ─────────────────────────────────────────── */
+      { section: 'Taskbar', area: 'UI General', items: [
+        'Start button opens app menu',
+        'Pinned apps display in taskbar',
+        'Pinned app icons are clickable and open tabs',
+        'More pinned apps overflow menu appears when needed',
+        'Running windows list updates dynamically',
+        'Quick search bar accepts text input',
+        'Quick search bar sends message on Enter',
+        'Clock displays and updates every second',
+        'Date displays in taskbar',
+        'Window count shows number of active windows',
+      ]},
+
+      /* ── START MENU ──────────────────────────────────────── */
+      { section: 'Start Menu', area: 'UI General', items: [
+        'Opens when Start button clicked',
+        'Closes on X button or scrim click',
+        'Pinned apps section shows pinned shortcuts',
+        'All Apps section shows app grid',
+        'Entities section lists available entities',
+        'Profiles section shows chat users',
+        'Entity selector has Creator and Details buttons',
+        'Release button shows when entity is active',
+      ]},
+
+      /* ── WINDOW MANAGEMENT ───────────────────────────────── */
+      { section: 'Window Management', area: 'Window Manager', items: [
+        'Open multiple windows (tabs)',
+        'Drag window titlebar to move window',
+        'Drag window to edge triggers snap dock',
+        'Snap dock 9-zone grid appears correctly',
+        'Snap zones tile window correctly',
+        'Maximize button expands window to full',
+        'Minimize button hides window',
+        'Click taskbar entry to restore minimized window',
+        'Close button removes window',
+        'Window layout persists after refresh',
+        'Reset Windows clears and restores default layout',
+      ]},
+
+      /* ── CONTEXT MENU ────────────────────────────────────── */
+      { section: 'Context Menu', area: 'UI General', items: [
+        'Right-click opens context menu',
+        'Menu items appear and are functional',
+        'Menu closes on selection or outside click',
+      ]},
+
+      /* ── DESKTOP HOME ────────────────────────────────────── */
+      { section: 'Desktop Home', area: 'UI General', items: [
+        'Shows "Run NekoCore like a workspace" message',
+        'Quick shortcuts: Chat, Skills, Workspace, Neural Visualizer',
+        'Shortcuts open correct tabs on click',
+        'System Snapshot shows Entity, Provider, Brain Loop, Theme',
+        'Quick Actions shows Creator, Settings, Start buttons',
+      ]},
+
+      /* ── CHAT ────────────────────────────────────────────── */
+      { section: 'Chat', area: 'Chat', items: [
+        'Chat title bar with "Context Chat" label',
+        'Model label displays current LLM',
+        'Subconscious memory bar (compression %) shows',
+        'User switcher button shows in multi-user mode',
+        'User switcher panel: list users, add new user, switch',
+        'Task status badge shows active task with step counter',
+        'Task badge cancel button closes task',
+        'Sleep button (🌙) triggers sleep cycle',
+        'Compress & Save button (💾) compresses chat history',
+        'Release button visible when entity active',
+        'Clear button clears chat',
+        'Auto-archive toggle on/off',
+        'Thoughts display toggle on/off',
+        'Threshold slider controls auto-archive threshold',
+        'Memory toggle row: Recall and Save buttons',
+        'Chat message area displays messages correctly',
+        'Drop zone for archive files works (drag & drop)',
+        'Empty state shows when no entity loaded',
+        'Slash command picker appears when "/" typed',
+        'Chat input textarea expands with content',
+        'Send button triggers message',
+        'Messages appear in chat and are processed',
+        'Typing a message and receiving a response',
+        'Cancel active task using badge cancel button',
+        'Task history panel shows task list',
+      ]},
+
+      /* ── ENTITY ACTIVITY ─────────────────────────────────── */
+      { section: 'Entity Activity', area: 'Entity', items: [
+        'Provider/Model card shows current provider',
+        'Pipeline Phase card shows orchestration status',
+        'Token card shows total tokens from last call',
+        'Brain Loop card shows loop status and cycle count',
+        'Contributor Models panel: Subconscious, Dream, Conscious, Orchestrator',
+        'Window/Runtime panel: open windows, pinned apps, layout, theme',
+        'Browser Status panel: tab count, active URL',
+        'App Performance metrics grid updates live',
+        'Active Task section shows running task details',
+        'Recent Runtime Events feed logs pipeline events',
+        'All cards update in real-time via SSE',
+      ]},
+
+      /* ── ARCHIVE ─────────────────────────────────────────── */
+      { section: 'Memory Archive', area: 'Memory System', items: [
+        'Search query input field works',
+        'Search button executes search',
+        'Date range filters (After/Before) work',
+        'Search limit selector (5/10/20) works',
+        'Memory type selector (All/Documents/Semantic/Episodic)',
+        'Subject text input for filtering',
+        'Search results display as list',
+        'No results placeholder when empty',
+        'Corpus ingest: file path input',
+        'Corpus ingest: doc ID and type selector',
+        'Start Ingest button and progress bar',
+        'Abort button stops ingest',
+        'Ingest completes and adds to memory',
+      ]},
+
+      /* ── DEBUG CORE ──────────────────────────────────────── */
+      { section: 'Debug Core', area: 'Pipeline', items: [
+        'Refresh button reloads debug data',
+        'Dump State button exports current state',
+        'Reset Windows button resets layout',
+        'Clear Local Buffer button clears events',
+        'Timeline Stream panel shows events',
+        'Client Buffer panel shows local debug entries',
+        'Both panels show placeholder when empty',
+      ]},
+
+      /* ── SETTINGS ────────────────────────────────────────── */
+      { section: 'Settings (Provider Config)', area: 'Settings', items: [
+        'OpenRouter provider button selectable',
+        'Anthropic Direct provider button selectable',
+        'Ollama provider button selectable',
+        'OpenRouter: API key input, model input, presets',
+        'OpenRouter: Save & Connect and status display',
+        'Anthropic: API key, model selector popup',
+        'Anthropic: capabilities accordion toggles',
+        'Anthropic: extended thinking budget slider',
+        'Anthropic: per-stage model overrides',
+        'Ollama: URL input, Fetch Models button, model dropdown',
+        'NekoCore OS section: API endpoint, key, model, save',
+        'Memory Log Self-Healing: Run button',
+        'Memory Statistics button',
+        'Rebuild Trace Graph button',
+        'Full Backup: folder input and backup button',
+        'Restore Backup: folder input and restore button',
+      ]},
+
+      /* ── ADVANCED (SLEEP & TOKENS) ──────────────────────── */
+      { section: 'Advanced (Sleep & Tokens)', area: 'Settings', items: [
+        'Auto-Sleep toggle on/off',
+        'Auto-Sleep interval input (5–1440 min)',
+        'Dream Depth selector (Shallow/Normal/Deep)',
+        'Max Dream Cycles counter (1–10)',
+        'Compress Chat selector (Always/Threshold/Never)',
+        'Persona Update selector (Always/On Significant/Never)',
+        'Wake Time and Sleep Time inputs',
+        'Save Sleep Config and status',
+        'Output Token Limit slider (1024–65536)',
+        'Token limit numeric input syncs with slider',
+        'Save token limit and status',
+        'Browser Settings: homepage, search engine, restore toggle',
+        'Browser Settings: export/import bookmarks',
+        'Browser Settings: clear history/bookmarks, reset defaults',
+        'Internal Token Limits: per-function config, save, reset',
+      ]},
+
+      /* ── ENTITY CREATOR ──────────────────────────────────── */
+      { section: 'Entity Creator', area: 'Creator', items: [
+        'Creator form loads in tab without errors',
+        'All creation input fields accept data',
+        'Create button triggers entity creation',
+        'New entity appears in entity list after creation',
+        'Created entity can be loaded successfully',
+        'Reserved names blocked (NekoCore, Neko, Echo, AgentEcho)',
+      ]},
+
+      /* ── USER PROFILES ───────────────────────────────────── */
+      { section: 'User Profiles', area: 'Entity', items: [
+        'User Name and About inputs accept data',
+        'Add User button creates new user',
+        'User appears in user list',
+        'Click user to select as active',
+        'Clear Active removes active user',
+        'Refresh reloads user list',
+        'Logout signs out current session',
+      ]},
+
+      /* ── ENTITY DETAILS ──────────────────────────────────── */
+      { section: 'Entity Details', area: 'Entity', items: [
+        'Entity info panel loads with entity data',
+        'Entity name displays correctly',
+        'Entity traits/description shows',
+        'Entity memory count shows',
+        'Entity creation date shows',
+      ]},
+
+      /* ── NEKOCORE PANEL ──────────────────────────────────── */
+      { section: 'NekoCore Panel', area: 'Chat', items: [
+        'NekoCore iframe loads without errors',
+        'Content displays correctly',
+        'Scrolling works inside iframe',
+      ]},
+
+      /* ── WORKSPACE FILE MANAGER ──────────────────────────── */
+      { section: 'Workspace File Manager', area: 'Workspace', items: [
+        'Back button disabled initially',
+        'Breadcrumb navigation shows current path',
+        'New Folder button creates folder',
+        'New File button creates file',
+        'Refresh button updates grid',
+        'File/folder grid displays items',
+        'Empty state when no files',
+        'Click file to open in editor',
+        'File editor textarea loads content',
+        'Save file persists changes',
+        'Navigate into folder updates breadcrumb',
+        'Back button returns to parent',
+      ]},
+
+      /* ── SKILLS MANAGER ──────────────────────────────────── */
+      { section: 'Skills Manager', area: 'Skills', items: [
+        'Web search input and search button',
+        'Search results display',
+        'Fetch URL input and fetch button',
+        'Fetched content displays',
+        'Skills overview: refresh and new skill buttons',
+        'Skills list grid shows skill cards',
+        'Skill card shows: name, status, version, trigger',
+        'Skill detail panel opens on selection',
+        'Skill detail: name, description, status badge, version, trigger',
+        'Skill detail: tools list, requirements, security scan',
+        'Create Skill modal: name, description, trigger, version, instructions',
+        'Load Template button populates fields',
+        'Create Skill button saves new skill',
+        'Enable/disable skill toggle',
+        'Skill invocation via /skill trigger in chat',
+      ]},
+
+      /* ── POPOUTS ─────────────────────────────────────────── */
+      { section: 'Popouts', area: 'Window Manager', items: [
+        'Refresh button updates popout list',
+        'Close All Popouts button closes all',
+        'Status message shows popout count',
+        'Grid of popout-capable apps displays',
+        'Open popout for a tab, window appears separately',
+        'Popout remains usable when main window minimized',
+      ]},
+
+      /* ── THEMES ──────────────────────────────────────────── */
+      { section: 'Themes', area: 'Theme', items: [
+        'Theme gallery grid shows theme previews',
+        'Click theme to apply instantly',
+        'Background Start/End color pickers',
+        'Background Opacity slider (0–1)',
+        'Background Image selector',
+        'Window Color picker and Window Opacity slider',
+        'Primary Text and Secondary Text color pickers',
+        'Text Field Background and Text color pickers',
+        'Custom Theme Name input and Accent Color picker',
+        'Save As New Theme button',
+        'Custom theme appears in gallery after save',
+        'Reset to NekoCore restores defaults',
+        'Background opacity at 0% shows desktop behind',
+      ]},
+
+      /* ── NEURAL VISUALIZER ───────────────────────────────── */
+      { section: 'Neural Visualizer', area: 'Pipeline', items: [
+        'Visualizer iframe loads and renders',
+        'Three.js 3D node graph visible',
+        'Pipeline nodes light up during chat message',
+        'Data flow connections visible between nodes',
+      ]},
+
+      /* ── PHYSICAL / SOMATIC STATE ────────────────────────── */
+      { section: 'Physical / Somatic State', area: 'Cognitive State', items: [
+        'Overall State card: zone badge, narrative, health bar',
+        'Neurochemistry card: mood label',
+        'Neurochemical bars: Dopamine, Serotonin, Cortisol, Oxytocin',
+        'Each neurotransmitter shows bar and percentage',
+        'Emotions label shows current emotional state',
+        'Metric Cards grid with all tracked metrics',
+        'Deep Sleep Interval slider (5–500 cycles)',
+        'Metrics update as entity interacts',
+      ]},
+
+      /* ── DREAM GALLERY ───────────────────────────────────── */
+      { section: 'Dream Gallery', area: 'Dream System', items: [
+        'Refresh button updates gallery',
+        'Generate Art button opens generation panel',
+        'Settings button opens image gen settings',
+        'Generation Mode selector (off/pixel/api)',
+        'Gallery grid displays dream images',
+        'Empty state message when no dreams',
+        'Generate Art: narrative textarea, emotion, style selectors',
+        'Generate button creates new image',
+        'Generated image appears in gallery',
+      ]},
+
+      /* ── LIFE DIARY ──────────────────────────────────────── */
+      { section: 'Life Diary', area: 'Entity', items: [
+        'Refresh button updates diary',
+        'Download button appears when entries exist',
+        'Diary content area displays entries',
+        'Empty state message when no entries',
+        'Download exports diary as markdown',
+      ]},
+
+      /* ── DREAM DIARY ─────────────────────────────────────── */
+      { section: 'Dream Diary', area: 'Dream System', items: [
+        'Refresh button updates diary',
+        'Download button appears when entries exist',
+        'Diary content area displays entries',
+        'Empty state message when no entries',
+        'Dream entry appears after sleep cycle',
+        'Download exports diary as markdown',
+      ]},
+
+      /* ── DOCUMENTS ───────────────────────────────────────── */
+      { section: 'Documents (Digest)', area: 'Memory System', items: [
+        'Document drop zone (drag & drop) visible',
+        'Browse Files button opens file picker',
+        'File input accepts .txt, .md, .json',
+        'Progress bar shows during ingest',
+        'Status message updates during ingest',
+        'Document splits into chunks and stores',
+        'Topics extracted and stored',
+        'Document searchable in Archive tab after ingest',
+      ]},
+
+      /* ── BROWSER ─────────────────────────────────────────── */
+      { section: 'Browser', area: 'Browser', items: [
+        'Browser tabs display (Chrome-style)',
+        'New tab button (+) opens new tab',
+        'Back, Forward, Reload buttons work',
+        'URL/search input navigates or searches',
+        'Bookmark button toggles (☆ → ★)',
+        'Bookmarks panel shows saved bookmarks',
+        'History panel shows browsing history',
+        'Downloads panel shows download list',
+        'Open External button opens in system browser',
+        'LLM Mode button opens analysis panel',
+        'LLM Mode: Extract, Summarize, Outline, Entities, Tables, Links',
+        'Ask This Page: input and answer display',
+        'Save to Memory stores analysis to entity memory',
+        'Home page: quick searches, recent, bookmarks, history',
+        'Search results are clickable and navigate',
+        'Multiple tabs support switching between them',
+        'Bookmark manager: search, folder filter, add, edit, delete',
+        'History manager: search, export, clear today, clear all',
+      ]},
+
+      /* ── MA SERVER ───────────────────────────────────────── */
+      { section: 'MA Server', area: 'Server', items: [
+        'Status dot color matches server state (green/orange/gray)',
+        'Status label shows port and health state',
+        'Start button (▶) launches MA server',
+        'Status changes to "Starting..." then "Healthy"',
+        'Embedded iframe loads MA GUI when healthy',
+        'Stop button (■) shuts down server',
+        'Status changes to "Offline" and iframe hides',
+        'Refresh button (↻) reloads iframe',
+        'MA Chat Mode toggle (Work/Chat) in MA GUI',
+        'Chat Mode restricts to read-only tools',
+        'Work Mode allows full tool access',
+      ]},
+
+      /* ── BUG TRACKER ─────────────────────────────────────── */
+      { section: 'Bug Tracker', area: 'Other', items: [
+        'Load button opens file picker',
+        'Save button saves .bugtrack.json',
+        'Report button generates Markdown/JSON report',
+        'New Bug button creates blank bug',
+        'Project name input editable',
+        'Bug counter shows total and open count',
+        'Bug search input filters list',
+        'Status filter dropdown works',
+        'Sort dropdown: newest, severity, status, ID',
+        'Bug editor: title, severity, status, area fields',
+        'Description, steps, expected, actual textareas',
+        'Screenshot capture button (full OS / active window)',
+        'Attach file button for images',
+        'Save Bug persists changes',
+        'Delete Bug removes with confirmation',
+        'Load previously saved .bugtrack.json file',
+        'Merge option when loading file',
+      ]},
+
+      /* ── RESOURCE MANAGER ────────────────────────────────── */
+      { section: 'Resource Manager', area: 'Other', items: [
+        'Type tabs: Todos, Pulses, Tasks, Projects, Blueprints',
+        'Filter/search input works',
+        'New button creates item of current type',
+        'Todos: title, description, priority, status, tags',
+        'Pulses: name, description, assignment, interval, enabled',
+        'Tasks: title, task type, description, status',
+        'Projects: name, keywords',
+        'Blueprints: name, content (markdown) textarea',
+        'Save button persists item',
+        'Set Active button marks item active',
+        'Delete button removes item',
+        'Status bar: item count, active resources, entity selector',
+        'Switch between type tabs updates list',
+      ]},
+
+      /* ── ENTITY LIFECYCLE (INTEGRATION) ──────────────────── */
+      { section: 'Entity Lifecycle (Integration)', area: 'Entity', items: [
+        'Create entity via Creator tab',
+        'Entity appears in entity list (sidebar + start menu)',
+        'Load entity — name appears in header',
+        'Physical widget updates with entity state',
+        'Chat works with loaded entity',
+        'Release entity — removed from header',
+        'Switch between multiple entities',
+      ]},
+
+      /* ── SLEEP CYCLE PIPELINE (INTEGRATION) ──────────────── */
+      { section: 'Sleep Cycle Pipeline (Integration)', area: 'Dream System', items: [
+        'Click Sleep button in chat',
+        'Sleep overlay shows with moon emoji',
+        'Progress bar animates during sleep',
+        'Phase text updates (dream cycle 1/N, etc.)',
+        'Dream images generate (if configured)',
+        'Dream diary entry created after sleep',
+        'Memory consolidation happens',
+        'Persona potentially updated',
+        'Sleep completes and returns to chat',
+      ]},
+
+      /* ── MEMORY SYSTEM (INTEGRATION) ─────────────────────── */
+      { section: 'Memory System (Integration)', area: 'Memory System', items: [
+        'Chat messages stored as episodic memories',
+        'Memory recall toggle injects memories into context',
+        'Memory save toggle stores exchanges',
+        'Subconscious compression triggers at threshold',
+        'Auto-archive triggers at threshold',
+        'Compressed chat saved correctly',
+        'Memories appear in Archive tab search',
+        'Document ingest creates searchable memories',
+      ]},
+
+      /* ── PROVIDER SWITCHING (INTEGRATION) ────────────────── */
+      { section: 'Provider Switching (Integration)', area: 'Settings', items: [
+        'Configure OpenRouter in Settings, verify it works',
+        'Switch to Anthropic Direct, verify next message uses it',
+        'Prompt caching enabled for Anthropic',
+        'Switch to Ollama (if running), verify model used',
+        'Token usage displays correctly for each provider',
+      ]},
+
+      /* ── SKILLS INVOCATION (INTEGRATION) ─────────────────── */
+      { section: 'Skills Invocation (Integration)', area: 'Skills', items: [
+        'Create skill with trigger name',
+        'Type /skill <trigger> in chat — skill loads',
+        'Skill tools: [TOOL:tool_name param="value"] syntax works',
+        'Skill workspace files accessible during execution',
+        'Skill enable/disable affects availability',
+      ]},
+
+      /* ── THEME SYSTEM (INTEGRATION) ──────────────────────── */
+      { section: 'Theme System (Integration)', area: 'Theme', items: [
+        'Switch theme — all UI elements respond to new colors',
+        'Custom theme persists across refresh',
+        'Background image loads correctly',
+        'Transparency at 0% shows desktop behind',
+      ]},
+
+      /* ── BACKUP & RESTORE (INTEGRATION) ──────────────────── */
+      { section: 'Backup & Restore (Integration)', area: 'Server', items: [
+        'Create full backup in Settings',
+        'Backup file created with timestamp',
+        'Restore from backup point',
+        'All data restored correctly',
+        'Memory systems functional post-restore',
+      ]},
+
+      /* ── EDGE CASES ──────────────────────────────────────── */
+      { section: 'Edge Cases & Error Handling', area: 'Other', items: [
+        'No provider configured → setup wizard appears',
+        'Chat with no entity loaded → empty state message',
+        'Invalid API key → connection error message',
+        'Reserved entity name → creation blocked with message',
+        'Very long message in chat → text wraps and scrolls',
+        'Memory self-heal detects and repairs corrupted files',
+      ]},
+    ];
+
+    /* ══════════════════════════════════════════════════════
+       STATE
+       ══════════════════════════════════════════════════════ */
+    const STORAGE_KEY = 'nekocore-qa-checklist-v1';
+    let results = {};    // key = "sectionIdx:itemIdx" → { status: 'pass'|'fail'|'untested', ts: ISO }
+    let collapsed = {};  // key = sectionIdx → bool
+
+    function loadFromStorage() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) { const d = JSON.parse(raw); results = d.results || {}; collapsed = d.collapsed || {}; }
+      } catch (_) { /* ignore */ }
+    }
+    function saveToStorage() {
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ results, collapsed })); } catch (_) { /* ignore */ }
+    }
+
+    /* ══════════════════════════════════════════════════════
+       DOM REFS
+       ══════════════════════════════════════════════════════ */
+    const $ = id => document.getElementById(id);
+    const body       = $('qaBody');
+    const progress   = $('qaProgress');
+    const passCount  = $('qaPassCount');
+    const failCount  = $('qaFailCount');
+    const progFill   = $('qaProgressFill');
+    const filterSel  = $('qaFilterStatus');
+    const loadInput  = $('qaLoadInput');
+
+    /* ══════════════════════════════════════════════════════
+       RENDER
+       ══════════════════════════════════════════════════════ */
+    function totalItems() {
+      let n = 0; CHECKLIST.forEach(s => n += s.items.length); return n;
+    }
+
+    function countByStatus(status) {
+      return Object.values(results).filter(r => r.status === status).length;
+    }
+
+    function updateStats() {
+      const total = totalItems();
+      const passes = countByStatus('pass');
+      const fails = countByStatus('fail');
+      const tested = passes + fails;
+      progress.textContent = tested + ' / ' + total;
+      passCount.textContent = '✅ ' + passes;
+      failCount.textContent = '❌ ' + fails;
+      const pct = total > 0 ? (tested / total * 100) : 0;
+      progFill.style.width = pct.toFixed(1) + '%';
+    }
+
+    function getKey(si, ii) { return si + ':' + ii; }
+    function getResult(si, ii) { return results[getKey(si, ii)] || { status: 'untested', ts: null }; }
+
+    function renderAll() {
+      body.innerHTML = '';
+      const filter = filterSel.value;
+
+      CHECKLIST.forEach((section, si) => {
+        const sectionEl = document.createElement('div');
+        sectionEl.className = 'qa-section';
+
+        // Count section stats
+        let secPass = 0, secFail = 0;
+        section.items.forEach((_, ii) => {
+          const r = getResult(si, ii);
+          if (r.status === 'pass') secPass++;
+          if (r.status === 'fail') secFail++;
+        });
+        const secTotal = section.items.length;
+        const secTested = secPass + secFail;
+
+        // Check if section has any visible items
+        let hasVisible = false;
+        if (filter === 'all') { hasVisible = true; }
+        else {
+          section.items.forEach((_, ii) => {
+            const r = getResult(si, ii);
+            if (filter === 'untested' && r.status === 'untested') hasVisible = true;
+            if (filter === 'pass' && r.status === 'pass') hasVisible = true;
+            if (filter === 'fail' && r.status === 'fail') hasVisible = true;
+          });
+        }
+        if (!hasVisible) { sectionEl.classList.add('qa-hidden'); }
+
+        // Header
+        const header = document.createElement('div');
+        header.className = 'qa-section-header' + (collapsed[si] ? ' qa-collapsed' : '');
+        const badgeClass = secTested === secTotal && secTotal > 0 ? ' qa-section-badge-done' : '';
+        header.innerHTML =
+          '<span class="qa-section-arrow">▼</span>' +
+          '<span class="qa-section-title">' + esc(section.section) + '</span>' +
+          '<span class="qa-section-badge' + badgeClass + '">' + secTested + '/' + secTotal +
+          (secFail > 0 ? ' · ' + secFail + ' fail' : '') + '</span>';
+        header.addEventListener('click', () => {
+          collapsed[si] = !collapsed[si];
+          header.classList.toggle('qa-collapsed');
+          saveToStorage();
+        });
+        sectionEl.appendChild(header);
+
+        // Body
+        const bodyEl = document.createElement('div');
+        bodyEl.className = 'qa-section-body';
+
+        section.items.forEach((item, ii) => {
+          const key = getKey(si, ii);
+          const r = getResult(si, ii);
+
+          const row = document.createElement('div');
+          row.className = 'qa-item';
+          if (r.status === 'pass') row.classList.add('qa-item-pass');
+          if (r.status === 'fail') row.classList.add('qa-item-fail');
+
+          // Filter visibility
+          if (filter !== 'all') {
+            if (filter === 'untested' && r.status !== 'untested') row.classList.add('qa-hidden');
+            if (filter === 'pass' && r.status !== 'pass') row.classList.add('qa-hidden');
+            if (filter === 'fail' && r.status !== 'fail') row.classList.add('qa-hidden');
+          }
+
+          const label = document.createElement('span');
+          label.className = 'qa-item-label';
+          label.textContent = item;
+          if (r.ts) {
+            const timeEl = document.createElement('span');
+            timeEl.className = 'qa-item-time';
+            timeEl.textContent = new Date(r.ts).toLocaleString();
+            label.appendChild(timeEl);
+          }
+
+          const statusEl = document.createElement('span');
+          statusEl.className = 'qa-item-status qa-status-' + r.status;
+          statusEl.textContent = r.status === 'pass' ? 'Pass' : r.status === 'fail' ? 'Fail' : '—';
+
+          const actions = document.createElement('span');
+          actions.className = 'qa-item-actions';
+
+          const passBtn = document.createElement('button');
+          passBtn.className = 'qa-btn qa-btn-pass' + (r.status === 'pass' ? ' qa-active' : '');
+          passBtn.textContent = '✓ Pass';
+          passBtn.addEventListener('click', () => {
+            results[key] = { status: 'pass', ts: new Date().toISOString() };
+            saveToStorage(); renderAll();
+          });
+
+          const failBtn = document.createElement('button');
+          failBtn.className = 'qa-btn qa-btn-fail' + (r.status === 'fail' ? ' qa-active' : '');
+          failBtn.textContent = '✗ Fail';
+          failBtn.addEventListener('click', () => {
+            results[key] = { status: 'fail', ts: new Date().toISOString() };
+            saveToStorage(); renderAll();
+            openBugReport(section, item, si, ii);
+          });
+
+          actions.appendChild(passBtn);
+          actions.appendChild(failBtn);
+
+          row.appendChild(label);
+          row.appendChild(statusEl);
+          row.appendChild(actions);
+          bodyEl.appendChild(row);
+        });
+
+        sectionEl.appendChild(bodyEl);
+        body.appendChild(sectionEl);
+      });
+
+      updateStats();
+    }
+
+    /* ══════════════════════════════════════════════════════
+       BUG REPORT INTEGRATION
+       ══════════════════════════════════════════════════════ */
+    function openBugReport(section, itemText, si, ii) {
+      // Switch to Bug Tracker tab
+      if (typeof switchMainTab === 'function') {
+        switchMainTab('bugtracker');
+      }
+
+      // Wait for bugtracker to be visible, then auto-create bug
+      setTimeout(() => {
+        const btStore = window.__bugtrackerStore;
+        const btNewBtn = document.getElementById('btNewBugBtn');
+
+        if (btStore && btNewBtn) {
+          // Click "New Bug" to create a blank entry
+          btNewBtn.click();
+
+          // Pre-fill fields
+          setTimeout(() => {
+            const titleEl = document.getElementById('btTitle');
+            const areaEl  = document.getElementById('btArea');
+            const descEl  = document.getElementById('btDesc');
+            const stepsEl = document.getElementById('btSteps');
+
+            if (titleEl) titleEl.value = 'QA FAIL: ' + itemText;
+            if (areaEl) {
+              // Try to match area from checklist section
+              const areaMap = section.area || 'Other';
+              for (let i = 0; i < areaEl.options.length; i++) {
+                if (areaEl.options[i].value === areaMap) { areaEl.selectedIndex = i; break; }
+              }
+            }
+            if (descEl) descEl.value = 'Failed during QA Checklist testing.\n\nSection: ' + section.section + '\nTest Item: ' + itemText;
+            if (stepsEl) stepsEl.value = '1. Open NekoCore OS\n2. Navigate to the relevant area\n3. Perform the test described above\n4. Observe the failure';
+
+            // Trigger input events so bugtracker picks up changes
+            [titleEl, areaEl, descEl, stepsEl].forEach(el => {
+              if (el) el.dispatchEvent(new Event('input', { bubbles: true }));
+            });
+          }, 100);
+        }
+      }, 200);
+    }
+
+    /* ══════════════════════════════════════════════════════
+       FILE SAVE / LOAD
+       ══════════════════════════════════════════════════════ */
+    function saveFile() {
+      const data = {
+        format: 'nekocore-qacheck-v1',
+        savedAt: new Date().toISOString(),
+        results: results,
+        stats: {
+          total: totalItems(),
+          pass: countByStatus('pass'),
+          fail: countByStatus('fail'),
+          untested: totalItems() - countByStatus('pass') - countByStatus('fail')
+        }
+      };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'nekocore-qa-' + new Date().toISOString().slice(0,10) + '.qacheck.json';
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }
+
+    function loadFile(file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data = JSON.parse(e.target.result);
+          if (data.format !== 'nekocore-qacheck-v1') { alert('Not a valid QA checklist file.'); return; }
+          results = data.results || {};
+          saveToStorage();
+          renderAll();
+        } catch (err) { alert('Error loading file: ' + err.message); }
+      };
+      reader.readAsText(file);
+    }
+
+    /* ══════════════════════════════════════════════════════
+       TOOLBAR EVENTS
+       ══════════════════════════════════════════════════════ */
+    $('qaSaveBtn').addEventListener('click', saveFile);
+    $('qaLoadBtn').addEventListener('click', () => loadInput.click());
+    loadInput.addEventListener('change', (e) => { if (e.target.files[0]) loadFile(e.target.files[0]); e.target.value = ''; });
+
+    $('qaResetBtn').addEventListener('click', () => {
+      if (!confirm('Reset all QA results? This cannot be undone.')) return;
+      results = {};
+      collapsed = {};
+      saveToStorage();
+      renderAll();
+    });
+
+    $('qaCollapseAllBtn').addEventListener('click', () => {
+      CHECKLIST.forEach((_, i) => { collapsed[i] = true; });
+      saveToStorage(); renderAll();
+    });
+
+    $('qaExpandAllBtn').addEventListener('click', () => {
+      collapsed = {};
+      saveToStorage(); renderAll();
+    });
+
+    filterSel.addEventListener('change', renderAll);
+
+    /* ══════════════════════════════════════════════════════
+       HELPERS
+       ══════════════════════════════════════════════════════ */
+    function esc(s) {
+      const d = document.createElement('div'); d.textContent = s; return d.innerHTML;
+    }
+
+    /* ══════════════════════════════════════════════════════
+       INIT
+       ══════════════════════════════════════════════════════ */
+    loadFromStorage();
+    renderAll();
+
+    window.__qaChecklistStore = { results, CHECKLIST, renderAll };
+  })();
+  </script>
+</div>

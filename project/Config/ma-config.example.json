@@ -27,11 +27,19 @@
         "apiKey": "",
         "model": "openai/gpt-4o"
       },
+      "ma": {
+        "type": "openrouter",
+        "endpoint": "https://openrouter.ai/api/v1/chat/completions",
+        "apiKey": "",
+        "model": "openai/gpt-4o"
+      },
+      "_activeType": "openrouter",
       "_activeTypes": {
         "main": "openrouter",
         "subconscious": "openrouter",
         "dream": "openrouter",
-        "orchestrator": "openrouter"
+        "orchestrator": "openrouter",
+        "ma": "openrouter"
       }
     }
   },
@@ -42,5 +50,6 @@
     "apiKey": "",
     "model": "",
     "size": "1024x1024"
-  }
+  },
+  "workspacePath": ""
 }

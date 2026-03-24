@@ -20,7 +20,7 @@
   &nbsp;
   <img src="https://img.shields.io/badge/dependencies-0-brightgreen?style=flat-square" alt="zero deps"/>
   &nbsp;
-  <img src="https://img.shields.io/badge/tests-2%2C248%20passing-brightgreen?style=flat-square" alt="2,248 tests passing"/>
+  <img src="https://img.shields.io/badge/tests-2%2C505%20passing-brightgreen?style=flat-square" alt="2,505 tests passing"/>
 </p>
 
 <p align="center">
@@ -30,14 +30,14 @@
   &nbsp;·&nbsp;
   <a href="docs/USER-GUIDE.md">User Guide</a>
   &nbsp;·&nbsp;
-  <strong>v0.9.0-alpha.4.24</strong>
+  <strong>v0.9.0-alpha.5</strong>
 </p>
 
 <br>
 
 <div align="center">
 
-| 2,248 | 0 | 5 | 20+ |
+| 2,505 | 0 | 5 | 20+ |
 |:-----:|:-:|:-:|:----:|
 | **Tests Passing** | **Runtime Dependencies** | **Pipeline Phases** | **Desktop Apps** |
 
@@ -53,7 +53,7 @@
 > self-repair/diagnostics, the failsafe console, resource manager, bug tracker, smart port management,
 > and server-to-server MA integration — are **functional but not yet battle-tested**.
 >
-> There are **2,248 passing unit tests** covering these features, but they have **not been
+> There are **2,505 passing unit tests** covering these features, but they have **not been
 > stress-tested in production environments**. APIs, data formats, and behaviour may change
 > without notice between releases.
 >
@@ -98,7 +98,7 @@ Structured multi-phase birth — name → traits → life history → core memor
 </td>
 <td width="33%" valign="top">
 <strong>🔌 Skills & Routing</strong><br><br>
-Drop-in function-call plugins with per-phase model routing. Assign different LLMs to 1A, 1D, 1C, and Final. Ollama (local) and OpenRouter (cloud) supported out of the box.
+Drop-in function-call plugins with per-phase model routing. Assign different LLMs to 1A, 1D, 1C, and Final. Ollama (local), OpenRouter (cloud), and Anthropic Direct supported out of the box.
 </td>
 </tr>
 <tr>
@@ -127,6 +127,20 @@ Bug Tracker with screenshot capture, severity tracking, and Markdown report expo
 <td width="33%" valign="top">
 <strong>🔌 Smart Port Management</strong><br><br>
 Auto-detects port conflicts, identifies running instances (NekoCore OS vs MA), and prompts before spawning duplicates. Power users can run multiple servers simultaneously on fallback ports.
+</td>
+</tr>
+<tr>
+<td width="33%" valign="top">
+<strong>🔗 Predictive Memory</strong><br><br>
+Memory topology with shape classification, edge graphs, activation propagation, and dream reconsolidation. Echo Future predicts relevant memories before they're needed. Belief-linked activation boosts retrieval.
+</td>
+<td width="33%" valign="top">
+<strong>🔑 Anthropic Direct</strong><br><br>
+Native Anthropic Messages API with prompt caching (up to 90% input-token savings), extended thinking, native tool use, and provider-agnostic capability layer. MA and NekoCore both support all three providers.
+</td>
+<td width="33%" valign="top">
+<strong>✅ QA Checklist</strong><br><br>
+~270 test items across 40 sections covering the full OS surface. Pass/Fail buttons per item — failures auto-open Bug Tracker with pre-filled details. Progress tracking, filtering, and JSON export/import.
 </td>
 </tr>
 </table>
@@ -230,12 +244,13 @@ The brain loop ticks independently of conversation:
 | **Persistence** | File-system JSON — no database required |
 | **Memory types** | Episodic · Semantic · Long-Term (compressed chatlog chunks) |
 | **Pipeline phases** | 1A (subconscious) · 1D (dream) · 1C (conscious) · Final · Brain Loop |
-| **LLM support** | Ollama (local) · OpenRouter · Any OpenAI-compatible endpoint |
+| **LLM support** | Ollama (local) · OpenRouter · Anthropic Direct · Any OpenAI-compatible endpoint |
 | **Auth** | Account system with session token management |
 | **Realtime** | SSE cognitive bus — all pipeline events streamed to the browser |
 | **Visualizer** | Three.js WebGL 3D neural node graph — live cognitive bus events |
+| **Memory topology** | Shape classification · Edge graphs · Activation propagation · Dream reconsolidation |
 | **Skills** | Drop-in function-call plugins: web search, memory tools, workspace ops |
-| **Test suite** | 2,247 passing — unit + integration (Node built-in `--test` runner) |
+| **Test suite** | 2,505 passing — unit + integration (Node built-in `--test` runner) |
 | **Installer** | Contract-driven app install/uninstall with rollback and file lifecycle |
 
 ### Memory System
@@ -320,7 +335,9 @@ The brain loop ticks independently of conversation:
 ✔  Phase 4.22  Smart Port Management           Complete  (port-guard for all servers)
 ✔  Phase 4.23  User Documentation              Complete  (24-section user guide)
 ✔  Phase 4.24  MA Public Release               Complete  (2,247 tests, factory reset)
-○  Phase 5     Predictive Memory Topology      Next
+✔  Phase 4.25  Provider-Agnostic Capabilities  Complete  (Anthropic direct, native tools)
+✔  Phase 4.26  QA Checklist App                Complete  (~270 test items, 40 sections)
+✔  Phase 5     Predictive Memory Topology      Complete  (13 slices, 2,505 tests)
 ```
 
 **Token Optimization** eliminated ~68% of per-turn token usage across 4 phases:
@@ -350,7 +367,7 @@ The brain loop ticks independently of conversation:
 ### Prerequisites
 
 - Node.js 18+ *(the only runtime requirement)*
-- An LLM provider — [Ollama](https://ollama.ai) (local) or an [OpenRouter](https://openrouter.ai) API key
+- An LLM provider — [Ollama](https://ollama.ai) (local), [OpenRouter](https://openrouter.ai), or [Anthropic](https://console.anthropic.com) API key
 - Python 3 — **not required**. Only used by the optional `neko_fixer.py` self-repair script
 
 ### Clone & Start
@@ -387,6 +404,16 @@ cp Config/ma-config.example.json Config/ma-config.json
   "provider": "openrouter",
   "openRouterApiKey": "sk-or-...",
   "defaultModel": "mistralai/mistral-7b-instruct"
+}
+```
+
+**Anthropic Direct:**
+
+```json
+{
+  "provider": "anthropic",
+  "apiKey": "sk-ant-...",
+  "defaultModel": "claude-sonnet-4-20250514"
 }
 ```
 
@@ -441,6 +468,7 @@ Any OpenAI-compatible model works. For fully local: set all phases to an Ollama 
 | `/` — Sleep tab | Trigger REM cycle, view sleep history |
 | `/` — Bug Tracker | Screenshot capture, severity tracking, report export |
 | `/` — Resource Manager | Task/project tracking for active entities |
+| `/` — QA Checklist | ~270 test items, progress tracking, JSON export |
 | `/` — MA Server | Memory Architect control panel |
 | `/visualizer.html` | 3D WebGL neural cognitive state graph |
 
@@ -534,7 +562,7 @@ NekoCore-OS/
     ├── browser-host/          # Browser host modules
     ├── skills/                # Pluggable skill plugins (11 skills)
     ├── scripts/               # Health scanner, fixer generator, safety scripts
-    ├── tests/                 # Unit + integration tests (2,247 passing)
+    ├── tests/                 # Unit + integration tests (2,505 passing)
     ├── MA/                    # Memory Architect — AI coding assistant
     │   ├── MA-Server.js       #   MA HTTP server (port 3850)
     │   ├── MA-server/         #   Core modules (LLM, memory, tasks, agents)

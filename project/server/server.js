@@ -598,6 +598,7 @@ const { getSubconsciousMemoryContext, extractSubconsciousTopics, getSemanticPrev
   getNeurochemistry: () => entityRuntime?.neurochemistry,
   getCognitivePulse: () => entityRuntime?.cognitivePulse,
   getCognitiveBus: () => cognitiveBus,
+  getBeliefGraph: () => entityRuntime?.beliefGraph,
   logTimeline,
   callSubconsciousReranker,
   loadAspectRuntimeConfig,
@@ -606,7 +607,8 @@ const { getSubconsciousMemoryContext, extractSubconsciousTopics, getSemanticPrev
 
 
 const ALLOWED_HOSTS = [
-  'openrouter.ai'
+  'openrouter.ai',
+  'api.anthropic.com'
 ];
 
 // ── Pipeline services ──────────────────────────────────────────────────────

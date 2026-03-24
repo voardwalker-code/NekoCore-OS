@@ -54,10 +54,36 @@ function stripInternalResumeTag(text) {
   return String(text || '').replace(/^\[INTERNAL-RESUME\]\s*/i, '').trim();
 }
 
+const THINKING_PROMPT_SUFFIX = '\n\nBefore responding, reason through your answer step by step inside <thinking>...</thinking> tags. Only the text OUTSIDE the thinking tags will be shown to the user.';
+
+function stripThinkingTags(text) {
+  if (!text || typeof text !== 'string') return '';
+  return text.replace(/<thinking>[\s\S]*?<\/thinking>/gi, '').trim();
+}
+
+/**
+ * Extract thinking content from prompt-based <thinking> tags.
+ * Returns the concatenated thinking text, or null if none found.
+ */
+function extractThinkingContent(text) {
+  if (!text || typeof text !== 'string') return null;
+  const matches = [];
+  const re = /<thinking>([\s\S]*?)<\/thinking>/gi;
+  let m;
+  while ((m = re.exec(text)) !== null) {
+    const content = m[1].trim();
+    if (content) matches.push(content);
+  }
+  return matches.length > 0 ? matches.join('\n\n') : null;
+}
+
 module.exports = {
   runtimeLabel,
   toChatEndpoint,
   parseJsonBlock,
   estimateUsageFromText,
-  stripInternalResumeTag
+  stripInternalResumeTag,
+  stripThinkingTags,
+  extractThinkingContent,
+  THINKING_PROMPT_SUFFIX
 };

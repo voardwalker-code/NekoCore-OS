@@ -5,6 +5,14 @@
 const ThoughtTypes = require('../../bus/thought-types');
 
 async function decayPhase(loop) {
+  // Slice 7: Decay transient activation levels every cycle (fast rate)
+  if (loop.memoryStorage && loop.memoryStorage.indexCache) {
+    try {
+      const { decayAllActivations } = require('../../memory/activation-network');
+      decayAllActivations(loop.memoryStorage.indexCache, 0.3);
+    } catch (_err) { /* activation decay non-critical */ }
+  }
+
   const now = Date.now();
   const dayMs = 24 * 60 * 60 * 1000;
   if (now - loop.lastDecayTime < dayMs) return;

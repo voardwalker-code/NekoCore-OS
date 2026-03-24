@@ -30,6 +30,9 @@ const {
   enforceLatencyGuard
 } = require('./orchestration-policy');
 const { invokeWorker } = require('./worker-dispatcher');
+const { compactConversation } = require('../../services/context-compactor');
+const { getCapabilityMode, hasCapability } = require('../../services/provider-capabilities');
+const { stripThinkingTags, extractThinkingContent, THINKING_PROMPT_SUFFIX } = require('../../services/llm-runtime-utils');
 
 class Orchestrator {
   /**
@@ -41,7 +44,7 @@ class Orchestrator {
    * @param {Function} [options.getBeliefs] - (topics) => Array of belief objects relevant to topics
    * @param {Object} [options.cognitiveBus] - CognitiveBus instance for event emission
    * @param {Function} [options.getConsciousContext] - async (topics) => context string
-   * @param {Function} [options.storeConsciousObservation] - async (userMessage, response, topics) => void
+   * @param {Function} [options.storeConsciousObservation] - async (userMessage, response, topics, thinkingLogId) => void
    */
   constructor(options = {}) {
     this.entity = options.entity;
@@ -68,12 +71,17 @@ class Orchestrator {
     this.getEntitySummaries = options.getEntitySummaries || null;
     // C-Integration: Pre-assembled cognitive state snapshot block
     this.cognitiveSnapshot = options.cognitiveSnapshot || null;
+    // Thinking log: stores LLM reasoning so memories can reference *why* they were formed
+    this.thinkingLog = options.thinkingLog || null;
+    // Native tool use: structured tool schemas and executor for providers that support it
+    this.workspaceToolSchemas = options.workspaceToolSchemas || null;
+    this.executeWorkspaceToolCall = options.executeWorkspaceToolCall || null;
   }
 
   isRuntimeUsable(runtime) {
     if (!runtime || typeof runtime !== 'object') return false;
     if (!runtime.type || !runtime.model) return false;
-    if (runtime.type === 'openrouter') {
+    if (runtime.type === 'openrouter' || runtime.type === 'anthropic') {
       return Boolean(runtime.endpoint && (runtime.apiKey || runtime.key));
     }
     return Boolean(runtime.endpoint);
@@ -276,7 +284,9 @@ class Orchestrator {
     // Store this exchange as a conscious observation so future cycles can recall it
     if (this.storeConsciousObservation) {
       const topics = subconsciousResult.memoryContext?.topics || turnSignals.subjects || [];
-      this.storeConsciousObservation(userMessage, finalText, topics).catch(() => {});
+      // Prefer orchestrator thinking log (final synthesis), fall back to conscious
+      const thinkingLogId = finalResponse._thinkingLogId || consciousRaw?._thinkingLogId || null;
+      this.storeConsciousObservation(userMessage, finalText, topics, thinkingLogId).catch(() => {});
     }
 
     // Emit follow-up messages (from [CONTINUE] splits) so the chat route can
@@ -700,13 +710,47 @@ Rules:
 
     const systemPrompt = getConsciousPrompt(this.entity, conciseSubconsciousHint, conciseDreamHint, { activeSkillsSection, includeWorkspaceTools });
 
+    // Prompt-based thinking: inject thinking instruction for providers that
+    // don't support native extended thinking (non-Anthropic). Anthropic native
+    // thinking is handled in Slice 7 via the `thinking` API parameter.
+    const usePromptThinking = getCapabilityMode(runtime, 'extendedThinking') === 'prompt';
+    const finalSystemPrompt = usePromptThinking
+      ? systemPrompt + THINKING_PROMPT_SUFFIX
+      : systemPrompt;
+
     // Build messages: system prompt + chat history + current message
-    const messages = [{ role: 'system', content: systemPrompt }];
+    const messages = [{ role: 'system', content: finalSystemPrompt }];
 
     // Keep conscious context bounded to avoid prompt clipping and latency spikes.
-    const recentHistory = chatHistory.slice(-8);
+    let recentHistory = chatHistory.slice(-8);
+
+    // Context compaction: if the provider supports prompt-based compaction and
+    // the chat history is long enough, compact older messages into a summary.
+    // Anthropic API-native compaction is handled in llm-interface.js via context_management.
+    const compactionMode = getCapabilityMode(runtime, 'compaction');
+    if (compactionMode === 'prompt' && chatHistory.length > 8) {
+      try {
+        const compactResult = await compactConversation(
+          this.callLLM, runtime, chatHistory,
+          {
+            contextWindow: 8192,
+            preserveLastN: 6,
+            entityName: this.entity?.name,
+            entityTraits: this.entity?.persona?.traits?.join(', ')
+          }
+        );
+        if (compactResult.compacted) {
+          // Use compacted messages (system summary + recent) as our history
+          recentHistory = compactResult.messages.filter(m => m.role !== 'system' || m.content.includes('[Conversation summary'));
+        }
+      } catch (_) { /* compaction failed — use original history */ }
+    }
+
     for (const msg of recentHistory) {
-      if (msg.role === 'user' || msg.role === 'assistant') {
+      if (msg.role === 'system' && msg.content.includes('[Conversation summary')) {
+        // Compaction summary — inject as system context
+        messages.push({ role: 'system', content: msg.content });
+      } else if (msg.role === 'user' || msg.role === 'assistant') {
         // T3-2: Truncate individual history messages to prevent token blow-up
         const content = String(msg.content || '').slice(0, 1200);
         messages.push({ role: msg.role, content });
@@ -717,11 +761,37 @@ Rules:
     messages.push({ role: 'user', content: userMessage });
 
     try {
-      const result = await this.callLLM(runtime, messages, { temperature: 0.55, contextWindow: 8192, maxTokens: this.getTokenLimit('consciousResponse') || 800, returnUsage: true });
+      const callOpts = {
+        temperature: 0.55, contextWindow: 8192,
+        maxTokens: this.getTokenLimit('consciousResponse') || 800, returnUsage: true
+      };
+      // Native tool use: pass workspace tool schemas if the provider supports it.
+      // The tool execution loop in callLLM handles the multi-turn flow.
+      const useNativeTools = hasCapability(runtime, 'nativeToolUse') &&
+        Array.isArray(this.workspaceToolSchemas) && this.workspaceToolSchemas.length > 0;
+      if (useNativeTools && this.executeWorkspaceToolCall) {
+        callOpts.tools = this.workspaceToolSchemas;
+        callOpts.executeToolCall = this.executeWorkspaceToolCall;
+      }
+      const result = await this.callLLM(runtime, messages, callOpts);
 
-      const content = typeof result === 'object' && result.content !== undefined ? result.content : result;
+      let content = typeof result === 'object' && result.content !== undefined ? result.content : result;
       const usage = typeof result === 'object' && result.usage ? result.usage : null;
-      return { _text: content, _usage: usage, toString() { return content; } };
+
+      // Capture thinking content — from prompt-based tags or Anthropic native thinking
+      let thinkingLogId = null;
+      const nativeThinking = typeof result === 'object' ? result.thinkingContent : null;
+      const promptThinking = usePromptThinking ? extractThinkingContent(content) : null;
+      const thinkingContent = nativeThinking || promptThinking;
+      if (thinkingContent && this.thinkingLog) {
+        try {
+          const entityId = options.entityId || this.entity?.id || 'unknown';
+          thinkingLogId = await this.thinkingLog.storeThinkingEntry(entityId, 'conscious', thinkingContent, userMessage);
+        } catch (_) { /* thinking log failure is non-critical */ }
+      }
+      if (usePromptThinking) content = stripThinkingTags(content);
+
+      return { _text: content, _usage: usage, _thinkingLogId: thinkingLogId, toString() { return content; } };
     } catch (err) {
       console.error('  ⚠ Conscious LLM call failed:', err.message);
       return '(Conscious mind encountered an error)';
@@ -851,6 +921,12 @@ Keep concise and structured.`;
 
     const systemPrompt = getOrchestratorPrompt(this.entity);
 
+    // Prompt-based thinking for orchestrator aspect
+    const useOrcPromptThinking = getCapabilityMode(runtime, 'extendedThinking') === 'prompt';
+    const finalOrcSystemPrompt = useOrcPromptThinking
+      ? systemPrompt + THINKING_PROMPT_SUFFIX
+      : systemPrompt;
+
     // F3: Orchestrator is now a reviewer/voicer — Conscious already reasoned with all context.
     // We give Orchestrator a full copy of what Conscious had plus the Conscious output.
 
@@ -906,9 +982,10 @@ The Conscious reasoning notes above define what to address (INTENT), which memor
     let timedOut = false;
     let usage = null;
     let content;
+    let nativeThinkingContent = null;
 
     const doCall = async (rt) => this.callLLM(rt, [
-      { role: 'system', content: systemPrompt },
+      { role: 'system', content: finalOrcSystemPrompt },
       { role: 'user', content: mergePrompt }
     ], { temperature: 0.5, contextWindow: 8192, maxTokens: this.getTokenLimit('orchestratorFinal') || 1200, returnUsage: true });
 
@@ -916,6 +993,7 @@ The Conscious reasoning notes above define what to address (INTENT), which memor
       const result = await enforceLatencyGuard(() => doCall(runtime), policy.maxLatencyMs);
       content = typeof result === 'object' && result.content !== undefined ? result.content : result;
       usage = typeof result === 'object' && result.usage ? result.usage : null;
+      nativeThinkingContent = typeof result === 'object' ? result.thinkingContent || null : null;
     } catch (err) {
       if (err && err.timedOut) {
         timedOut = true;
@@ -944,6 +1022,20 @@ The Conscious reasoning notes above define what to address (INTENT), which memor
 
     const o2LatencyMs = Date.now() - o2StartMs;
 
+    // Capture thinking content — from prompt-based tags or Anthropic native thinking
+    let thinkingLogId = null;
+    const promptThinking = (useOrcPromptThinking && typeof content === 'string') ? extractThinkingContent(content) : null;
+    const thinkingContent = nativeThinkingContent || promptThinking;
+    if (thinkingContent && this.thinkingLog) {
+      try {
+        const entityId = this.entity?.id || 'unknown';
+        thinkingLogId = await this.thinkingLog.storeThinkingEntry(entityId, 'orchestrator', thinkingContent, userMessage);
+      } catch (_) { /* thinking log failure is non-critical */ }
+    }
+    if (useOrcPromptThinking && typeof content === 'string') {
+      content = stripThinkingTags(content);
+    }
+
     // C4: escalation telemetry returned with result
     const escalationTelemetry = {
       reason: effectiveEscalate.reason,
@@ -958,6 +1050,7 @@ The Conscious reasoning notes above define what to address (INTENT), which memor
       _text: content,
       _usage: usage,
       _escalation: escalationTelemetry,
+      _thinkingLogId: thinkingLogId,
       toString() { return content; }
     };
   }

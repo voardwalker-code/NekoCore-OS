@@ -97,15 +97,20 @@ document.addEventListener('contextmenu', function(e) {
   e.preventDefault();
 
   // ── Pinned app on taskbar ──
-  const pinnedBtn = target.closest('.os-pinned-app, .os-dash-app, .os-overflow-app');
-  if (pinnedBtn) {
-    const tab = pinnedBtn.getAttribute('data-tab');
+  const taskbarAppBtn = target.closest('.os-pinned-app, .os-dash-app, .os-overflow-app, .os-running-app');
+  if (taskbarAppBtn) {
+    const tab = taskbarAppBtn.getAttribute('data-tab');
     const app = getWindowApp(tab);
-    if (!app) return;
+    const appLabel = app?.label || tab || 'App';
+    const appIcon = app?.icon || '🪟';
+    const meta = windowManager && windowManager.windows ? windowManager.windows.get(tab) : null;
+    const isOpen = !!(meta && meta.open);
     ctxMenu.show(e.clientX, e.clientY, [
+      { icon: appIcon, label: 'Open ' + appLabel, action: function() { switchMainTab(tab); } },
+      { icon: '✕', label: 'Close ' + appLabel, danger: isOpen, action: function() { closeWindow(tab); } },
+      '---',
       { icon: '📌', label: 'Unpin from Taskbar', action: function() { togglePinnedApp(tab); } },
       ...buildPopoutContextItems(tab),
-      { icon: app.icon, label: 'Open ' + app.label, action: function() { switchMainTab(tab); } },
       '---',
       { icon: '📄', label: 'Create Shortcut on Desktop', action: function() { vfs.createDesktopShortcut(tab); } }
     ]);
@@ -171,6 +176,7 @@ document.addEventListener('contextmenu', function(e) {
       { icon: '📁', label: 'New Folder', action: function() { vfs.createOnDesktop('folder'); } },
       { icon: '📝', label: 'New Note', action: function() { vfs.createOnDesktop('note'); } },
       '---',
+      { icon: '🎨', label: 'Customize Desktop', action: function() { if (typeof window.openThemeCustomizer === 'function') window.openThemeCustomizer(); else switchMainTab('themes'); } },
       { icon: '🔄', label: 'Refresh Desktop', action: function() { vfs.renderDesktop(); } }
     ]);
     return;
@@ -215,6 +221,7 @@ document.addEventListener('contextmenu', function(e) {
     { icon: '📁', label: 'New Folder', action: function() { vfs.createOnDesktop('folder'); } },
     { icon: '📝', label: 'New Note', action: function() { vfs.createOnDesktop('note'); } },
     '---',
+    { icon: '🎨', label: 'Customize Desktop', action: function() { if (typeof window.openThemeCustomizer === 'function') window.openThemeCustomizer(); else switchMainTab('themes'); } },
     { icon: '🔄', label: 'Refresh Desktop', action: function() { vfs.renderDesktop(); } }
   ]);
 });

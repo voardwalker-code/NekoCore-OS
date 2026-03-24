@@ -2235,7 +2235,7 @@ body.nav-collapsed .hdr { padding-left: initial; }
 .theme-card-badge {
   position: absolute;
   top: 8px;
-  right: 8px;
+  left: 8px;
   font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
@@ -2244,6 +2244,24 @@ body.nav-collapsed .hdr { padding-left: initial; }
   border-radius: 6px;
   background: var(--accent-primary);
   color: #fff;
+}
+.theme-card-delete {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  border: 1px solid color-mix(in srgb, var(--danger) 55%, #ffffff 0%);
+  background: color-mix(in srgb, var(--danger) 15%, var(--surface-2) 85%);
+  color: var(--text-primary);
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .25px;
+  cursor: pointer;
+}
+.theme-card-delete:hover {
+  border-color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 25%, var(--surface-2) 75%);
 }
 
 /* Entity management */

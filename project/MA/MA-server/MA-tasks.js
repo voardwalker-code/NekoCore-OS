@@ -20,6 +20,16 @@ const TASK_TYPES = {
   entity_genesis: { maxSteps: 10, maxLLM: 50 }
 };
 
+// Task types that benefit from extended thinking (complex reasoning required)
+const COMPLEX_TASK_TYPES = new Set(['architect', 'code', 'deep_research', 'project', 'entity_genesis']);
+
+/** Strip <thinking>...</thinking> blocks from LLM output. */
+function _stripThinkingTags(text) {
+  if (!text) return text;
+  return text.replace(/<thinking>[\s\S]*?<\/thinking>/gi, '').trim();
+}
+
+
 // ── Blueprint cache ─────────────────────────────────────────────────────────
 const _bpCache = new Map();
 const BP_DIR = path.join(__dirname, '..', 'MA-blueprints');
@@ -232,8 +242,12 @@ async function runTask(opts) {
     let resp = await callLLM([
       { role: 'system', content: sysMsg },
       { role: 'user', content: prompt }
-    ], { temperature: 0.7 });
+    ], { temperature: 0.7, ...(COMPLEX_TASK_TYPES.has(taskType) ? { thinking: true } : {}) });
     llmCalls++;
+
+    // Strip thinking tags before tool parsing (prompt-based fallback path)
+    resp = _stripThinkingTags(resp);
+
     if (onActivity) await onActivity('llm_call', `LLM response for step ${i + 1}`);
 
     // Execute tool calls

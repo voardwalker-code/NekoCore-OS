@@ -131,19 +131,49 @@ function createConfigRoutes(ctx) {
   function normalizeIncomingRuntimeConfig(config) {
     if (!config || typeof config !== 'object') return null;
 
+    const isProbablyCorruptedApiKey = (raw) => {
+      const s = String(raw || '').trim();
+      if (!s) return true;
+      // API keys should be single-token values without whitespace/newlines/log text.
+      if (/\s/.test(s)) return true;
+      if (/call failed|invalid_request_error|request_id|context_management|⚠/i.test(s)) return true;
+      return false;
+    };
+
     const type = String(config.type || '').toLowerCase().trim();
+
+    // Preserve capabilities object if present (user-configured overrides)
+    const capabilities = (config.capabilities && typeof config.capabilities === 'object')
+      ? { ...config.capabilities, compaction: false }
+      : undefined;
+
     if (type === 'ollama' || (config.ollamaUrl && config.ollamaModel)) {
       const endpoint = String(config.endpoint || config.ollamaUrl || 'http://localhost:11434').trim();
       const model = String(config.model || config.ollamaModel || '').trim();
       if (!endpoint || !model) return null;
-      return { type: 'ollama', endpoint, model };
+      const result = { type: 'ollama', endpoint, model };
+      if (capabilities) result.capabilities = capabilities;
+      return result;
+    }
+
+    if (type === 'anthropic') {
+      const endpoint = String(config.endpoint || '').trim()
+        || 'https://api.anthropic.com/v1/messages';
+      const apiKey = String(config.apiKey || config.key || '').trim();
+      const model = String(config.model || '').trim();
+      if (!apiKey || !model || isProbablyCorruptedApiKey(apiKey)) return null;
+      const result = { type: 'anthropic', endpoint, apiKey, model };
+      if (capabilities) result.capabilities = capabilities;
+      return result;
     }
 
     const endpoint = String(config.endpoint || config.ep || '').trim() || 'https://openrouter.ai/api/v1/chat/completions';
     const apiKey = String(config.apiKey || config.key || '').trim();
     const model = String(config.model || '').trim();
-    if (!endpoint || !apiKey || !model) return null;
-    return { type: 'openrouter', endpoint, apiKey, model };
+    if (!endpoint || !apiKey || !model || isProbablyCorruptedApiKey(apiKey)) return null;
+    const result = { type: 'openrouter', endpoint, apiKey, model };
+    if (capabilities) result.capabilities = capabilities;
+    return result;
   }
 
   const REDACTED = '••••••••';
@@ -362,6 +392,12 @@ function createConfigRoutes(ctx) {
       const normalizedConfig = normalizeIncomingRuntimeConfig(mergedConfig);
       if (!normalizedConfig) throw new Error('Invalid provider config payload');
 
+      // Elevate capabilities to profile level (canonical location for resolveCapabilities)
+      if (normalizedConfig.capabilities) {
+        targetProfile.capabilities = normalizedConfig.capabilities;
+        delete normalizedConfig.capabilities;
+      }
+
       targetProfile[normalizedProvider] = normalizedConfig;
       if (!targetProfile._activeTypes || typeof targetProfile._activeTypes !== 'object') targetProfile._activeTypes = {};
       targetProfile._activeTypes[normalizedProvider] = normalizedConfig.type;
@@ -393,7 +429,7 @@ function createConfigRoutes(ctx) {
   }
 
   async function postProxy(req, res, apiHeaders, readBody) {
-    const ALLOWED_HOSTS = ['openrouter.ai'];
+    const ALLOWED_HOSTS = ['openrouter.ai', 'api.anthropic.com'];
     try {
       const raw = JSON.parse(await readBody(req));
       if (!raw.url) { res.writeHead(400, apiHeaders); res.end(JSON.stringify({ error: 'Missing url' })); return; }

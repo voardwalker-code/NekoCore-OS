@@ -537,6 +537,26 @@
         "sharedSourceGroup": null
       },
       "notes": ["Resource manager — mounted non-core HTML with active resource tracking"]
+    },
+    {
+      "id": "qachecklist",
+      "name": "QA Checklist",
+      "icon": "WINDOW_APPS:inline-svg",
+      "sourcePath": "apps/non-core/core/tab-qachecklist.html",
+      "appType": "html-only",
+      "defaultWindow": { "width": 1020, "height": 720 },
+      "standalonePath": null,
+      "optional": true,
+      "launchMode": "both",
+      "embedded": { "tabId": "qachecklist", "target": "#tab-qachecklist", "hostPath": "apps/non-core/core/tab-qachecklist.html", "navTarget": "#navOptionalAppsHost" },
+      "popout": { "eligible": true, "queryParam": "?popout=qachecklist" },
+      "ownership": {
+        "controllerPath": null,
+        "hostPath": "apps/non-core/core/tab-qachecklist.html",
+        "pagePath": null,
+        "sharedSourceGroup": null
+      },
+      "notes": ["QA checklist — mounted non-core HTML with pass/fail workflow linked to Bug Tracker"]
     }
   ]
 }

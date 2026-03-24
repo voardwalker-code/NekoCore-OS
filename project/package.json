@@ -1,6 +1,6 @@
 {
   "name": "nekocore",
-  "version": "0.9.0-alpha.4.24",
+  "version": "0.9.0-alpha.5",
   "description": "NekoCore OS - A Cognitive WebOS for persistent AI identity, episodic memory, autonomous brain cycles, and layered reasoning. Built on the REM System (Recursive Echo Memory).",
   "main": "server/server.js",
   "scripts": {
@@ -16,6 +16,7 @@
     "backfill:memory-schema": "node server/tools/audit-legacy-memory-records.js --apply",
     "audit:document-backfill": "node server/tools/backfill-legacy-document-chunks.js",
     "backfill:document-chunks": "node server/tools/backfill-legacy-document-chunks.js --apply",
+    "migrate:memory-agents": "node server/tools/migrate-memory-agents.js",
     "test": "node --test tests/unit/*.test.js tests/integration/*.test.js",
     "test:unit": "node --test tests/unit/*.test.js",
     "test:integration": "node --test tests/integration/*.test.js",

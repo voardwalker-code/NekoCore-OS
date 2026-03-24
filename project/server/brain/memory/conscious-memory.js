@@ -87,6 +87,12 @@ class ConsciousMemory {
       last_reinforced:  now,
       source:           entry.source || 'conscious_observation'
     };
+    // Optional thinking log reference — if the LLM's reasoning was captured
+    // during this observation, link it so the entity can later understand
+    // the reasoning that formed this memory.
+    if (entry.thinking_log_id) {
+      stored.thinking_log_id = String(entry.thinking_log_id);
+    }
     this._stm.set(id, stored);
     if (this._stm.size >= STM_MAX_ENTRIES) {
       this._needsConsolidation = true;
@@ -306,6 +312,10 @@ class ConsciousMemory {
       subcon_links: links.subcon_links || [],
       ltm_links:    links.ltm_links    || []
     };
+    // Preserve thinking log link through promotion
+    if (entry.thinking_log_id) {
+      ltmEntry.thinking_log_id = entry.thinking_log_id;
+    }
 
     if (this._ltmDir) {
       fs.writeFileSync(

@@ -193,17 +193,64 @@ function promoteToStm(entityId, hits, opts = {}) {
   return promoted;
 }
 
-// ── Echo Future (stub — implemented in Phase 5) ───────────────────────────────
+// ── Echo Future (Phase 5 — Predictive Memory Recall) ──────────────────────────
 
 /**
  * Shape/topology matching for predictive memory recall.
- * Stub: returns null until Phase 5.
+ * Uses activation levels + shape classification to predict which memories
+ * the entity will need next. Purely algorithmic — no LLM calls.
  *
- * @param {string} entityId
- * @returns {null}
+ * @param {string}   entityId
+ * @param {string[]} [topics]        Current turn topics — filters results by overlap.
+ * @param {Object}   [opts]
+ * @param {Object}   [opts._indexCache]  Injected indexCache for tests.
+ * @param {number}   [opts.limit=5]      Max results to return.
+ * @returns {Object[]}  `[{ id, topics, shape, activationLevel, creationContext }]`
  */
-function echoFuture(entityId) { // eslint-disable-line no-unused-vars
-  return null;
+function echoFuture(entityId, topics, opts = {}) {
+  if (!entityId) return [];
+
+  const { getPreActivated } = require('./memory/activation-network');
+
+  const indexCache = opts._indexCache || null;
+  if (!indexCache) return [];
+
+  // Step 1: Get pre-activated memories (threshold 0.15, up to 20 candidates)
+  const preActivated = getPreActivated(indexCache, 0.15, 20);
+  if (preActivated.length === 0) return [];
+
+  const pool = [];
+  for (const memId of preActivated) {
+    const meta = indexCache.getMemoryMeta(memId);
+    if (!meta) continue;
+
+    let activationLevel = meta.activationLevel || 0;
+
+    // Step 2: Topic filtering — if topics provided, require at least 1 shared topic
+    if (topics && topics.length > 0) {
+      const metaTopics = (meta.topics || []).map(t => t.toLowerCase());
+      const queryTopics = topics.map(t => t.toLowerCase());
+      if (!queryTopics.some(t => metaTopics.includes(t))) continue;
+    }
+
+    // Step 3: Shape boost — anticipatory memories get +0.2
+    if (meta.shape === 'anticipatory') {
+      activationLevel = Math.min(1.0, activationLevel + 0.2);
+    }
+
+    pool.push({
+      id: memId,
+      topics: meta.topics || [],
+      shape: meta.shape || 'unclassified',
+      activationLevel,
+      creationContext: meta.creationContext || null
+    });
+  }
+
+  // Step 4: Sort by activation level descending, return top N
+  const limit = opts.limit || 5;
+  pool.sort((a, b) => b.activationLevel - a.activationLevel);
+  return pool.slice(0, limit);
 }
 
 module.exports = { echoNow, echoPast, echoFuture, promoteToStm };

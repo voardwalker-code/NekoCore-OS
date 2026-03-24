@@ -127,20 +127,40 @@ async function handleRequest(req, res) {
       return json(res, 200, { ok: true, saved: messages.length });
     }
 
+    // ── Mode toggle (Chat / Work) ────────────────────────────────────
+    if (url.pathname === '/api/mode' && method === 'GET') {
+      return json(res, 200, { mode: core.getMode() });
+    }
+
+    if (url.pathname === '/api/mode' && method === 'POST') {
+      const body = JSON.parse(await readBody(req));
+      const m = String(body.mode || '').toLowerCase();
+      if (m !== 'chat' && m !== 'work') return json(res, 400, { error: 'mode must be "chat" or "work"' });
+      core.setMode(m);
+      return json(res, 200, { ok: true, mode: core.getMode() });
+    }
+
     if (url.pathname === '/api/config' && method === 'GET') {
       const config = core.getConfig();
       const hasFile = fs.existsSync(core.CONFIG_PATH);
+      const revealKey = url.searchParams.get('revealKey') === '1';
       let fileData = null;
       if (hasFile && !config) {
         try { fileData = JSON.parse(fs.readFileSync(core.CONFIG_PATH, 'utf8')); } catch (_) {}
       }
       const src = config || fileData;
+      const key = String(src?.apiKey || src?.key || '').trim();
+      const hasApiKey = !!key;
       return json(res, 200, {
         configured: !!config, hasFile,
         type: src?.type || null, model: src?.model || null, endpoint: src?.endpoint || null,
         maxTokens: src?.maxTokens || 12288,
         vision: src?.vision || false,
-        workspacePath: core.WORKSPACE_DIR
+        workspacePath: src?.workspacePath || core.WORKSPACE_DIR,
+        capabilities: src?.capabilities || null,
+        hasApiKey,
+        apiKeyMasked: hasApiKey ? '********' : '',
+        ...(revealKey && hasApiKey ? { apiKey: key } : {})
       });
     }
 
@@ -150,12 +170,14 @@ async function handleRequest(req, res) {
       const maxTokens = parseInt(body.maxTokens, 10);
       // Preserve existing apiKey if the new one is blank (password fields don't pre-fill)
       const existingConfig = core.getConfig();
-      const apiKey = body.apiKey && body.apiKey.trim() ? body.apiKey.trim() : (existingConfig?.apiKey || '');
+      const incomingKey = String(body.apiKey || '').trim();
+      const apiKey = incomingKey && incomingKey !== '********' ? incomingKey : (existingConfig?.apiKey || '');
       core.setConfig({
         type: body.type, endpoint: body.endpoint, apiKey, model: body.model,
         maxTokens: (maxTokens > 0 && maxTokens <= 1000000) ? maxTokens : 12288,
         vision: body.vision === true,
-        workspacePath: body.workspacePath || ''
+        workspacePath: body.workspacePath || '',
+        ...(body.capabilities ? { capabilities: body.capabilities } : {})
       });
       return json(res, 200, { ok: true });
     }

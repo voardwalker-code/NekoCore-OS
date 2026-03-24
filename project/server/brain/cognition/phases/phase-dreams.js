@@ -77,6 +77,27 @@ async function dreamsPhase(loop) {
     loop._forcedDreamRun = null;
   }
 
+  // Slice 10: Reconsolidation runs every 4th dream cycle (≈ every 20 brain loop cycles)
+  const reconsolidationCadence = (loop.dreamInterval || 5) * 4;
+  if (loop.cycleCount % reconsolidationCadence === 0) {
+    try {
+      const { reconsolidate } = require('../../memory/reconsolidation');
+      const indexCache = loop.memoryStorage && loop.memoryStorage.indexCache;
+      if (indexCache) {
+        const reconResult = reconsolidate(
+          loop.memoryStorage.entityId,
+          indexCache,
+          loop.beliefGraph
+        );
+        if (reconResult.edgesUpdated || reconResult.clustersFound || reconResult.stubsCreated) {
+          console.log(`  ✓ Reconsolidation: ${reconResult.edgesUpdated} edges updated, ${reconResult.clustersFound} clusters, ${reconResult.stubsCreated} stubs`);
+        }
+      }
+    } catch (e) {
+      console.warn('  ⚠ Reconsolidation failed:', e.message);
+    }
+  }
+
   loop._emit('phase', { name: 'dream', status: 'done' });
 }
 
