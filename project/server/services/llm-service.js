@@ -58,7 +58,7 @@ class LLMService {
     const _llmStart = Date.now();
     const temperature = Number.isFinite(options.temperature) ? options.temperature : 0.35;
     const maxTokens = Number.isFinite(options.maxTokens) ? options.maxTokens : this.defaultMaxTokens;
-    const timeoutMs = Number.isFinite(options.timeout) ? options.timeout : 90000;
+    const timeoutMs = Number.isFinite(options.timeout) ? options.timeout : 300000;
 
     if (runtime.type === 'openrouter') {
       return this._callOpenRouter(runtime, messages, { temperature, maxTokens, timeoutMs, responseFormat: options.responseFormat, returnUsage: options.returnUsage, contextWindow: options.contextWindow, _llmStart });

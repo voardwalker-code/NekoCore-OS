@@ -1,7 +1,6 @@
 ---
 name: self-repair
 description: System diagnostics and self-healing — run health scans, interpret results, trigger the fixer generator, guide users through disaster recovery, and rebuild broken files using the BIOS.
-enabled: true
 ---
 
 # Self-Repair Skill

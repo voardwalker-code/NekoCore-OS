@@ -1,7 +1,6 @@
 ---
 name: memory-tools
 description: Advanced memory management tools. Create, search, and organize entity memories with fine-grained control.
-enabled: true
 ---
 
 # Memory Tools

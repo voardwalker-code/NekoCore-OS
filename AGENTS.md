@@ -10,7 +10,7 @@ For this project, the instruction split is:
 
 ## Mandatory behavior
 
-1. Reference `WORKLOG.md` in every message.
+1. Reference both `WORKLOG.md` and `.github/copilot-instructions.md` in every message.
 2. Validate planned actions against `WORKLOG.md` before editing code or docs.
 3. Respect the active phase/slice from `WORKLOG.md` and the operating rules from `.github/copilot-instructions.md`.
 4. When uncertain, prefer explicit repo instructions over inferred workflow.
@@ -18,7 +18,7 @@ For this project, the instruction split is:
 
 ## Required line in each message
 
-`Reference: WORKLOG.md`
+`Reference: WORKLOG.md | .github/copilot-instructions.md`
 
 ## Enforcement
 

@@ -140,6 +140,12 @@
       dispose();
       return;
     }
+    // Pause the loop when the window is closed/minimized (display:none)
+    var shell = canvas.closest('.wm-window');
+    if (shell && !shell.classList.contains('open')) {
+      rafId = requestAnimationFrame(tick);
+      return;
+    }
     update();
     draw();
     rafId = requestAnimationFrame(tick);

@@ -209,7 +209,8 @@ Write the SKILL.md file with YAML frontmatter:
 [TOOL:ws_write {"path": "MA-skills/{skill-name}/SKILL.md"}]
 ---
 name: {skill-name}
-enabled: true
+description: "Use when the user asks for {task_type} workflows, automation, or guidance."
+user-invocable: true
 ---
 
 # {Skill Name} Skill

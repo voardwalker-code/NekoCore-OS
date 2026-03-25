@@ -216,6 +216,6 @@ describe('client registrations', () => {
 
   it('app.js has APP_CATEGORY_BY_TAB entry for resourcemgr', () => {
     const src = fs.readFileSync(path.join(__dirname, '..', '..', 'client', 'js', 'app.js'), 'utf8');
-    assert.ok(src.includes("resourcemgr: 'tools'"), 'category entry missing');
+    assert.ok(src.includes("resourcemgr: 'dev'"), 'category entry missing');
   });
 });

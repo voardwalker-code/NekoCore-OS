@@ -29,7 +29,7 @@ test('MA-tasks.js exists', () => {
 });
 
 test('MA-blueprints modules directory exists', () => {
-  assert.ok(existsSync(resolve('MA/MA-blueprints/modules/modules')));
+  assert.ok(existsSync(resolve('MA/MA-blueprints/modules')));
 });
 
 test('slash-interceptor.js has /ma case', () => {
@@ -96,7 +96,7 @@ test('MA getBlueprint function exists', () => {
 // ── MA blueprint structure ──────────────────────────────────────────────────
 
 test('MA core blueprints exist', () => {
-  const coreDir = resolve('MA/MA-blueprints/core/core');
+  const coreDir = resolve('MA/MA-blueprints/core');
   const expected = ['task-decomposition.md', 'tool-guide.md', 'error-recovery.md', 'quality-gate.md', 'output-format.md'];
   for (const f of expected) {
     assert.ok(existsSync(resolve(coreDir, f)), `${f} must exist`);
@@ -104,7 +104,7 @@ test('MA core blueprints exist', () => {
 });
 
 test('MA module blueprints exist for current task types', () => {
-  const modDir = resolve('MA/MA-blueprints/modules/modules');
+  const modDir = resolve('MA/MA-blueprints/modules');
   const expected = ['code.md', 'research.md', 'analysis.md', 'writing.md', 'architect.md'];
   for (const f of expected) {
     assert.ok(existsSync(resolve(modDir, f)), `${f} must exist`);
@@ -129,7 +129,7 @@ test('entity_genesis task type registered', () => {
 
 test('entity_genesis blueprint exists', () => {
   assert.ok(
-    existsSync(resolve('MA/MA-blueprints/modules/modules/entity_genesis.md')),
+    existsSync(resolve('MA/MA-blueprints/modules/entity_genesis.md')),
     'entity_genesis.md blueprint must exist'
   );
 });

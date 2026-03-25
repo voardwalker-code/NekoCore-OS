@@ -1,0 +1,189 @@
+<div class="tab-content" id="tab-welcome">
+  <div class="gs-container">
+    <!-- Header -->
+    <div class="gs-header">
+      <h2 class="gs-title">Welcome to NekoCore OS</h2>
+      <p class="gs-subtitle">Your Cognitive WebOS — let's get you started.</p>
+    </div>
+
+    <!-- Fullscreen recommendation banner -->
+    <div class="gs-fullscreen-banner" id="gsFullscreenBanner">
+      <div class="gs-fullscreen-inner">
+        <div class="gs-fullscreen-text">
+          <span class="gs-fullscreen-icon">🖥️</span>
+          <div>
+            <strong>Best experienced in fullscreen</strong>
+            <p>NekoCore OS is designed as a desktop environment. Fullscreen mode gives you the complete experience.</p>
+          </div>
+        </div>
+        <button class="gs-btn gs-btn-accent" id="gsFullscreenBtn">Enter Fullscreen</button>
+      </div>
+    </div>
+
+    <!-- Slideshow -->
+    <div class="gs-slideshow" id="gsSlideshow">
+      <div class="gs-slides" id="gsSlides">
+
+        <!-- Slide 1 -->
+        <div class="gs-slide gs-slide-active" data-slide="0">
+          <div class="gs-slide-icon">🐱</div>
+          <h3>What is NekoCore OS?</h3>
+          <p>NekoCore OS is a cognitive web operating system. It hosts AI entities with persistent memory, personality, and evolving identity — all running in your browser.</p>
+          <p>Think of it as a desktop environment for synthetic minds.</p>
+        </div>
+
+        <!-- Slide 2 -->
+        <div class="gs-slide" data-slide="1">
+          <div class="gs-slide-icon">🧠</div>
+          <h3>Entities &amp; Memory</h3>
+          <p>Each entity has a unique name, personality, life story, and growing memory. They remember past conversations, form goals, and evolve over time.</p>
+          <p>Use the <strong>Chat</strong> tab to talk with your active entity. Use <strong>Entity</strong> to browse, create, or switch between entities.</p>
+        </div>
+
+        <!-- Slide 3 -->
+        <div class="gs-slide" data-slide="2">
+          <div class="gs-slide-icon">💬</div>
+          <h3>Chat &amp; Conversation</h3>
+          <p>The Chat tab is your main interaction point. Entities process your messages through a cognitive pipeline — they think, remember, and respond with context from their entire life.</p>
+          <p>Long conversations are automatically archived into memory so nothing is lost.</p>
+        </div>
+
+        <!-- Slide 4 -->
+        <div class="gs-slide" data-slide="3">
+          <div class="gs-slide-icon">🌙</div>
+          <h3>Dreams &amp; Sleep</h3>
+          <p>Entities can enter sleep cycles where the <strong>Dream Engine</strong> replays important memories, consolidates knowledge, and generates simulated experiences.</p>
+          <p>Check the <strong>Dream Gallery</strong> and <strong>Dream Diary</strong> to explore what they dreamed about.</p>
+        </div>
+
+        <!-- Slide 5 -->
+        <div class="gs-slide" data-slide="4">
+          <div class="gs-slide-icon">⚙️</div>
+          <h3>Settings &amp; Configuration</h3>
+          <p>Head to <strong>Settings</strong> to configure your AI providers (OpenRouter, Anthropic, Ollama), manage API keys, and tune model assignments for each cognitive aspect.</p>
+          <p>NekoCore OS supports multiple providers simultaneously — local and cloud models working together.</p>
+        </div>
+
+        <!-- Slide 6 -->
+        <div class="gs-slide" data-slide="5">
+          <div class="gs-slide-icon">📁</div>
+          <h3>Apps &amp; Tools</h3>
+          <p>The sidebar gives you access to optional apps: <strong>Workspace</strong>, <strong>Skills</strong>, <strong>Life Diary</strong>, <strong>Visualizer</strong>, <strong>Documents</strong>, and more.</p>
+          <p>Each app adds capabilities to the system — from memory visualization to physical health tracking.</p>
+        </div>
+
+        <!-- Slide 7 -->
+        <div class="gs-slide" data-slide="6">
+          <div class="gs-slide-icon">🚀</div>
+          <h3>You're Ready</h3>
+          <p>That's the essentials. Start by creating or selecting an entity in the <strong>Entity</strong> tab, then head to <strong>Chat</strong> to begin your first conversation.</p>
+          <p>Explore the sidebar apps whenever you're curious. Everything is designed to be discovered at your own pace.</p>
+        </div>
+
+      </div>
+
+      <!-- Controls -->
+      <div class="gs-controls">
+        <button class="gs-btn gs-btn-nav" id="gsPrev" disabled>← Previous</button>
+        <div class="gs-dots" id="gsDots"></div>
+        <button class="gs-btn gs-btn-nav" id="gsNext">Next →</button>
+      </div>
+    </div>
+
+    <!-- Quick links -->
+    <div class="gs-quicklinks">
+      <button class="gs-quicklink" onclick="if(typeof switchMainTab==='function')switchMainTab('chat')">💬 Open Chat</button>
+      <button class="gs-quicklink" onclick="if(typeof switchMainTab==='function')switchMainTab('entity')">🧬 Entity Browser</button>
+      <button class="gs-quicklink" onclick="if(typeof switchMainTab==='function')switchMainTab('settings')">⚙️ Settings</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  // --- Fullscreen toggle ---
+  var fsBtn = document.getElementById('gsFullscreenBtn');
+  var fsBanner = document.getElementById('gsFullscreenBanner');
+
+  function updateFsBanner() {
+    var isFs = !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement);
+    if (fsBanner) fsBanner.style.display = isFs ? 'none' : '';
+    if (fsBtn) fsBtn.textContent = isFs ? 'Exit Fullscreen' : 'Enter Fullscreen';
+  }
+
+  if (fsBtn) {
+    fsBtn.addEventListener('click', function () {
+      var isFs = !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement);
+      if (isFs) {
+        if (document.exitFullscreen) document.exitFullscreen();
+        else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+        else if (document.mozCancelFullScreen) document.mozCancelFullScreen();
+      } else {
+        var el = document.documentElement;
+        if (el.requestFullscreen) el.requestFullscreen();
+        else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+        else if (el.mozRequestFullScreen) el.mozRequestFullScreen();
+      }
+    });
+  }
+
+  document.addEventListener('fullscreenchange', updateFsBanner);
+  document.addEventListener('webkitfullscreenchange', updateFsBanner);
+  document.addEventListener('mozfullscreenchange', updateFsBanner);
+  updateFsBanner();
+
+  // --- Slideshow ---
+  var slides = document.querySelectorAll('#gsSlides .gs-slide');
+  var dotsHost = document.getElementById('gsDots');
+  var prevBtn = document.getElementById('gsPrev');
+  var nextBtn = document.getElementById('gsNext');
+  var current = 0;
+  var total = slides.length;
+
+  // Build dots
+  if (dotsHost) {
+    for (var i = 0; i < total; i++) {
+      var dot = document.createElement('button');
+      dot.className = 'gs-dot' + (i === 0 ? ' gs-dot-active' : '');
+      dot.setAttribute('data-dot', String(i));
+      dot.setAttribute('type', 'button');
+      dot.setAttribute('aria-label', 'Go to slide ' + (i + 1));
+      (function (idx) {
+        dot.addEventListener('click', function () { goTo(idx); });
+      })(i);
+      dotsHost.appendChild(dot);
+    }
+  }
+
+  function goTo(idx) {
+    if (idx < 0 || idx >= total) return;
+    slides[current].classList.remove('gs-slide-active');
+    current = idx;
+    slides[current].classList.add('gs-slide-active');
+    // Update dots
+    var dots = dotsHost ? dotsHost.querySelectorAll('.gs-dot') : [];
+    for (var d = 0; d < dots.length; d++) {
+      dots[d].classList.toggle('gs-dot-active', d === current);
+    }
+    // Update buttons
+    if (prevBtn) prevBtn.disabled = current === 0;
+    if (nextBtn) {
+      nextBtn.textContent = current === total - 1 ? 'Get Started →' : 'Next →';
+    }
+  }
+
+  if (prevBtn) prevBtn.addEventListener('click', function () { goTo(current - 1); });
+  if (nextBtn) {
+    nextBtn.addEventListener('click', function () {
+      if (current === total - 1) {
+        // Last slide — go to chat
+        if (typeof switchMainTab === 'function') switchMainTab('chat');
+      } else {
+        goTo(current + 1);
+      }
+    });
+  }
+}());
+</script>

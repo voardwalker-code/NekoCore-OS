@@ -44,7 +44,17 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (typeof initChatPhysical === 'function') initChatPhysical();
 
     setBootOverlayState(getBootGreetingTitle(), 'Desktop shell ready', 100);
-    setTimeout(() => hideBootOverlay(), 220);
+    if (typeof nkSound !== 'undefined') nkSound.play('boot');
+    setTimeout(() => {
+      hideBootOverlay();
+      // Auto-open Welcome tab if first setup just completed
+      try {
+        if (localStorage.getItem('nk-show-welcome') === '1') {
+          localStorage.removeItem('nk-show-welcome');
+          if (typeof switchMainTab === 'function') switchMainTab('welcome');
+        }
+      } catch (_) {}
+    }, 220);
   } catch (err) {
     lg('err', 'Boot pipeline failed: ' + err.message);
     hideBootOverlay();

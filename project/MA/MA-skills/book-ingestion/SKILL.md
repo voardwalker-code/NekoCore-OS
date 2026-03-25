@@ -1,7 +1,6 @@
 ---
 name: book-ingestion
 description: Extract characters from a book and create them as NekoCore OS entities with POV-isolated memories. Supports main-only, all, or specific character selection.
-enabled: true
 ---
 
 # Book-to-Entity Ingestion Skill

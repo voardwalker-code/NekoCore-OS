@@ -557,6 +557,46 @@
         "sharedSourceGroup": null
       },
       "notes": ["QA checklist — mounted non-core HTML with pass/fail workflow linked to Bug Tracker"]
+    },
+    {
+      "id": "profiler",
+      "name": "Profiler",
+      "icon": "WINDOW_APPS:inline-svg",
+      "sourcePath": "apps/non-core/core/tab-profiler.html",
+      "appType": "html-only",
+      "defaultWindow": { "width": 1060, "height": 740 },
+      "standalonePath": null,
+      "optional": true,
+      "launchMode": "both",
+      "embedded": { "tabId": "profiler", "target": "#tab-profiler", "hostPath": "apps/non-core/core/tab-profiler.html", "navTarget": "#navOptionalAppsHost" },
+      "popout": { "eligible": true, "queryParam": "?popout=profiler" },
+      "ownership": {
+        "controllerPath": null,
+        "hostPath": "apps/non-core/core/tab-profiler.html",
+        "pagePath": null,
+        "sharedSourceGroup": null
+      },
+      "notes": ["Unity-style performance profiler — mounted non-core HTML with FPS/memory charts and script breakdown"]
+    },
+    {
+      "id": "welcome",
+      "name": "Welcome",
+      "icon": "WINDOW_APPS:inline-svg",
+      "sourcePath": "apps/non-core/core/tab-welcome.html",
+      "appType": "html-only",
+      "defaultWindow": { "width": 900, "height": 640 },
+      "standalonePath": null,
+      "optional": true,
+      "launchMode": "both",
+      "embedded": { "tabId": "welcome", "target": "#tab-welcome", "hostPath": "apps/non-core/core/tab-welcome.html", "navTarget": "#navOptionalAppsHost" },
+      "popout": { "eligible": true, "queryParam": "?popout=welcome" },
+      "ownership": {
+        "controllerPath": null,
+        "hostPath": "apps/non-core/core/tab-welcome.html",
+        "pagePath": null,
+        "sharedSourceGroup": null
+      },
+      "notes": ["Getting Started intro slideshow — mounted non-core HTML with interactive slides"]
     }
   ]
 }

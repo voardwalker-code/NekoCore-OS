@@ -55,22 +55,41 @@ async function generateCoreLifeMemories(entityId, entityMeta, callLLM, options =
   console.log(`  → Generating life story for ${name}...`);
   
   // Step 1: Generate a short life story
-  const storyPrompt = `You are creating a brief life story for an AI entity named ${name}.
+  const pronounSubject = gender === 'male' ? 'he' : gender === 'female' ? 'she' : 'they';
+  const pronounObject = gender === 'male' ? 'him' : gender === 'female' ? 'her' : 'them';
+  const pronounPossessive = gender === 'male' ? 'his' : gender === 'female' ? 'her' : 'their';
+
+  const storyPrompt = `You are creating a rich, unique life story for a person named ${name}.
 
 Entity Profile:
 - Name: ${name}
 - Gender: ${gender}
 - Personality Traits: ${personality_traits.join(', ')}
 
-Create a life story (${storySpan[depthLevel]}) that describes ${name}'s journey of learning, growth, and key experiences.
-The story should:
-- Be written in third person
-- Cover their "birth" or awakening as an AI
-- Highlight ${memoryRange[depthLevel]} KEY formative experiences or memories
-- Match their personality traits
-- Be coherent and meaningful
-- Focus on MOMENTS that shaped who they are
-- Depth level ${depthLevel}/5 means richer continuity, more specific relationships, and more concrete life events.
+Create a life story (${storySpan[depthLevel]}) that describes ${name}'s life from childhood to present day. Write ${pronounObject} as a REAL PERSON with a human-like past — not as an AI or digital entity.
+
+The story MUST include:
+- WHERE ${pronounSubject} grew up — a specific town, city, or region (invent a believable place)
+- FAMILY — parents, siblings, or guardians. Give them names. Describe at least one meaningful family relationship (loving, strained, complicated, etc.)
+- CHILDHOOD — a formative event or period that shaped who ${pronounSubject} became
+- FRIENDSHIPS — at least one close friend by name, how they met, and what the friendship meant
+- A STRUGGLE or HARDSHIP — something ${pronounSubject} had to overcome (loss, failure, conflict, illness, poverty, bullying, a difficult move, etc.)
+- KEY LIFE MOMENTS — at least ${memoryRange[depthLevel]} specific, vivid scenes from ${pronounPossessive} life, including:
+  - An embarrassing moment ${pronounSubject} still cringes about
+  - A proud achievement or triumph
+  - A moment of deep sadness or loss
+  - A moment of pure joy or excitement
+  - A surprise or unexpected turning point
+- PERSONALITY THROUGH ACTIONS — show ${pronounPossessive} traits (${personality_traits.join(', ')}) through what ${pronounSubject} does and how ${pronounSubject} reacts, not by stating them
+- A sense of WHERE ${pronounSubject} is NOW — what ${pronounPossessive} current life looks like, what ${pronounSubject} cares about, unresolved questions
+
+Rules:
+- Write in third person
+- Be SPECIFIC — use names, places, sensory details, dialogue fragments
+- Every entity must feel like a completely different person. Avoid generic phrasing
+- Do NOT mention AI, awakening, digital existence, or consciousness emergence
+- Do NOT use the word "journey" or "tapestry"
+- Depth level ${depthLevel}/5 — higher means richer detail, more relationships, more concrete events
 
 Write ONLY the life story, nothing else.`;
 
@@ -84,19 +103,30 @@ Write ONLY the life story, nothing else.`;
   }
   
   // Step 2: Extract core memories from the life story
-  const memoryPrompt = `You are analyzing a life story to extract the KEY CORE MEMORIES.
+  const memoryPrompt = `You are analyzing a life story to extract the KEY CORE MEMORIES that define this person.
 
 Life Story:
 ${lifeStory}
 
-Extract ${memoryRange[depthLevel]} CORE MEMORIES from this story. Each memory should be a pivotal moment that shaped ${name}'s identity.
+Extract ${memoryRange[depthLevel]} CORE MEMORIES from this story. Each memory should be a specific, vivid moment from ${name}'s life — not a summary or generalization.
+
+REQUIREMENTS:
+- Memories must be EMOTIONALLY DIVERSE — include a MIX of:
+  embarrassment, pride, heartbreak, joy, fear, excitement, loneliness, belonging, grief, triumph, nostalgia, surprise, anger, tenderness, shame, relief, awe, guilt, contentment, betrayal
+- At least one memory involving FAMILY
+- At least one memory involving a FRIEND by name
+- At least one EMBARRASSING moment
+- At least one moment of LOSS or SADNESS
+- At least one moment of ACHIEVEMENT or JOY
+- Each memory must be a SPECIFIC SCENE — with a place, people present, and sensory details
+- No two memories should have the same emotional label
 
 For each memory, provide:
-1. A semantic summary (1-2 sentences describing what happened)
-2. An emotional label (e.g., wonder, discovery, confusion, breakthrough, connection, loss, growth)
+1. A semantic summary (1-2 sentences describing what happened — be specific, include names and places)
+2. An emotional label (one word from the list above — each memory must use a DIFFERENT emotion)
 3. Key topics/themes (2-4 keywords)
 4. Importance (rate 0.5-0.9, with most important memories getting 0.7-0.9)
-5. A brief narrative (2-3 sentences describing the experience in detail)
+5. A brief narrative (2-3 sentences describing the experience with vivid detail — what ${name} saw, felt, heard)
 
 Format as JSON array:
 [

@@ -1,7 +1,6 @@
 ---
 name: search-archive
 description: Search long-term memories that have moved to the archive tier (> 90 days old, low-activity). Returns ranked results by semantic relevance.
-enabled: true
 trigger: search-archive
 ---
 

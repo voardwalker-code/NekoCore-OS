@@ -1,7 +1,6 @@
 ---
 name: dnd-create
 description: Design D&D encounters, generate NPC rosters with living entities, or create full player characters with backstories and entity integration.
-enabled: true
 ---
 
 # DnD Create Skill

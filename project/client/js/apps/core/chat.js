@@ -1490,6 +1490,12 @@ async function sendChatMessage() {
   }
   const text = input.value.trim();
   if (!text) return;
+  const uiSendTs = Date.now();
+  console.log('[CHAT_PIPE_DEBUG][client][entity_chat] ui_send', {
+    at: new Date(uiSendTs).toISOString(),
+    messageLength: text.length,
+    chatHistoryCount: chatHistory.length
+  });
 
   // Setup wizard intercept (legacy — hatch button is used instead)
   if (setupActive) {
@@ -1663,10 +1669,43 @@ async function sendChatMessage() {
   } catch (err) {
     removeOneTimeSystemMessage(oneTimeIntroInstruction);
     removeOneTimeSystemMessage(oneTurnSubconContext);
-    typingContent.textContent = '\u26A0 Error: ' + err.message;
-    typingContent.style.color = 'var(--dn)';
-    if (activeThinkingEl) setThinkingLive(activeThinkingEl, false);
-    lg('err', 'Chat error: ' + err.message);
+
+    if (err.name === 'AbortError') {
+      // Entity was released mid-chat — remove typing bubble silently
+      if (typingEl && typingEl.parentNode) typingEl.parentNode.removeChild(typingEl);
+      if (activeThinkingEl) setThinkingLive(activeThinkingEl, false);
+      lg('info', 'Chat call cancelled (entity released)');
+    } else if (/timed?\s*out/i.test(err.message)) {
+      // LLM timeout — offer a Continue button that sends a continuation
+      // prompt instead of re-sending the original message (which would
+      // just cause the same timeout). The user's message is already in
+      // chatHistory, so the LLM has full context to resume.
+      typingContent.innerHTML = '';
+      typingContent.style.color = 'var(--dn)';
+      const notice = document.createElement('span');
+      notice.textContent = '\u26A0 Response timed out. ';
+      typingContent.appendChild(notice);
+      const continueBtn = document.createElement('button');
+      continueBtn.textContent = 'Continue';
+      continueBtn.className = 'btn-continue-timeout';
+      continueBtn.style.cssText = 'margin-left:8px;padding:4px 14px;border-radius:6px;border:1px solid var(--bd);background:var(--bg2);color:var(--tx);cursor:pointer;font-size:0.85rem';
+      continueBtn.addEventListener('click', () => {
+        if (typingEl && typingEl.parentNode) typingEl.parentNode.removeChild(typingEl);
+        // Inject a continue instruction — the original user message
+        // is already in chatHistory so the pipeline has full context.
+        const inp = document.getElementById('chatInput');
+        if (inp) inp.value = 'Continue where you left off.';
+        sendChatMessage();
+      });
+      typingContent.appendChild(continueBtn);
+      if (activeThinkingEl) setThinkingLive(activeThinkingEl, false);
+      lg('warn', 'Chat timed out — Continue button shown');
+    } else {
+      typingContent.textContent = '\u26A0 Error: ' + err.message;
+      typingContent.style.color = 'var(--dn)';
+      if (activeThinkingEl) setThinkingLive(activeThinkingEl, false);
+      lg('err', 'Chat error: ' + err.message);
+    }
   } finally {
     activeThinkingEl = null;
     chatBusy = false;

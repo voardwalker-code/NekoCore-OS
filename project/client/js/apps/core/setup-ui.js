@@ -645,7 +645,18 @@ async function setupFinish() {
     hideSetupWizard();
     lg('ok', 'Main provider saved. Advanced roles will inherit it until you customize them later.');
 
+    // Flag to auto-open Welcome tab after first setup (backup for page-reload case)
+    try { localStorage.setItem('nk-show-welcome', '1'); } catch (_) {}
+
     showHatchScreen();
+
+    // Open Welcome tab directly — boot.js already ran so the flag won't be read until reload
+    setTimeout(() => {
+      try {
+        localStorage.removeItem('nk-show-welcome');
+        if (typeof switchMainTab === 'function') switchMainTab('welcome');
+      } catch (_) {}
+    }, 350);
 
     refreshSidebarEntities();
   } catch (err) {

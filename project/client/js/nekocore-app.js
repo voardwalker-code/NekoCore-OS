@@ -512,6 +512,14 @@ const Chat = (() => {
     }
   }
 
+  let _nekoChatAbortController = null;
+  function abortNekoChatCall() {
+    if (_nekoChatAbortController) {
+      _nekoChatAbortController.abort();
+      _nekoChatAbortController = null;
+    }
+  }
+
   async function send() {
     const input = document.getElementById('nkChatInput');
     if (!input) return;
@@ -522,11 +530,25 @@ const Chat = (() => {
     _addMessage('user', text);
     _setLoading(true);
 
+    _nekoChatAbortController = new AbortController();
+    const clientSentAt = Date.now();
+    const clientSentIso = new Date(clientSentAt).toISOString();
+    console.log('[CHAT_PIPE_DEBUG][client][nekocore_chat] send', {
+      at: clientSentIso,
+      messageLength: text.length,
+      chatHistoryCount: _history.slice(-12).length
+    });
     try {
       const resp = await fetch('/api/nekocore/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text, chatHistory: _history.slice(-12) })
+        signal: _nekoChatAbortController.signal,
+        body: JSON.stringify({
+          message: text,
+          chatHistory: _history.slice(-12),
+          debugClientSentAt: clientSentAt,
+          debugClientIso: clientSentIso
+        })
       });
       const data = await resp.json();
       if (!resp.ok || !data.ok) throw new Error(data.error || 'No response');
@@ -534,7 +556,24 @@ const Chat = (() => {
       _addMessage('assistant', data.response);
     } catch (e) {
       _setLoading(false);
+      _nekoChatAbortController = null;
+      if (e.name === 'AbortError') return; // silent cancel
+      if (/timed?\s*out/i.test(e.message)) {
+        // Show continue option — sends a continuation prompt, not the
+        // original message (which would just cause the same timeout).
+        const box = document.getElementById('nkChatMessages');
+        if (box) {
+          const el = document.createElement('div');
+          el.className = 'nk-msg nk-msg-neko';
+          el.innerHTML = '<div class="nk-bubble" style="color:var(--dn)">\u26A0 Response timed out. <button style="margin-left:8px;padding:4px 14px;border-radius:6px;border:1px solid var(--bd);background:var(--bg2);color:var(--tx);cursor:pointer;font-size:0.85rem" onclick="this.parentNode.parentNode.remove();document.getElementById(\'nkChatInput\').value=\'Continue where you left off.\';window.NekoCoreApp?.chat?.send()">Continue</button></div>';
+          box.appendChild(el);
+          box.scrollTop = box.scrollHeight;
+        }
+        return;
+      }
       _toast('Chat error: ' + e.message, 'error');
+    } finally {
+      _nekoChatAbortController = null;
     }
   }
 

@@ -44,14 +44,14 @@ Emergency exception log:
 
 ---
 
-## Stop/Resume Snapshot — 2026-03-24 (Landing Page Info Update)
+## Stop/Resume Snapshot — 2026-03-25 (Test Suite Green)
 
-- **Current phase:** `Landing page deployment`
+- **Current phase:** `Feature`
 - **Current slice:** `Complete`
-- **Last completed work:** `Synced landing-deploy/ with updated HTML sources and deployed to Cloudflare Pages (nekocore-landing → neko-core.com). 3 files uploaded.`
+- **Last completed work:** `Fixed all 31 test suite failures. Root causes: stale frontmatter assertions (enabled: true removed), runtime skill paths, task type count drift, blueprint path typos, missing system-apps manifest entries, chat route mocks missing event stubs, app category renames, entity visibility regression assertion, shadow cleanup regex. Added --test-concurrency=1 to fix Node.js test runner IPC deserialization bug when HTTP-server tests run in parallel. Full suite: 2816 pass, 0 fail.`
 - **In-progress item:** `none`
 - **Blocking issue:** `none`
-- **Next action on resume:** `User direction.`
+- **Next action on resume:** `Push to git and verify CI workflow passes green on GitHub Actions.`
 - **Active plans:**
   - `Documents/current/PLAN-PREDICTIVE-MEMORY-v1.md` — Phase 5: Predictive Memory Topology — `COMPLETE — all 13 slices (-0 through 11), archived`
   - `Documents/current/PLAN-RESOURCE-MANAGER-APP-v1.md` — Resource Manager App — `Complete`
@@ -71,6 +71,170 @@ Emergency exception log:
   - `Documents/current/PLAN-DND-AND-STUDY-BLUEPRINTS-v1.md` — D&D + Education/Study Blueprints & Skills — `Complete (all 11 slices: -0 through 10)`
 - **Prior plan (paused):** `Documents/current/PLAN-SLASH-COMMAND-SYSTEM-v1.md — A0/A1/A2 complete; A3/A4 future`
 - **MA workspace projects:** `Moved to separate repo — MA-workspace is now fully cleared on reset`
+
+---
+
+## Session Ledger — 2026-03-25 (Performance Optimization)
+
+| Date | Slice | Outcome | Note |
+|------|-------|---------|------|
+| 2026-03-25 | Performance | Complete | Neural Viz batch rendering — glow sprites moved from per-node THREE.Sprite (350 draw calls) to single THREE.Points with per-point size/color (1 draw call). Labels moved from per-node canvas Sprite to texture-atlas InstancedMesh with billboard ShaderMaterial (1 draw call). Both systems sync positions with force-directed physics each frame. |
+| 2026-03-25 | Performance | Complete | onMouseMove rAF throttle — was running full raycaster + tooltip on every mousemove event (64ms avg). Now batches into requestAnimationFrame, processing at most once per frame. |
+| 2026-03-25 | Performance | Complete | Raycast target caching — onClick and onMouseMove were rebuilding `[...nodeMap.values(), ...beliefNodeMap.values()]` on every event. Now cached and only invalidated on graph/belief rebuild. |
+| 2026-03-25 | Performance | Complete | Animate visibility gating — animate loop now checks `container.offsetParent` and skips all compute (physics, rendering, animations) when the neural viz container is hidden. |
+| 2026-03-25 | Performance | Complete | Ghost window drag system — startDrag in window-manager.js now creates a lightweight `.wm-drag-ghost` div (dashed border, semi-transparent) at window position, hides real window with opacity:0, moves only ghost during pointermove, applies final position with single setWindowRect on pointerup. Eliminates per-frame setWindowRect→scheduleLayoutResizeSignal calls during drag. CSS class added to ui-v2.css. |
+| 2026-03-25 | Performance | Complete | Resize event feedback loop fix — scheduleLayoutResizeSignal was dispatching `window.dispatchEvent(new Event('resize'))` which was caught by window-manager's own resize listener → setWindowRect for every window → scheduleLayoutResizeSignal again = infinite per-frame loop (227 events/5s, 8.73% CPU). Removed synthetic resize dispatch (now only dispatches `rem:layout-resized` custom event). Added `_wmResizing` re-entrancy guard to resize listener. Verified neural-viz.js and renderer.js resize listeners only need actual browser resize (safe). |
+| 2026-03-25 | Performance | Complete | Pong game tick visibility fix — tab-hello-world.html tick() function was running update/draw at 60fps even when window was closed (canvas.isConnected=true because window uses display:none not DOM removal). Added check for parent `.wm-window.open` class — skips update/draw when window hidden, rAF loop continues but is effectively idle. Eliminated 1.51% CPU (75.9ms/5s) waste. |
+
+Status: `Complete`
+
+---
+
+## Session Ledger — 2026-03-25 (Test Suite Fix — 31 Failures → 0)
+
+| Date | Slice | Outcome | Note |
+|------|-------|---------|------|
+| 2026-03-25 | Test Fix | Complete | Fixed 29 test assertion failures across 10 test files + 3 SKILL.md source files. Categories: 8 stale `enabled: true` frontmatter assertions → `description:`, 8 runtime skill path fixes, 2 task type count updates (17→19, 12→14), 4 blueprint path typo fixes, system-apps manifest missing profiler+welcome, chat/nekocore route mock event stubs (on/removeListener), 2 app category `tools`→`dev`, entity visibility code assertion, shadow cleanup regex relaxation. |
+| 2026-03-25 | Test Fix | Complete | Fixed Node.js test runner IPC deserialization bug — `Unable to deserialize cloned data due to invalid or unsupported version` caused by parallel child process HTTP server creation. Added `--test-concurrency=1` to npm test script. Full suite: 2816 pass, 0 fail. |
+
+Status: `Complete`
+
+---
+
+## Session Ledger — 2026-03-25 (Chat Pipeline Loud Debug)
+
+| Date | Slice | Outcome | Note |
+|------|-------|---------|------|
+| 2026-03-25 | Debug | Complete | Added high-visibility chat tracing across route + pipeline. `/api/chat` now logs trace-id request lifecycle and passes `debugTraceId` to pipeline calls. `processChatMessage` now logs all major message-loop stages and every runtime LLM call start/success/error with durations. `processSingleLlmChatMessage` also logs start/call/done with the same trace-id for cross-path debugging. |
+
+Status: `Complete`
+
+---
+
+## Session Ledger — 2026-03-25 (Chat Auto-Disconnect Bugfix)
+
+| Date | Slice | Outcome | Note |
+|------|-------|---------|------|
+| 2026-03-25 | Bugfix | Complete | Fixed premature pipeline cancellation in `chat-routes.js` and `nekocore-routes.js`. Replaced `req.on('close', abort)` with disconnect-safe hooks (`req.on('aborted')` and `res.on('close')` guarded by `!res.writableEnded`), and cleaned listeners in finally. Prevents normal requests from being mislabeled/cancelled as client disconnects. |
+
+Status: `Complete`
+
+---
+
+## Session Ledger — 2026-03-25 (Chat Loop Timestamp Instrumentation)
+
+| Date | Slice | Outcome | Note |
+|------|-------|---------|------|
+| 2026-03-25 | Debug | Complete | Added timestamped and elapsed chat-loop instrumentation across client + server. Client sends now include `debugClientSentAt/debugClientIso`; route logs include `clientToServerMs` and step-level markers; pipeline logs now print `[CHAT_PIPE_DEBUG][traceId][ISO][+ms]` for all stages and LLM call boundaries. |
+
+Status: `Complete`
+
+---
+
+## Session Ledger — 2026-03-25 (Post-Theme Bugfixes)
+
+| Date | Slice | Outcome | Note |
+|------|-------|---------|------|
+| 2026-03-25 | Bugfix | Complete | Fixed 5 issues: (1) Welcome auto-open timing — calls switchMainTab('welcome') directly from setupFinish() instead of relying on boot.js flag that already ran. (2) Theme wallpaper ordering — _applyThemeWallpaperPreset() now runs AFTER _clearThemeCustomFromDom() so wallpaper image isn't immediately removed. (3) Customizer wallpaper sync — form pre-populates wallpaper dropdown with active theme's paired image from THEME_WALLPAPER_BY_THEME. (4) Stale localStorage migration — _migrateStaleThemeData() clears orphaned theme IDs and invalid wallpaper paths on load. (5) bgOpacity default changed from 0.2 to 0.3. |
+
+Status: `Complete`
+
+---
+
+## Session Ledger — 2026-03-25 (Profiler App + AudioContext Fix)
+
+| Date | Slice | Outcome | Note |
+|------|-------|---------|------|
+| 2026-03-25 | Feature | Complete | Built Unity-style Profiler non-core app (tab-profiler) with: start/stop/clear/export controls, duration selector, overview stats strip (FPS, frame time, JS heap, heap limit, DOM nodes, timers, listeners, duration), FPS timeline canvas chart (color-coded green/yellow/red), memory chart (area), sortable script & timer breakdown table with call count, timing, CPU%, and stress indicators (🔴Critical/🟠High/🟡Medium/🟢Low), long tasks (>50ms) table, and Markdown export. Registered in non-core manifest. CSS appended to ui-v2.css. |
+| 2026-03-25 | Bugfix | Complete | Fixed AudioContext autoplay error in sound-system.js — deferred AudioContext creation until first user gesture (click/keydown/touchstart). Sounds silently no-op before first interaction. |
+| 2026-03-25 | Investigation | Complete | Identified 8 performance lag suspects: (1) Task Manager polling every 1.2s with 15+ DOM queries, (2) Shell status sync every 4s, (3) Starfield canvas 60fps continuous rAF with 400+ gradient stars, (4) Neural-viz THREE.js 60fps, (5) Browser app status polling every 3s, (6) Web UI presence heartbeat every 15s, (7) Visualizer diagnostics polling every 30s, (8) CSS backdrop-filter blur (20+ instances). |
+| 2026-03-25 | Feature | Complete | Profiler v2 rewrite: Added early monkey-patching hooks to index.html `<head>` — patches setInterval/setTimeout/rAF/addEventListener BEFORE any other script loads, storing data in window.__profHooks. Rewrote tab-profiler.html with collapsible tree view (script files as parents sorted by CPU ms, functions as children). Reads from three sources: early hooks, LoAF API (Chrome 123+), Resource Timing inventory. Tree CSS added to ui-v2.css. Markdown export updated for tree-structured report. |
+| 2026-03-25 | Bugfix | Complete | Fixed profiler/welcome/ma-server missing from system-apps.json, WINDOW_APPS, and APP_CATEGORY_BY_TAB in app.js. Added optional-tab-slot-profiler div to index.html. |
+| 2026-03-25 | Bugfix | Complete | Fixed window drag stuck/toggle bug. Profiler hooks wrapped addEventListener callbacks but did not patch removeEventListener. Window manager's pointerup handler called removeEventListener(move/up) but those were wrapped — removal silently failed, drag handlers stayed active forever. Added removeEventListener patch to index.html profiler hooks that resolves fn.__profWrapped before removing. |
+
+Status: `Complete`
+
+---
+
+## Session Ledger — 2026-03-25 (Light/Dark Mode + System Default)
+
+| Date | Slice | Outcome | Note |
+|------|-------|---------|------|
+| 2026-03-25 | Feature | Complete | Added Dark Mode (neko-dark) and Light Mode (neko-light) theme options. Created neko-light.css with daylight palette (white surfaces, blue accents, light gradient, no stars). System Default now uses prefers-color-scheme media query to resolve to neko-dark (dark preference) or neko-light (light preference) with live listener for OS theme changes. Updated BUILTIN_SHELL_THEMES, THEME_WALLPAPER_BY_THEME (null for light/system-default → uses CSS gradient), themes.manifest.json, and updateShellThemeSummary. |
+
+Status: `Complete`
+
+---
+
+## Session Ledger — 2026-03-25 (Theme System Overhaul)
+
+| Date | Slice | Outcome | Note |
+|------|-------|---------|------|
+| 2026-03-25 | Feature | Complete | Overhauled theme system. Removed Mac Sequoia (mac-sequoia) and Ubuntu Dash (ubuntu-dash) themes. Created 6 new theme CSS files (Cosmic, Electric, Ice, Nature, Neon, Phoenix) plus kept Default (neko-default). Each theme now pairs with a renamed background image (NekoCore-OS-*.png). Updated theme-manager.js wallpaper options/mappings/registry, themes.manifest.json, and system-default resolution. Old themes (light-default, sunset-terminal, frosted-orbit, glass-clear) removed from registry but CSS files left on disk. |
+
+Status: `Complete`
+
+---
+
+## Session Ledger — 2026-03-25 (Server Boot Power Menu)
+
+| Date | Slice | Outcome | Note |
+|------|-------|---------|------|
+| 2026-03-25 | Feature | Complete | Added server boot controls to taskbar power menu with live status indicators for NekoCore OS and MA servers. Three boot buttons: Boot NekoCore OS (restart), Boot MA (spawn), Boot Both. New server-side route (server-control-routes.js) with GET /api/server/status and POST /api/server/boot/{neko,ma,both}. Status auto-refreshes when power menu opens. |
+
+Status: `Complete`
+
+---
+
+## Session Ledger — 2026-03-25 (Welcome Auto-Open & OS Sound System)
+
+| Date | Slice | Outcome | Note |
+|------|-------|---------|------|
+| 2026-03-25 | Feature | Complete | Welcome tab auto-opens after initial setup wizard finishes (localStorage flag set in setupFinish, cleared in boot.js). Created synthesized OS sound system (sound-system.js) with 10 Web Audio API sounds (boot, shutdown, error, warning, notification, click, windowOpen, windowClose, login, tabSwitch). Wired to: boot sequence, login, sleep/shutdown, window open/close, notifications (error/warning/info), with global enable/disable and volume API. |
+
+Status: `Complete`
+
+---
+
+## Session Ledger — 2026-03-25 (Welcome App & Auto-Open Removal)
+
+| Date | Slice | Outcome | Note |
+|------|-------|---------|------|
+| 2026-03-25 | Feature | Complete | Removed auto-open browser call from server.js (no more auto-F11 on random windows). Created Welcome/Getting Started non-core app with 7-slide intro slideshow, fullscreen recommendation button, and quick-link buttons to Chat/Entity/Settings. Registered in manifest, loader, index.html. CSS in ui-v2.css (gs- prefix). |
+
+Status: `Complete`
+
+---
+
+## Session Ledger — 2026-03-25 (Entity Backstory Generation Overhaul)
+
+| Date | Slice | Outcome | Note |
+|------|-------|---------|------|
+| 2026-03-25 | Bugfix | Complete | Rewrote life story prompt for human-like backstories (family, friends, struggles, key moments). Rewrote memory extraction prompt for emotionally diverse memories. Replaced static template introduction with LLM-generated first-person intro. |
+
+Status: `Complete`
+
+---
+
+## Session Ledger — 2026-03-25 (Pipeline Abort & Timeout Bugfix)
+
+| Date | Slice | Outcome | Note |
+|------|-------|---------|------|
+| 2026-03-25 | Bugfix | Complete | Pipeline cancellation on entity release (client AbortController + server signal propagation through chat-pipeline → llm-interface). LLM timeout 90s→300s. Continue button on timeout in chat.js and nekocore-app.js. |
+
+Status: `Complete`
+
+---
+
+## Session Ledger — 2026-03-25 (Entity List UI Bugfix)
+
+Status: `Complete`
+
+- **Request:** Fix entity list showing only the active entity instead of all entities; entity window should always show full browser; checkout should auto-release previous entity.
+- **Root cause:** `refreshSidebarEntities()` filtered to only the active entity when one was checked out. `ensureEntityWindowContent()` showed the active entity profile instead of the browser. `checkoutEntity()` did not release the previous entity. `buildEntityChip()` used global `currentEntityId` to hide buttons for all entities instead of per-entity check.
+- **Files changed:**
+  - `project/client/js/apps/core/entity-ui.js` — sidebar always shows all entities, entity window always shows browser, checkout auto-releases previous entity, chip buttons use per-entity `isActive` flag
+  - `project/server/routes/entity-routes.js` — `postEntitiesLoad` auto-releases all entities for the account before checking out a new one
 
 ---
 
@@ -3920,7 +4084,7 @@ Exit criteria:
 
 Status: `Done`
 
-1. Requested git comparison could not be executed in this workspace because `c:\Users\voard\Desktop\NekoCore-main` has no `.git` metadata.
+1. Requested git comparison could not be executed in this workspace because the local NekoCore-main checkout has no `.git` metadata.
 2. Fallback used: reconcile docs against concrete in-workspace file changes and live implemented features.
 3. Changelog updated under `Unreleased` to capture Creator extraction, release/check-in controls, Users app, and power-control placement.
 4. If repository metadata is restored, run a follow-up true git diff audit and append any missing deltas.
@@ -3929,7 +4093,7 @@ Status: `Done`
 
 Status: `Paused`
 
-1. Attempted to pull missing `Documents/` from `https://github.com/voardwalker-code/NekoCore.git`.
+1. Attempted to pull missing `Documents/` from the NekoCore remote.
 2. Remote clone succeeded, but no `Documents/` (or `docs/`) directory exists on `origin/main`.
 3. User confirmed newer docs are available on another laptop/git source; docs import deferred.
 4. Resume action: import docs from alternate source, then run a docs truth-sync pass against current Creator/Users/Release/Power changes.

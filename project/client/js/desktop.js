@@ -50,6 +50,62 @@ function toggleStartPowerMenu(forceOpen) {
   powerMenu.classList.toggle('open', shouldOpen);
   powerMenu.setAttribute('aria-hidden', shouldOpen ? 'false' : 'true');
   if (powerButton) powerButton.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
+  if (shouldOpen) refreshServerStatus();
+}
+
+// ── Server control (power menu) ──────────────────────────────
+
+function refreshServerStatus() {
+  fetch('/api/server/status').then(function (r) { return r.json(); }).then(function (d) {
+    _applyStatusDot('pwrNekoDot', 'pwrNekoText', d.neko);
+    _applyStatusDot('pwrMADot',   'pwrMAText',   d.ma);
+  }).catch(function () {
+    _applyStatusDot('pwrNekoDot', 'pwrNekoText', { running: false });
+    _applyStatusDot('pwrMADot',   'pwrMAText',   { running: false });
+  });
+}
+
+function _applyStatusDot(dotId, textId, info) {
+  var dot  = document.getElementById(dotId);
+  var text = document.getElementById(textId);
+  if (!dot || !text) return;
+  if (info && info.running) {
+    dot.className  = 'os-power-dot online';
+    text.textContent = 'Running';
+  } else {
+    dot.className  = 'os-power-dot offline';
+    text.textContent = 'Offline';
+  }
+}
+
+function bootServer(target) {
+  var endpoint = '/api/server/boot/' + target;
+  var label = target === 'neko' ? 'NekoCore OS' : target === 'ma' ? 'MA' : 'Both Servers';
+
+  if (target === 'neko' || target === 'both') {
+    if (!confirm('Restarting the NekoCore OS server will briefly disconnect this page. Continue?')) return;
+  }
+
+  fetch(endpoint, { method: 'POST' }).then(function (r) { return r.json(); }).then(function (d) {
+    if (target === 'neko' || target === 'both') {
+      // Server is restarting — wait then reload
+      if (typeof notify !== 'undefined') notify.info(label + ' restarting…');
+      setTimeout(function () { window.location.reload(); }, 2500);
+    } else {
+      // MA boot — just refresh status
+      if (d.started === false && d.reason === 'already_running') {
+        if (typeof notify !== 'undefined') notify.info('MA server is already running.');
+      } else if (d.started === false && d.reason === 'ma_not_found') {
+        if (typeof notify !== 'undefined') notify.error('MA server files not found.');
+      } else {
+        if (typeof notify !== 'undefined') notify.ok('MA server started.');
+      }
+      setTimeout(refreshServerStatus, 1500);
+    }
+  }).catch(function () {
+    if (typeof notify !== 'undefined') notify.error('Failed to reach server.');
+  });
+  closeStartMenu();
 }
 
 function restartShellUI() {
@@ -70,6 +126,8 @@ function toggleStartMenu(forceOpen) {
   if (button) button.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
   if (shouldOpen) {
     startCategoryViewMode = 'categories';
+    var searchEl = document.getElementById('osStartSearchInput');
+    if (searchEl) searchEl.value = '';
     updateStartUserChip();
     buildLauncherMenu();
   }

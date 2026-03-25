@@ -1,0 +1,599 @@
+<div class="tab-content" id="tab-profiler">
+<div class="prof-container">
+  <!-- ── Header Bar ── -->
+  <div class="prof-header">
+    <div class="prof-title-row">
+      <span class="prof-icon">⚡</span>
+      <h2 class="prof-title">Profiler</h2>
+      <span class="prof-badge" id="profBadge">STOPPED</span>
+    </div>
+    <div class="prof-controls">
+      <button class="prof-btn prof-btn-start" id="profStartBtn" onclick="nkProfiler.start()">▶ Start</button>
+      <button class="prof-btn prof-btn-stop" id="profStopBtn" onclick="nkProfiler.stop()" disabled>■ Stop</button>
+      <button class="prof-btn prof-btn-clear" id="profClearBtn" onclick="nkProfiler.clear()">✕ Clear</button>
+      <span class="prof-sep"></span>
+      <button class="prof-btn prof-btn-export" id="profExportBtn" onclick="nkProfiler.exportMd()">📥 Export .md</button>
+      <span class="prof-sep"></span>
+      <label class="prof-label">Duration:
+        <select id="profDuration" class="prof-select">
+          <option value="3000">3s</option>
+          <option value="5000" selected>5s</option>
+          <option value="10000">10s</option>
+          <option value="20000">20s</option>
+          <option value="30000">30s</option>
+          <option value="60000">60s</option>
+        </select>
+      </label>
+    </div>
+  </div>
+
+  <!-- ── Overview Stats ── -->
+  <div class="prof-overview" id="profOverview">
+    <div class="prof-stat"><span class="prof-stat-label">FPS</span><span class="prof-stat-value" id="profFps">—</span></div>
+    <div class="prof-stat"><span class="prof-stat-label">Frame Time</span><span class="prof-stat-value" id="profFrameTime">—</span></div>
+    <div class="prof-stat"><span class="prof-stat-label">JS Heap</span><span class="prof-stat-value" id="profHeap">—</span></div>
+    <div class="prof-stat"><span class="prof-stat-label">Heap Limit</span><span class="prof-stat-value" id="profHeapLimit">—</span></div>
+    <div class="prof-stat"><span class="prof-stat-label">DOM Nodes</span><span class="prof-stat-value" id="profDomNodes">—</span></div>
+    <div class="prof-stat"><span class="prof-stat-label">Scripts</span><span class="prof-stat-value" id="profScripts">—</span></div>
+    <div class="prof-stat"><span class="prof-stat-label">Listeners</span><span class="prof-stat-value" id="profListeners">—</span></div>
+    <div class="prof-stat"><span class="prof-stat-label">Duration</span><span class="prof-stat-value" id="profElapsed">—</span></div>
+  </div>
+
+  <!-- ── FPS Timeline Chart ── -->
+  <div class="prof-chart-section">
+    <div class="prof-chart-header">
+      <span class="prof-chart-title">FPS Timeline</span>
+      <span class="prof-chart-legend"><span class="prof-legend-good"></span>≥50 <span class="prof-legend-warn"></span>30-49 <span class="prof-legend-bad"></span>&lt;30</span>
+    </div>
+    <canvas id="profFpsChart" class="prof-chart-canvas" height="80"></canvas>
+  </div>
+
+  <!-- ── Memory Timeline Chart ── -->
+  <div class="prof-chart-section">
+    <div class="prof-chart-header">
+      <span class="prof-chart-title">Memory (JS Heap)</span>
+    </div>
+    <canvas id="profMemChart" class="prof-chart-canvas" height="60"></canvas>
+  </div>
+
+  <!-- ── Script Execution Tree Table ── -->
+  <div class="prof-table-section">
+    <div class="prof-table-header">
+      <span class="prof-table-title">Script Execution Tree</span>
+      <span class="prof-table-desc">All scripts sorted by CPU time — expand a file to see functions inside. Click column headers to sort.</span>
+    </div>
+    <div class="prof-table-wrap">
+      <table class="prof-table" id="profTable">
+        <thead>
+          <tr>
+            <th class="prof-th-sortable" data-sort="name" onclick="nkProfiler.sort('name')">Script / Function <span class="prof-sort-arrow"></span></th>
+            <th class="prof-th-sortable" data-sort="type" onclick="nkProfiler.sort('type')">Type <span class="prof-sort-arrow"></span></th>
+            <th class="prof-th-sortable prof-th-right" data-sort="calls" onclick="nkProfiler.sort('calls')">Calls <span class="prof-sort-arrow"></span></th>
+            <th class="prof-th-sortable prof-th-right" data-sort="totalMs" onclick="nkProfiler.sort('totalMs')">Total (ms) <span class="prof-sort-arrow"></span></th>
+            <th class="prof-th-sortable prof-th-right" data-sort="avgMs" onclick="nkProfiler.sort('avgMs')">Avg (ms) <span class="prof-sort-arrow"></span></th>
+            <th class="prof-th-sortable prof-th-right" data-sort="maxMs" onclick="nkProfiler.sort('maxMs')">Max (ms) <span class="prof-sort-arrow"></span></th>
+            <th class="prof-th-sortable prof-th-right" data-sort="cpuPct" onclick="nkProfiler.sort('cpuPct')">CPU % <span class="prof-sort-arrow"></span></th>
+            <th class="prof-th-right">Stress</th>
+          </tr>
+        </thead>
+        <tbody id="profTableBody">
+          <tr><td colspan="8" class="prof-empty">Press ▶ Start to begin profiling</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── Long Tasks Log ── -->
+  <div class="prof-table-section">
+    <div class="prof-table-header">
+      <span class="prof-table-title">Long Tasks (&gt;50ms)</span>
+      <span class="prof-table-desc">Tasks that blocked the main thread</span>
+    </div>
+    <div class="prof-table-wrap">
+      <table class="prof-table" id="profLongTasksTable">
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th class="prof-th-right">Duration (ms)</th>
+            <th>Attribution</th>
+          </tr>
+        </thead>
+        <tbody id="profLongTasksBody">
+          <tr><td colspan="3" class="prof-empty">No long tasks recorded</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+(function() {
+  'use strict';
+
+  /* ── Originals from early hooks ── */
+  var orig = window.__profOrig || {};
+  var _si  = orig.si  || window.setInterval;
+  var _ci  = orig.ci  || window.clearInterval;
+  var _st  = orig.st  || window.setTimeout;
+  var _ct  = orig.ct  || window.clearTimeout;
+  var _raf = orig.raf  || window.requestAnimationFrame;
+  var _craf= orig.craf || window.cancelAnimationFrame;
+  var hooks = window.__profHooks || { timers: {}, listeners: {}, running: false };
+
+  /* ── State ── */
+  var running     = false;
+  var startTime   = 0;
+  var sampleIv    = null;
+  var rafId       = null;
+  var sortField   = 'totalMs';
+  var sortDir     = 'desc';
+  var snapshots   = [];
+  var fpsHistory  = [];
+  var memHistory  = [];
+  var longTasks   = [];
+  var loafEntries = {};
+  var loafObs     = null;
+  var ltObs       = null;
+
+  /* ── Script tree model ── */
+  // tree[filePath] = { path, fileName, children:{[key]:{name,type,calls,totalMs,maxMs}}, expanded, totalMs, calls, maxMs, loadMs, sizeKB }
+  var tree = {};
+  var expandState = {};
+
+  function fileFromPath(p) { var s = p.split('/'); return s[s.length - 1] || p; }
+  function urlToPath(url) {
+    if (!url) return 'unknown';
+    try { return new URL(url, location.origin).pathname.replace(/^\//, ''); } catch (_) { return url.replace(/https?:\/\/[^/]+\//, '') || url; }
+  }
+
+  function getTreeNode(filePath) {
+    if (!tree[filePath]) {
+      tree[filePath] = { path: filePath, fileName: fileFromPath(filePath), children: {}, expanded: (expandState[filePath] !== false), totalMs: 0, calls: 0, maxMs: 0, loadMs: 0, sizeKB: 0 };
+    }
+    return tree[filePath];
+  }
+
+  function recalcTree() {
+    Object.keys(tree).forEach(function(fp) {
+      var node = tree[fp]; var t = 0, c = 0, mx = 0;
+      Object.keys(node.children).forEach(function(k) {
+        var ch = node.children[k]; t += ch.totalMs; c += ch.calls; if (ch.maxMs > mx) mx = ch.maxMs;
+      });
+      node.totalMs = t; node.calls = c; node.maxMs = mx;
+    });
+  }
+
+  /* ── Merge hook data into tree ── */
+  function mergeHookData() {
+    var h = hooks.timers;
+    Object.keys(h).forEach(function(k) {
+      var r = h[k];
+      if (!r || r.calls === 0) return;
+      var node = getTreeNode(r.file);
+      var childKey = (r.func || 'anonymous') + '|' + r.type;
+      if (!node.children[childKey]) {
+        node.children[childKey] = { name: r.func || 'anonymous', type: r.type, calls: 0, totalMs: 0, maxMs: 0 };
+      }
+      var ch = node.children[childKey];
+      ch.calls = r.calls; ch.totalMs = r.totalMs; ch.maxMs = r.maxMs;
+    });
+  }
+
+  /* ── Merge LoAF data into tree ── */
+  function mergeLoafData() {
+    Object.keys(loafEntries).forEach(function(k) {
+      var r = loafEntries[k];
+      var node = getTreeNode(r.file);
+      var childKey = (r.func || 'anonymous') + '|' + r.type;
+      if (!node.children[childKey]) {
+        node.children[childKey] = { name: r.func || 'anonymous', type: r.type, calls: 0, totalMs: 0, maxMs: 0 };
+      }
+      var ch = node.children[childKey];
+      ch.calls += r.calls; ch.totalMs += r.totalMs; if (r.maxMs > ch.maxMs) ch.maxMs = r.maxMs;
+    });
+  }
+
+  /* ── Load script inventory from Resource Timing ── */
+  function loadInventory() {
+    try {
+      performance.getEntriesByType('resource').forEach(function(r) {
+        if (r.initiatorType !== 'script') return;
+        var p = urlToPath(r.name);
+        var n = getTreeNode(p);
+        n.loadMs = r.duration || 0;
+        n.sizeKB = (r.transferSize || 0) / 1024;
+      });
+    } catch (_) {}
+    document.querySelectorAll('script[src]').forEach(function(s) {
+      var p = urlToPath(s.src);
+      getTreeNode(p);
+    });
+  }
+
+  /* ── LoAF Observer (Chrome 123+) ── */
+  function startLoaf() {
+    if (typeof PerformanceObserver === 'undefined') return;
+    try {
+      loafObs = new PerformanceObserver(function(list) {
+        if (!running) return;
+        list.getEntries().forEach(function(entry) {
+          if (!entry.scripts) return;
+          entry.scripts.forEach(function(s) {
+            var fp = urlToPath(s.sourceURL);
+            var fn = s.sourceFunctionName || 'anonymous';
+            var ty = s.invokerType || 'script';
+            if (ty === 'user-callback') {
+              if (s.invoker && s.invoker.indexOf('setInterval') !== -1) ty = 'setInterval';
+              else if (s.invoker && s.invoker.indexOf('setTimeout') !== -1) ty = 'setTimeout';
+              else if (s.invoker && s.invoker.indexOf('requestAnimationFrame') !== -1) ty = 'rAF';
+            }
+            var k = fp + '|' + fn + '|' + ty;
+            if (!loafEntries[k]) loafEntries[k] = { file: fp, func: fn, type: ty, calls: 0, totalMs: 0, maxMs: 0 };
+            var r = loafEntries[k];
+            r.calls++; r.totalMs += (s.duration || 0); if ((s.duration || 0) > r.maxMs) r.maxMs = s.duration;
+          });
+        });
+      });
+      loafObs.observe({ type: 'long-animation-frame', buffered: false });
+    } catch (_) { loafObs = null; }
+  }
+  function stopLoaf() { if (loafObs) { try { loafObs.disconnect(); } catch (_) {} loafObs = null; } }
+
+  /* ── Long Task Observer ── */
+  function startLT() {
+    if (typeof PerformanceObserver === 'undefined') return;
+    try {
+      ltObs = new PerformanceObserver(function(list) {
+        if (!running) return;
+        list.getEntries().forEach(function(e) {
+          longTasks.push({ time: e.startTime, duration: e.duration, name: e.name || 'self',
+            attribution: (e.attribution && e.attribution[0]) ? (e.attribution[0].containerName || e.attribution[0].name || 'unknown') : 'window'
+          });
+        });
+      });
+      ltObs.observe({ type: 'longtask', buffered: false });
+    } catch (_) {}
+  }
+  function stopLT() { if (ltObs) { try { ltObs.disconnect(); } catch (_) {} ltObs = null; } }
+
+  /* ── FPS ── */
+  var fpsFrames = 0, fpsLast = 0, curFps = 0, curFrameTime = 0;
+  function fpsLoop(now) {
+    if (!running) return;
+    fpsFrames++;
+    if (!fpsLast) fpsLast = now;
+    var dt = now - fpsLast;
+    if (dt >= 500) { curFps = Math.round((fpsFrames / dt) * 1000); curFrameTime = dt / fpsFrames; fpsFrames = 0; fpsLast = now; }
+    rafId = _raf(fpsLoop);
+  }
+
+  /* ── Sample ── */
+  function collectSample() {
+    if (!running) return;
+    var mem = performance.memory || {};
+    var scriptCount = Object.keys(tree).length;
+    var listenerCount = Object.keys(hooks.listeners).reduce(function(s, k) { return s + hooks.listeners[k]; }, 0);
+    var sample = { ts: performance.now(), fps: curFps, frameTime: curFrameTime,
+      heap: mem.usedJSHeapSize || 0, heapLimit: mem.jsHeapSizeLimit || 0, domNodes: document.querySelectorAll('*').length, scriptCount: scriptCount, listenerCount: listenerCount };
+    snapshots.push(sample);
+    fpsHistory.push(curFps);
+    memHistory.push(sample.heap);
+    updateOverview(sample);
+    drawFpsChart();
+    drawMemChart();
+  }
+
+  /* ── Overview ── */
+  function updateOverview(s) {
+    setText('profFps', s.fps + ' fps');
+    setText('profFrameTime', s.frameTime.toFixed(1) + ' ms');
+    setText('profHeap', fmtBytes(s.heap));
+    setText('profHeapLimit', fmtBytes(s.heapLimit));
+    setText('profDomNodes', s.domNodes.toLocaleString());
+    setText('profScripts', String(s.scriptCount));
+    setText('profListeners', String(s.listenerCount));
+    setText('profElapsed', ((performance.now() - startTime) / 1000).toFixed(1) + 's');
+  }
+
+  /* ── Chart drawing ── */
+  function drawFpsChart() {
+    var canvas = document.getElementById('profFpsChart'); if (!canvas) return;
+    var ctx = canvas.getContext('2d'); var w = canvas.clientWidth, h = canvas.clientHeight;
+    canvas.width = w * (devicePixelRatio || 1); canvas.height = h * (devicePixelRatio || 1);
+    ctx.scale(devicePixelRatio || 1, devicePixelRatio || 1); ctx.clearRect(0, 0, w, h);
+    var data = fpsHistory; if (data.length < 2) return;
+    var max = Math.min(data.length, 300), slice = data.slice(-max), bw = w / max;
+    ctx.strokeStyle = 'rgba(52,211,153,0.2)'; ctx.setLineDash([4, 4]);
+    var y60 = h - (60 / 120) * h; ctx.beginPath(); ctx.moveTo(0, y60); ctx.lineTo(w, y60); ctx.stroke();
+    var y30 = h - (30 / 120) * h; ctx.beginPath(); ctx.moveTo(0, y30); ctx.lineTo(w, y30); ctx.stroke();
+    ctx.setLineDash([]);
+    for (var i = 0; i < slice.length; i++) {
+      var v = Math.min(slice[i], 120), bh = (v / 120) * h;
+      ctx.fillStyle = v >= 50 ? 'rgba(52,211,153,0.7)' : v >= 30 ? 'rgba(251,191,36,0.7)' : 'rgba(239,68,68,0.7)';
+      ctx.fillRect(i * bw, h - bh, Math.max(bw - 1, 1), bh);
+    }
+  }
+
+  function drawMemChart() {
+    var canvas = document.getElementById('profMemChart'); if (!canvas) return;
+    var ctx = canvas.getContext('2d'); var w = canvas.clientWidth, h = canvas.clientHeight;
+    canvas.width = w * (devicePixelRatio || 1); canvas.height = h * (devicePixelRatio || 1);
+    ctx.scale(devicePixelRatio || 1, devicePixelRatio || 1); ctx.clearRect(0, 0, w, h);
+    var data = memHistory; if (data.length < 2) return;
+    var max = Math.min(data.length, 300), slice = data.slice(-max);
+    var peak = 0; for (var j = 0; j < slice.length; j++) { if (slice[j] > peak) peak = slice[j]; } if (!peak) return; peak *= 1.15;
+    var sx = w / (max - 1);
+    ctx.beginPath(); ctx.moveTo(0, h);
+    for (var i = 0; i < slice.length; i++) ctx.lineTo(i * sx, h - (slice[i] / peak) * h);
+    ctx.lineTo((slice.length - 1) * sx, h); ctx.closePath();
+    ctx.fillStyle = 'rgba(99,102,241,0.25)'; ctx.fill();
+    ctx.strokeStyle = 'rgba(99,102,241,0.7)'; ctx.lineWidth = 1.5; ctx.beginPath();
+    for (var k = 0; k < slice.length; k++) { var y = h - (slice[k] / peak) * h; if (k === 0) ctx.moveTo(0, y); else ctx.lineTo(k * sx, y); }
+    ctx.stroke();
+  }
+
+  /* ── Build flat sorted list from tree for rendering ── */
+  function buildTreeRows() {
+    var totalElapsed = performance.now() - startTime; if (totalElapsed <= 0) totalElapsed = 1;
+    mergeHookData();
+    mergeLoafData();
+    recalcTree();
+
+    // Sort parent nodes
+    var parents = Object.keys(tree).map(function(k) { return tree[k]; });
+    parents.sort(function(a, b) {
+      var va = a[sortField === 'name' ? 'path' : sortField] || 0;
+      var vb = b[sortField === 'name' ? 'path' : sortField] || 0;
+      if (typeof va === 'string') { va = va.toLowerCase(); vb = (vb || '').toLowerCase(); return sortDir === 'asc' ? (va < vb ? -1 : 1) : (va > vb ? -1 : 1); }
+      return sortDir === 'asc' ? va - vb : vb - va;
+    });
+
+    var rows = [];
+    parents.forEach(function(node) {
+      var cpuPct = totalElapsed > 0 ? (node.totalMs / totalElapsed) * 100 : 0;
+      var stress = cpuPct > 10 ? 'critical' : cpuPct > 3 ? 'high' : cpuPct > 0.5 ? 'medium' : 'low';
+      var childKeys = Object.keys(node.children);
+      var childCount = childKeys.length;
+      var typeSummary = childCount > 0 ? childCount + ' function' + (childCount > 1 ? 's' : '') : (node.sizeKB > 0 ? 'loaded' : '—');
+
+      // Skip nodes with zero activity and zero load size (noise)
+      if (node.calls === 0 && node.totalMs === 0 && node.sizeKB === 0) return;
+
+      rows.push({ isParent: true, path: node.path, name: node.fileName, type: typeSummary, calls: node.calls,
+        totalMs: node.totalMs, avgMs: node.calls > 0 ? node.totalMs / node.calls : 0, maxMs: node.maxMs, cpuPct: cpuPct, stress: stress,
+        expanded: node.expanded, hasChildren: childCount > 0, loadMs: node.loadMs, sizeKB: node.sizeKB });
+
+      if (node.expanded && childCount > 0) {
+        var children = childKeys.map(function(k) { return node.children[k]; });
+        children.sort(function(a, b) {
+          var va = a[sortField === 'name' ? 'name' : sortField] || 0;
+          var vb = b[sortField === 'name' ? 'name' : sortField] || 0;
+          if (typeof va === 'string') { va = va.toLowerCase(); vb = (vb || '').toLowerCase(); return sortDir === 'asc' ? (va < vb ? -1 : 1) : (va > vb ? -1 : 1); }
+          return sortDir === 'asc' ? va - vb : vb - va;
+        });
+        children.forEach(function(ch) {
+          var cPct = totalElapsed > 0 ? (ch.totalMs / totalElapsed) * 100 : 0;
+          var cStress = cPct > 10 ? 'critical' : cPct > 3 ? 'high' : cPct > 0.5 ? 'medium' : 'low';
+          rows.push({ isParent: false, parentPath: node.path, name: ch.name, type: ch.type, calls: ch.calls,
+            totalMs: ch.totalMs, avgMs: ch.calls > 0 ? ch.totalMs / ch.calls : 0, maxMs: ch.maxMs, cpuPct: cPct, stress: cStress });
+        });
+      }
+    });
+    return rows;
+  }
+
+  /* ── Render tree table ── */
+  function renderTable() {
+    var rows = buildTreeRows();
+    var tbody = document.getElementById('profTableBody'); if (!tbody) return;
+    if (rows.length === 0) { tbody.innerHTML = '<tr><td colspan="8" class="prof-empty">No script activity recorded yet</td></tr>'; return; }
+
+    var html = '';
+    for (var i = 0; i < rows.length; i++) {
+      var r = rows[i];
+      var sc = 'prof-stress-' + r.stress;
+      var sl = r.stress === 'critical' ? '🔴 Critical' : r.stress === 'high' ? '🟠 High' : r.stress === 'medium' ? '🟡 Medium' : '🟢 Low';
+
+      if (r.isParent) {
+        var toggle = r.hasChildren ? '<span class="prof-tree-toggle" data-prof-toggle="' + esc(r.path) + '">' + (r.expanded ? '▼' : '▶') + '</span> ' : '<span class="prof-tree-indent"></span> ';
+        var sizeNote = r.sizeKB > 0 ? ' <span class="prof-tree-size">(' + r.sizeKB.toFixed(0) + ' KB)</span>' : '';
+        html += '<tr class="prof-tree-parent ' + sc + '" data-prof-file="' + esc(r.path) + '">';
+        html += '<td class="prof-td-name" title="' + esc(r.path) + '">' + toggle + '<strong>' + esc(r.name) + '</strong>' + sizeNote + '</td>';
+      } else {
+        html += '<tr class="prof-tree-child ' + sc + '" data-prof-parent="' + esc(r.parentPath) + '">';
+        html += '<td class="prof-td-name prof-tree-child-cell" title="' + esc(r.name) + '"><span class="prof-tree-indent"></span>↳ ' + esc(truncate(r.name, 60)) + '</td>';
+      }
+      html += '<td class="prof-td-type">' + esc(r.type) + '</td>';
+      html += '<td class="prof-td-right">' + (r.calls > 0 ? r.calls.toLocaleString() : '—') + '</td>';
+      html += '<td class="prof-td-right">' + (r.totalMs > 0 ? r.totalMs.toFixed(2) : '—') + '</td>';
+      html += '<td class="prof-td-right">' + (r.calls > 0 ? r.avgMs.toFixed(3) : '—') + '</td>';
+      html += '<td class="prof-td-right">' + (r.maxMs > 0 ? r.maxMs.toFixed(2) : '—') + '</td>';
+      html += '<td class="prof-td-right">' + (r.cpuPct > 0.001 ? r.cpuPct.toFixed(2) + '%' : '—') + '</td>';
+      html += '<td class="prof-td-stress ' + sc + '">' + sl + '</td>';
+      html += '</tr>';
+    }
+    tbody.innerHTML = html;
+
+    // Bind toggle clicks
+    document.querySelectorAll('.prof-tree-toggle').forEach(function(el) {
+      el.onclick = function() {
+        var fp = el.getAttribute('data-prof-toggle');
+        if (tree[fp]) { tree[fp].expanded = !tree[fp].expanded; expandState[fp] = tree[fp].expanded; }
+        renderTable();
+      };
+    });
+
+    // Update sort arrows
+    document.querySelectorAll('#profTable .prof-th-sortable').forEach(function(th) {
+      var arrow = th.querySelector('.prof-sort-arrow'); if (!arrow) return;
+      arrow.textContent = th.getAttribute('data-sort') === sortField ? (sortDir === 'asc' ? ' ▲' : ' ▼') : '';
+    });
+  }
+
+  /* ── Long tasks ── */
+  function renderLongTasks() {
+    var tbody = document.getElementById('profLongTasksBody'); if (!tbody) return;
+    if (longTasks.length === 0) { tbody.innerHTML = '<tr><td colspan="3" class="prof-empty">No long tasks recorded</td></tr>'; return; }
+    var sorted = longTasks.slice().sort(function(a, b) { return b.duration - a.duration; });
+    var html = '';
+    for (var i = 0; i < Math.min(sorted.length, 100); i++) {
+      var lt = sorted[i]; var cls = lt.duration > 200 ? 'prof-stress-critical' : lt.duration > 100 ? 'prof-stress-high' : 'prof-stress-medium';
+      html += '<tr class="' + cls + '"><td>' + (lt.time / 1000).toFixed(2) + 's</td><td class="prof-td-right">' + lt.duration.toFixed(1) + '</td><td>' + esc(lt.attribution) + '</td></tr>';
+    }
+    tbody.innerHTML = html;
+  }
+
+  /* ── Helpers ── */
+  function setText(id, v) { var el = document.getElementById(id); if (el) el.textContent = v; }
+  function esc(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+  function truncate(s, n) { return s.length > n ? s.slice(0, n) + '…' : s; }
+  function fmtBytes(b) { if (!b || b <= 0) return '—'; if (b < 1024) return b + ' B'; if (b < 1048576) return (b / 1024).toFixed(1) + ' KB'; return (b / 1048576).toFixed(1) + ' MB'; }
+
+  /* ── Start / Stop / Clear ── */
+  function start() {
+    if (running) return;
+    running = true;
+    startTime = performance.now();
+    snapshots = []; fpsHistory = []; memHistory = []; longTasks = []; loafEntries = {};
+
+    // Reset hook counters but preserve structure
+    Object.keys(hooks.timers).forEach(function(k) { var r = hooks.timers[k]; r.calls = 0; r.totalMs = 0; r.maxMs = 0; });
+    hooks.running = true;
+
+    // Reset tree children data (keep nodes for inventory)
+    Object.keys(tree).forEach(function(fp) {
+      var n = tree[fp]; n.totalMs = 0; n.calls = 0; n.maxMs = 0;
+      Object.keys(n.children).forEach(function(k) { delete n.children[k]; });
+    });
+
+    loadInventory();
+    startLoaf();
+    startLT();
+    fpsFrames = 0; fpsLast = 0; curFps = 0; curFrameTime = 0;
+    rafId = _raf(fpsLoop);
+    sampleIv = _si(function() { collectSample(); renderTable(); renderLongTasks(); }, 500);
+
+    var dur = parseInt(document.getElementById('profDuration').value) || 5000;
+    _st(function() { if (running) stop(); }, dur);
+
+    setText('profBadge', 'RECORDING');
+    var badge = document.getElementById('profBadge');
+    if (badge) { badge.classList.remove('prof-badge-stopped'); badge.classList.add('prof-badge-recording'); }
+    document.getElementById('profStartBtn').disabled = true;
+    document.getElementById('profStopBtn').disabled = false;
+  }
+
+  function stop() {
+    if (!running) return;
+    running = false;
+    hooks.running = false;
+    if (sampleIv) { _ci(sampleIv); sampleIv = null; }
+    if (rafId) { _craf(rafId); rafId = null; }
+    stopLoaf(); stopLT();
+
+    collectSample(); renderTable(); renderLongTasks();
+
+    setText('profBadge', 'STOPPED');
+    var badge = document.getElementById('profBadge');
+    if (badge) { badge.classList.remove('prof-badge-recording'); badge.classList.add('prof-badge-stopped'); }
+    document.getElementById('profStartBtn').disabled = false;
+    document.getElementById('profStopBtn').disabled = true;
+  }
+
+  function clear() {
+    if (running) stop();
+    snapshots = []; fpsHistory = []; memHistory = []; longTasks = []; loafEntries = {};
+    tree = {}; expandState = {};
+    Object.keys(hooks.timers).forEach(function(k) { var r = hooks.timers[k]; r.calls = 0; r.totalMs = 0; r.maxMs = 0; });
+    var tbody = document.getElementById('profTableBody');
+    if (tbody) tbody.innerHTML = '<tr><td colspan="8" class="prof-empty">Press ▶ Start to begin profiling</td></tr>';
+    var ltBody = document.getElementById('profLongTasksBody');
+    if (ltBody) ltBody.innerHTML = '<tr><td colspan="3" class="prof-empty">No long tasks recorded</td></tr>';
+    ['profFps','profFrameTime','profHeap','profHeapLimit','profDomNodes','profScripts','profListeners','profElapsed'].forEach(function(id) { setText(id, '—'); });
+    var fc = document.getElementById('profFpsChart'); if (fc) fc.getContext('2d').clearRect(0, 0, fc.width, fc.height);
+    var mc = document.getElementById('profMemChart'); if (mc) mc.getContext('2d').clearRect(0, 0, mc.width, mc.height);
+  }
+
+  function sortBy(field) {
+    if (sortField === field) { sortDir = sortDir === 'desc' ? 'asc' : 'desc'; } else { sortField = field; sortDir = 'desc'; }
+    renderTable();
+  }
+
+  /* ── Export Markdown ── */
+  function exportMd() {
+    mergeHookData(); mergeLoafData(); recalcTree();
+    var totalElapsed = snapshots.length > 0 ? (snapshots[snapshots.length - 1].ts - startTime) : 0;
+    if (totalElapsed <= 0) totalElapsed = 1;
+    var dur = (totalElapsed / 1000).toFixed(1);
+    var lastSnap = snapshots.length > 0 ? snapshots[snapshots.length - 1] : {};
+    var avgFps = fpsHistory.length > 0 ? Math.round(fpsHistory.reduce(function(a, b) { return a + b; }, 0) / fpsHistory.length) : 0;
+    var minFps = fpsHistory.length > 0 ? Math.min.apply(null, fpsHistory) : 0;
+    var maxFps = fpsHistory.length > 0 ? Math.max.apply(null, fpsHistory) : 0;
+
+    var md = '# NekoCore OS — Profiler Report\n\n';
+    md += '**Date:** ' + new Date().toISOString().slice(0, 19).replace('T', ' ') + '  \n';
+    md += '**Duration:** ' + dur + 's  \n';
+    md += '**User Agent:** ' + navigator.userAgent + '\n\n';
+    md += '## Overview\n\n| Metric | Value |\n|--------|-------|\n';
+    md += '| Avg FPS | ' + avgFps + ' |\n| Min FPS | ' + minFps + ' |\n| Max FPS | ' + maxFps + ' |\n';
+    md += '| JS Heap | ' + fmtBytes(lastSnap.heap || 0) + ' |\n| Heap Limit | ' + fmtBytes(lastSnap.heapLimit || 0) + ' |\n';
+    md += '| DOM Nodes | ' + (lastSnap.domNodes || 0).toLocaleString() + ' |\n';
+    md += '| Scripts Loaded | ' + Object.keys(tree).length + ' |\n';
+    md += '| Long Tasks (>50ms) | ' + longTasks.length + ' |\n\n';
+
+    // Tree export
+    var parents = Object.keys(tree).map(function(k) { return tree[k]; }).filter(function(n) { return n.calls > 0 || n.sizeKB > 0; });
+    parents.sort(function(a, b) { return b.totalMs - a.totalMs; });
+
+    if (parents.length > 0) {
+      md += '## Script Execution Tree\n\n';
+      parents.forEach(function(node, idx) {
+        var cpuPct = (node.totalMs / totalElapsed) * 100;
+        var stressLabel = cpuPct > 10 ? '🔴 Critical' : cpuPct > 3 ? '🟠 High' : cpuPct > 0.5 ? '🟡 Medium' : '🟢 Low';
+        var sizeNote = node.sizeKB > 0 ? ' (' + node.sizeKB.toFixed(0) + ' KB)' : '';
+        md += '### ' + (idx + 1) + '. ' + node.path + sizeNote + ' — ' + node.totalMs.toFixed(2) + 'ms (' + cpuPct.toFixed(2) + '% CPU) — ' + stressLabel + '\n\n';
+
+        var children = Object.keys(node.children).map(function(k) { return node.children[k]; });
+        children.sort(function(a, b) { return b.totalMs - a.totalMs; });
+
+        if (children.length > 0) {
+          md += '| Function | Type | Calls | Total (ms) | Avg (ms) | Max (ms) | CPU % |\n';
+          md += '|----------|------|------:|----------:|--------:|--------:|------:|\n';
+          children.forEach(function(ch) {
+            var cPct = (ch.totalMs / totalElapsed) * 100;
+            md += '| ' + ch.name.replace(/\|/g, '\\|') + ' | ' + ch.type + ' | ' + ch.calls.toLocaleString() + ' | ' + ch.totalMs.toFixed(2) + ' | ';
+            md += (ch.calls > 0 ? (ch.totalMs / ch.calls).toFixed(3) : '0') + ' | ' + ch.maxMs.toFixed(2) + ' | ' + cPct.toFixed(2) + '% |\n';
+          });
+          md += '\n';
+        } else {
+          md += '*No execution data — loaded only*\n\n';
+        }
+      });
+    }
+
+    if (longTasks.length > 0) {
+      md += '## Long Tasks (>50ms)\n\n| Time | Duration (ms) | Attribution |\n|------|-------------:|-------------|\n';
+      longTasks.slice().sort(function(a, b) { return b.duration - a.duration; }).slice(0, 50).forEach(function(lt) {
+        md += '| ' + (lt.time / 1000).toFixed(2) + 's | ' + lt.duration.toFixed(1) + ' | ' + lt.attribution + ' |\n';
+      });
+      md += '\n';
+    }
+
+    md += '---\n*Generated by NekoCore OS Profiler*\n';
+
+    var blob = new Blob([md], { type: 'text/markdown' });
+    var filename = 'nekocore-profiler-' + new Date().toISOString().slice(0, 19).replace(/[:.]/g, '-') + '.md';
+    if (window.showSaveFilePicker) {
+      window.showSaveFilePicker({ suggestedName: filename, types: [{ description: 'Markdown', accept: { 'text/markdown': ['.md'] } }] })
+        .then(function(h) { return h.createWritable().then(function(w) { return w.write(blob).then(function() { return w.close(); }); }); })
+        .catch(function() {});
+    } else {
+      var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename; a.click(); URL.revokeObjectURL(a.href);
+    }
+  }
+
+  /* ── Public API ── */
+  window.nkProfiler = { start: start, stop: stop, clear: clear, sort: sortBy, exportMd: exportMd };
+})();
+</script>

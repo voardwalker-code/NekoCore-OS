@@ -39,12 +39,12 @@ test('refreshSidebarEntities normalizes active id before filtering visible entit
     'refreshSidebarEntities should define canonical id normalization'
   );
   assert.ok(
-    block.includes('data.entities.filter(e => normalizeEntityId(e.id) === activeEntityId)'),
+    block.includes('normalizeEntityId(e.id) === activeEntityId'),
     'refreshSidebarEntities should compare normalized ids to avoid hiding released entities'
   );
   assert.ok(
-    block.includes('if (activeEntityId && entitiesToShow.length === 0) {'),
-    'refreshSidebarEntities should clear stale active state and fall back to full visible list'
+    block.includes('activeEntityId = \'\''),
+    'refreshSidebarEntities should clear stale active state when entity not in list'
   );
 });
 

@@ -1,7 +1,6 @@
 ---
 name: entity-genesis
 description: Create deeply-evolved entities for NekoCore OS through iterative backstory generation, memory injection, and cognitive evolution tracking.
-enabled: true
 ---
 
 # Entity Genesis Skill

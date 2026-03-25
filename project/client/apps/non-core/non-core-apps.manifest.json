@@ -89,6 +89,22 @@
             "label": "QA Checklist",
             "icon": "✅",
             "navTarget": "#navOptionalAppsHost"
+        },
+        {
+            "tabId": "welcome",
+            "enabled": true,
+            "path": "apps/non-core/core/tab-welcome.html",
+            "label": "Welcome",
+            "icon": "🏠",
+            "navTarget": "#navOptionalAppsHost"
+        },
+        {
+            "tabId": "profiler",
+            "enabled": true,
+            "path": "apps/non-core/core/tab-profiler.html",
+            "label": "Profiler",
+            "icon": "⚡",
+            "navTarget": "#navOptionalAppsHost"
         }
     ],
     "customApps": [

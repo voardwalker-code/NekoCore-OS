@@ -21,11 +21,11 @@ function getStageRect() {
   return windowManager.stage.getBoundingClientRect();
 }
 
+var _wmResizing = false;
 function scheduleLayoutResizeSignal(detail = {}) {
   if (layoutResizeRaf) return;
   layoutResizeRaf = requestAnimationFrame(() => {
     layoutResizeRaf = 0;
-    try { window.dispatchEvent(new Event('resize')); } catch (_) {}
     try { window.dispatchEvent(new CustomEvent('rem:layout-resized', { detail })); } catch (_) {}
   });
 }
@@ -247,6 +247,7 @@ function openWindow(tabName, options = {}) {
   const meta = windowManager.windows.get(tabName);
   if (!meta) return;
 
+  var wasOpen = meta.open;
   const needsCenter = options.center === true || !meta.open;
   meta.open = true;
   meta.minimized = false;
@@ -281,6 +282,7 @@ function openWindow(tabName, options = {}) {
       focusWindow(tabName);
       applyWindowActivationEffects(tabName);
       syncShellStatusWidgets();
+      if (!wasOpen && typeof nkSound !== 'undefined') nkSound.play('windowOpen');
       return; // Exit early — shadow loader took over
     }
     // If shadow load failed, fall through to legacy path below
@@ -308,6 +310,8 @@ function openWindow(tabName, options = {}) {
   focusWindow(tabName);
   applyWindowActivationEffects(tabName);
   syncShellStatusWidgets();
+
+  if (!wasOpen && typeof nkSound !== 'undefined') nkSound.play('windowOpen');
 
   // Per-tab on-open hooks
   if (tabName === 'workspace' && typeof feRender === 'function') feRender();
@@ -338,6 +342,7 @@ function openWindow(tabName, options = {}) {
 function closeWindow(tabName) {
   const meta = windowManager.windows.get(tabName);
   if (!meta) return;
+  if (typeof nkSound !== 'undefined') nkSound.play('windowClose');
   // Browser-specific: save session on window close
   if (tabName === 'browser' && typeof _browserSaveSessionSync === 'function') {
     _browserSaveSessionSync();
@@ -507,27 +512,72 @@ function startDrag(meta, event) {
   const startY = event.clientY;
   const rect = restoreWindowForDrag(meta, event);
 
+  // ── Imposter window: clone the real window as a visual snapshot for dragging ──
+  var elRect = meta.el.getBoundingClientRect();
+  var stageRect = getStageRect();
+  var snapLeft = elRect.left - stageRect.left;
+  var snapTop = elRect.top - stageRect.top;
+  var snapWidth = elRect.width;
+  var snapHeight = elRect.height;
+
+  const ghost = meta.el.cloneNode(true);
+  ghost.removeAttribute('id');
+  ghost.classList.add('wm-drag-ghost');
+  ghost.style.cssText = 'position:absolute;left:' + snapLeft + 'px;top:' + snapTop + 'px;width:' + snapWidth + 'px;height:' + snapHeight + 'px;z-index:999999;pointer-events:none;opacity:0.85;';
+  windowManager.stage.appendChild(ghost);
+
+  // Hide real window content while dragging (keep shell visible for z-order but invisible)
+  meta.el.style.opacity = '0';
+  meta.el.style.pointerEvents = 'none';
+
   const move = (moveEvent) => {
     const stage = getStageRect();
     const relativeY = moveEvent.clientY - stage.top;
     if (relativeY <= 30) {
       showSnapDock(meta.tab);
-    } else if (windowManager.dock.active && relativeY > 86) {
-      hideSnapDock();
+    } else if (windowManager.dock.active) {
+      // Keep dock open while pointer is inside the overlay
+      var dockEl = windowManager.dock.overlay;
+      var overDock = false;
+      if (dockEl) {
+        var dockRect = dockEl.getBoundingClientRect();
+        overDock = moveEvent.clientX >= dockRect.left && moveEvent.clientX <= dockRect.right &&
+                   moveEvent.clientY >= dockRect.top && moveEvent.clientY <= dockRect.bottom;
+      }
+      if (!overDock) {
+        hideSnapDock();
+      }
     }
     updateSnapDockPointer(moveEvent.clientX, moveEvent.clientY);
 
-    setWindowRect(meta, {
-      left: rect.left + (moveEvent.clientX - startX),
-      top: rect.top + (moveEvent.clientY - startY),
-      width: rect.width,
-      height: rect.height
-    });
+    // Move only the ghost — no setWindowRect, no resize signal, no layout cascade
+    ghost.style.left = (snapLeft + (moveEvent.clientX - startX)) + 'px';
+    ghost.style.top = (snapTop + (moveEvent.clientY - startY)) + 'px';
   };
   const up = (upEvent) => {
+    // Place real window at ghost's final position
+    const finalLeft = parseFloat(ghost.style.left) || 0;
+    const finalTop = parseFloat(ghost.style.top) || 0;
+
+    // Remove ghost
+    ghost.remove();
+
+    // Restore real window visibility
+    meta.el.style.opacity = '';
+    meta.el.style.pointerEvents = '';
+
+    // Check for snap zone
     const selectedZone = windowManager.dock.selectedZone || resolveEdgeSnap(upEvent.clientX, upEvent.clientY);
     if (selectedZone) {
       snapWindow(meta.tab, selectedZone);
+    } else {
+      // Apply final position to real window (single setWindowRect call)
+      setWindowRect(meta, {
+        left: finalLeft,
+        top: finalTop,
+        width: snapWidth,
+        height: snapHeight
+      });
     }
     hideSnapDock();
     document.removeEventListener('pointermove', move);
@@ -680,9 +730,18 @@ function buildLauncherMenu() {
   const categoryHost = document.getElementById('osStartCategoryGrid');
   const appsHost = document.getElementById('osStartCategoryApps');
   const pinnedHost = document.getElementById('osStartPinnedGrid');
+  const searchInput = document.getElementById('osStartSearchInput');
   if (!categoryHost || !appsHost) return;
   categoryHost.innerHTML = '';
   appsHost.innerHTML = '';
+
+  var searchTerm = (searchInput ? searchInput.value : '').trim().toLowerCase();
+
+  // Wire search input (idempotent — only bind once)
+  if (searchInput && !searchInput._wmBound) {
+    searchInput._wmBound = true;
+    searchInput.addEventListener('input', function() { buildLauncherMenu(); });
+  }
 
   const sourceApps = typeof getShellWindowApps === 'function' ? getShellWindowApps() : WINDOW_APPS;
   const allApps = sourceApps
@@ -695,6 +754,88 @@ function buildLauncherMenu() {
       description: ''
     }));
   const startApps = [...allApps, ...START_MENU_SPECIAL_APPS];
+
+  const makeAppButton = (app) => {
+    const button = document.createElement('button');
+    button.className = 'os-launcher-item os-start-app-item';
+    if (app.launchTab) button.setAttribute('data-tab', app.launchTab);
+    var catId = APP_CATEGORY_BY_TAB[app.tab] || app.category || '';
+    var catObj = START_MENU_CATEGORY_ORDER.find(function(c) { return c.id === catId; });
+    var catText = catObj ? catObj.label : '';
+    const desc = app.description ? '<span class="launcher-app-meta">' + app.description + '</span>' : (catText ? '<span class="launcher-app-meta">' + catText + '</span>' : '');
+    button.innerHTML = '<span class="launcher-app-left"><span class="launcher-app-icon" data-accent="' + (app.accent || 'green') + '">' + app.icon + '</span><span class="launcher-app-label">' + app.label + '</span></span>' + desc;
+
+    if (app.pinnable) {
+      const pin = document.createElement('span');
+      pin.className = 'launcher-pin-btn';
+      pin.setAttribute('role', 'button');
+      pin.setAttribute('tabindex', '0');
+      pin.textContent = isPinnedApp(app.tab) ? 'Unpin' : 'Pin';
+      pin.onclick = function(event) {
+        event.stopPropagation();
+        togglePinnedApp(app.tab);
+      };
+      pin.onkeydown = function(event) {
+        if (event.key !== 'Enter' && event.key !== ' ') return;
+        event.preventDefault();
+        event.stopPropagation();
+        togglePinnedApp(app.tab);
+      };
+      button.appendChild(pin);
+    }
+
+    if (app.action) {
+      button.onclick = function() {
+        const fn = window[app.action];
+        if (typeof fn === 'function') fn();
+        closeStartMenu();
+      };
+    } else {
+      button.onclick = function() { switchMainTab(app.launchTab, button); };
+    }
+    return button;
+  };
+
+  function syncDetachedIfAvailable() {
+    if (typeof syncDetachedShellStateUI === 'function') syncDetachedShellStateUI();
+  }
+
+  // ── Search mode: if user typed a query, show filtered results and skip categories ──
+  if (searchTerm) {
+    categoryHost.style.display = 'none';
+    appsHost.style.display = '';
+
+    var filtered = startApps.filter(function(app) {
+      var label = (app.label || '').toLowerCase();
+      var cat = (APP_CATEGORY_BY_TAB[app.tab] || app.category || '').toLowerCase();
+      var catLabel = '';
+      START_MENU_CATEGORY_ORDER.forEach(function(c) { if (c.id === cat) catLabel = c.label.toLowerCase(); });
+      return label.indexOf(searchTerm) !== -1 || cat.indexOf(searchTerm) !== -1 || catLabel.indexOf(searchTerm) !== -1;
+    });
+
+    if (filtered.length === 0) {
+      var empty = document.createElement('div');
+      empty.className = 'os-start-section-title';
+      empty.textContent = 'No apps found for "' + searchTerm + '"';
+      appsHost.appendChild(empty);
+    } else {
+      var heading = document.createElement('div');
+      heading.className = 'os-start-section-title';
+      heading.textContent = filtered.length + ' result' + (filtered.length !== 1 ? 's' : '');
+      appsHost.appendChild(heading);
+      var grid = document.createElement('div');
+      grid.className = 'os-launcher-grid os-launcher-grid-categorized';
+      filtered.forEach(function(app) { grid.appendChild(makeAppButton(app)); });
+      appsHost.appendChild(grid);
+    }
+
+    if (pinnedHost) pinnedHost.parentElement.style.display = 'none';
+    syncDetachedIfAvailable();
+    return;
+  }
+
+  // Not searching — show pinned section
+  if (pinnedHost) pinnedHost.parentElement.style.display = '';
 
   const categoryGroups = new Map();
   startApps.forEach((app) => {
@@ -747,44 +888,6 @@ function buildLauncherMenu() {
     categoryHost.style.display = 'none';
     appsHost.style.display = '';
   }
-
-  const makeAppButton = (app) => {
-    const button = document.createElement('button');
-    button.className = 'os-launcher-item os-start-app-item';
-    if (app.launchTab) button.setAttribute('data-tab', app.launchTab);
-    const desc = app.description ? '<span class="launcher-app-meta">' + app.description + '</span>' : '';
-    button.innerHTML = '<span class="launcher-app-left"><span class="launcher-app-icon" data-accent="' + (app.accent || 'green') + '">' + app.icon + '</span><span class="launcher-app-label">' + app.label + '</span></span>' + desc;
-
-    if (app.pinnable) {
-      const pin = document.createElement('span');
-      pin.className = 'launcher-pin-btn';
-      pin.setAttribute('role', 'button');
-      pin.setAttribute('tabindex', '0');
-      pin.textContent = isPinnedApp(app.tab) ? 'Unpin' : 'Pin';
-      pin.onclick = function(event) {
-        event.stopPropagation();
-        togglePinnedApp(app.tab);
-      };
-      pin.onkeydown = function(event) {
-        if (event.key !== 'Enter' && event.key !== ' ') return;
-        event.preventDefault();
-        event.stopPropagation();
-        togglePinnedApp(app.tab);
-      };
-      button.appendChild(pin);
-    }
-
-    if (app.action) {
-      button.onclick = function() {
-        const fn = window[app.action];
-        if (typeof fn === 'function') fn();
-        closeStartMenu();
-      };
-    } else {
-      button.onclick = function() { switchMainTab(app.launchTab, button); };
-    }
-    return button;
-  };
 
   const selectedCategory = START_MENU_CATEGORY_ORDER.find((category) => category.id === selectedStartCategoryId);
   const selectedApps = categoryGroups.get(selectedStartCategoryId) || [];
@@ -862,9 +965,7 @@ function buildLauncherMenu() {
     appsHost.appendChild(tools);
   }
 
-  if (typeof syncDetachedShellStateUI === 'function') {
-    syncDetachedShellStateUI();
-  }
+  syncDetachedIfAvailable();
 }
 
 // ── Layout persistence ───────────────────────────────────────────────────────
@@ -984,6 +1085,8 @@ function initWindowManager() {
   }
 
   window.addEventListener('resize', () => {
+    if (_wmResizing) return;
+    _wmResizing = true;
     windowManager.windows.forEach((meta) => {
       if (meta.maximized) {
         toggleMaximizeWindow(meta.tab, true);
@@ -997,5 +1100,6 @@ function initWindowManager() {
       }
     });
     updateTaskbarOverflow();
+    _wmResizing = false;
   });
 }

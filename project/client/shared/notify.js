@@ -43,6 +43,13 @@ window.notify = (function () {
     type = type || 'info';
     duration = (duration == null) ? 3000 : duration;
 
+    // Play OS sound for notification type
+    if (typeof nkSound !== 'undefined') {
+      if (type === 'error') nkSound.play('error');
+      else if (type === 'warn') nkSound.play('warning');
+      else nkSound.play('notification');
+    }
+
     const styles = TYPE_STYLES[type] || TYPE_STYLES.info;
     const toast = document.createElement('div');
     Object.assign(toast.style, {

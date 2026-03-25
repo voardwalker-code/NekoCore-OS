@@ -211,6 +211,9 @@ function createEntityRoutes(ctx) {
         return;
       }
 
+      // Auto-release any entity previously checked out by this account
+      if (accountId) entityCheckout.releaseAllForAccount(accountId);
+
       const entity = ctx.entityManager.loadEntity(canonicalId);
       ctx.setActiveEntity(canonicalId);
 

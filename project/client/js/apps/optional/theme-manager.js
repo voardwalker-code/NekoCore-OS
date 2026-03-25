@@ -15,32 +15,38 @@ const THEME_EXTENSION_HOST_ID = 'themeCustomExtensionHost';
 const THEME_WALLPAPER_BASE_PATH = '/shared-assets/Background images/';
 const THEME_WALLPAPER_OPTIONS = [
   { value: '', label: 'Gradient Only' },
-  { value: 'ChatGPT Image Mar 17, 2026, 12_31_33 PM.png', label: 'Background 01' },
-  { value: 'ChatGPT Image Mar 17, 2026, 12_32_43 PM.png', label: 'Background 02' },
-  { value: 'ChatGPT Image Mar 17, 2026, 12_33_47 PM.png', label: 'Background 03' },
-  { value: 'ChatGPT Image Mar 17, 2026, 12_34_29 PM.png', label: 'Background 04' },
-  { value: 'ChatGPT Image Mar 17, 2026, 12_34_58 PM.png', label: 'Background 05' },
-  { value: 'ChatGPT Image Mar 17, 2026, 12_36_16 PM.png', label: 'Background 06' },
-  { value: 'ChatGPT Image Mar 17, 2026, 12_37_32 PM.png', label: 'Background 07' }
+  { value: 'NekoCore-OS-Default.png',  label: 'Default' },
+  { value: 'NekoCore-OS-Cosmic.png',   label: 'Cosmic' },
+  { value: 'NekoCore-OS-Electric.png',  label: 'Electric' },
+  { value: 'NekoCore-OS-Ice.png',       label: 'Ice' },
+  { value: 'NekoCore-OS-Nature.png',    label: 'Nature' },
+  { value: 'NekoCore-OS-Neon.png',      label: 'Neon' },
+  { value: 'NekoCore-OS-Phoenix.png',   label: 'Phoenix' }
 ];
 const THEME_WALLPAPER_ALLOWED = new Set(THEME_WALLPAPER_OPTIONS.map((item) => item.value));
 const THEME_WALLPAPER_BY_THEME = {
-  'system-default': { image: 'ChatGPT Image Mar 17, 2026, 12_31_33 PM.png', tintA: 'rgba(11, 19, 34, 0.06)', tintB: 'rgba(15, 23, 42, 0.08)' },
-  'light-default': { image: 'ChatGPT Image Mar 17, 2026, 12_32_43 PM.png', tintA: 'rgba(224, 242, 254, 0.06)', tintB: 'rgba(191, 219, 254, 0.08)' },
-  'neko-default': { image: 'ChatGPT Image Mar 17, 2026, 12_33_47 PM.png', tintA: 'rgba(16, 185, 129, 0.06)', tintB: 'rgba(6, 78, 59, 0.08)' },
-  'sunset-terminal': { image: 'ChatGPT Image Mar 17, 2026, 12_34_29 PM.png', tintA: 'rgba(249, 115, 22, 0.06)', tintB: 'rgba(124, 45, 18, 0.08)' },
-  'frosted-orbit': { image: 'ChatGPT Image Mar 17, 2026, 12_34_58 PM.png', tintA: 'rgba(56, 189, 248, 0.06)', tintB: 'rgba(30, 64, 175, 0.08)' },
-  'glass-clear': { image: 'ChatGPT Image Mar 17, 2026, 12_36_16 PM.png', tintA: 'rgba(255, 255, 255, 0.03)', tintB: 'rgba(255, 255, 255, 0.05)' },
-  'mac-sequoia': { image: 'ChatGPT Image Mar 17, 2026, 12_37_32 PM.png', tintA: 'rgba(125, 211, 252, 0.06)', tintB: 'rgba(59, 130, 246, 0.08)' },
-  'ubuntu-dash': { image: 'ChatGPT Image Mar 17, 2026, 12_34_29 PM.png', tintA: 'rgba(251, 146, 60, 0.06)', tintB: 'rgba(194, 65, 12, 0.08)' }
+  'system-default':  null,
+  'neko-dark':       { image: 'NekoCore-OS-Default.png',  tintA: 'rgba(16, 185, 129, 0.06)', tintB: 'rgba(6, 78, 59, 0.08)' },
+  'neko-light':      null,
+  'neko-default':    { image: 'NekoCore-OS-Default.png',  tintA: 'rgba(16, 185, 129, 0.06)', tintB: 'rgba(6, 78, 59, 0.08)' },
+  'neko-cosmic':     { image: 'NekoCore-OS-Cosmic.png',   tintA: 'rgba(139, 92, 246, 0.06)', tintB: 'rgba(88, 28, 135, 0.08)' },
+  'neko-electric':   { image: 'NekoCore-OS-Electric.png',  tintA: 'rgba(59, 130, 246, 0.06)', tintB: 'rgba(30, 64, 175, 0.08)' },
+  'neko-ice':        { image: 'NekoCore-OS-Ice.png',       tintA: 'rgba(125, 211, 252, 0.06)', tintB: 'rgba(56, 189, 248, 0.08)' },
+  'neko-nature':     { image: 'NekoCore-OS-Nature.png',    tintA: 'rgba(74, 222, 128, 0.06)', tintB: 'rgba(22, 101, 52, 0.08)' },
+  'neko-neon':       { image: 'NekoCore-OS-Neon.png',      tintA: 'rgba(236, 72, 153, 0.06)', tintB: 'rgba(157, 23, 77, 0.08)' },
+  'neko-phoenix':    { image: 'NekoCore-OS-Phoenix.png',   tintA: 'rgba(249, 115, 22, 0.06)', tintB: 'rgba(154, 52, 18, 0.08)' }
 };
 const BUILTIN_SHELL_THEMES = {
-  'system-default': { id: 'system-default', label: 'System Default', href: '' },
-  'light-default': { id: 'light-default', label: 'Light Mode', href: 'themes/core/light-default.css', bodyClasses: ['theme-light-mode'] },
-  'neko-default': { id: 'neko-default', label: 'NekoCore', href: 'themes/core/neko-default.css' },
-  'sunset-terminal': { id: 'sunset-terminal', label: 'Sunset Terminal', href: 'themes/core/sunset-terminal.css' },
-  'frosted-orbit': { id: 'frosted-orbit', label: 'Frosted Orbit', href: 'themes/core/frosted-orbit.css' },
-  'glass-clear': { id: 'glass-clear', label: 'Glass Clear', href: 'themes/core/glass-clear.css' }
+  'system-default':  { id: 'system-default',  label: 'System Default', href: '' },
+  'neko-dark':       { id: 'neko-dark',       label: 'Dark Mode',  href: 'themes/core/neko-default.css' },
+  'neko-light':      { id: 'neko-light',      label: 'Light Mode', href: 'themes/core/neko-light.css' },
+  'neko-default':    { id: 'neko-default',    label: 'Default',  href: 'themes/core/neko-default.css' },
+  'neko-cosmic':     { id: 'neko-cosmic',     label: 'Cosmic',   href: 'themes/core/neko-cosmic.css' },
+  'neko-electric':   { id: 'neko-electric',   label: 'Electric', href: 'themes/core/neko-electric.css' },
+  'neko-ice':        { id: 'neko-ice',        label: 'Ice',      href: 'themes/core/neko-ice.css' },
+  'neko-nature':     { id: 'neko-nature',     label: 'Nature',   href: 'themes/core/neko-nature.css' },
+  'neko-neon':       { id: 'neko-neon',       label: 'Neon',     href: 'themes/core/neko-neon.css' },
+  'neko-phoenix':    { id: 'neko-phoenix',    label: 'Phoenix',  href: 'themes/core/neko-phoenix.css' }
 };
 let SHELL_THEMES = { ...BUILTIN_SHELL_THEMES };
 
@@ -54,7 +60,7 @@ let activeThemeCustomData = null;
 const THEME_CUSTOM_DEFAULTS = {
   backgroundStart: '#04060d',
   backgroundEnd: '#0b172a',
-  bgOpacity: 0.2,
+  bgOpacity: 0.3,
   wallpaperImage: '',
   windowColor: '#0d1526',
   windowOpacity: 0.82,
@@ -290,9 +296,11 @@ function getStoredThemeId() {
 }
 
 function updateShellThemeSummary(themeId) {
-  const resolvedThemeId = themeId === 'system-default'
-    ? ((window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'neko-default' : 'light-default')
-    : themeId;
+  let resolvedThemeId = themeId;
+  if (themeId === 'system-default') {
+    const prefersDark = !window.matchMedia || window.matchMedia('(prefers-color-scheme: dark)').matches;
+    resolvedThemeId = prefersDark ? 'neko-dark' : 'neko-light';
+  }
   const theme = SHELL_THEMES[resolvedThemeId] || SHELL_THEMES['neko-default'];
   const summary = document.getElementById('shellThemeSummary');
   if (summary) summary.textContent = themeId === 'system-default' ? 'System (' + theme.label + ')' : theme.label;
@@ -769,6 +777,7 @@ function applyTheme(themeId) {
   const theme = SHELL_THEMES[selected] || SHELL_THEMES[THEME_FALLBACK_ID] || SHELL_THEMES['system-default'];
   const themeLink = document.getElementById('themeOverrideLink');
   themeCssErrorCount = 0;
+  let resolvedWallpaperId = selected;
 
   if (systemThemeMediaQuery && systemThemeMediaQuery.__remListener) {
     systemThemeMediaQuery.removeEventListener('change', systemThemeMediaQuery.__remListener);
@@ -777,6 +786,7 @@ function applyTheme(themeId) {
 
   const applyResolvedTheme = (resolvedId) => {
     const resolvedTheme = SHELL_THEMES[resolvedId] || SHELL_THEMES[THEME_FALLBACK_ID] || SHELL_THEMES['system-default'];
+    resolvedWallpaperId = resolvedTheme.id;
     _wireThemeLinkFallback(themeLink, resolvedTheme.id);
     if (themeLink) {
       themeLink.setAttribute('href', resolvedTheme.href);
@@ -784,7 +794,6 @@ function applyTheme(themeId) {
     document.documentElement.setAttribute('data-theme', selected);
     _applyThemeBodyClasses(resolvedTheme);
     _applyThemeExtras(resolvedTheme);
-    _applyThemeWallpaperPreset(resolvedTheme.id);
     activeThemeCustomData = resolvedTheme.isUserTheme ? { ...THEME_CUSTOM_DEFAULTS, ...(resolvedTheme.customData || {}), enabled: true } : null;
     updateShellThemeSummary(selected);
   };
@@ -792,14 +801,16 @@ function applyTheme(themeId) {
   if (selected === 'system-default') {
     systemThemeMediaQuery = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
     const resolveSystemTheme = () => {
-      const preferredId = (systemThemeMediaQuery && systemThemeMediaQuery.matches) ? 'neko-default' : 'light-default';
-      if (SHELL_THEMES[preferredId]) return preferredId;
-      if (SHELL_THEMES[THEME_FALLBACK_ID]) return THEME_FALLBACK_ID;
-      return 'system-default';
+      const prefersDark = !systemThemeMediaQuery || systemThemeMediaQuery.matches;
+      return prefersDark ? (SHELL_THEMES['neko-dark'] ? 'neko-dark' : THEME_FALLBACK_ID) : (SHELL_THEMES['neko-light'] ? 'neko-light' : THEME_FALLBACK_ID);
     };
     applyResolvedTheme(resolveSystemTheme());
     if (systemThemeMediaQuery) {
-      const listener = () => applyResolvedTheme(resolveSystemTheme());
+      const listener = () => {
+        applyResolvedTheme(resolveSystemTheme());
+        _clearThemeCustomFromDom();
+        _applyThemeWallpaperPreset(resolvedWallpaperId);
+      };
       systemThemeMediaQuery.addEventListener('change', listener);
       systemThemeMediaQuery.__remListener = listener;
     }
@@ -813,7 +824,13 @@ function applyTheme(themeId) {
     _syncCustomizerForm(activeThemeCustomData);
   } else {
     _clearThemeCustomFromDom();
-    _syncCustomizerForm(_readStoredThemeCustom());
+    _applyThemeWallpaperPreset(resolvedWallpaperId);
+    const storedCustom = _readStoredThemeCustom();
+    const wallpaperPreset = THEME_WALLPAPER_BY_THEME[resolvedWallpaperId];
+    if (wallpaperPreset && wallpaperPreset.image && !storedCustom.wallpaperImage) {
+      storedCustom.wallpaperImage = wallpaperPreset.image;
+    }
+    _syncCustomizerForm(storedCustom);
   }
   syncThemeSelectorUI(selected);
 }
@@ -836,8 +853,26 @@ function openThemeCustomizer() {
 
 window.openThemeCustomizer = openThemeCustomizer;
 
+function _migrateStaleThemeData() {
+  try {
+    const storedId = localStorage.getItem(THEME_STORAGE_KEY);
+    if (storedId && !SHELL_THEMES[storedId]) {
+      localStorage.removeItem(THEME_STORAGE_KEY);
+    }
+    const rawCustom = localStorage.getItem(THEME_CUSTOM_STORAGE_KEY);
+    if (rawCustom) {
+      const parsed = JSON.parse(rawCustom);
+      if (parsed && parsed.wallpaperImage && !THEME_WALLPAPER_ALLOWED.has(parsed.wallpaperImage)) {
+        parsed.wallpaperImage = '';
+        localStorage.setItem(THEME_CUSTOM_STORAGE_KEY, JSON.stringify(parsed));
+      }
+    }
+  } catch (_) {}
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
   await loadThemeManifest();
+  _migrateStaleThemeData();
   _injectUserThemes();
   initThemeCustomizer();
   const storedTheme = getStoredThemeId();

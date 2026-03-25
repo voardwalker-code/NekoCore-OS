@@ -29,14 +29,17 @@ function makeRes() {
   const res = {
     statusCode: null,
     body: '',
+    writableEnded: false,
     writeHead(code)  { this.statusCode = code; },
-    end(data)        { this.body = data || ''; },
-    json()           { return JSON.parse(this.body); }
+    end(data)        { this.body = data || ''; this.writableEnded = true; },
+    json()           { return JSON.parse(this.body); },
+    on() {},
+    removeListener() {}
   };
   return res;
 }
 
-function makeReq(method = 'GET', body = null) { return { method, body, accountId: 'test-user' }; }
+function makeReq(method = 'GET', body = null) { return { method, body, accountId: 'test-user', on() {}, removeListener() {} }; }
 function readBodyFn(body) { return () => Promise.resolve(typeof body === 'string' ? body : '{}'); }
 function makeUrl(p)  { return new URL(p, 'http://localhost:3000'); }
 

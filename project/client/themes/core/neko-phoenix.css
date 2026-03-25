@@ -1,0 +1,54 @@
+/* ══════════════════════════════════════════════════════════
+   Phoenix — Fire / warm orange / red-gold
+   Pairs with NekoCore-OS-Phoenix.png
+   ══════════════════════════════════════════════════════════ */
+:root {
+  /* ── Surfaces: dark embers ── */
+  --surface-0: #0d0604;
+  --surface-1: #1c0e08;
+  --surface-2: #2c1810;
+  --surface-3: #3c2218;
+
+  /* ── Borders: flame glow ── */
+  --border-default:  rgba(249, 115, 22, 0.18);
+  --border-emphasis: rgba(249, 115, 22, 0.36);
+  --border-subtle:   rgba(249, 115, 22, 0.07);
+
+  /* ── Text ── */
+  --text-primary:   #fff4e6;
+  --text-secondary: #f0c8a0;
+  --text-tertiary:  #a07858;
+
+  /* ── Accent: fire orange ── */
+  --accent:        #f97316;
+  --accent-strong: #ea580c;
+  --accent-subtle: rgba(249, 115, 22, 0.12);
+  --accent-muted:  rgba(249, 115, 22, 0.18);
+
+  /* ── Semantic ── */
+  --cyan:   #fbbf24;
+  --indigo: #f97316;
+  --purple: #ef4444;
+  --pink:   #fb7185;
+  --orange: #fb923c;
+  --gold:   #fde68a;
+  --teal:   #fbbf24;
+
+  /* ── Desktop ── */
+  --desktop-wallpaper:
+    radial-gradient(ellipse at 25% 15%, rgba(249, 115, 22, 0.26), transparent 36%),
+    radial-gradient(ellipse at 75% 10%, rgba(234, 88, 12, 0.16), transparent 30%),
+    radial-gradient(ellipse at 50% 85%, rgba(251, 191, 36, 0.10), transparent 38%),
+    linear-gradient(180deg, #0a0404 0%, #180c06 30%, #0d0604 100%);
+  --desktop-overlay: linear-gradient(135deg, rgba(13, 6, 4, 0.14), rgba(28, 14, 8, 0.58));
+  --desktop-grid-line: rgba(249, 115, 22, 0.03);
+
+  /* ── Shell surfaces ── */
+  --taskbar-bg: rgba(13, 6, 4, 0.78);
+  --window-bg: rgba(28, 14, 8, 0.82);
+  --start-surface: rgba(28, 14, 8, 0.88);
+  --shortcut-bg: rgba(44, 24, 16, 0.72);
+  --shortcut-bg-hover: rgba(60, 34, 24, 0.88);
+
+  --stars-opacity: 0.50;
+}

@@ -1,7 +1,6 @@
 ---
 name: rust
 description: Rust systems programmer — write, compile, test, and debug Rust projects. Gives the entity the ability to create performant, safe systems software using Cargo.
-enabled: true
 ---
 
 # Rust Skill

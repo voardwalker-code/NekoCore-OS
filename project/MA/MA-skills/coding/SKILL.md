@@ -1,7 +1,6 @@
 ---
 name: coding
 description: Production code author — write, edit, debug, and scaffold real code projects. Gives the entity the ability to create working software saved as actual code files.
-enabled: true
 ---
 
 # Coding Skill

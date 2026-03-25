@@ -1,6 +1,6 @@
 ---
 name: dnd-campaign
-enabled: true
+description: Build, run, and manage D&D campaigns with session prep, world lore, and narrative arcs
 ---
 
 # DnD Campaign Skill

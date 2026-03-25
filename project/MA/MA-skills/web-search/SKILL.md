@@ -1,7 +1,6 @@
 ---
 name: web-search
 description: Browse the web, fetch pages, and extract content. Gives the entity the ability to search and read web content.
-enabled: true
 ---
 
 # Web Search & Browse

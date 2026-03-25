@@ -50,7 +50,7 @@ describe('Bug Tracker — WINDOW_APPS guard', () => {
 
   it('APP_CATEGORY_BY_TAB contains bugtracker entry', () => {
     const src = fs.readFileSync(appJsPath, 'utf8');
-    assert.match(src, /bugtracker:\s*['"]tools['"]/);
+    assert.match(src, /bugtracker:\s*['"]dev['"]/);
   });
 });
 

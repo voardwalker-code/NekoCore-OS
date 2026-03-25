@@ -1,0 +1,55 @@
+/* ══════════════════════════════════════════════════════════
+   Cosmic — Deep-space purples / indigo / violet
+   Pairs with NekoCore-OS-Cosmic.png
+   ══════════════════════════════════════════════════════════ */
+:root {
+  /* ── Surfaces: deep cosmic purples ── */
+  --surface-0: #08051a;
+  --surface-1: #0e0b26;
+  --surface-2: #161236;
+  --surface-3: #1e1946;
+
+  /* ── Borders: violet glow ── */
+  --border-default:  rgba(167, 139, 250, 0.16);
+  --border-emphasis: rgba(167, 139, 250, 0.36);
+  --border-subtle:   rgba(167, 139, 250, 0.07);
+
+  /* ── Text ── */
+  --text-primary:   #ede9fe;
+  --text-secondary: #a5a0d4;
+  --text-tertiary:  #5b5688;
+
+  /* ── Accent: violet ── */
+  --accent:        #a78bfa;
+  --accent-strong: #8b5cf6;
+  --accent-subtle: rgba(167, 139, 250, 0.10);
+  --accent-muted:  rgba(167, 139, 250, 0.16);
+
+  /* ── Semantic ── */
+  --cyan:   #67e8f9;
+  --indigo: #818cf8;
+  --purple: #c084fc;
+  --pink:   #f0abfc;
+  --orange: #fb923c;
+  --gold:   #fbbf24;
+  --teal:   #2dd4bf;
+
+  /* ── Desktop: gradient fallback — wallpaper image set by theme-manager ── */
+  --desktop-wallpaper:
+    radial-gradient(ellipse at 25% 15%, rgba(139, 92, 246, 0.22), transparent 38%),
+    radial-gradient(ellipse at 75% 20%, rgba(167, 139, 250, 0.16), transparent 32%),
+    radial-gradient(ellipse at 50% 80%, rgba(192, 132, 252, 0.10), transparent 40%),
+    linear-gradient(180deg, #06041a 0%, #0c0826 30%, #08051a 100%);
+  --desktop-overlay: linear-gradient(135deg, rgba(8, 5, 26, 0.14), rgba(14, 11, 38, 0.58));
+  --desktop-grid-line: rgba(167, 139, 250, 0.03);
+
+  /* ── Shell surfaces ── */
+  --taskbar-bg: rgba(8, 5, 26, 0.78);
+  --window-bg: rgba(14, 11, 38, 0.82);
+  --start-surface: rgba(14, 11, 38, 0.88);
+  --shortcut-bg: rgba(22, 18, 54, 0.72);
+  --shortcut-bg-hover: rgba(30, 25, 70, 0.88);
+
+  /* ── Stars: visible ── */
+  --stars-opacity: 0.75;
+}

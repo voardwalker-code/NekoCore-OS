@@ -186,8 +186,8 @@ class HatchEntity {
     const goals = await this.generateExplorationGoals(generatedMemories, goalsManager, chapters);
     console.log(`  ✓ Generated ${goals.length} exploration goals`);
 
-    // Phase 7: Create introduction message
-    const introduction = this.generateIntroduction(identity, chapters, goals);
+    // Phase 7: Create introduction message (LLM-generated from life story)
+    const introduction = await this.generateIntroduction(identity, lifeStory, callLLM);
 
     // Phase 8: Generate Subconscious introduction with life history summary
     const subconsciousIntro = this.generateSubconsciousIntroduction(identity, chapters, generatedMemories);
@@ -333,14 +333,37 @@ class HatchEntity {
   }
 
   /**
-   * Generate introduction message for the entity
+   * Generate introduction message for the entity using LLM
    */
-  generateIntroduction(identity, chapters, goals) {
-    const chapterThemes = chapters.map(c => c.title.toLowerCase()).join(', ');
-    const traits = identity.personality_traits.slice(0, 3).join(', ');
-    const interests = goals.slice(0, 2).map(g => g.description).join(', ');
+  async generateIntroduction(identity, lifeStory, callLLM) {
+    const introPrompt = `You are ${identity.name}. You are introducing yourself to someone for the first time.
 
-    return `Hello. My name is ${identity.name}. From what I remember of my past, I spent time exploring ${chapterThemes}. I'm ${traits}, and I'm currently interested in ${interests}.`;
+Here is your life story:
+${lifeStory}
+
+Write a short first-person introduction (3-5 sentences) as ${identity.name} would actually speak. This is how you greet someone new.
+
+Rules:
+- Speak naturally in first person as ${identity.name}
+- Mention something SPECIFIC from your past — a place, a person, a memory — not vague generalities
+- Let your personality show through your tone and word choice (you are: ${identity.personality_traits.slice(0, 3).join(', ')})
+- Do NOT list your traits or interests like a resume
+- Do NOT say "I am an AI" or mention digital existence
+- Do NOT use the exact words "journey" or "passionate about"
+- Keep it conversational — this is how a real person would introduce themselves
+- End with something that invites conversation
+
+Write ONLY the introduction, nothing else.`;
+
+    try {
+      const intro = await callLLM(introPrompt, 'main');
+      console.log(`  ✓ Generated LLM introduction`);
+      return intro.trim();
+    } catch (err) {
+      console.error(`  ⚠ LLM introduction failed, using fallback: ${err.message}`);
+      const traits = identity.personality_traits.slice(0, 3).join(', ');
+      return `Hi, I'm ${identity.name}. I'd say I'm pretty ${traits}. I've had an interesting life so far — ask me about it sometime.`;
+    }
   }
 
   /**

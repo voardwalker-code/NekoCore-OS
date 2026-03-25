@@ -1,6 +1,6 @@
 ---
 name: blueprint-builder
-enabled: true
+description: Create and register new MA task blueprints, task types, and classification rules
 ---
 
 # Blueprint Builder Skill

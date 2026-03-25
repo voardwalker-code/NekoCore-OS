@@ -1,6 +1,6 @@
 ---
 name: course-creator
-enabled: true
+description: Create structured courses, curricula, lesson plans, and exam prep materials from topics or books
 ---
 
 # Course Creator Skill

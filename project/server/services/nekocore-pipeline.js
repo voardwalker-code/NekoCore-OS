@@ -55,7 +55,17 @@ function createNekoCoreChat(deps) {
     nekoSystemRuntime
   } = deps;
 
-  async function processNekoCoreChatMessage(userMessage, chatHistory = []) {
+  async function processNekoCoreChatMessage(userMessage, chatHistory = [], pipelineOptions = {}) {
+    const pipelineSignal = pipelineOptions.signal || null;
+    if (pipelineSignal && pipelineSignal.aborted) throw new Error('Pipeline cancelled');
+
+    const signalAwareCallLLM = pipelineSignal
+      ? (runtime, msgs, opts = {}) => {
+          if (pipelineSignal.aborted) throw new Error('Pipeline cancelled');
+          return callLLMWithRuntime(runtime, msgs, { ...opts, signal: pipelineSignal });
+        }
+      : callLLMWithRuntime;
+
     logTimeline('nekocore_chat.user_message', {
       userMessage: String(userMessage || '').slice(0, 400),
       chatHistoryCount: Array.isArray(chatHistory) ? chatHistory.length : 0
@@ -216,7 +226,7 @@ function createNekoCoreChat(deps) {
       memorySearch: memorySearchFn,
       memoryCreate: memoryCreateFn,
       memoryStorage: nekoCoreMemStorage
-    })(callLLMWithRuntime);
+    })(signalAwareCallLLM);
 
     // Build native tool schemas + executor for providers that support it
     const nekoMainRuntime = aspectConfigs.conscious || aspectConfigs.main;
@@ -292,7 +302,7 @@ function createNekoCoreChat(deps) {
           { role: 'system', content: `You are NekoCore, the system entity. Tool results are below. Integrate them into your response naturally.` },
           { role: 'user', content: `Original message: "${userMessage}"\n\nDraft: ${toolExec.cleanedResponse}\n\n${toolResultsBlock}\n\nWrite final response.` }
         ];
-        const followUpResponse = await callLLMWithRuntime(aspectConfigs.orchestrator || aspectConfigs.main, followUpMessages, { temperature: 0.6 });
+        const followUpResponse = await signalAwareCallLLM(aspectConfigs.orchestrator || aspectConfigs.main, followUpMessages, { temperature: 0.6 });
         result.finalResponse = followUpResponse || toolExec.cleanedResponse;
         result.toolResults = toolExec.toolResults;
       }
@@ -307,7 +317,7 @@ function createNekoCoreChat(deps) {
         const taskResult = await taskRunner.executeTaskPlan(plan, userMessage, {
           entityName: 'NekoCore',
           systemPrompt: entity.systemPromptText || '',
-          callLLM: callLLMWithRuntime,
+          callLLM: signalAwareCallLLM,
           runtime: aspectConfigs.main,
           workspacePath: entity.workspacePath || '',
           webFetch,

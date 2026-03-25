@@ -232,9 +232,9 @@ test('book-ingestion skill exists', () => {
     'book-ingestion SKILL.md must exist');
 });
 
-test('book-ingestion runtime skill exists', () => {
-  assert.ok(existsSync(resolve('MA/MA-entity/entity_ma/skills/book-ingestion.md')),
-    'runtime book-ingestion skill must exist');
+test('book-ingestion runtime skill source exists', () => {
+  assert.ok(existsSync(resolve('MA/MA-skills/book-ingestion/SKILL.md')),
+    'source book-ingestion SKILL.md must exist');
 });
 
 test('book_ingestion blueprint contains POV isolation rules', () => {

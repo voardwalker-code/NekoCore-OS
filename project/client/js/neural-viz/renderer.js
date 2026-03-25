@@ -13,7 +13,6 @@ window._NVR = (() => {
   const nodeMap = new Map();     // memory_id -> mesh
   const edgeMap = new Map();     // "src|tgt" -> line
   const nodeData = new Map();    // memory_id -> data object
-  const labelSprites = new Map();
 
   // Belief graph data
   const beliefNodeMap = new Map();   // belief_id -> mesh
@@ -26,6 +25,22 @@ window._NVR = (() => {
 
   // Batched edge rendering (single draw call)
   let _edgeBatch = null;  // THREE.LineSegments for memory edges
+
+  // ── Batched glow / label rendering ──
+  let _glowPoints = null;               // THREE.Points – one draw call for all mem-node glows
+  const _glowNodeIndex = new Map();     // nodeId → index in _glowPoints
+  let _glowTexture = null;              // shared radial-gradient CanvasTexture
+  let _labelMesh = null;                // InstancedMesh of billboard quads (atlas labels)
+  const _labelNodeIndex = new Map();    // nodeId → index in _labelMesh
+  let _labelAtlasData = null;           // { texture, uvMap }
+  const _dummy = new THREE.Object3D();
+  const _tmpColor = new THREE.Color();
+  const _tmpVec1 = new THREE.Vector3();
+  const _tmpVec2 = new THREE.Vector3();
+  let _cachedRayTargets = null;         // lazily-built array for raycasting
+  let _mouseMoveRafId = 0;             // rAF gate for mousemove
+  let _pendingMouseEvent = null;
+  const _simNodeById = new Map();       // nodeId → simNode (persistent O(1) lookup)
 
   // Visual settings
   const NODE_BASE_SIZE = 0.35;
@@ -368,22 +383,18 @@ window._NVR = (() => {
       nodeData.set(node.id, node);
 
       // Build sim node for physics
-      simNodes.push({
+      const sn = {
         id: node.id,
         x: mesh.position.x,
         y: mesh.position.y,
         z: mesh.position.z,
         vx: 0, vy: 0, vz: 0,
         mesh,
-        data: node
-      });
-
-      // Glow sprite — larger and brighter for core memories
-      const glowScale = profile.glowScale || 4;
-      addGlowSprite(mesh, size, color, glowScale);
-
-      // Floating type label beside the node
-      addNodeLabel(mesh, profile.label || typeKey, size, color);
+        data: node,
+        baseSize: size
+      };
+      simNodes.push(sn);
+      _simNodeById.set(node.id, sn);
     });
 
     // Filter + sort edges by strength, prune weak ones, cap total
@@ -447,6 +458,12 @@ window._NVR = (() => {
       simulationStep(0.6);
     }
     updateEdgePositions();
+
+    // Build batched glow sprites (single THREE.Points draw call)
+    _buildGlowSprites();
+    // Build texture-atlas label system (single InstancedMesh draw call)
+    _buildLabelSystem();
+    _invalidateRayTargets();
   }
 
   // ── Overlay trace connections ──
@@ -552,14 +569,16 @@ window._NVR = (() => {
       beliefNodeData.set(belief.belief_id, belief);
 
       // Add to physics simulation
-      simNodes.push({
+      const bSn = {
         id: belief.belief_id,
         x: posX, y: posY, z: posZ,
         vx: 0, vy: 0, vz: 0,
         mesh,
         data: belief,
         isBelief: true
-      });
+      };
+      simNodes.push(bSn);
+      _simNodeById.set(belief.belief_id, bSn);
 
       // Add glow sprite (purple tinted)
       addGlowSprite(mesh, size, color);
@@ -624,6 +643,7 @@ window._NVR = (() => {
       simulationStep(0.4);
     }
     updateEdgePositions();
+    _invalidateRayTargets();
   }
 
   // ── Glow sprite for nodes ──
@@ -744,6 +764,236 @@ window._NVR = (() => {
     parentMesh.add(ring);
   }
 
+  // ── Batched glow texture (generated once) ──
+  function _makeGlowTexture() {
+    if (_glowTexture) return _glowTexture;
+    const sz = 64;
+    const canvas = document.createElement('canvas');
+    canvas.width = canvas.height = sz;
+    const ctx = canvas.getContext('2d');
+    const grad = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+    grad.addColorStop(0, 'rgba(255,255,255,1)');
+    grad.addColorStop(0.3, 'rgba(255,255,255,0.6)');
+    grad.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, sz, sz);
+    _glowTexture = new THREE.CanvasTexture(canvas);
+    return _glowTexture;
+  }
+
+  // ── Build a single THREE.Points for all memory-node glows ──
+  function _buildGlowSprites() {
+    if (_glowPoints) { scene.remove(_glowPoints); _glowPoints = null; }
+    _glowNodeIndex.clear();
+    const memNodes = simNodes.filter(n => !n.isBelief);
+    if (memNodes.length === 0) return;
+
+    const count = memNodes.length;
+    const positions = new Float32Array(count * 3);
+    const colors    = new Float32Array(count * 3);
+    const sizes     = new Float32Array(count);
+    const c = new THREE.Color();
+
+    memNodes.forEach((sn, i) => {
+      positions[i * 3]     = sn.x;
+      positions[i * 3 + 1] = sn.y;
+      positions[i * 3 + 2] = sn.z;
+
+      const data = sn.data;
+      const typeKey = (data && data.type) || 'episodic';
+      const profile = MEMORY_TYPES[typeKey] || DEFAULT_TYPE_PROFILE;
+      c.setHex(profile.color);
+      colors[i * 3]     = c.r;
+      colors[i * 3 + 1] = c.g;
+      colors[i * 3 + 2] = c.b;
+
+      const glowScale = profile.glowScale || 4;
+      sizes[i] = (sn.baseSize || 0.5) * glowScale;
+
+      _glowNodeIndex.set(sn.id, i);
+    });
+
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3).setUsage(THREE.DynamicDrawUsage));
+    geo.setAttribute('color',    new THREE.BufferAttribute(colors,    3).setUsage(THREE.DynamicDrawUsage));
+    geo.setAttribute('size',     new THREE.BufferAttribute(sizes,     1));
+
+    const mat = new THREE.PointsMaterial({
+      size: 1,
+      vertexColors: true,
+      map: _makeGlowTexture(),
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      sizeAttenuation: true,
+    });
+    mat.onBeforeCompile = function(shader) {
+      shader.vertexShader = shader.vertexShader
+        .replace('uniform float size;', 'attribute float size;');
+    };
+
+    _glowPoints = new THREE.Points(geo, mat);
+    scene.add(_glowPoints);
+  }
+
+  // ── Flash a single glow point's color ──
+  function _flashGlowSprite(nodeId, hexColor) {
+    if (!_glowPoints) return;
+    const i = _glowNodeIndex.get(nodeId);
+    if (i == null) return;
+    const buf = _glowPoints.geometry.attributes.color;
+    const c = new THREE.Color(hexColor);
+    buf.setXYZ(i, c.r, c.g, c.b);
+    buf.needsUpdate = true;
+  }
+
+  // ── Build texture-atlas + instanced-quad label system ──
+  function _buildLabelSystem() {
+    if (_labelMesh) { scene.remove(_labelMesh); _labelMesh = null; }
+    _labelNodeIndex.clear();
+    _labelAtlasData = null;
+
+    const memNodes = simNodes.filter(n => !n.isBelief);
+    if (memNodes.length === 0) return;
+
+    // One atlas slot per unique type (compact atlas)
+    const SLOT_W = 256, SLOT_H = 32, COLS = 8;
+    const typeKeys = Object.keys(MEMORY_TYPES);
+    typeKeys.push('_default');
+    const ROWS = Math.ceil(typeKeys.length / COLS);
+    const CW = SLOT_W * COLS;
+    const CH = SLOT_H * ROWS;
+
+    const canvas = document.createElement('canvas');
+    canvas.width = CW; canvas.height = CH;
+    const ctx = canvas.getContext('2d');
+    ctx.font = '500 13px "JetBrains Mono", monospace';
+    ctx.textBaseline = 'middle';
+
+    const uvMap = new Map();
+    typeKeys.forEach((typeKey, i) => {
+      const col = i % COLS, row = Math.floor(i / COLS);
+      const px = col * SLOT_W, py = row * SLOT_H;
+      const profile = MEMORY_TYPES[typeKey] || DEFAULT_TYPE_PROFILE;
+      const c = new THREE.Color(profile.color);
+      ctx.fillStyle = 'rgba(' + Math.round(c.r * 255) + ',' + Math.round(c.g * 255) + ',' + Math.round(c.b * 255) + ',0.88)';
+      ctx.fillText(profile.label || typeKey, px + 2, py + SLOT_H / 2);
+      uvMap.set(typeKey, {
+        offsetX: px / CW,
+        offsetY: 1 - (py + SLOT_H) / CH,
+        scaleX: SLOT_W / CW,
+        scaleY: SLOT_H / CH
+      });
+    });
+
+    const atlasTexture = new THREE.CanvasTexture(canvas);
+    _labelAtlasData = { texture: atlasTexture, uvMap };
+
+    // Instanced quad geometry
+    const count = memNodes.length;
+    const geo = new THREE.PlaneGeometry(1, 1);
+    const offsets = new Float32Array(count * 2);
+    const scales  = new Float32Array(count * 2);
+
+    memNodes.forEach((sn, i) => {
+      const data = sn.data;
+      const typeKey = (data && data.type) || 'episodic';
+      const uv = uvMap.get(typeKey) || uvMap.get('_default');
+      offsets[i * 2]     = uv.offsetX;
+      offsets[i * 2 + 1] = uv.offsetY;
+      scales[i * 2]      = uv.scaleX;
+      scales[i * 2 + 1]  = uv.scaleY;
+      _labelNodeIndex.set(sn.id, i);
+    });
+
+    geo.setAttribute('instanceUvOffset', new THREE.InstancedBufferAttribute(offsets, 2));
+    geo.setAttribute('instanceUvScale',  new THREE.InstancedBufferAttribute(scales,  2));
+
+    const mat = new THREE.ShaderMaterial({
+      uniforms: { map: { value: atlasTexture } },
+      vertexShader: [
+        'attribute vec2 instanceUvOffset;',
+        'attribute vec2 instanceUvScale;',
+        'varying vec2 vUv;',
+        'void main() {',
+        '  vUv = instanceUvOffset + uv * instanceUvScale;',
+        '  vec4 mvPos = modelViewMatrix * instanceMatrix * vec4(0.0, 0.0, 0.0, 1.0);',
+        '  vec3 sc = vec3(',
+        '    length(instanceMatrix[0].xyz),',
+        '    length(instanceMatrix[1].xyz),',
+        '    length(instanceMatrix[2].xyz)',
+        '  );',
+        '  mvPos.xy += position.xy * sc.xy * 0.4;',
+        '  gl_Position = projectionMatrix * mvPos;',
+        '}'
+      ].join('\n'),
+      fragmentShader: [
+        'uniform sampler2D map;',
+        'varying vec2 vUv;',
+        'void main() {',
+        '  vec4 col = texture2D(map, vUv);',
+        '  if (col.a < 0.05) discard;',
+        '  gl_FragColor = col;',
+        '}'
+      ].join('\n'),
+      transparent: true,
+      depthWrite: false,
+      side: THREE.DoubleSide,
+    });
+
+    _labelMesh = new THREE.InstancedMesh(geo, mat, count);
+    _labelMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+
+    memNodes.forEach((sn, i) => {
+      const sz = sn.baseSize || 0.5;
+      _dummy.position.set(sn.x + sz * 2.0, sn.y + sz * 0.5, sn.z);
+      _dummy.scale.set(sz * 5.5, sz * 1.0, 1);
+      _dummy.rotation.set(0, 0, 0);
+      _dummy.updateMatrix();
+      _labelMesh.setMatrixAt(i, _dummy.matrix);
+    });
+    _labelMesh.instanceMatrix.needsUpdate = true;
+    scene.add(_labelMesh);
+  }
+
+  // ── Sync glow positions with simNode physics ──
+  function _syncGlowPositions() {
+    if (!_glowPoints) return;
+    const posAttr = _glowPoints.geometry.attributes.position;
+    for (const sn of simNodes) {
+      if (sn.isBelief) continue;
+      const idx = _glowNodeIndex.get(sn.id);
+      if (idx != null) posAttr.setXYZ(idx, sn.x, sn.y, sn.z);
+    }
+    posAttr.needsUpdate = true;
+  }
+
+  // ── Sync label positions with simNode physics ──
+  function _syncLabelPositions() {
+    if (!_labelMesh) return;
+    for (const sn of simNodes) {
+      if (sn.isBelief) continue;
+      const idx = _labelNodeIndex.get(sn.id);
+      if (idx == null) continue;
+      const sz = sn.baseSize || 0.5;
+      _dummy.position.set(sn.x + sz * 2.0, sn.y + sz * 0.5, sn.z);
+      _dummy.scale.set(sz * 5.5, sz * 1.0, 1);
+      _dummy.rotation.set(0, 0, 0);
+      _dummy.updateMatrix();
+      _labelMesh.setMatrixAt(idx, _dummy.matrix);
+    }
+    _labelMesh.instanceMatrix.needsUpdate = true;
+  }
+
+  // ── Cached ray-target array (invalidated on node/belief changes) ──
+  function _getRayTargets() {
+    if (!_cachedRayTargets) {
+      _cachedRayTargets = [...nodeMap.values(), ...beliefNodeMap.values()];
+    }
+    return _cachedRayTargets;
+  }
+  function _invalidateRayTargets() { _cachedRayTargets = null; }
+
   // ── Force-directed simulation step ──
   function simulationStep(alpha) {
     const a = alpha || SIM_ALPHA;
@@ -795,6 +1045,9 @@ window._NVR = (() => {
       n.x += n.vx; n.y += n.vy; n.z += n.vz;
       if (n.mesh) n.mesh.position.set(n.x, n.y, n.z);
     }
+    // Sync batched glow/label positions with physics
+    _syncGlowPositions();
+    _syncLabelPositions();
   }
 
   function updateEdgePositions() {
@@ -833,6 +1086,8 @@ window._NVR = (() => {
   // ── Animation Loop ──
   function animate() {
     animationId = requestAnimationFrame(animate);
+    // Visibility gating — skip expensive work if the container is hidden
+    if (container && !container.offsetParent) return;
     pulseTime += 0.016;
     frameCount++;
 
@@ -1027,10 +1282,7 @@ window._NVR = (() => {
     mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
 
     raycaster.setFromCamera(mouse, camera);
-    const allMeshes = [...nodeMap.values(), ...beliefNodeMap.values()];
-    const intersects = raycaster.intersectObjects(allMeshes);
-
-    // Reset previous selection
+    const intersects = raycaster.intersectObjects(_getRayTargets());
     if (selectedNode) {
       const prevMesh = nodeMap.get(selectedNode) || beliefNodeMap.get(selectedNode);
       if (prevMesh) {
@@ -1083,13 +1335,24 @@ window._NVR = (() => {
   }
 
   function onMouseMove(event) {
+    _pendingMouseEvent = event;
+    if (!_mouseMoveRafId) {
+      _mouseMoveRafId = requestAnimationFrame(_processMouseMove);
+    }
+  }
+
+  function _processMouseMove() {
+    _mouseMoveRafId = 0;
+    const event = _pendingMouseEvent;
+    if (!event || !renderer) return;
+    _pendingMouseEvent = null;
+
     const rect = renderer.domElement.getBoundingClientRect();
     mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
     mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
 
     raycaster.setFromCamera(mouse, camera);
-    const allMeshes = [...nodeMap.values(), ...beliefNodeMap.values()];
-    const intersects = raycaster.intersectObjects(allMeshes);
+    const intersects = raycaster.intersectObjects(_getRayTargets());
 
     // Reset previous hover
     if (hoveredNode && hoveredNode !== selectedNode) {
@@ -1666,11 +1929,13 @@ window._NVR = (() => {
 
     mesh.material.color.setHex(color);
     mesh.material.emissiveIntensity = intensity;
+    _flashGlowSprite(memId, color);
 
     setTimeout(() => {
       if (memId !== selectedNode) {
         mesh.material.color.setHex(origColor);
         mesh.material.emissiveIntensity = origEmissive;
+        _flashGlowSprite(memId, origColor);
       }
     }, 1500);
   }
@@ -1684,6 +1949,8 @@ window._NVR = (() => {
     _revealAnims = [];
     for (const [, mesh] of nodeMap) mesh.visible = false;
     if (_edgeBatch) _edgeBatch.material.opacity = 0.03;
+    if (_glowPoints) _glowPoints.visible = false;
+    if (_labelMesh) _labelMesh.visible = false;
   }
 
   function exitPlaybackMode() {
@@ -1701,6 +1968,8 @@ window._NVR = (() => {
       mesh.material.emissiveIntensity = prof.emissiveBase;
     }
     if (_edgeBatch) _edgeBatch.material.opacity = 0.6;
+    if (_glowPoints) _glowPoints.visible = true;
+    if (_labelMesh) _labelMesh.visible = true;
   }
 
   // Birth-reveal a single node during playback (or flash it if already visible).
@@ -1748,6 +2017,11 @@ window._NVR = (() => {
     if (scene) {
       for (const [, mesh] of nodeMap) scene.remove(mesh);
       if (_edgeBatch) { scene.remove(_edgeBatch); _edgeBatch = null; }
+      if (_glowPoints) { scene.remove(_glowPoints); _glowPoints = null; }
+      _glowNodeIndex.clear();
+      if (_labelMesh) { scene.remove(_labelMesh); _labelMesh = null; }
+      _labelNodeIndex.clear();
+      _labelAtlasData = null;
       for (const [, mesh] of beliefNodeMap) scene.remove(mesh);
       for (const [, line] of beliefEdgeMap) scene.remove(line);
       traceAnimations.forEach(a => a.particles.forEach(p => scene.remove(p)));
@@ -1758,9 +2032,11 @@ window._NVR = (() => {
     beliefNodeMap.clear();
     beliefNodeData.clear();
     beliefEdgeMap.clear();
+    _simNodeById.clear();
     simNodes = [];
     simEdges = [];
     traceAnimations = [];
+    _invalidateRayTargets();
   }
 
   // ── Resize ──
@@ -1798,6 +2074,15 @@ window._NVR = (() => {
     camera = null;
     controls = null;
     _edgeBatch = null;
+    _glowPoints = null;
+    _glowNodeIndex.clear();
+    _labelMesh = null;
+    _labelNodeIndex.clear();
+    _labelAtlasData = null;
+    _simNodeById.clear();
+    _invalidateRayTargets();
+    if (_mouseMoveRafId) { cancelAnimationFrame(_mouseMoveRafId); _mouseMoveRafId = 0; }
+    _pendingMouseEvent = null;
     container = null;
     raycaster = null;
     mouse = null;
@@ -2043,6 +2328,9 @@ window._NVR = (() => {
     for (const [id, mesh] of nodeMap) {
       mesh.visible = set.has(id);
     }
+    // Hide glow/label for filtered-out nodes
+    if (_glowPoints) _glowPoints.visible = false;
+    if (_labelMesh) _labelMesh.visible = false;
     if (_edgeBatch) _edgeBatch.visible = false;
   }
 
@@ -2052,6 +2340,8 @@ window._NVR = (() => {
     for (const [, mesh] of nodeMap) {
       mesh.visible = true;
     }
+    if (_glowPoints) _glowPoints.visible = true;
+    if (_labelMesh) _labelMesh.visible = true;
     if (_edgeBatch) _edgeBatch.visible = true;
   }
 

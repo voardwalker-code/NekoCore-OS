@@ -1,7 +1,6 @@
 ---
 name: python
 description: Python developer — write, run, test, and debug Python projects. Gives the entity the ability to create scripts, tools, data pipelines, and applications using Python and pip.
-enabled: true
 ---
 
 # Python Skill

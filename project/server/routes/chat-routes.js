@@ -42,9 +42,50 @@ function createChatRoutes(ctx) {
   }
 
   async function chat(req, res, apiHeaders, readBody) {
+    // Create an AbortController tied to the client connection —
+    // if the client disconnects (e.g. entity release), abort the pipeline.
+    const pipelineAc = new AbortController();
+    const traceId = `chat_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+    const reqStartTs = Date.now();
+    const logT = (stage, detail) => {
+      const iso = new Date().toISOString();
+      const ms = Date.now() - reqStartTs;
+      if (typeof detail === 'undefined') {
+        console.log(`[CHAT_PIPE_DEBUG][${traceId}][${iso}][+${ms}ms] ${stage}`);
+      } else {
+        console.log(`[CHAT_PIPE_DEBUG][${traceId}][${iso}][+${ms}ms] ${stage}`, detail);
+      }
+    };
+    const abortFromDisconnect = (source) => {
+      if (!pipelineAc.signal.aborted) {
+        logT(`disconnect.abort_signal ${source}`);
+        pipelineAc.abort();
+      }
+    };
+    const onReqAborted = () => abortFromDisconnect('req.aborted');
+    const onResClose = () => {
+      // `close` before `writableEnded` indicates the client disconnected early.
+      if (!res.writableEnded) abortFromDisconnect('res.close_before_end');
+    };
+    req.on('aborted', onReqAborted);
+    res.on('close', onResClose);
+    logT('/api/chat opened');
+
     try {
+      logT('read_body.start');
       const body = JSON.parse(await readBody(req));
-      const { message: userMessage, chatHistory, memoryRecall, memorySave } = body;
+      const { message: userMessage, chatHistory, memoryRecall, memorySave, debugClientSentAt, debugClientIso } = body;
+      const clientToServerMs = Number.isFinite(Number(debugClientSentAt))
+        ? Math.max(0, Date.now() - Number(debugClientSentAt))
+        : null;
+      logT('read_body.done', {
+        hasMessage: !!userMessage,
+        chatHistoryCount: Array.isArray(chatHistory) ? chatHistory.length : 0,
+        memoryRecall: memoryRecall === true,
+        memorySave: memorySave === true,
+        clientSentAt: debugClientIso || null,
+        clientToServerMs
+      });
 
       logTimeline('api.chat.request', {
         userMessage: String(userMessage || '').slice(0, 1200),
@@ -60,19 +101,23 @@ function createChatRoutes(ctx) {
 
       // ── Slash command intercept — dispatch before LLM pipeline ──
       const entityId = ctx.getActiveEntityId ? ctx.getActiveEntityId() : null;
+      logT('slash_intercept.start', { entityId });
       const slash = await slashInterceptor.intercept(userMessage, entityId, ctx);
       if (slash.handled) {
+        logT('slash_intercept.handled');
         const validatedSlash = enforceResponseContract('/api/chat', slash.response);
         res.writeHead(200, apiHeaders);
         res.end(JSON.stringify(validatedSlash));
         logTimeline('api.chat.slash_command', { command: userMessage.split(/\s+/)[0] });
         return;
       }
+      logT('slash_intercept.pass_through');
 
       // Route single-llm entities to the simplified pipeline
       let result;
       let isSingleLlm = false;
       try {
+        logT('mode_resolve.start');
         const path = require('path');
         const fs   = require('fs');
         const entityPaths = require('../entityPaths');
@@ -84,14 +129,24 @@ function createChatRoutes(ctx) {
           }
         }
       } catch (_) {}
+      logT('mode_resolve.done', { isSingleLlm });
 
       if (isSingleLlm && ctx.processSingleLlmChatMessage) {
+        logT('pipeline.invoke.single_llm.start');
         result = await ctx.processSingleLlmChatMessage(userMessage, chatHistory || [], {
           memoryRecall: memoryRecall === true,
-          memorySave:   memorySave === true
+          memorySave:   memorySave === true,
+          signal: pipelineAc.signal,
+          debugTraceId: traceId
         });
+        logT('pipeline.invoke.single_llm.done');
       } else {
-        result = await ctx.processChatMessage(userMessage, chatHistory || []);
+        logT('pipeline.invoke.orchestrated.start');
+        result = await ctx.processChatMessage(userMessage, chatHistory || [], {
+          signal: pipelineAc.signal,
+          debugTraceId: traceId
+        });
+        logT('pipeline.invoke.orchestrated.done');
       }
 
       const chatResponse = {
@@ -135,6 +190,10 @@ function createChatRoutes(ctx) {
       if (result.pendingSkillApproval) {
         chatResponse.pendingSkillApproval = result.pendingSkillApproval;
       }
+      logT('/api/chat success', {
+        responseLength: String(result.finalResponse || '').length,
+        chunks: Array.isArray(result.chunks) ? result.chunks.length : 0
+      });
       const validatedChatResponse = enforceResponseContract('/api/chat', chatResponse);
       res.writeHead(200, apiHeaders);
       res.end(JSON.stringify(validatedChatResponse));
@@ -164,12 +223,23 @@ function createChatRoutes(ctx) {
         }
       }
     } catch (e) {
+      if (pipelineAc.signal.aborted) {
+        // Client disconnected — pipeline was cancelled, nothing to send
+        logT('pipeline.cancelled.client_disconnected');
+        logTimeline('api.chat.cancelled', { reason: 'client_disconnect' });
+        return;
+      }
+      logT('/api/chat failed', { error: e.message });
       console.error('  ⚠ Chat orchestration error:', e.message);
       if (!res.headersSent) {
         res.writeHead(500, apiHeaders);
         res.end(JSON.stringify({ error: e.message }));
       }
       logTimeline('api.chat.error', { error: e.message });
+    } finally {
+      req.removeListener('aborted', onReqAborted);
+      res.removeListener('close', onResClose);
+      logT('/api/chat closed');
     }
   }
 

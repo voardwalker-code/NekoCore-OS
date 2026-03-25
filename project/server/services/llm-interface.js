@@ -38,7 +38,9 @@ function createLLMInterface({ getSomaticAwareness = () => null, getDefaultMaxTok
     const _llmStart = Date.now();
     const temperature = Number.isFinite(options.temperature) ? options.temperature : 0.35;
     const maxTokens = Number.isFinite(options.maxTokens) ? options.maxTokens : _defaultMaxTokens;
-    const timeoutMs = Number.isFinite(options.timeout) ? options.timeout : 90000;
+    const timeoutMs = Number.isFinite(options.timeout) ? options.timeout : 300000;
+    const externalSignal = options.signal || null;
+    if (externalSignal && externalSignal.aborted) throw new Error('LLM call cancelled');
     const normalizedContextWindow = Number.isFinite(options.contextWindow)
       ? Math.max(1024, Math.min(32768, Math.floor(options.contextWindow)))
       : (Number.isFinite(runtime?.contextWindow)
@@ -55,6 +57,11 @@ function createLLMInterface({ getSomaticAwareness = () => null, getDefaultMaxTok
       headers.Authorization = 'Bearer ' + apiKey;
       const ac = new AbortController();
       const timer = setTimeout(() => ac.abort(), timeoutMs);
+      if (externalSignal) {
+        const onAbort = () => ac.abort();
+        externalSignal.addEventListener('abort', onAbort, { once: true });
+        ac.signal.addEventListener('abort', () => externalSignal.removeEventListener('abort', onAbort), { once: true });
+      }
       const bodyObj = { model: runtime.model, temperature, max_tokens: maxTokens, messages };
       if (options.responseFormat === 'json') bodyObj.response_format = { type: 'json_object' };
 
@@ -74,7 +81,10 @@ function createLLMInterface({ getSomaticAwareness = () => null, getDefaultMaxTok
       } catch (err) {
         clearTimeout(timer);
         if (somaticAwareness) somaticAwareness.reportCallOutcome(false);
-        if (err.name === 'AbortError') throw new Error(`OpenRouter call timed out after ${timeoutMs / 1000}s`);
+        if (err.name === 'AbortError') {
+          if (externalSignal && externalSignal.aborted) throw new Error('LLM call cancelled (pipeline aborted)');
+          throw new Error(`OpenRouter call timed out after ${timeoutMs / 1000}s`);
+        }
         throw err;
       }
       clearTimeout(timer);
@@ -282,6 +292,11 @@ function createLLMInterface({ getSomaticAwareness = () => null, getDefaultMaxTok
 
       const ac = new AbortController();
       const timer = setTimeout(() => ac.abort(), timeoutMs);
+      if (externalSignal) {
+        const onAbort = () => ac.abort();
+        externalSignal.addEventListener('abort', onAbort, { once: true });
+        ac.signal.addEventListener('abort', () => externalSignal.removeEventListener('abort', onAbort), { once: true });
+      }
       let resp;
       try {
         resp = await fetch(endpoint, {
@@ -293,7 +308,10 @@ function createLLMInterface({ getSomaticAwareness = () => null, getDefaultMaxTok
       } catch (err) {
         clearTimeout(timer);
         if (somaticAwareness) somaticAwareness.reportCallOutcome(false);
-        if (err.name === 'AbortError') throw new Error(`Anthropic call timed out after ${timeoutMs / 1000}s`);
+        if (err.name === 'AbortError') {
+          if (externalSignal && externalSignal.aborted) throw new Error('LLM call cancelled (pipeline aborted)');
+          throw new Error(`Anthropic call timed out after ${timeoutMs / 1000}s`);
+        }
         throw err;
       }
       clearTimeout(timer);
@@ -407,6 +425,11 @@ function createLLMInterface({ getSomaticAwareness = () => null, getDefaultMaxTok
     if (!endpoint) throw new Error('Ollama runtime missing endpoint');
     const ac2 = new AbortController();
     const timer2 = setTimeout(() => ac2.abort(), timeoutMs);
+    if (externalSignal) {
+      const onAbort = () => ac2.abort();
+      externalSignal.addEventListener('abort', onAbort, { once: true });
+      ac2.signal.addEventListener('abort', () => externalSignal.removeEventListener('abort', onAbort), { once: true });
+    }
     const ollamaBody = { model: runtime.model, temperature, max_tokens: maxTokens, messages };
     if (normalizedContextWindow) {
       ollamaBody.options = {
@@ -427,7 +450,10 @@ function createLLMInterface({ getSomaticAwareness = () => null, getDefaultMaxTok
     } catch (err) {
       clearTimeout(timer2);
       if (somaticAwareness) somaticAwareness.reportCallOutcome(false);
-      if (err.name === 'AbortError') throw new Error(`Ollama call timed out after ${timeoutMs / 1000}s`);
+      if (err.name === 'AbortError') {
+        if (externalSignal && externalSignal.aborted) throw new Error('LLM call cancelled (pipeline aborted)');
+        throw new Error(`Ollama call timed out after ${timeoutMs / 1000}s`);
+      }
       throw err;
     }
     clearTimeout(timer2);

@@ -4,7 +4,7 @@ These instructions apply to every conversation in this workspace. Follow them wi
 
 ## Response Contract (Mandatory)
 
-1. Every response must end with exactly: `Reference: WORKLOG.md`
+1. Every response must end with exactly: `Reference: WORKLOG.md | .github/copilot-instructions.md`
 2. If a request conflicts with `WORKLOG.md`, state the conflict first, then propose the compliant path.
 
 ## Priority Order

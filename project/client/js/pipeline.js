@@ -193,6 +193,18 @@ async function callOpenAICompat(endpoint, token, model, prompt) {
 }
 
 // ============================================================
+// CHAT ABORT CONTROLLER — cancels in-flight /api/chat fetch
+// ============================================================
+let _chatAbortController = null;
+
+function abortActiveChatCall() {
+  if (_chatAbortController) {
+    _chatAbortController.abort();
+    _chatAbortController = null;
+  }
+}
+
+// ============================================================
 // CHAT LLM CALL (multi-turn orchestrator — uses inner dialog system)
 // ============================================================
 async function callChatLLM() {
@@ -209,15 +221,26 @@ async function callChatLLM() {
   const historyForServer = messages.filter((_, index) => index !== currentUserIndex);
   
   // Call the server's orchestrator endpoint instead of direct LLM call
+  _chatAbortController = new AbortController();
+  const clientSentAt = Date.now();
+  const clientSentIso = new Date(clientSentAt).toISOString();
+  console.log('[CHAT_PIPE_DEBUG][client][main_chat] send', {
+    at: clientSentIso,
+    messageLength: String(currentMessage.content || '').length,
+    chatHistoryCount: historyForServer.length
+  });
   try {
     const resp = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      signal: _chatAbortController.signal,
       body: JSON.stringify({
         message: currentMessage.content || '',
         chatHistory: historyForServer,
         memoryRecall: _memoryRecall,
-        memorySave:   _memorySave
+        memorySave:   _memorySave,
+        debugClientSentAt: clientSentAt,
+        debugClientIso: clientSentIso
       })
     });
     
@@ -241,6 +264,10 @@ async function callChatLLM() {
       pendingSkillApproval: data.pendingSkillApproval || null
     };
   } catch (err) {
+    _chatAbortController = null;
+    // If the call was aborted (entity release or user cancel), propagate immediately
+    if (err.name === 'AbortError') throw err;
+
     console.error('Orchestrator call failed:', err);
     lg('warn', 'Orchestrator error — falling back to direct LLM: ' + err.message);
     
@@ -259,6 +286,8 @@ async function callChatLLM() {
         throw new Error('Unknown provider: ' + type);
     }
     return { response: fallbackResponse, innerDialog: null };
+  } finally {
+    _chatAbortController = null;
   }
 }
 

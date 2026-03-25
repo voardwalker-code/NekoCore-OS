@@ -391,13 +391,6 @@
       "ext": ".js"
     },
     {
-      "path": "client/js/starfield.js",
-      "dir": "client/js",
-      "lines": 187,
-      "modified": "2026-03-20",
-      "ext": ".js"
-    },
-    {
       "path": "client/js/vfs.js",
       "dir": "client/js",
       "lines": 448,

@@ -744,6 +744,7 @@ const createEntityChatRoutes = require('./routes/entity-chat-routes');
 const createProcessMgrRoutes = require('./routes/process-manager-routes');
 const createEntityEnrichmentRoutes = require('./routes/entity-enrichment-routes');
 const createResourceManagerRoutes = require('./routes/resource-manager-routes');
+const createServerControlRoutes   = require('./routes/server-control-routes');
 
 const sseRoutes      = createSSERoutes(ctx);
 const configRoutes   = createConfigRoutes(ctx);
@@ -764,8 +765,9 @@ const entityChatRoutes = createEntityChatRoutes(ctx);
 const processMgrRoutes = createProcessMgrRoutes(ctx);
 const enrichmentRoutes = createEntityEnrichmentRoutes(ctx);
 const resourceMgrRoutes = createResourceManagerRoutes(ctx);
+const serverCtrlRoutes  = createServerControlRoutes(ctx);
 
-const _routeDispatchers = [authRoutes, sseRoutes, configRoutes, memoryRoutes, chatRoutes, entityRoutes, taskRoutes, entityChatRoutes, brainRoutes, skillsRoutes, cogRoutes, documentRoutes, browserRoutes, vfsRoutes, nekocoreRoutes, archiveRoutes, processMgrRoutes, enrichmentRoutes, resourceMgrRoutes];
+const _routeDispatchers = [authRoutes, sseRoutes, configRoutes, memoryRoutes, chatRoutes, entityRoutes, taskRoutes, entityChatRoutes, brainRoutes, skillsRoutes, cogRoutes, documentRoutes, browserRoutes, vfsRoutes, nekocoreRoutes, archiveRoutes, processMgrRoutes, enrichmentRoutes, resourceMgrRoutes, serverCtrlRoutes];
 
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://localhost:${PORT}`);
@@ -882,24 +884,8 @@ server.on('error', (error) => {
   PORT = resolved;
 
   server.listen(PORT, () => {
-    // Auto-open/focus browser in OS mode.
+    // Auto-open/focus browser disabled — users enter fullscreen via the Welcome app.
     const url = `http://localhost:${PORT}`;
-    const autoOpenResult = tryAutoOpenBrowser(url, {
-      logger: console,
-      fullscreen: true,
-      windowTitle: 'NekoCore-OS',
-      preferredRuntime: 'chrome'
-    });
-    if (autoOpenResult.reason === 'already-open-switching') {
-      console.log('  ℹ WebUI already open. Switching focus to existing dedicated window.');
-    } else if (autoOpenResult.reason === 'opened') {
-      console.log('  ✓ WebUI launched in dedicated OS window (fullscreen request sent).');
-    } else if (autoOpenResult.reason === 'disabled') {
-      console.log('  ℹ WebUI auto-open is disabled (REM_AUTO_OPEN_BROWSER=off).');
-    } else if (autoOpenResult.reason === 'runtime-missing' || autoOpenResult.reason === 'runtime-unsupported') {
-      console.log('  ✖ WebUI did not launch. Dedicated runtime is missing/unsupported.');
-      if (autoOpenResult.error) console.log('    ' + autoOpenResult.error);
-    }
 
     console.log('');
     console.log('  ┌─────────────────────────────────────────────┐');
@@ -907,7 +893,7 @@ server.on('error', (error) => {
     console.log('  │   NekoCore OS                            │');
     console.log('  │   OpenRouter + Ollama                       │');
     console.log('  │                                             │');
-    console.log(`  │   ➜  http://localhost:${PORT}                  │`);
+    console.log(`  │   ➜  ${url}                  │`);
     console.log('  │                                             │');
     console.log('  │   Brain modules: loaded                     │');
     console.log('  │   Press Ctrl+C to stop                      │');

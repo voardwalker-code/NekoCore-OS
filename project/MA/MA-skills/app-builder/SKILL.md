@@ -1,7 +1,6 @@
 ---
 name: app-builder
 description: Build, install, and manage complete NekoCore OS apps — HTML payload, installer contract, window registration, start menu category. Produces installer-managed, reversible app packages.
-enabled: true
 ---
 
 # App Builder Skill

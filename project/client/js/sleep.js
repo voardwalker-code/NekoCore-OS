@@ -161,6 +161,7 @@ async function startSleep() {
 
   sleeping = true;
   document.getElementById('sleepOverlay').classList.add('active');
+  if (typeof nkSound !== 'undefined') nkSound.play('shutdown');
   setSleepUI('Phase 0: Saving current chat', 'Compressing active conversation...', 2);
   lg('info', '\u{1F319} Sleep cycle started');
   let preSleepArchive = '';

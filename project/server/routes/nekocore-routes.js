@@ -622,9 +622,42 @@ function createNekoCoreRoutes(ctx) {
   // Dedicated chat with the NekoCore system entity — no checkout required.
   // Body: { message, chatHistory? }
   async function postChat(req, res, apiHeaders, readBody) {
+    const pipelineAc = new AbortController();
+    const traceId = `nekochat_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+    const reqStartTs = Date.now();
+    const logT = (stage, detail) => {
+      const iso = new Date().toISOString();
+      const ms = Date.now() - reqStartTs;
+      if (typeof detail === 'undefined') {
+        console.log(`[CHAT_PIPE_DEBUG][${traceId}][${iso}][+${ms}ms] ${stage}`);
+      } else {
+        console.log(`[CHAT_PIPE_DEBUG][${traceId}][${iso}][+${ms}ms] ${stage}`, detail);
+      }
+    };
+    const abortFromDisconnect = () => {
+      if (!pipelineAc.signal.aborted) pipelineAc.abort();
+    };
+    const onReqAborted = () => abortFromDisconnect();
+    const onResClose = () => {
+      if (!res.writableEnded) abortFromDisconnect();
+    };
+    req.on('aborted', onReqAborted);
+    res.on('close', onResClose);
+    logT('/api/nekocore/chat opened');
+
     try {
+      logT('read_body.start');
       const body = JSON.parse(await readBody(req));
-      const { message, chatHistory } = body;
+      const { message, chatHistory, debugClientSentAt, debugClientIso } = body;
+      const clientToServerMs = Number.isFinite(Number(debugClientSentAt))
+        ? Math.max(0, Date.now() - Number(debugClientSentAt))
+        : null;
+      logT('read_body.done', {
+        hasMessage: !!message,
+        chatHistoryCount: Array.isArray(chatHistory) ? chatHistory.length : 0,
+        clientSentAt: debugClientIso || null,
+        clientToServerMs
+      });
       if (!message || !String(message).trim()) {
         res.writeHead(400, apiHeaders);
         res.end(JSON.stringify({ error: 'Missing message' }));
@@ -635,22 +668,40 @@ function createNekoCoreRoutes(ctx) {
       // ── Slash command intercept — dispatch before LLM pipeline ──
       const slashInterceptor = require('./slash-interceptor');
       const nekoCoreEntityId = 'nekocore';
+      logT('slash_intercept.start');
       const slash = await slashInterceptor.intercept(trimmed, nekoCoreEntityId, ctx);
       if (slash.handled) {
+        logT('slash_intercept.handled');
         res.writeHead(200, apiHeaders);
         res.end(JSON.stringify(slash.response));
         return;
       }
+      logT('slash_intercept.pass_through');
 
+      logT('pipeline.invoke.nekocore.start');
       const result = await ctx.processNekoCoreChatMessage(
         trimmed,
-        Array.isArray(chatHistory) ? chatHistory : []
+        Array.isArray(chatHistory) ? chatHistory : [],
+        { signal: pipelineAc.signal, debugTraceId: traceId }
       );
+      logT('pipeline.invoke.nekocore.done', {
+        responseLength: String(result.finalResponse || '').length
+      });
       res.writeHead(200, apiHeaders);
       res.end(JSON.stringify({ ok: true, response: result.finalResponse || '' }));
+      logT('/api/nekocore/chat success');
     } catch (e) {
+      if (pipelineAc.signal.aborted) {
+        logT('pipeline.cancelled.client_disconnected');
+        return;
+      }
+      logT('/api/nekocore/chat failed', { error: e.message });
       res.writeHead(500, apiHeaders);
       res.end(JSON.stringify({ ok: false, error: e.message }));
+    } finally {
+      req.removeListener('aborted', onReqAborted);
+      res.removeListener('close', onResClose);
+      logT('/api/nekocore/chat closed');
     }
   }
 

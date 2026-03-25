@@ -16,7 +16,7 @@ function readBodyFn(body) {
 }
 
 function makeReq(body) {
-  return { method: 'POST', accountId: 'test-user', body };
+  return { method: 'POST', accountId: 'test-user', body, on() {}, removeListener() {} };
 }
 
 function makeRes() {
@@ -25,17 +25,21 @@ function makeRes() {
     body: '',
     headersSent: false,
     writeHeadCalls: 0,
+    writableEnded: false,
     writeHead(code) {
       this.writeHeadCalls += 1;
       this.statusCode = code;
     },
     end(data) {
       this.headersSent = true;
+      this.writableEnded = true;
       this.body = data || '';
     },
     json() {
       return JSON.parse(this.body);
-    }
+    },
+    on() {},
+    removeListener() {}
   };
 }
 

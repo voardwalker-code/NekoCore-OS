@@ -99,6 +99,10 @@ Modular Task Orch.txt
 booter.js
 Start-NekoCore-Server.bat
 
+# Test artifacts — generated locally, contain machine-specific paths
+test-output.txt
+project/test-output.txt
+
 # Explicit archive index docs inside ignored planning tree
 Documents/current/completed-phase-plans/INDEX.md
 Documents/current/completed-paper-work/INDEX.md

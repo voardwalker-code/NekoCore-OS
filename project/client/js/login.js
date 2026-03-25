@@ -96,6 +96,7 @@ function _onAuthSuccess(account) {
   _remAccountInfo = account.info || '';
   _updateAccountBadge(account.displayName || account.username);
   hideLoginOverlay();
+  if (typeof nkSound !== 'undefined') nkSound.play('login');
   // Refresh entity list so the new user's entities are shown
   if (typeof refreshSidebarEntities === 'function') refreshSidebarEntities();
   resolveAuthWaiters(getCurrentAccount());

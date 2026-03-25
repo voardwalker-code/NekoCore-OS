@@ -75,10 +75,11 @@ function buildEntityChip(entity) {
   const avatar = deriveEntityAvatar(entity.gender, entity.traits || entity.personality_traits, entity.name);
   const traits = (entity.traits || entity.personality_traits || []).slice(0, 2).join(', ');
   const isOwner = entity.isOwner !== false;
-  const showVisibilityBtn = entity.ownerId && isOwner && !currentEntityId;
+  const isActive = entity.id === currentEntityId;
+  const showVisibilityBtn = entity.ownerId && isOwner && !isActive;
   const visibilityHtml = showVisibilityBtn
     ? `<span class="entity-chip-vis" title="${entity.isPublic ? 'Shared — click to make private' : 'Private — click to share'}" style="font-size:.65rem;cursor:pointer;opacity:.6;margin-right:.15rem;">${entity.isPublic ? '🌐' : '🔒'}</span>`
-    : (entity.ownerId && !isOwner && !currentEntityId ? '<span style="font-size:.62rem;opacity:.4;margin-right:.15rem;" title="Shared by another user">🌐</span>' : '');
+    : (entity.ownerId && !isOwner && !isActive ? '<span style="font-size:.62rem;opacity:.4;margin-right:.15rem;" title="Shared by another user">🌐</span>' : '');
 
   chip.innerHTML = `
     <span class="entity-chip-avatar">${avatar}</span>
@@ -87,7 +88,7 @@ function buildEntityChip(entity) {
       <div class="entity-chip-meta">${traits || entity.gender || ''}</div>
     </div>
     ${visibilityHtml}
-    ${isOwner && !currentEntityId ? `<span class="entity-chip-del" title="Delete ${entity.name || 'entity'}">&times;</span>` : ''}
+    ${isOwner && !isActive ? `<span class="entity-chip-del" title="Delete ${entity.name || 'entity'}">&times;</span>` : ''}
   `;
 
   chip.addEventListener('click', (e) => {
@@ -172,19 +173,7 @@ async function ensureEntityWindowContent(forceRefresh) {
 
   panel.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--text-tertiary)">Loading entities...</div>';
 
-  if (currentEntityId) {
-    try {
-      const resp = await fetch('/api/entity/profile');
-      if (!resp.ok) throw new Error('Failed to fetch active profile');
-      const data = await resp.json();
-      if (!data.ok) throw new Error(data.error || 'No active profile');
-      renderEntityInfoPanel(data.profile, 'active');
-      return;
-    } catch (_) {
-      // Fall through to the entity browser so the window is still useful.
-    }
-  }
-
+  // Always show the full entity browser list so users can switch between entities.
   try {
     const resp = await fetch('/api/entities');
     if (!resp.ok) throw new Error('Failed to fetch entities');
@@ -265,20 +254,17 @@ async function refreshSidebarEntities() {
       return;
     }
 
-    // If an entity is active, only show that one. If no visible match exists,
-    // prefer the server's current entity state rather than clearing chat.
-    let entitiesToShow = activeEntityId
-      ? data.entities.filter(e => normalizeEntityId(e.id) === activeEntityId)
-      : data.entities;
+    // Always show all entities. The active one gets the 'active' chip highlight.
+    let entitiesToShow = data.entities;
 
-    if (activeEntityId && entitiesToShow.length === 0) {
+    // If the active entity isn't in the list (edge case), inject it from server state.
+    if (activeEntityId && !entitiesToShow.some(e => normalizeEntityId(e.id) === activeEntityId)) {
       if (activeEntityState && normalizeEntityId(activeEntityState.id) === activeEntityId) {
-        entitiesToShow = [activeEntityState];
+        entitiesToShow = [activeEntityState, ...entitiesToShow];
       } else {
         activeEntityId = '';
         currentEntityId = null;
         currentEntityVoice = null;
-        entitiesToShow = data.entities;
       }
     }
 
@@ -323,6 +309,17 @@ async function sidebarSelectEntity(entityId) {
 
 async function checkoutEntity(entityId) {
   try {
+    // Auto-release the currently checked out entity before checking out a new one
+    if (currentEntityId && currentEntityId !== entityId) {
+      try {
+        await fetch('/api/entities/release', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ entityId: currentEntityId })
+        });
+      } catch (_) { /* best-effort release */ }
+    }
+
     const resp = await fetch('/api/entities/load', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -588,6 +585,11 @@ async function releaseActiveEntity() {
     return;
   }
   if (!confirm('Release this entity? Other users will be able to check it out.')) return;
+
+  // Cancel any in-flight chat pipeline call before releasing
+  if (typeof abortActiveChatCall === 'function') abortActiveChatCall();
+  chatBusy = false;
+
   try {
     const resp = await fetch('/api/entities/release', {
       method: 'POST',

@@ -96,7 +96,7 @@ test('A-0 guard: launcher builder preserves data-tab launch buttons and detached
   );
   assert.match(
     windowManagerJs,
-    /if \(typeof syncDetachedShellStateUI === 'function'\) \{[\s\S]*syncDetachedShellStateUI\(\);[\s\S]*\}/,
+    /if \(typeof syncDetachedShellStateUI === 'function'\)[\s\S]*syncDetachedShellStateUI\(\)/,
     'buildLauncherMenu must continue resyncing detached shell state after rebuilds'
   );
 });

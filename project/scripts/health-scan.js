@@ -312,7 +312,6 @@ const CORE_REGISTRY = {
   'client/js/memory-ui.js': 'Memory UI',
   'client/js/nekocore-app.js': 'NekoCore app client',
   'client/js/create.js': 'Entity creator client',
-  'client/js/starfield.js': 'Starfield background',
   'client/js/visualizer.js': 'Visualizer client',
 
   // ---- Client: App Loaders ----

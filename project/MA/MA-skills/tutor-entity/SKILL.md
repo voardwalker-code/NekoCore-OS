@@ -1,7 +1,6 @@
 ---
 name: tutor-entity
 description: Create living tutor or teaching assistant entities for NekoCore OS with deep subject knowledge, pedagogical strategies, and course-specific awareness.
-enabled: true
 ---
 
 # Tutor Entity Skill

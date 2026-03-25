@@ -1,7 +1,6 @@
 ---
 name: study-guide
 description: Generate comprehensive study materials — study guides, flashcards, outlines, and timelines — from any subject or source material.
-enabled: true
 ---
 
 # Study Guide Skill

@@ -288,10 +288,78 @@ function createChatPipeline(deps) {
 
   // ── processChatMessage ────────────────────────────────────────────────────
 
-  async function processChatMessage(userMessage, chatHistory = []) {
+  async function processChatMessage(userMessage, chatHistory = [], pipelineOptions = {}) {
+    const pipelineSignal = pipelineOptions.signal || null;
+    if (pipelineSignal && pipelineSignal.aborted) throw new Error('Pipeline cancelled');
+
+    const debugTraceId = String(pipelineOptions.debugTraceId || `chatpipe_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`);
+    const pipelineStartTs = Date.now();
+    const dbg = (stage, detail) => {
+      const iso = new Date().toISOString();
+      const ms = Date.now() - pipelineStartTs;
+      if (typeof detail === 'undefined') {
+        console.log(`[CHAT_PIPE_DEBUG][${debugTraceId}][${iso}][+${ms}ms] ${stage}`);
+        return;
+      }
+      console.log(`[CHAT_PIPE_DEBUG][${debugTraceId}][${iso}][+${ms}ms] ${stage}`, detail);
+    };
+    dbg('pipeline.start', {
+      userPreview: String(userMessage || '').slice(0, 140),
+      chatHistoryCount: Array.isArray(chatHistory) ? chatHistory.length : 0
+    });
+
+    // Wrap callLLMWithRuntime to forward the abort signal to every LLM call
+    const signalAwareCallLLM = pipelineSignal
+      ? (runtime, msgs, opts = {}) => {
+          if (pipelineSignal.aborted) throw new Error('Pipeline cancelled');
+          const callStart = Date.now();
+          const runtimeName = runtimeLabel(runtime);
+          dbg('llm.call.start', {
+            runtime: runtimeName,
+            messages: Array.isArray(msgs) ? msgs.length : 0,
+            returnUsage: !!opts.returnUsage
+          });
+          return Promise.resolve(callLLMWithRuntime(runtime, msgs, { ...opts, signal: pipelineSignal }))
+            .then((out) => {
+              dbg('llm.call.ok', { runtime: runtimeName, ms: Date.now() - callStart });
+              return out;
+            })
+            .catch((err) => {
+              dbg('llm.call.err', {
+                runtime: runtimeName,
+                ms: Date.now() - callStart,
+                error: err && err.message ? err.message : String(err)
+              });
+              throw err;
+            });
+        }
+      : (runtime, msgs, opts = {}) => {
+          const callStart = Date.now();
+          const runtimeName = runtimeLabel(runtime);
+          dbg('llm.call.start', {
+            runtime: runtimeName,
+            messages: Array.isArray(msgs) ? msgs.length : 0,
+            returnUsage: !!opts.returnUsage
+          });
+          return Promise.resolve(callLLMWithRuntime(runtime, msgs, opts))
+            .then((out) => {
+              dbg('llm.call.ok', { runtime: runtimeName, ms: Date.now() - callStart });
+              return out;
+            })
+            .catch((err) => {
+              dbg('llm.call.err', {
+                runtime: runtimeName,
+                ms: Date.now() - callStart,
+                error: err && err.message ? err.message : String(err)
+              });
+              throw err;
+            });
+        };
+
     const isInternalResume = /^\s*\[INTERNAL-RESUME\]/i.test(String(userMessage || ''));
     const isWakeFromSleep = /^\s*\[WAKE-FROM-SLEEP\]/i.test(String(userMessage || ''));
     const effectiveUserMessage = isInternalResume ? stripInternalResumeTag(userMessage) : userMessage;
+    dbg('pipeline.flags', { isInternalResume, isWakeFromSleep });
     logTimeline('chat.user_message', {
       isInternalResume,
       isWakeFromSleep,
@@ -301,6 +369,7 @@ function createChatPipeline(deps) {
 
     let aspectConfigs = {};
     let entity = null;
+    dbg('entity.load.start');
     if (brain.entityId) {
       try { entity = hatchEntity.loadEntity(); } catch (_) {}
     }
@@ -322,6 +391,12 @@ function createChatPipeline(deps) {
     if (!aspectConfigs.main || !aspectConfigs.main.type) {
       throw new Error('No LLM aspect configurations available. Please complete setup.');
     }
+    dbg('aspect.configs.ready', {
+      main: runtimeLabel(aspectConfigs.main),
+      subconscious: runtimeLabel(aspectConfigs.subconscious),
+      dream: runtimeLabel(aspectConfigs.dream),
+      orchestrator: runtimeLabel(aspectConfigs.orchestrator)
+    });
 
     setLastAspectConfigs(aspectConfigs);
     const _brainLoop = getBrainLoop();
@@ -334,6 +409,7 @@ function createChatPipeline(deps) {
     if (!entity) {
       entity = hatchEntity.loadEntity();
     }
+    dbg('entity.load.done', { entityId: brain.entityId || null, entityName: entity?.name || null });
 
     // Enrich entity with system prompt and persona
     if (entity && brain.entityId) {
@@ -399,6 +475,7 @@ function createChatPipeline(deps) {
     // T-6: Task dispatch fork before companion pipeline.
     // High-confidence tasks route to Frontman + task executor/planning orchestrator.
     try {
+      dbg('task.fork.start');
       const taskDispatch = await taskPipelineBridge.detectAndDispatchTask(effectiveUserMessage, {
         id: brain.entityId,
         name: entity?.name || 'Entity',
@@ -414,6 +491,11 @@ function createChatPipeline(deps) {
       });
 
       if (taskDispatch && taskDispatch.handled) {
+        dbg('task.fork.handled', {
+          mode: taskDispatch.mode,
+          taskType: taskDispatch.classification?.taskType || null,
+          confidence: taskDispatch.classification?.confidence || null
+        });
         logTimeline('chat.task_fork.dispatched', {
           mode: taskDispatch.mode,
           taskType: taskDispatch.classification?.taskType || null,
@@ -432,17 +514,27 @@ function createChatPipeline(deps) {
           classification: taskDispatch.classification || null
         };
       }
+      dbg('task.fork.pass_through');
     } catch (taskForkErr) {
       // Never break companion chat on task-fork failures.
+      dbg('task.fork.error', { error: taskForkErr.message });
       console.warn('  ⚠ Task dispatch fork failed, continuing with companion pipeline:', taskForkErr.message);
     }
 
     // ── T2-3: Hybrid Router — classify turn and fast-path simple ones ────────
     const hybridRouterEnabled = loadConfig()?.pipeline?.hybridRouter !== false;
+    dbg('hybrid_router.check', { enabled: hybridRouterEnabled });
     if (hybridRouterEnabled && !isInternalResume) {
       try {
+        dbg('hybrid_router.classify.start');
         const classification = classifyTurn(effectiveUserMessage);
         const valid = validateClassification(classification);
+        dbg('hybrid_router.classify.done', {
+          valid: !!valid.ok,
+          category: classification?.category || null,
+          confidence: classification?.confidence || null,
+          bypass: !!classification?.bypass
+        });
         if (valid.ok && classification.bypass) {
           const templateResult = getTemplateResponse(classification.category, {
             userName: entity?.persona?.userName || null,
@@ -539,16 +631,19 @@ function createChatPipeline(deps) {
         }
       } catch (classifyErr) {
         // Never break companion chat on classifier failures.
+        dbg('hybrid_router.error', { error: classifyErr.message });
         console.warn('  ⚠ Turn classifier failed, continuing with full pipeline:', classifyErr.message);
       }
     }
 
     // ── T4-1: Semantic cache — check before full pipeline ──────────────────
     const semanticCacheEnabled = loadConfig()?.pipeline?.semanticCache !== false;
+    dbg('semantic_cache.check', { enabled: semanticCacheEnabled });
     if (semanticCacheEnabled && !isInternalResume) {
       try {
         const entityCache = getEntityCache(brain.entityId);
         const cacheResult = entityCache.lookup(effectiveUserMessage);
+        dbg('semantic_cache.lookup', { hit: !!cacheResult.hit });
         if (cacheResult.hit) {
           broadcastSSE('cache_hit', {
             score: cacheResult.entry.score,
@@ -626,6 +721,7 @@ function createChatPipeline(deps) {
           };
         }
       } catch (cacheErr) {
+        dbg('semantic_cache.error', { error: cacheErr.message });
         console.warn('  ⚠ Semantic cache lookup failed, continuing with full pipeline:', cacheErr.message);
       }
     }
@@ -635,6 +731,7 @@ function createChatPipeline(deps) {
     let cognitiveSnapshotBlock = '';
     let cognitiveSnapshotData = null;
     try {
+      dbg('cognitive_snapshot.start');
       const msgTopics = effectiveUserMessage.toLowerCase().split(/[^a-z0-9]+/).filter(w => w.length >= 4);
       const { snapshot, block } = assembleCognitiveSnapshot({
         beliefGraph: brain.beliefGraph || null,
@@ -660,7 +757,12 @@ function createChatPipeline(deps) {
           timestamp: Date.now()
         });
       }
+      dbg('cognitive_snapshot.done', {
+        hasSnapshot: !!cognitiveSnapshotData,
+        blockLength: String(cognitiveSnapshotBlock || '').length
+      });
     } catch (snapErr) {
+      dbg('cognitive_snapshot.error', { error: snapErr.message });
       console.warn('  ⚠ Cognitive snapshot assembly failed, continuing without:', snapErr.message);
     }
 
@@ -670,7 +772,7 @@ function createChatPipeline(deps) {
       memorySearch: bridgeSearchFn,
       memoryCreate: bridgeCreateFn,
       memoryStorage: brain.memoryStorage
-    })(callLLMWithRuntime);
+    })(signalAwareCallLLM);
 
     // Build native tool schemas + executor for providers that support it
     const { memorySearchFn: toolSearchFn, memoryCreateFn: toolCreateFn } = buildMemoryCallbacks();
@@ -742,11 +844,21 @@ function createChatPipeline(deps) {
     });
 
     console.log(`  ℹ Running orchestrator with aspects: main=${runtimeLabel(aspectConfigs.main)}, sub=${runtimeLabel(aspectConfigs.subconscious)}, dream=${runtimeLabel(aspectConfigs.dream)}, orch=${runtimeLabel(aspectConfigs.orchestrator)}`);
+    dbg('orchestrator.start', {
+      main: runtimeLabel(aspectConfigs.main),
+      subconscious: runtimeLabel(aspectConfigs.subconscious),
+      dream: runtimeLabel(aspectConfigs.dream),
+      orchestrator: runtimeLabel(aspectConfigs.orchestrator)
+    });
     const trimmedChatHistory = Array.isArray(chatHistory) ? chatHistory.slice(-10) : [];
     const result = await orchestrator.orchestrate(effectiveUserMessage, trimmedChatHistory, {
       entityId: brain.entityId,
       memoryStorage: brain.memoryStorage,
       identityManager
+    });
+    dbg('orchestrator.done', {
+      responseLength: String(result?.finalResponse || '').length,
+      hasInnerDialog: !!result?.innerDialog
     });
 
     const rawOrchestratorOutput = result.finalResponse;
@@ -836,6 +948,7 @@ function createChatPipeline(deps) {
       if (isInternalResume) {
         throw new Error('skip-tools-for-internal-resume');
       }
+      dbg('tools.exec.start');
       const toolExec = await workspaceTools.executeToolCalls(result.finalResponse, {
         workspacePath: entity?.workspacePath || '',
         webFetch,
@@ -849,6 +962,7 @@ function createChatPipeline(deps) {
       });
 
       if (toolExec.hadTools && toolExec.toolResults.length > 0) {
+        dbg('tools.exec.done', { count: toolExec.toolResults.length });
         console.log(`  🔧 Executed ${toolExec.toolResults.length} tool call(s): ${toolExec.toolResults.map(t => t.command).join(', ')}`);
         const toolResultsBlock = workspaceTools.formatToolResults(toolExec.toolResults);
         const followUpRuntime = (orchestrator.isRuntimeUsable && orchestrator.isRuntimeUsable(aspectConfigs.orchestrator))
@@ -857,14 +971,17 @@ function createChatPipeline(deps) {
           { role: 'system', content: `You are ${entity?.name || 'the entity'}. You just used tools. Below are the tool results. Incorporate them naturally into your response to the user. Stay in character. Do NOT include [TOOL:...] tags in your response this time.` },
           { role: 'user', content: `Original user message: "${userMessage}"\n\nYour draft response (before tools ran):\n${toolExec.cleanedResponse}\n\n${toolResultsBlock}\n\nNow write your final response incorporating the tool results naturally. Stay in character.` }
         ];
-        const followUpResponse = await callLLMWithRuntime(followUpRuntime, followUpMessages, { temperature: 0.6 });
+        const followUpResponse = await signalAwareCallLLM(followUpRuntime, followUpMessages, { temperature: 0.6 });
         result.finalResponse = followUpResponse || toolExec.cleanedResponse;
         result.toolResults = toolExec.toolResults;
         result._toolsHandled = true;
         console.log(`  ✓ Tool follow-up response generated`);
+      } else {
+        dbg('tools.exec.none');
       }
     } catch (toolErr) {
       if (toolErr.message !== 'skip-tools-for-internal-resume') {
+        dbg('tools.exec.error', { error: toolErr.message });
         console.warn('  ⚠ Tool execution failed:', toolErr.message);
       }
     }
@@ -873,13 +990,15 @@ function createChatPipeline(deps) {
     try {
       if (isInternalResume) throw new Error('skip-task-plan-for-internal-resume');
       if (result._toolsHandled) throw new Error('skip-task-plan-tools-already-ran');
+      dbg('task_plan.check.start');
       const plan = taskRunner.parsePlan(rawOrchestratorOutput);
       if (plan && plan.steps.length >= 1) {
+        dbg('task_plan.detected', { steps: plan.steps.length });
         console.log(`  📋 Task plan detected: ${plan.steps.length} steps`);
         const taskResult = await taskRunner.executeTaskPlan(plan, userMessage, {
           entityName: entity?.name || 'Entity',
           systemPrompt: entity?.systemPromptText || '',
-          callLLM: callLLMWithRuntime,
+          callLLM: signalAwareCallLLM,
           runtime: aspectConfigs.main,
           workspacePath: entity?.workspacePath || '',
           webFetch,
@@ -899,10 +1018,17 @@ function createChatPipeline(deps) {
           stepOutputs: taskResult.stepOutputs,
           llmCalls: taskResult.llmCalls
         };
+        dbg('task_plan.done', {
+          steps: taskResult.plan?.steps?.length || 0,
+          llmCalls: taskResult.llmCalls || 0
+        });
+      } else {
+        dbg('task_plan.none');
       }
     } catch (taskErr) {
       if (taskErr.message !== 'skip-task-plan-for-internal-resume' &&
           taskErr.message !== 'skip-task-plan-tools-already-ran') {
+        dbg('task_plan.error', { error: taskErr.message });
         console.warn('  ⚠ Task plan execution failed:', taskErr.message);
       }
     }
@@ -990,7 +1116,12 @@ function createChatPipeline(deps) {
       entity,
       aspectConfigs,
       loadConfig,
-      callLLMWithRuntime
+      callLLMWithRuntime: signalAwareCallLLM
+    });
+    dbg('postprocess.done', {
+      responseLength: String(postProcessed.finalResponse || '').length,
+      chunkCount: Array.isArray(postProcessed.chunks) ? postProcessed.chunks.length : 0,
+      hadError: !!postProcessed.error
     });
     result.finalResponse = postProcessed.finalResponse;
     result.chunks = postProcessed.chunks;
@@ -1013,6 +1144,13 @@ function createChatPipeline(deps) {
       usedTaskPlan: !!result.taskPlan
     });
 
+    dbg('pipeline.done', {
+      totalMs: Date.now() - pipelineStartTs,
+      responseLength: String(result.finalResponse || '').length,
+      chunks: Array.isArray(result.chunks) ? result.chunks.length : 0,
+      tools: Array.isArray(result.toolResults) ? result.toolResults.length : 0
+    });
+
     return result;
   }
 
@@ -1026,8 +1164,26 @@ function createChatPipeline(deps) {
   // @param {boolean} opts.memoryRecall  — inject subconscious memory context before LLM call
   // @param {boolean} opts.memorySave    — store conversation exchange after response
 
-  async function processSingleLlmChatMessage(userMessage, chatHistory = [], { memoryRecall = false, memorySave = false } = {}) {
+  async function processSingleLlmChatMessage(userMessage, chatHistory = [], { memoryRecall = false, memorySave = false, signal = null, debugTraceId = null } = {}) {
+    const traceId = String(debugTraceId || `singlellm_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`);
+    const singleStartTs = Date.now();
+    const dbg = (stage, detail) => {
+      const iso = new Date().toISOString();
+      const ms = Date.now() - singleStartTs;
+      if (typeof detail === 'undefined') {
+        console.log(`[CHAT_PIPE_DEBUG][${traceId}][${iso}][+${ms}ms] ${stage}`);
+        return;
+      }
+      console.log(`[CHAT_PIPE_DEBUG][${traceId}][${iso}][+${ms}ms] ${stage}`, detail);
+    };
+
     const orchestrationStartTs = Date.now();
+    dbg('single_llm.start', {
+      userPreview: String(userMessage || '').slice(0, 140),
+      chatHistoryCount: Array.isArray(chatHistory) ? chatHistory.length : 0,
+      memoryRecall,
+      memorySave
+    });
     broadcastSSE('orchestration_start', { timestamp: orchestrationStartTs, _source: 'single-llm' });
     broadcastSSE('phase_start', { phase: 'single_llm', timestamp: orchestrationStartTs, source: 'single-llm' });
 
@@ -1108,9 +1264,16 @@ function createChatPipeline(deps) {
 
     // ── Call LLM ─────────────────────────────────────────────────────────────
     console.log(`  ℹ Single-LLM chat: model=${runtimeLabel(aspectConfigs.main)}, recall=${memoryRecall}, save=${memorySave}`);
-    const llmResult = await callLLMWithRuntime(aspectConfigs.main, messages, {
-      temperature: 0.7,
-      returnUsage: true
+    const singleLlmOpts = { temperature: 0.7, returnUsage: true };
+    if (signal) singleLlmOpts.signal = signal;
+    dbg('single_llm.call.start', {
+      runtime: runtimeLabel(aspectConfigs.main),
+      messages: messages.length
+    });
+    const llmResult = await callLLMWithRuntime(aspectConfigs.main, messages, singleLlmOpts);
+    dbg('single_llm.call.ok', {
+      runtime: runtimeLabel(aspectConfigs.main),
+      ms: Date.now() - orchestrationStartTs
     });
     const defaultUsage = { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 };
     const usage = (llmResult && typeof llmResult === 'object' && !Array.isArray(llmResult) && llmResult.usage)
@@ -1192,6 +1355,10 @@ function createChatPipeline(deps) {
     }
 
     logTimeline('chat.single_llm.response', { responseLength: finalResponse.length });
+    dbg('single_llm.done', {
+      totalMs: Date.now() - orchestrationStartTs,
+      responseLength: finalResponse.length
+    });
     return { finalResponse, innerDialog: null, memoryConnections: [] };
   }
 

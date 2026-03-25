@@ -165,6 +165,104 @@
     });
   })();
   </script>
+  <!-- Profiler hooks — MUST load before any other script to capture all timers/rAF -->
+  <script>
+  (function(){
+    var _si=window.setInterval, _ci=window.clearInterval;
+    var _st=window.setTimeout, _ct=window.clearTimeout;
+    var _raf=window.requestAnimationFrame, _craf=window.cancelAnimationFrame;
+    var _ael=EventTarget.prototype.addEventListener;
+    var hooks={timers:{},listeners:{},running:false,startTs:0};
+    window.__profHooks=hooks;
+    window.__profOrig={si:_si,ci:_ci,st:_st,ct:_ct,raf:_raf,craf:_craf};
+
+    function callerFile(stack){
+      if(!stack)return'unknown';
+      var lines=stack.split('\n');
+      for(var i=2;i<lines.length;i++){
+        var l=lines[i]||'';
+        if(l.indexOf('index.html')!==-1&&l.indexOf('profHook')!==-1)continue;
+        var m=l.match(/\((.+?):\d+:\d+\)/)||l.match(/at\s+(https?:\/\/.+?):\d+:\d+/);
+        if(m){try{var u=new URL(m[1],location.origin);return u.pathname.replace(/^\//,'');}catch(e){return m[1].replace(/https?:\/\/[^/]+\//,'');}}
+      }
+      return'unknown';
+    }
+    function callerFunc(stack){
+      if(!stack)return'anonymous';
+      var lines=stack.split('\n');
+      for(var i=2;i<lines.length;i++){
+        var l=lines[i]||'';
+        if(l.indexOf('index.html')!==-1&&l.indexOf('profHook')!==-1)continue;
+        var m=l.match(/at\s+([A-Za-z0-9_$.]+)\s+\(/);
+        if(m&&m[1])return m[1];
+      }
+      return'anonymous';
+    }
+    function rec(file,fn,type,dt){
+      var k=file+'|'+fn+'|'+type;
+      var r=hooks.timers[k];
+      if(!r){r={file:file,func:fn,type:type,calls:0,totalMs:0,maxMs:0};hooks.timers[k]=r;}
+      r.calls++;r.totalMs+=dt;if(dt>r.maxMs)r.maxMs=dt;
+    }
+
+    window.setInterval=function(fn,delay){
+      var s=(new Error()).stack,f=callerFile(s),n=callerFunc(s);
+      var origFn=typeof fn==='function'?fn:function(){};
+      var d=delay||0;
+      return _si(function(){
+        if(!hooks.running){origFn();return;}
+        var t=performance.now();origFn();rec(f,n,'setInterval('+d+'ms)',performance.now()-t);
+      },d);
+    };
+    window.clearInterval=function(id){_ci(id);};
+
+    window.setTimeout=function(fn,delay){
+      var d=delay||0;
+      if(d<50)return _st.apply(window,arguments);
+      var s=(new Error()).stack,f=callerFile(s),n=callerFunc(s);
+      var origFn=typeof fn==='function'?fn:function(){};
+      return _st(function(){
+        if(!hooks.running){origFn();return;}
+        var t=performance.now();origFn();rec(f,n,'setTimeout('+d+'ms)',performance.now()-t);
+      },d);
+    };
+    window.clearTimeout=function(id){_ct(id);};
+
+    window.requestAnimationFrame=function(fn){
+      var s=(new Error()).stack,f=callerFile(s),n=callerFunc(s);
+      return _raf(function(ts){
+        if(!hooks.running){fn(ts);return;}
+        var t=performance.now();fn(ts);rec(f,n,'rAF',performance.now()-t);
+      });
+    };
+    window.cancelAnimationFrame=function(id){_craf(id);};
+
+    EventTarget.prototype.addEventListener=function(type,fn,opts){
+      if(typeof fn!=='function')return _ael.call(this,type,fn,opts);
+      var s=(new Error()).stack,f=callerFile(s),n=callerFunc(s);
+      var tag=(this.tagName||this.constructor.name||'').toLowerCase();
+      var label=tag?tag+'.on'+type:'on'+type;
+      var wrapped=function(e){
+        if(!hooks.running){fn.call(this,e);return;}
+        var t=performance.now();fn.call(this,e);rec(f,n||label,'listener('+type+')',performance.now()-t);
+      };
+      fn.__profWrapped=wrapped;
+      wrapped._profOrig=fn;
+      var k=f+'|'+n+'|listener('+type+')';
+      if(!hooks.listeners[k])hooks.listeners[k]=0;
+      hooks.listeners[k]++;
+      return _ael.call(this,type,wrapped,opts);
+    };
+
+    var _rel=EventTarget.prototype.removeEventListener;
+    EventTarget.prototype.removeEventListener=function(type,fn,opts){
+      if(fn&&fn.__profWrapped){
+        _rel.call(this,type,fn.__profWrapped,opts);
+      }
+      _rel.call(this,type,fn,opts);
+    };
+  })();
+  </script>
 </head>
 <body>
 
@@ -297,6 +395,9 @@
   </div>
 
   <div class="os-start-section">
+    <div class="os-start-search-row">
+      <input type="text" id="osStartSearchInput" class="os-start-search" placeholder="Search apps..." autocomplete="off" />
+    </div>
     <div class="os-start-section-title">All Apps</div>
     <div class="os-start-category-grid" id="osStartCategoryGrid"></div>
     <div class="os-start-category-apps" id="osStartCategoryApps"></div>
@@ -564,6 +665,8 @@
   <div id="optional-tab-slot-ma-server" data-optional-tab="ma-server"></div>
   <div id="optional-tab-slot-bugtracker" data-optional-tab="bugtracker"></div>
   <div id="optional-tab-slot-resourcemgr" data-optional-tab="resourcemgr"></div>
+  <div id="optional-tab-slot-welcome" data-optional-tab="welcome"></div>
+  <div id="optional-tab-slot-profiler" data-optional-tab="profiler"></div>
   <div id="optional-tab-custom-slot"></div>
   <div id="core-tab-slot-advanced" data-core-tab="advanced"></div>
 
@@ -590,6 +693,21 @@
         <div class="os-start-power-wrap os-taskbar-power-wrap">
           <button class="btn br power-btn os-start-power-btn os-taskbar-power-btn" id="osStartPowerButton" onclick="toggleStartPowerMenu()" aria-expanded="false" aria-haspopup="menu" title="Power options" aria-label="Power options">&#x23FB;</button>
           <div class="os-start-power-menu" id="osStartPowerMenu" aria-hidden="true" role="menu">
+            <div class="os-power-section-label">Server Control</div>
+            <div class="os-power-status-row" id="pwrNekoStatus">
+              <span class="os-power-dot" id="pwrNekoDot"></span>
+              <span class="os-power-status-label">NekoCore OS</span>
+              <span class="os-power-status-text" id="pwrNekoText">checking…</span>
+            </div>
+            <div class="os-power-status-row" id="pwrMAStatus">
+              <span class="os-power-dot" id="pwrMADot"></span>
+              <span class="os-power-status-label">MA Server</span>
+              <span class="os-power-status-text" id="pwrMAText">checking…</span>
+            </div>
+            <button class="os-start-power-item" role="menuitem" onclick="bootServer('neko')">&#x1F5A5; Boot NekoCore OS Server</button>
+            <button class="os-start-power-item" role="menuitem" onclick="bootServer('ma')">&#x1F9E0; Boot MA Server</button>
+            <button class="os-start-power-item" role="menuitem" onclick="bootServer('both')">&#x26A1; Boot Both Servers</button>
+            <div class="os-power-divider"></div>
             <button class="os-start-power-item" role="menuitem" onclick="closeStartMenu()">&#127769; Sleep (Close Menu)</button>
             <button class="os-start-power-item" role="menuitem" onclick="restartShellUI()">&#8635; Restart UI</button>
             <button class="os-start-power-item" role="menuitem" onclick="if (typeof handleLogout === 'function') handleLogout(); closeStartMenu();">&#128682; Sign out</button>
@@ -711,6 +829,7 @@
 <script src="js/apps/optional/popout-manager.js"></script>
 <script src="js/apps/core/debug-core-app.js"></script>
 <script src="js/apps/core/archive-ui.js"></script>
+<script src="js/sound-system.js"></script>
 <script src="js/boot.js"></script>
 
 </body>
