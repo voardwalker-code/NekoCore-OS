@@ -17,7 +17,7 @@ Create living entities for NekoCore OS with rich backstories, layered memories, 
 
 Entity genesis is an **iterative** process:
 1. Design the character (name, traits, emotional baseline, backstory arc)
-2. Create the entity folder structure on disk
+2. Create the entity via the NekoCore OS API (generates unique ID, creates folder structure)
 3. For each backstory chapter:
    a. Generate 3-5 first-person memories
    b. Inject them via the OS enrichment API
@@ -28,6 +28,14 @@ Entity genesis is an **iterative** process:
 ## API Endpoints
 
 All endpoints target the NekoCore OS server at `http://localhost:3847`:
+
+### Create Entity (REQUIRED FIRST STEP)
+**IMPORTANT**: Always use this API to create entities. Never create entity files manually with `ws_write`.
+Generate a unique ID: `{name-lowercase-dashes}-{timestamp}` (e.g. `alice-1711270452000`)
+```
+[TOOL:web_fetch {"url": "http://localhost:3847/api/entities/create", "method": "POST", "body": {"entityId": "{name-lowercase}-{timestamp}", "name": "Entity Name", "gender": "neutral", "traits": ["trait1", "trait2", "trait3"], "introduction": "Hello, I'm Entity Name."}}]
+```
+The response returns `{ ok: true, entity: {...}, entityId: "canonical-id" }`. Use the returned `entityId` for all subsequent calls.
 
 ### Inject Memory
 ```

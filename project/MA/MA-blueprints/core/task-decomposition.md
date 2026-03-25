@@ -7,7 +7,7 @@ You must break every task into small, concrete steps. Follow these rules exactly
 1. Read the user's request carefully. Identify the SINGLE main goal.
 2. List what must be done to reach that goal. Each item = one step.
 3. Order steps so each one builds on the last.
-4. Write 2–6 steps. Never more than 6.
+4. Write steps appropriate to the task complexity (see Step Count Guide below).
 5. Each step must be ONE action — not two actions joined by "and".
 6. Each step must produce something checkable (a file, a finding, a decision).
 
@@ -42,8 +42,10 @@ Bad step: "Figure out the best approach" (no checkable output)
 | Research + write-up | 3–4 |
 | Multi-part creation (outline → draft → polish) | 4–5 |
 | Complex analysis with multiple sources | 5–6 |
+| Deep research, architecture, or project scaffolding | 6–10 |
 
-## When You Cannot Plan
+For standard tasks, write 2–6 steps. For complex tasks (deep research, project
+creation, architecture, entity genesis), you may write up to 10 steps.
 
 If the request is too vague to plan, ask ONE specific question:
 ```

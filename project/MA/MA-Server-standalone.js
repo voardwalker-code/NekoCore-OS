@@ -1,13 +1,13 @@
 #!/usr/bin/env node
-// ── MA-Server.js ────────────────────────────────────────────────────────────
-// MA — HTTP server shell. Thin layer over MA-core.
-// All business logic lives in server/MA-core.js.
-// Start: node MA-Server.js
+// ── MA-Server-standalone.js ─────────────────────────────────────────────────
+// Standalone MA server — no dependency on ../server/services/port-guard.
+// Drop this into your MA folder and run: node MA-Server-standalone.js
 'use strict';
 
 const http = require('http');
 const fs   = require('fs');
 const path = require('path');
+const net  = require('net');
 
 const core = require('./MA-server/MA-core');
 const cmdExec = require('./MA-server/MA-cmd-executor');
@@ -21,7 +21,23 @@ const { renderMarkdownToHtml } = require('./MA-server/MA-markdown');
 const CLIENT_DIR    = path.join(core.MA_ROOT, 'MA-client');
 const BLUEPRINT_DIR = path.join(core.MA_ROOT, 'MA-blueprints');
 const DEFAULT_PORT  = 3850;
-const FALLBACK_PORT = 3851;
+
+// ── Standalone port helper (replaces port-guard) ────────────────────────────
+function isPortFree(port) {
+  return new Promise(resolve => {
+    const srv = net.createServer();
+    srv.once('error', () => resolve(false));
+    srv.once('listening', () => { srv.close(); resolve(true); });
+    srv.listen(port, '127.0.0.1');
+  });
+}
+
+async function findFreePort(start, end) {
+  for (let p = start; p <= end; p++) {
+    if (await isPortFree(p)) return p;
+  }
+  return 0;
+}
 
 // ── HTTP helpers ────────────────────────────────────────────────────────────
 const MIME = {
@@ -73,42 +89,6 @@ function listMarkdownFiles(rootDir, currentDir = rootDir, bucket = []) {
     });
   }
   return bucket;
-}
-
-/** Chunk book text on paragraph/sentence boundaries, targeting ~maxLen chars. */
-function _chunkBookText(text, maxLen = 2500) {
-  const paragraphs = text.split(/\n\s*\n/);
-  const chunks = [];
-  let current = '';
-
-  for (const para of paragraphs) {
-    const trimmed = para.trim();
-    if (!trimmed) continue;
-
-    if (current.length + trimmed.length + 2 <= maxLen) {
-      current += (current ? '\n\n' : '') + trimmed;
-    } else {
-      if (current) chunks.push(current);
-      // If a single paragraph exceeds maxLen, split on sentence boundaries
-      if (trimmed.length > maxLen) {
-        const sentences = trimmed.match(/[^.!?]+[.!?]+[\s]*/g) || [trimmed];
-        let sentBuf = '';
-        for (const sent of sentences) {
-          if (sentBuf.length + sent.length <= maxLen) {
-            sentBuf += sent;
-          } else {
-            if (sentBuf) chunks.push(sentBuf.trim());
-            sentBuf = sent;
-          }
-        }
-        current = sentBuf;
-      } else {
-        current = trimmed;
-      }
-    }
-  }
-  if (current.trim()) chunks.push(current.trim());
-  return chunks;
 }
 
 function listWorkspaceTree(rootDir, currentDir = rootDir, depth = 0) {
@@ -165,7 +145,6 @@ async function handleRequest(req, res) {
           message: body.message,
           history: body.history,
           attachments: body.attachments,
-          autoPilot: body.autoPilot === true,
           onStep: async (stepInfo) => {
             sendEvent('step', {
               stepIndex: stepInfo.stepIndex,
@@ -200,7 +179,6 @@ async function handleRequest(req, res) {
     // ── Chat session persistence ────────────────────────────────────
     const sessionsDir = path.join(path.dirname(core.CONFIG_PATH), 'chat-sessions');
 
-    // List all sessions (id, createdAt, updatedAt, preview) — newest first
     if (url.pathname === '/api/chat/sessions' && method === 'GET') {
       if (!fs.existsSync(sessionsDir)) return json(res, 200, { sessions: [] });
       const files = fs.readdirSync(sessionsDir).filter(f => f.endsWith('.json'));
@@ -215,7 +193,6 @@ async function handleRequest(req, res) {
       return json(res, 200, { sessions });
     }
 
-    // Get a single session's full messages
     if (url.pathname.startsWith('/api/chat/session/') && method === 'GET') {
       const id = decodeURIComponent(url.pathname.slice('/api/chat/session/'.length));
       if (!id || /[\/\\]/.test(id)) return json(res, 400, { error: 'invalid id' });
@@ -227,7 +204,6 @@ async function handleRequest(req, res) {
       } catch { return json(res, 500, { error: 'corrupt session file' }); }
     }
 
-    // Save/update a session (POST with id in body)
     if (url.pathname === '/api/chat/session' && method === 'POST') {
       const body = JSON.parse(await readBody(req));
       fs.mkdirSync(sessionsDir, { recursive: true });
@@ -251,7 +227,6 @@ async function handleRequest(req, res) {
       return json(res, 200, { ok: true, id, preview });
     }
 
-    // Legacy endpoint — kept for backward compat, returns empty
     if (url.pathname === '/api/chat/history' && method === 'GET') {
       return json(res, 200, { messages: [] });
     }
@@ -307,7 +282,6 @@ async function handleRequest(req, res) {
         ? Math.max(1024, thinkingBudget > 0 ? thinkingBudget : 4096)
         : 1024;
       const normalizedMaxTokens = (maxTokens > 0 && maxTokens <= 1000000) ? maxTokens : 12288;
-      // Preserve existing apiKey if the new one is blank (password fields don't pre-fill)
       const existingConfig = core.getConfig();
       const incomingKey = String(body.apiKey || '').trim();
       const apiKey = incomingKey && incomingKey !== '********' ? incomingKey : (existingConfig?.apiKey || '');
@@ -518,94 +492,6 @@ async function handleRequest(req, res) {
       }
     }
 
-    // List archive nodes for a project
-    if (url.pathname.startsWith('/api/projects/nodes/') && method === 'GET') {
-      const projectId = decodeURIComponent(url.pathname.slice('/api/projects/nodes/'.length));
-      if (!projectId || /[\/\\]/.test(projectId)) return json(res, 400, { error: 'invalid project id' });
-      try {
-        const nodes = core.projectArchive.listNodes(projectId);
-        return json(res, 200, { nodes });
-      } catch (e) {
-        return json(res, 200, { nodes: [] });
-      }
-    }
-
-    // Get a single archive node (full content)
-    if (url.pathname.startsWith('/api/projects/node/') && method === 'GET') {
-      const parts = url.pathname.slice('/api/projects/node/'.length).split('/');
-      const projectId = decodeURIComponent(parts[0] || '');
-      const nodeId = decodeURIComponent(parts[1] || '');
-      if (!projectId || !nodeId) return json(res, 400, { error: 'Need project id and node id' });
-      if (/[\/\\]/.test(projectId) || /[\/\\]/.test(nodeId)) return json(res, 400, { error: 'invalid id' });
-      try {
-        const node = core.projectArchive.getNode(projectId, nodeId);
-        if (!node) return json(res, 404, { error: 'Node not found' });
-        return json(res, 200, { node });
-      } catch (e) {
-        return json(res, 404, { error: e.message });
-      }
-    }
-
-    // ── Book ingestion routes ──────────────────────────────────────────────
-
-    if (url.pathname === '/api/book/upload' && method === 'POST') {
-      const body = JSON.parse(await readBody(req));
-      let text = '';
-      if (body.text && typeof body.text === 'string') {
-        text = body.text;
-      } else if (body.filePath && typeof body.filePath === 'string') {
-        const resolved = path.resolve(body.filePath);
-        if (!fs.existsSync(resolved)) return json(res, 400, { error: 'File not found' });
-        text = fs.readFileSync(resolved, 'utf8');
-      } else {
-        return json(res, 400, { error: 'Provide text or filePath' });
-      }
-      if (!text.trim()) return json(res, 400, { error: 'Empty book text' });
-
-      const bookId = 'book_' + Date.now();
-      const title = (body.title || 'Untitled').substring(0, 200);
-      const author = (body.author || 'Unknown').substring(0, 200);
-      const bookDir = path.join(core.WORKSPACE_DIR, 'books', bookId);
-      const chunkDir = path.join(bookDir, 'chunks');
-      fs.mkdirSync(chunkDir, { recursive: true });
-
-      // Smart chunking: paragraph + sentence boundaries, ~2500 chars
-      const chunks = _chunkBookText(text, 2500);
-      for (let i = 0; i < chunks.length; i++) {
-        fs.writeFileSync(path.join(chunkDir, `chunk_${String(i).padStart(4, '0')}.txt`), chunks[i], 'utf8');
-      }
-
-      const meta = { bookId, title, author, totalChunks: chunks.length, totalChars: text.length, uploadedAt: new Date().toISOString() };
-      fs.writeFileSync(path.join(bookDir, 'meta.json'), JSON.stringify(meta, null, 2), 'utf8');
-      return json(res, 200, { ok: true, ...meta });
-    }
-
-    if (url.pathname.startsWith('/api/book/') && url.pathname.endsWith('/chunks') && method === 'GET') {
-      const bookId = url.pathname.slice('/api/book/'.length, -'/chunks'.length);
-      if (!bookId || /[/\\]/.test(bookId)) return json(res, 400, { error: 'Invalid book id' });
-      const bookDir = path.join(core.WORKSPACE_DIR, 'books', bookId);
-      const metaPath = path.join(bookDir, 'meta.json');
-      if (!fs.existsSync(metaPath)) return json(res, 404, { error: 'Book not found' });
-      const meta = JSON.parse(fs.readFileSync(metaPath, 'utf8'));
-      const chunkDir = path.join(bookDir, 'chunks');
-      const chunkFiles = fs.readdirSync(chunkDir).filter(f => f.endsWith('.txt')).sort();
-      const chunks = chunkFiles.map((f, i) => {
-        const text = fs.readFileSync(path.join(chunkDir, f), 'utf8');
-        return { index: i, preview: text.substring(0, 120), charCount: text.length };
-      });
-      return json(res, 200, { bookId: meta.bookId, title: meta.title, chunks });
-    }
-
-    if (url.pathname.match(/^\/api\/book\/[^/]+\/chunk\/\d+$/) && method === 'GET') {
-      const parts = url.pathname.split('/');
-      const bookId = parts[3];
-      const chunkIndex = parseInt(parts[5], 10);
-      if (!bookId || /[/\\]/.test(bookId)) return json(res, 400, { error: 'Invalid book id' });
-      const chunkPath = path.join(core.WORKSPACE_DIR, 'books', bookId, 'chunks', `chunk_${String(chunkIndex).padStart(4, '0')}.txt`);
-      if (!fs.existsSync(chunkPath)) return json(res, 404, { error: 'Chunk not found' });
-      return json(res, 200, { text: fs.readFileSync(chunkPath, 'utf8'), index: chunkIndex });
-    }
-
     if (url.pathname === '/api/blueprints' && method === 'GET') {
       const files = listMarkdownFiles(BLUEPRINT_DIR).sort((a, b) => a.path.localeCompare(b.path));
       return json(res, 200, { files });
@@ -733,7 +619,6 @@ async function handleRequest(req, res) {
       return json(res, 200, { chunks: count });
     }
 
-    // Folder ingest with SSE progress
     if (url.pathname === '/api/memory/ingest-folder' && method === 'POST') {
       const body = JSON.parse(await readBody(req));
       if (!body.folderPath) return json(res, 400, { error: 'Need folderPath' });
@@ -773,13 +658,12 @@ async function handleRequest(req, res) {
       return;
     }
 
-    // List archives
     if (url.pathname === '/api/memory/archives' && method === 'GET') {
       const mem = core.getMemory();
       return json(res, 200, mem ? mem.listArchives() : {});
     }
 
-    // ── Workspace file serving (for clickable file links in chat) ───
+    // ── Workspace file serving ──────────────────────────────────────
     if (url.pathname === '/api/workspace/tree' && method === 'GET') {
       return json(res, 200, { root: core.WORKSPACE_DIR, items: listWorkspaceTree(core.WORKSPACE_DIR) });
     }
@@ -826,13 +710,7 @@ async function handleRequest(req, res) {
         const parsed = cmdExec.parseCommand(body.command);
         if (!parsed.ok) return json(res, 200, { error: parsed.error });
         const result = await cmdExec.execCommand(body.command, core.WORKSPACE_DIR);
-        return json(res, 200, {
-          stdout: result.stdout || '',
-          stderr: result.stderr || '',
-          code: result.exitCode ?? null,
-          error: result.error || null,
-          timedOut: result.timedOut || false
-        });
+        return json(res, 200, { stdout: result.stdout || '', stderr: result.stderr || '', code: result.code });
       } catch (e) {
         return json(res, 200, { error: e.message });
       }
@@ -885,9 +763,7 @@ async function handleRequest(req, res) {
   }
 }
 
-// ── Port guard ──────────────────────────────────────────────────────────────
-const { resolvePort } = require('../server/services/port-guard');
-
+// ── Browser open helper ─────────────────────────────────────────────────────
 function openBrowser(url) {
   const { exec } = require('child_process');
   const cmd = process.platform === 'win32' ? `start "" "${url}"`
@@ -900,23 +776,24 @@ function openBrowser(url) {
 async function start() {
   core.boot();
 
-  // Initialize model router
   modelRouter.init({ callLLM: (msgs, opts) => llm.callLLM(core.getConfig(), msgs, opts) });
   console.log('  Model router ready (' + modelRouter.listModels().length + ' models in roster)');
 
-  // Initialize and start pulse engine
   pulse.init({ core, callLLM: llm.callLLM, agentCatalog: core.agentCatalog, health: core.health });
   pulse.startAll();
   console.log('  Pulse engine started');
 
-  const port = await resolvePort({
-    defaultPort:  DEFAULT_PORT,
-    serverName:   'MA (Memory Architect)',
-    healthPath:   '/api/health',
-    portRange:    [DEFAULT_PORT, 3860],
-    allowMultiple: true
-  });
-  if (port === 0) { process.exit(1); }
+  // Simple port resolution — no port-guard dependency
+  let port = DEFAULT_PORT;
+  if (!(await isPortFree(port))) {
+    console.log(`  ⚠ Port ${port} in use, scanning ${DEFAULT_PORT}–3860...`);
+    port = await findFreePort(DEFAULT_PORT, 3860);
+  }
+  if (port === 0) {
+    console.error('  ✖ No free port found in range 3850–3860. Exiting.');
+    process.exit(1);
+  }
+
   const server = http.createServer(handleRequest);
   server.listen(port, '127.0.0.1', () => {
     const url = `http://127.0.0.1:${port}`;
@@ -927,7 +804,7 @@ async function start() {
       console.log('\n  Opening browser...\n');
       openBrowser(url);
     } else {
-      console.log('\n  (browser open suppressed — launched by REM System)\n');
+      console.log('\n  (browser open suppressed)\n');
     }
   });
 }

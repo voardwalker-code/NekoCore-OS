@@ -7,7 +7,7 @@
 const http  = require('http');
 const https = require('https');
 
-const DEFAULT_TIMEOUT  = 90000;  // 90s
+const DEFAULT_TIMEOUT  = 180000; // 180s — complex tasks (deep research, projects) need more time
 const DEFAULT_MAX_TOKENS = 12288;
 const ANTHROPIC_API_VERSION = '2023-06-01';
 const ANTHROPIC_DEFAULT_ENDPOINT = 'https://api.anthropic.com/v1/messages';
@@ -296,7 +296,10 @@ function _fetch(url, body, headers, timeout) {
       res.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
     });
     req.on('error', reject);
-    req.setTimeout(timeout, () => { req.destroy(); reject(new Error('LLM request timeout')); });
+    // timeout=0 means no timeout (Auto Pilot mode)
+    if (timeout > 0) {
+      req.setTimeout(timeout, () => { req.destroy(); reject(new Error('LLM request timeout')); });
+    }
     req.write(body);
     req.end();
   });

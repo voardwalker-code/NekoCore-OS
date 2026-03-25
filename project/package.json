@@ -1,6 +1,6 @@
 {
   "name": "nekocore",
-  "version": "0.9.0-alpha.5",
+  "version": "0.9.0-alpha.6",
   "description": "NekoCore OS - A Cognitive WebOS for persistent AI identity, episodic memory, autonomous brain cycles, and layered reasoning. Built on the REM System (Recursive Echo Memory).",
   "main": "server/server.js",
   "scripts": {

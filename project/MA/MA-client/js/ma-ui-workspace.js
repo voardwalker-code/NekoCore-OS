@@ -159,6 +159,60 @@ async function loadWorklog() {
   }
 }
 
+async function loadConversationHistory() {
+  const container = document.getElementById('session-conversations');
+  if (!container) return;
+  container.innerHTML = '<div class="side-empty">Loading conversations...</div>';
+  try {
+    const r = await fetch('/api/chat/sessions');
+    const d = await r.json();
+    const sessions = d.sessions || [];
+    if (!sessions.length) {
+      container.innerHTML = '<div class="side-empty">No conversations yet. Start chatting to create history.</div>';
+      return;
+    }
+
+    // Group by date
+    const groups = {};
+    const today = new Date().toISOString().slice(0, 10);
+    for (const s of sessions) {
+      const day = (s.updatedAt || s.createdAt || '').slice(0, 10) || 'Unknown';
+      if (!groups[day]) groups[day] = [];
+      groups[day].push(s);
+    }
+
+    // Sort dates newest first
+    const sortedDays = Object.keys(groups).sort((a, b) => b.localeCompare(a));
+
+    let html = '';
+    for (const day of sortedDays) {
+      const label = day === today ? 'Today — ' + day : day;
+      const items = groups[day];
+      const isToday = day === today;
+      html += '<div class="conv-day-folder' + (isToday ? ' open' : '') + '">';
+      html += '<div class="conv-day-header" onclick="this.parentElement.classList.toggle(\'open\')">';
+      html += '<span class="conv-folder-icon">' + (isToday ? '📂' : '📁') + '</span> ';
+      html += '<strong>' + escHtml(label) + '</strong>';
+      html += '<span class="conv-day-count">' + items.length + '</span>';
+      html += '</div>';
+      html += '<div class="conv-day-items">';
+      for (const s of items) {
+        const preview = escHtml(s.preview || 'Untitled conversation');
+        const time = (s.updatedAt || s.createdAt || '').slice(11, 16) || '';
+        const isActive = s.id === activeSessionId;
+        html += '<button class="conv-item' + (isActive ? ' active' : '') + '" onclick="loadSession(\'' + s.id.replace(/'/g, "\\'") + '\')">';
+        html += '<span class="conv-item-preview">' + preview + '</span>';
+        if (time) html += '<span class="conv-item-time">' + time + '</span>';
+        html += '</button>';
+      }
+      html += '</div></div>';
+    }
+    container.innerHTML = html;
+  } catch (e) {
+    container.innerHTML = '<div class="side-empty">Could not load conversations.</div>';
+  }
+}
+
 async function loadProjects() {
   const list = document.getElementById('proj-list');
   if (!list) return;
@@ -201,6 +255,147 @@ async function setProjectState(projectId, action) {
   }
 }
 
+// ── Archives ──────────────────────────────────────────────────────────────
+
+let _archivesCache = []; // { project, nodes[] }
+
+async function loadArchives() {
+  const list = document.getElementById('archive-list');
+  if (!list) return;
+  list.innerHTML = '<div class="side-empty">Loading archives...</div>';
+  try {
+    const r = await fetch('/api/projects');
+    const d = await r.json();
+    const projects = d.projects || [];
+    if (!projects.length) {
+      _archivesCache = [];
+      list.innerHTML = '<div class="side-empty">No project archives yet. Archives are created when MA works on tasks.</div>';
+      return;
+    }
+
+    // Fetch nodes for each project in parallel
+    const withNodes = await Promise.all(projects.map(async function(project) {
+      try {
+        const nr = await fetch('/api/projects/nodes/' + encodeURIComponent(project.id));
+        const nd = await nr.json();
+        return { project: project, nodes: nd.nodes || [] };
+      } catch (_) { return { project: project, nodes: [] }; }
+    }));
+
+    _archivesCache = withNodes;
+    _renderArchiveList(withNodes, '');
+  } catch (e) {
+    list.innerHTML = '<div class="side-empty">Could not load archives.</div>';
+  }
+}
+
+function filterArchiveList() {
+  const input = document.getElementById('archive-search');
+  const query = (input ? input.value : '').toLowerCase().trim();
+  _renderArchiveList(_archivesCache, query);
+}
+
+function _renderArchiveList(archives, query) {
+  const list = document.getElementById('archive-list');
+  if (!list) return;
+
+  if (!archives.length) {
+    list.innerHTML = '<div class="side-empty">No archives found.</div>';
+    return;
+  }
+
+  let html = '';
+  for (const entry of archives) {
+    const proj = entry.project;
+    let nodes = entry.nodes;
+
+    // Filter by search query
+    if (query) {
+      nodes = nodes.filter(function(n) {
+        return (n.summary || '').toLowerCase().includes(query)
+          || (n.sourceType || '').toLowerCase().includes(query)
+          || (n.topics || []).some(function(t) { return t.toLowerCase().includes(query); });
+      });
+      // Skip project if no matching nodes and project name doesn't match
+      if (!nodes.length && !(proj.name || proj.id).toLowerCase().includes(query)) continue;
+    }
+
+    const isClosed = proj.status === 'closed';
+    html += '<div class="archive-project-folder open">';
+    html += '<div class="archive-project-header" onclick="this.parentElement.classList.toggle(\'open\')">';
+    html += '<span class="conv-folder-icon">📂</span> ';
+    html += '<strong>' + escHtml(proj.name || proj.id) + '</strong>';
+    html += '<span class="conv-day-count">' + nodes.length + ' nodes</span>';
+    if (isClosed) html += '<span class="archive-status-badge">closed</span>';
+    html += '</div>';
+    html += '<div class="archive-node-list">';
+
+    if (!nodes.length) {
+      html += '<div class="side-empty" style="padding-left:12px">No entries' + (query ? ' matching "' + escHtml(query) + '"' : '') + '</div>';
+    } else {
+      for (const node of nodes) {
+        const icon = node.sourceType === 'code' ? '💻' : node.sourceType === 'decision' ? '🎯' : node.sourceType === 'error' ? '⚠️' : node.sourceType === 'semantic' ? '🧠' : '📄';
+        const time = (node.created || '').slice(11, 16) || '';
+        html += '<button class="archive-node-item" onclick="openArchiveNode(\'' + escHtml(proj.id).replace(/'/g, "\\'") + '\', \'' + escHtml(node.memory_id).replace(/'/g, "\\'") + '\')">';
+        html += '<span class="archive-node-icon">' + icon + '</span>';
+        html += '<span class="archive-node-summary">' + escHtml(node.summary || node.sourceType || 'Node') + '</span>';
+        if (time) html += '<span class="conv-item-time">' + time + '</span>';
+        html += '</button>';
+      }
+    }
+
+    html += '</div></div>';
+  }
+
+  if (!html) {
+    list.innerHTML = '<div class="side-empty">No archives matching "' + escHtml(query) + '"</div>';
+    return;
+  }
+  list.innerHTML = html;
+}
+
+async function openArchiveNode(projectId, nodeId) {
+  try {
+    const r = await fetch('/api/projects/node/' + encodeURIComponent(projectId) + '/' + encodeURIComponent(nodeId));
+    if (!r.ok) { addSystem('Could not load archive node.'); return; }
+    const d = await r.json();
+    const node = d.node;
+    if (!node) { addSystem('Archive node not found.'); return; }
+
+    // Format as plain text for the editor viewport
+    let text = '── Archive Node ──\n';
+    text += 'ID:          ' + (node.memory_id || nodeId) + '\n';
+    text += 'Project:     ' + projectId + '\n';
+    text += 'Type:        ' + (node.sourceType || 'unknown') + '\n';
+    text += 'Created:     ' + (node.created || 'unknown') + '\n';
+    text += 'Importance:  ' + (node.importance != null ? node.importance : 'N/A') + '\n';
+    text += 'Topics:      ' + (node.topics || []).join(', ') + '\n';
+    if (node.agentId) text += 'Agent:       ' + node.agentId + '\n';
+    if (node.stepNumber != null) text += 'Step:        ' + node.stepNumber + '\n';
+    text += '\n── Summary ──\n' + (node.summary || '(no summary)') + '\n';
+    text += '\n── Content ──\n' + (node.content || '(no content)') + '\n';
+
+    // Open as a read-only tab in the editor
+    const tabName = (node.summary || node.sourceType || 'node').slice(0, 40);
+    const tab = {
+      id: 'tab-arc-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6),
+      path: '__archive__/' + projectId + '/' + nodeId,
+      name: tabName,
+      content: text,
+      originalContent: text,
+      ext: 'txt',
+      mode: 'code',
+      viewMode: 'source',
+      dirty: false
+    };
+    openTabs.push(tab);
+    renderEditorTabs();
+    activateTab(tab.id);
+  } catch (e) {
+    addSystem('Error loading archive node: ' + e.message);
+  }
+}
+
 async function loadBlueprints() {
   const list = document.getElementById('bp-list');
   if (!list) return;
@@ -213,11 +408,40 @@ async function loadBlueprints() {
       list.innerHTML = '<div class="side-empty">No blueprint files found.</div>';
       return;
     }
-    list.innerHTML = files.map(function(file) {
-      const active = file.path === selectedBlueprintPath ? ' active' : '';
-      return '<button class="bp-item' + active + '" onclick="openBlueprint(\'' + file.path.replace(/'/g, '\\&#39;') + '\')"><div class="name">' + escHtml(file.name) + '</div><div class="meta">' + escHtml(file.path) + '</div></button>';
-    }).join('');
-    const hasSelection = selectedBlueprintPath && files.some(function(file) { return file.path === selectedBlueprintPath; });
+    // Group files by folder
+    var groups = {};
+    files.forEach(function(file) {
+      var folder = file.group || 'root';
+      if (!groups[folder]) groups[folder] = [];
+      groups[folder].push(file);
+    });
+    // Render folder tree
+    var html = '';
+    var folderDescriptions = {
+      core: 'Core — Task execution rules',
+      modules: 'Modules — Task-type blueprints',
+      nekocore: 'NekoCore — OS architecture docs',
+      'rem-system': 'REM System — Layer specifications',
+      root: 'Root'
+    };
+    Object.keys(groups).sort().forEach(function(folder) {
+      var label = folderDescriptions[folder] || folder;
+      html += '<div class="bp-folder">';
+      html += '<button class="bp-folder-toggle" onclick="this.parentElement.classList.toggle(\'collapsed\')">';
+      html += '<span class="bp-folder-icon">▾</span> ' + escHtml(label);
+      html += '<span class="bp-folder-count">' + groups[folder].length + '</span>';
+      html += '</button>';
+      html += '<div class="bp-folder-items">';
+      groups[folder].forEach(function(file) {
+        var active = file.path === selectedBlueprintPath ? ' active' : '';
+        html += '<button class="bp-item' + active + '" data-bp-path="' + escHtml(file.path) + '" onclick="openBlueprint(\'' + file.path.replace(/'/g, '\\&#39;') + '\')">';
+        html += '<div class="name">' + escHtml(file.name.replace(/\.md$/, '')) + '</div>';
+        html += '</button>';
+      });
+      html += '</div></div>';
+    });
+    list.innerHTML = html;
+    var hasSelection = selectedBlueprintPath && files.some(function(file) { return file.path === selectedBlueprintPath; });
     if (!hasSelection) {
       selectedBlueprintPath = files[0].path;
       return openBlueprint(selectedBlueprintPath);
@@ -239,7 +463,7 @@ async function openBlueprint(filePath) {
     document.getElementById('bp-editor').value = d.content || '';
     document.getElementById('bp-status').textContent = 'Editing ' + filePath;
     document.querySelectorAll('.bp-item').forEach(function(item) {
-      item.classList.toggle('active', item.textContent.includes(filePath.split('/').pop()));
+      item.classList.toggle('active', item.getAttribute('data-bp-path') === filePath);
     });
   } catch (e) {
     document.getElementById('bp-status').textContent = 'Blueprint error: ' + e.message;

@@ -26,7 +26,8 @@ const inspectorTitles = {
   projects: 'Projects',
   tasks: 'Tasks',
   todos: 'Todos',
-  chores: 'Chores'
+  chores: 'Chores',
+  archives: 'Archives'
 };
 
 let currentInspector = 'session';

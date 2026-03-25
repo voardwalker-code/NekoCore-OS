@@ -44,14 +44,14 @@ Emergency exception log:
 
 ---
 
-## Stop/Resume Snapshot — 2026-03-24 (v0.9.0-alpha.5 release)
+## Stop/Resume Snapshot — 2026-03-24 (v0.9.0-alpha.6 Release)
 
-- **Current phase:** `Landing page overhaul`
-- **Current slice:** `Neko-Core.html professional update`
-- **Last completed work:** `Major Neko-Core.html update: added MA showcase section (purple-themed, 6 feature cards), About/Bio section (cyan-themed, projects + professional interests), Contact section (gold-themed, general email + Remote Work Inquiry with mailto: links), updated CTA with both repo links. Updated nav (Features/Architecture/Pipeline/MA/About/Contact + GitHub profile link), roadmap (Phases 1-5 all done, v0.9 current, Setup Wizard next), architecture title ("Near-zero dependencies"), footer (GitHub profile + both repos + White Paper + Contact). Added CSS for purple/cyan/gold themes, bio-grid, contact-grid, GitHub profile button.`
+- **Current phase:** `Version bump + documentation update + push`
+- **Current slice:** `Complete`
+- **Last completed work:** `Bumped version to 0.9.0-alpha.6 in both package.json files. Updated CHANGELOG.md — promoted [Unreleased] to [0.9.0-alpha.6] with all session work (QA expansion, Bug Tracker Export, MA Skills GUI, Prompt Engineering Blueprint, App Builder Blueprint, Blueprint Builder, D&D+Study Blueprints, Book-to-Entity, Archives panel, etc.). Updated README.md — version text, test badge (2,605), QA Checklist (625/61), roadmap (Phases 4.26–4.33 + Phase 5), Bug Tracker export description.`
 - **In-progress item:** `none`
 - **Blocking issue:** `none`
-- **Next action on resume:** `Manual MA browser smoke test after fresh reset. Copy MA directory to standalone MA-Memory-Architect repo and verify it works independently.`
+- **Next action on resume:** `User direction.`
 - **Active plans:**
   - `Documents/current/PLAN-PREDICTIVE-MEMORY-v1.md` — Phase 5: Predictive Memory Topology — `COMPLETE — all 13 slices (-0 through 11), archived`
   - `Documents/current/PLAN-RESOURCE-MANAGER-APP-v1.md` — Resource Manager App — `Complete`
@@ -67,8 +67,118 @@ Emergency exception log:
   - `Documents/current/PLAN-TOKEN-OPTIMIZATION-v1.md` — COMPLETE (Phases 1–4 done, Phase 5 cancelled)
   - `Documents/current/PLAN-COGNITIVE-STATE-INTEGRATION-v1.md` — COMPLETE (all 4 phases, 14 slices)
   - `Documents/current/PLAN-INTROSPECTION-LOOP-v1.md` — 6-axis self-inquiry brain-loop phase with local model
+  - `Documents/current/PLAN-BOOK-TO-ENTITY-v1.md` — Book-to-Entity Character Ingestion — `Complete (all 7 slices: -0 through 6)`
+  - `Documents/current/PLAN-DND-AND-STUDY-BLUEPRINTS-v1.md` — D&D + Education/Study Blueprints & Skills — `Complete (all 11 slices: -0 through 10)`
 - **Prior plan (paused):** `Documents/current/PLAN-SLASH-COMMAND-SYSTEM-v1.md — A0/A1/A2 complete; A3/A4 future`
 - **MA workspace projects:** `Moved to separate repo — MA-workspace is now fully cleared on reset`
+
+---
+
+## Session Ledger — 2026-03-24 (v0.9.0-alpha.6 Release)
+
+Status: `Complete`
+
+- **Request:** Bump version, update CHANGELOG/README/WORKLOG, push.
+- **Files changed:** `package.json` (root + project: 0.9.0-alpha.5 → 0.9.0-alpha.6), `CHANGELOG.md` ([Unreleased] promoted to [0.9.0-alpha.6] with all session additions), `README.md` (version, test badge 2605, QA 625/61, roadmap Phases 4.26–4.33, Bug Tracker export), `WORKLOG.md`
+
+---
+
+## Session Ledger — 2026-03-24 (Bug Tracker Export)
+
+Status: `Complete`
+
+- **Request:** Replace Bug Tracker Save with Export that generates a Markdown file and opens native Windows file explorer for save location.
+- **Files changed:** `project/client/apps/non-core/core/tab-bugtracker.html` (replaced Save button with Export, new buildExportMarkdown() with area grouping + severity table + checkboxes, new exportFile() with showSaveFilePicker + download fallback), `project/client/apps/non-core/core/tab-qachecklist.html` (updated Bug Tracker test items for Export), `WORKLOG.md`
+
+---
+
+## Session Ledger — 2026-03-24 (QA Checklist — Full MA Test Matrix)
+
+Status: `Complete`
+
+- **Request:** Add comprehensive MA testing coverage to QA Checklist and update with all features added since original creation.
+- **Files changed:** `project/client/apps/non-core/core/tab-qachecklist.html` (expanded from ~270 items / 40 sections to 625 items / 61 sections — added 18 MA sections + Book Upload & Character Selection + Archive Panel + Conversation History + expanded Memory System + expanded Edge Cases + expanded Skills Manager with MA Skills GUI), `project/client/apps/non-core/core/tab-bugtracker.html` (added MA area option to bug area dropdown), `WORKLOG.md`
+
+---
+
+## Session Ledger — 2026-03-24 (Blueprint Builder)
+
+Status: `Complete`
+
+- **Request:** Create a meta-blueprint that enables MA to build new blueprints when asked to do something without an existing blueprint.
+- **Files changed:** `project/MA/MA-server/MA-tasks.js` (added blueprint_builder task type, complex type, RULES — now 17/12/17), `project/MA/MA-blueprints/modules/blueprint_builder.md` (new — 240+ line meta-blueprint with quality standards, structural conventions, tool reference, entity integration pattern, classifier registration guidance), `project/MA/MA-skills/blueprint-builder/SKILL.md` (new), `project/MA/MA-entity/entity_ma/skills/blueprint-builder.md` (new), `project/tests/unit/dnd-study-blueprints-guards.test.js` (extended to 128 tests), `CHANGELOG.md`, `WORKLOG.md`
+
+---
+
+## Session Ledger — 2026-03-24 (App Builder Blueprint + Skill)
+
+Status: `Complete`
+
+- **Request:** Create an App Builder blueprint and skill for MA to create NekoCore OS compatible apps, including HTML window creation and installation knowledge.
+- **Files changed:** `project/MA/MA-blueprints/modules/app_builder.md` (new — 4-mode blueprint: Simple, Interactive, Canvas, API-Connected — 7-phase workflow with full installer contract, HTML payload template, CSS vars, API patterns), `project/MA/MA-skills/app-builder/SKILL.md` (new — skill registration with triggers/workflow/tools/checklist), `project/MA/MA-entity/entity_ma/skills/app-builder.md` (new — compact runtime skill reference), `project/MA/MA-server/MA-tasks.js` (added app_builder task type, complex type, RULES with 16 keywords + 4 regexes — now 19/14/19), `WORKLOG.md`
+
+---
+
+## Session Ledger — 2026-03-24 (Prompt Engineering Blueprint)
+
+Status: `Complete`
+
+- **Request:** Create a production-quality prompt engineering blueprint for MA.
+- **Files changed:** `project/MA/MA-blueprints/modules/prompt_engineering.md` (new — 6-mode blueprint: System Prompt, Prompt Refinement, Few-Shot Template, Chain-of-Thought, Structured/Tool Prompt, General Prompt), `project/MA/MA-server/MA-tasks.js` (added prompt_engineering task type, complex type, RULES — now 18/13/18), `WORKLOG.md`
+
+---
+
+## Session Ledger — 2026-03-24 (MA Skills GUI)
+
+Status: `Complete`
+
+- **Request:** Wire MA-skills/ drop-in folder for auto-pickup by MA and GUI visibility on the Skills tab.
+- **Files changed:** `project/MA/MA-server/MA-core.js` (loadSkills now scans both entity_ma/skills/ and MA-skills/), `project/server/routes/skills-routes.js` (added /api/ma-skills GET endpoint + frontmatter parser), `project/client/apps/non-core/core/tab-skills.html` (added 'MA Skills' section), `project/client/js/apps/optional/skills-ui.js` (added loadMASkillsList, init call), `WORKLOG.md`
+
+---
+
+## Session Ledger — 2026-03-24 (Blueprint Builder)
+
+Status: `Complete`
+
+- **Request:** Implement PLAN-DND-AND-STUDY-BLUEPRINTS-v1.md — 5 new consolidated blueprint task types for D&D and education/study content.
+- **Files changed:** `project/MA/MA-server/MA-tasks.js` (5 new task types, 5 complex types, 5 RULES entries — now 16/11/16 total), `project/MA/MA-blueprints/modules/study_guide.md` (new — 4 modes: Study Guide, Flashcard, Outline, Timeline), `project/MA/MA-blueprints/modules/dnd_create.md` (new — 3 modes: Encounter, NPC Factory, Character with entity creation), `project/MA/MA-blueprints/modules/tutor_entity.md` (new — 2 modes: Tutor, TA with entity creation), `project/MA/MA-blueprints/modules/dnd_campaign.md` (new — 4 modes: Campaign Builder, Session Prep, Session Recap, World Lore), `project/MA/MA-blueprints/modules/course_creator.md` (new — 3 modes: Course Creator, Book-to-Course, Exam Prep), `project/MA/MA-skills/study-guide/SKILL.md` (new), `project/MA/MA-skills/dnd-create/SKILL.md` (new), `project/MA/MA-skills/tutor-entity/SKILL.md` (new), `project/MA/MA-skills/dnd-campaign/SKILL.md` (new), `project/MA/MA-skills/course-creator/SKILL.md` (new), `project/MA/MA-entity/entity_ma/skills/study-guide.md` (new), `project/MA/MA-entity/entity_ma/skills/dnd-create.md` (new), `project/MA/MA-entity/entity_ma/skills/tutor-entity.md` (new), `project/MA/MA-entity/entity_ma/skills/dnd-campaign.md` (new), `project/MA/MA-entity/entity_ma/skills/course-creator.md` (new), `project/tests/unit/dnd-study-blueprints-guards.test.js` (new — 111 tests), `CHANGELOG.md`, `WORKLOG.md`
+
+---
+
+## Session Ledger — 2026-03-24 (Book-to-Entity Implementation)
+
+Status: `Complete`
+
+- **Request:** Implement Book-to-Entity character ingestion system: ingest books, extract characters with POV-isolated knowledge, create as NekoCore OS entities.
+- **Files changed:** `project/MA/MA-Server.js` (book upload + chunking routes, _chunkBookText helper), `project/MA/MA-server/MA-tasks.js` (book_ingestion task type + classifier rules), `project/MA/MA-blueprints/modules/book_ingestion.md` (new blueprint), `project/MA/MA-skills/book-ingestion/SKILL.md` (new skill), `project/MA/MA-entity/entity_ma/skills/book-ingestion.md` (runtime copy), `project/MA/MA-client/js/ma-ui-chat.js` (character selection buttons), `project/MA/MA-client/css/ma-ui.css` (selection bar styles), `project/tests/unit/book-ingestion-guards.test.js` (41 tests), `Documents/current/PLAN-BOOK-TO-ENTITY-v1.md` (plan file), `CHANGELOG.md`, `WORKLOG.md`
+
+---
+
+## Session Ledger — 2026-03-24 (Book-to-Entity Plan)
+
+Status: `Complete — plan drafted, awaiting review`
+
+- **Request:** Design a system to ingest an entire book, extract characters with POV-isolated knowledge, and create them as NekoCore OS entities with shared conversation memories.
+- **Deliverable:** `Documents/current/PLAN-BOOK-TO-ENTITY-v1.md` — 6 phases, 7 slices, full data schemas, processing flow diagram, token budget estimate, validation strategy.
+
+---
+
+## Session Ledger — 2026-03-24 (Entity Genesis fix + Archives panel)
+
+Status: `Complete`
+
+- **Request:** Fix MA entity genesis to write to NekoCore OS entities folder with unique IDs. Add Archives panel accessible from left rail and top bar with search and plain-text display in editor viewport.
+- **Files changed:** `project/MA/MA-blueprints/modules/entity_genesis.md` (Phase 2 rewritten to use API), `project/MA/MA-skills/entity-genesis/SKILL.md` (added create endpoint, removed ws_write instructions), `project/MA/MA-client/MA-index.html` (archives rail button + top bar button), `project/MA/MA-client/css/ma-ui.css` (archive folder/node styles), `project/MA/MA-client/js/ma-ui.js` (archives in inspectorTitles), `project/MA/MA-client/js/ma-ui-editor.js` (archives scaffold), `project/MA/MA-client/js/ma-ui-nav.js` (archives in refreshInspector), `project/MA/MA-client/js/ma-ui-workspace.js` (loadArchives, filterArchiveList, openArchiveNode functions), `project/MA/MA-Server.js` (node listing + node content routes), `CHANGELOG.md`, `WORKLOG.md`
+
+---
+
+## Session Ledger — 2026-03-24 (MA timeout UX + conversation history)
+
+Status: `Complete`
+
+- **Request:** Replace hardcoded LLM timeouts with user-facing popup (cancel/continue/auto-pilot). Fix conversation history — only showing one entry, should show day-grouped folders.
+- **Files changed:** `project/MA/MA-client/MA-index.html` (popup HTML, auto-pilot config checkbox, new-chat button), `project/MA/MA-client/css/ma-ui.css` (popup + conversation folder styles), `project/MA/MA-client/js/ma-ui-chat.js` (timer system, abort controller, auto-pilot localStorage, payload wiring), `project/MA/MA-client/js/ma-ui-config.js` (auto-pilot hydrate+save), `project/MA/MA-client/js/ma-ui-editor.js` (conversations section in session scaffold), `project/MA/MA-client/js/ma-ui-nav.js` (refresh inspector for conversations), `project/MA/MA-client/js/ma-ui-workspace.js` (loadConversationHistory function), `project/MA/MA-server/MA-llm.js` (timeout=0 bypass), `project/MA/MA-Server.js` (autoPilot flag forwarding), `project/MA/MA-server/MA-core.js` (autoPilot in handleChat + callLLM wrappers), `CHANGELOG.md`, `WORKLOG.md`
 
 ---
 

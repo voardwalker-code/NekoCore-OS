@@ -54,8 +54,11 @@ project/skills/*/workspace/*
 # MA private runtime data — never commit
 /project/MA/MA-Config/ma-config.json
 /project/MA/MA-Config/chat-history.json
+/project/MA/MA-Config/chat-sessions/
 /project/MA/MA-Config/model-performance.json
 /project/MA/MA-Config/chores.json
+/project/MA/MA-entity/agent_*/
+/project/MA/MA-entity/entity_ma/entity.json
 /project/MA/MA-entity/*/memories/
 /project/MA/MA-entity/*/index/
 /project/MA/MA-entity/*/archives/
@@ -76,9 +79,14 @@ project/skills/*/workspace/*
 project/neko_fixer.py
 
 # Wrangler / Cloudflare Pages deploy artifacts — not part of the project
+.wrangler/
 project/wrangler.toml
 project/.wrangler/
 project/_redirects
+project/landing-deploy/
+project/Neko-Core.html
+project/MA-Memory-Architect.html
+project/VoardWalker-Code.html
 
 # IDE
 .vscode/

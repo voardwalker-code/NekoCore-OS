@@ -4,7 +4,7 @@
     <div class="bt-toolbar">
       <div class="bt-toolbar-left">
         <button class="bt-btn" id="btLoadBtn" title="Load bug tracking file">📂 Load</button>
-        <button class="bt-btn" id="btSaveBtn" title="Save bug tracking file">💾 Save</button>
+        <button class="bt-btn" id="btExportBtn" title="Export bugs as Markdown">📤 Export</button>
         <button class="bt-btn" id="btReportBtn" title="Generate bug report">📋 Report</button>
         <button class="bt-btn bt-btn-accent" id="btNewBugBtn" title="Create new bug">➕ New Bug</button>
       </div>
@@ -92,6 +92,7 @@
                 <option value="Window Manager">Window Manager</option>
                 <option value="Theme">Theme</option>
                 <option value="Server">Server</option>
+                <option value="MA">MA</option>
                 <option value="API">API</option>
                 <option value="UI General">UI General</option>
                 <option value="Other">Other</option>
@@ -545,15 +546,95 @@
     URL.revokeObjectURL(url);
   }
 
-  function saveFile() {
-    const data = buildSaveData();
-    const json = JSON.stringify(data, null, 2);
+  function buildExportMarkdown() {
+    const project = els.projectName.value.trim() || 'NekoCore OS';
+    const bugs = [...store.bugs];
+    const open = bugs.filter(b => b.status === 'open');
+    const inProg = bugs.filter(b => b.status === 'in-progress');
+    const fixed = bugs.filter(b => b.status === 'fixed');
+    const wontFix = bugs.filter(b => b.status === 'wont-fix');
+    const dupes = bugs.filter(b => b.status === 'duplicate');
+    const date = new Date().toISOString().slice(0, 10);
+
+    let md = `# ${project} — Bug Report\n`;
+    md += `> Exported: ${date} | Total: ${bugs.length} | Open: ${open.length} | In Progress: ${inProg.length} | Fixed: ${fixed.length}\n\n`;
+
+    // Summary table
+    md += `## Summary\n\n`;
+    md += `| Severity | Open | In Progress | Fixed | Won't Fix | Duplicate |\n`;
+    md += `|----------|------|-------------|-------|-----------|-----------|\n`;
+    for (const sev of SEVERITIES) {
+      const sevBugs = bugs.filter(b => b.severity === sev);
+      const so = sevBugs.filter(b => b.status === 'open').length;
+      const si = sevBugs.filter(b => b.status === 'in-progress').length;
+      const sf = sevBugs.filter(b => b.status === 'fixed').length;
+      const sw = sevBugs.filter(b => b.status === 'wont-fix').length;
+      const sd = sevBugs.filter(b => b.status === 'duplicate').length;
+      md += `| ${sev.charAt(0).toUpperCase() + sev.slice(1)} | ${so} | ${si} | ${sf} | ${sw} | ${sd} |\n`;
+    }
+    md += `\n---\n\n`;
+
+    // Group by area
+    const areas = [...new Set(bugs.map(b => b.area || 'Other'))];
+
+    for (const area of areas) {
+      const areaBugs = bugs.filter(b => (b.area || 'Other') === area);
+      const areaOpen = areaBugs.filter(b => b.status === 'open' || b.status === 'in-progress').length;
+      md += `## ${area} (${areaOpen} active / ${areaBugs.length} total)\n\n`;
+
+      for (const bug of areaBugs) {
+        const sevTag = bug.severity.toUpperCase();
+        const statusTag = bug.status.toUpperCase().replace('-', ' ');
+        const checkbox = (bug.status === 'fixed' || bug.status === 'wont-fix' || bug.status === 'duplicate') ? '[x]' : '[ ]';
+        md += `### ${checkbox} ${bug.id} — ${bug.title || '(untitled)'}\n`;
+        md += `**Severity:** ${sevTag} | **Status:** ${statusTag} | **Area:** ${area}\n\n`;
+        if (bug.description) md += `**Description:**\n${bug.description}\n\n`;
+        if (bug.steps) md += `**Steps to Reproduce:**\n${bug.steps}\n\n`;
+        if (bug.expected) md += `**Expected:** ${bug.expected}\n\n`;
+        if (bug.actual) md += `**Actual:** ${bug.actual}\n\n`;
+        if (bug.screenshots && bug.screenshots.length) {
+          md += `**Screenshots:** ${bug.screenshots.length} attached\n\n`;
+        }
+        md += `---\n\n`;
+      }
+    }
+
+    return md;
+  }
+
+  async function exportFile() {
+    if (!store.bugs.length) { alert('No bugs to export.'); return; }
     const project = (els.projectName.value.trim() || 'bugs').replace(/[^a-zA-Z0-9_-]/g, '-').toLowerCase();
     const date = new Date().toISOString().slice(0, 10);
-    const filename = store.fileName || `${project}-bugs-${date}.bugtrack.json`;
-    triggerDownload(json, filename, 'application/json');
-    store.fileName = filename;
+    const md = buildExportMarkdown();
+    const defaultName = `${project}-bugs-${date}.md`;
+
+    // Use File System Access API if available (native file picker)
+    if (window.showSaveFilePicker) {
+      try {
+        const handle = await window.showSaveFilePicker({
+          suggestedName: defaultName,
+          types: [{
+            description: 'Markdown file',
+            accept: { 'text/markdown': ['.md'] }
+          }]
+        });
+        const writable = await handle.createWritable();
+        await writable.write(md);
+        await writable.close();
+        markClean();
+        store.fileName = handle.name;
+        updateStatusBar();
+        return;
+      } catch (err) {
+        if (err.name === 'AbortError') return; // User cancelled
+        // Fall through to download fallback
+      }
+    }
+    // Fallback: browser download
+    triggerDownload(md, defaultName, 'text/markdown');
     markClean();
+    store.fileName = defaultName;
     updateStatusBar();
   }
 
@@ -690,8 +771,8 @@
     renderBugList();
   });
 
-  // Save file
-  $('btSaveBtn').addEventListener('click', saveFile);
+  // Export file
+  $('btExportBtn').addEventListener('click', () => exportFile());
 
   // Load file
   $('btLoadBtn').addEventListener('click', () => els.loadInput.click());
@@ -772,7 +853,7 @@
     }
     if (e.ctrlKey && e.shiftKey && e.key === 'S') {
       e.preventDefault();
-      saveFile();
+      exportFile();
     }
   });
 

@@ -136,9 +136,13 @@ async function runTerminalCmd() {
     if (d.error) {
       result.className = 'term-err';
       result.textContent = d.error;
+    } else if (d.timedOut) {
+      result.className = 'term-err';
+      result.textContent = (d.stdout || '') + (d.stderr ? '\n' + d.stderr : '') + '\n[Command timed out]';
     } else {
-      result.className = 'term-out';
-      result.textContent = (d.stdout || '') + (d.stderr ? '\n' + d.stderr : '');
+      result.className = d.code === 0 ? 'term-out' : 'term-err';
+      const text = (d.stdout || '') + (d.stderr ? '\n' + d.stderr : '');
+      result.textContent = text || '(no output)';
     }
     output.appendChild(result);
   } catch (e) {
@@ -189,11 +193,12 @@ function resetWorkspaceLayout() {
 }
 
 function refreshInspector() {
-  if (currentInspector === 'session' || currentInspector === 'tasks') return loadWorklog();
+  if (currentInspector === 'session' || currentInspector === 'tasks') { loadWorklog(); loadConversationHistory(); return; }
   if (currentInspector === 'blueprints') return loadBlueprints();
   if (currentInspector === 'projects') return loadProjects();
   if (currentInspector === 'todos') return renderTodos();
   if (currentInspector === 'chores') return loadChoresPane();
+  if (currentInspector === 'archives') return loadArchives();
 }
 
 function syncRailMode() {

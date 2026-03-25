@@ -20,7 +20,7 @@
   &nbsp;
   <img src="https://img.shields.io/badge/dependencies-1%20(zod)-brightgreen?style=flat-square" alt="1 dep (zod)"/>
   &nbsp;
-  <img src="https://img.shields.io/badge/tests-2%2C505%20passing-brightgreen?style=flat-square" alt="2,505 tests passing"/>
+  <img src="https://img.shields.io/badge/tests-2%2C605%20passing-brightgreen?style=flat-square" alt="2,605 tests passing"/>
 </p>
 
 <p align="center">
@@ -30,14 +30,14 @@
   &nbsp;·&nbsp;
   <a href="docs/USER-GUIDE.md">User Guide</a>
   &nbsp;·&nbsp;
-  <strong>v0.9.0-alpha.5</strong>
+  <strong>v0.9.0-alpha.6</strong>
 </p>
 
 <br>
 
 <div align="center">
 
-| 2,505 | 1 | 5 | 20+ |
+| 2,605 | 1 | 5 | 20+ |
 |:-----:|:-:|:-:|:----:|
 | **Tests Passing** | **Runtime Dependency** | **Pipeline Phases** | **Desktop Apps** |
 
@@ -140,7 +140,7 @@ Native Anthropic Messages API with prompt caching (up to 90% input-token savings
 </td>
 <td width="33%" valign="top">
 <strong>✅ QA Checklist</strong><br><br>
-~270 test items across 40 sections covering the full OS surface. Pass/Fail buttons per item — failures auto-open Bug Tracker with pre-filled details. Progress tracking, filtering, and JSON export/import.
+625 test items across 61 sections covering the full OS + MA surface. Pass/Fail buttons per item — failures auto-open Bug Tracker with pre-filled details. Progress tracking, filtering, and JSON export/import.
 </td>
 </tr>
 </table>
@@ -336,8 +336,15 @@ The brain loop ticks independently of conversation:
 ✔  Phase 4.23  User Documentation              Complete  (24-section user guide)
 ✔  Phase 4.24  MA Public Release               Complete  (2,247 tests, factory reset)
 ✔  Phase 4.25  Provider-Agnostic Capabilities  Complete  (Anthropic direct, native tools)
-✔  Phase 4.26  QA Checklist App                Complete  (~270 test items, 40 sections)
-✔  Phase 5     Predictive Memory Topology      Complete  (13 slices, 2,505 tests)
+✔  Phase 4.26  QA Checklist App                Complete  (625 test items, 61 sections)
+✔  Phase 4.27  MA Skills GUI                   Complete  (auto-pickup + Skills tab)
+✔  Phase 4.28  Prompt Engineering Blueprint     Complete  (6 modes)
+✔  Phase 4.29  App Builder Blueprint + Skill    Complete  (4 app modes, 7-phase workflow)
+✔  Phase 4.30  Blueprint Builder Meta-Blueprint Complete  (self-extending MA)
+✔  Phase 4.31  D&D + Study Blueprints           Complete  (5 task types, 111 tests)
+✔  Phase 4.32  Book-to-Entity Ingestion         Complete  (7 slices, character extraction)
+✔  Phase 4.33  Bug Tracker Export               Complete  (Markdown + native file picker)
+✔  Phase 5     Predictive Memory Topology      Complete  (13 slices, 2,605 tests)
 ```
 
 **Token Optimization** eliminated ~68% of per-turn token usage across 4 phases:
@@ -466,9 +473,9 @@ Any OpenAI-compatible model works. For fully local: set all phases to an Ollama 
 | `/` — Dream Gallery | View and replay recorded dreams |
 | `/` — Diary | Entity self-reflection log |
 | `/` — Sleep tab | Trigger REM cycle, view sleep history |
-| `/` — Bug Tracker | Screenshot capture, severity tracking, report export |
+| `/` — Bug Tracker | Screenshot capture, severity tracking, Markdown export |
 | `/` — Resource Manager | Task/project tracking for active entities |
-| `/` — QA Checklist | ~270 test items, progress tracking, JSON export |
+| `/` — QA Checklist | 625 test items, progress tracking, JSON export |
 | `/` — MA Server | Memory Architect control panel |
 | `/visualizer.html` | 3D WebGL neural cognitive state graph |
 

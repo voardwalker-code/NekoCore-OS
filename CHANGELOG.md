@@ -5,7 +5,35 @@ Built with MA (Memory Architect v1).
 
 ## [Unreleased]
 
+## [0.9.0-alpha.6] — 2026-03-24
+
+### Added
+- **QA Checklist — Full MA Test Matrix** — Expanded QA Checklist from ~270 items / 40 sections to **625 items / 61 sections**. Added 18 MA-specific sections (Chat, Work Mode, Memory, Config, Blueprints, Workspace, Terminal, Agents, Skills, Task Pipeline, Book Ingestion, Entity Genesis, Archives, Sessions, Ingest, Theme, Dropdown Menus, Left Rail), plus Book Upload & Character Selection, Archive Panel, Conversation History, expanded Memory System, expanded Edge Cases, expanded Skills Manager with MA Skills GUI.
+- **Bug Tracker Export** — Replaced Save button with Export. Generates a structured Markdown file grouped by area with severity summary table, checkbox-style task headers, and full bug details. Uses File System Access API (`showSaveFilePicker`) for native OS file picker, falls back to browser download.
+- **MA Skills GUI** — Wired `MA-skills/` drop-in folder for auto-pickup by MA and GUI visibility on the Skills tab. New `/api/ma-skills` endpoint, frontmatter parser, and "MA Skills" section in the Skills app.
+- **Prompt Engineering Blueprint** — 6-mode blueprint for MA: System Prompt, Prompt Refinement, Few-Shot Template, Chain-of-Thought, Structured/Tool Prompt, General Prompt. New `prompt_engineering` task type.
+- **App Builder Blueprint + Skill** — 4-mode blueprint for MA to create NekoCore OS compatible apps (Simple, Interactive, Canvas, API-Connected). 7-phase workflow with full installer contract, HTML payload template, CSS vars, API patterns. New `app_builder` task type. MA-tasks.js now has 19 task types.
+- **Blueprint Builder meta-blueprint** — New `blueprint_builder` task type that teaches MA how to create new blueprints, skills, and classifier rules when asked to handle a task type that doesn't exist yet. The meta-blueprint encodes all structural conventions (header → goal → mode detection → architecture → step pattern → phases → guidelines), quality standards (150-400 lines, explicit tool calls, mode detection tables with ASK fallback), entity integration patterns, and classifier registration guidance. MA can now self-extend its own capabilities.
+- **D&D + Education/Study blueprints** — 5 new consolidated MA task types with full blueprints, skills, and classifier rules (111 tests). MA-tasks.js now has 16 task types.
+  - **study_guide** — 4-mode blueprint: Study Guide, Flashcard, Outline, Timeline. Pure content generation with web_search and ws_write.
+  - **dnd_create** — 3-mode blueprint: Encounter, NPC Factory, Character. Encounter generates stat blocks and tactical environments. NPC Factory creates NPCs as NekoCore entities with backstory memories. Character builds full backstories with chapter-by-chapter entity memory injection and cognitive ticks.
+  - **tutor_entity** — 2-mode blueprint: Tutor (subject expert entity) and TA (course-specific teaching assistant entity). Both create NekoCore entities with semantic subject knowledge and episodic pedagogical memories.
+  - **dnd_campaign** — 4-mode blueprint: Campaign Builder (full arc with interactive pause + session outlines + NPC entities), Session Prep (context-aware session packages), Session Recap (rough notes → narrative prose + NPC memory updates), World Lore (region/faction/deity/culture generation).
+  - **course_creator** — 3-mode blueprint: Course Creator (research + structure + lessons + assessments), Book-to-Course (uses existing book upload API + restructures into modules), Exam Prep (study plan + topic reviews + cheat sheet + mock exam).
+- **Book-to-Entity character ingestion** — New MA skill (`book-ingestion`) that extracts characters from a book and creates them as NekoCore OS entities with POV-isolated memories. Supports Main Characters Only, All Characters, or Specific Characters selection modes. Characters only know about events they were present for — no cross-contamination.
+- **Book upload + chunking API** — `POST /api/book/upload` accepts raw text or file path, chunks on paragraph/sentence boundaries (~2500 chars), stores in MA-workspace. `GET /api/book/{id}/chunks` lists chunks, `GET /api/book/{id}/chunk/{index}` reads individual chunks.
+- **Book ingestion task classifier** — `book_ingestion` task type added to MA-tasks.js with keyword/regex classification rules. Correctly routes "ingest this book", "extract characters", "book to entity" etc.
+- **Book ingestion blueprint** — Full multi-phase LLM pipeline: book upload → character discovery (multi-pass batched) → user selection → per-character POV-isolated memory extraction → entity creation + injection with cognitive ticks → summary report.
+- **Character selection UI** — Quick-select buttons (Main Characters Only / All Characters / Select Specific) render in MA chat when character list is presented. Specific mode shows text input for comma-separated names.
+- **Long-request timeout popup** — When an LLM call takes longer than 30 seconds with no progress, a popup appears letting users cancel or dismiss. Elapsed time shown in the popup.
+- **Auto Pilot mode** — New toggle in Config panel and timeout popup checkbox. When enabled, suppresses timeout popups and disables server-side request timeouts so MA can run freely on long tasks.
+- **Conversation history in Session explorer** — The Session History tab now shows a "Conversations" section with all chat sessions grouped by date in collapsible day folders. Today's folder opens by default.
+- **New Chat button** — Session picker bar now has a "＋ New Chat" button to start fresh conversations without losing history.
+- **Archives panel** — New "Archives" section in the explorer rail (🗄 icon) and top bar button. Displays all project archives with per-project node listings, type icons, and search/filter functionality. Clicking a node opens it as plain text in the editor viewport.
+- **Archive API routes** — `GET /api/projects/nodes/{id}` lists archive nodes, `GET /api/projects/node/{projectId}/{nodeId}` retrieves full node content.
+
 ### Fixed
+- **Entity genesis writes to correct folder** — MA entity genesis blueprint and skill now use the NekoCore OS `POST /api/entities/create` API instead of manually writing files with `ws_write`. Entities are created in the correct `project/entities/` folder with proper unique timestamp-based IDs (e.g. `alice-1711270452000`).
 - **Dependency accuracy** — All "zero dependencies" claims across README, docs, white paper, architecture docs, and landing page corrected to reflect that Zod (`^4.3.6`) is a required dependency. Hero stat on Neko-Core.html updated from "0 Dependencies" to "1 Dependency".
 
 ### Changed

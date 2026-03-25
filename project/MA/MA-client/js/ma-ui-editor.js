@@ -16,7 +16,9 @@ function _scaffoldSection(name) {
       '<div id="proj-list"></div>',
     session:
       '<div id="session-summary" style="margin-bottom:12px"></div>' +
-      '<h3 style="font-size:13px;color:var(--text);margin:0 0 6px">Recent Work</h3>' +
+      '<h3 style="font-size:13px;color:var(--text);margin:0 0 6px">Conversations</h3>' +
+      '<div id="session-conversations"></div>' +
+      '<h3 style="font-size:13px;color:var(--text);margin:12px 0 6px">Recent Work</h3>' +
       '<div id="session-recent"></div>' +
       '<h3 style="font-size:13px;color:var(--text);margin:12px 0 6px">Task Editor</h3>' +
       '<label style="font-size:12px;color:var(--dim)">Current Task</label>' +
@@ -43,7 +45,12 @@ function _scaffoldSection(name) {
       '<input id="chore-desc" placeholder="Description" style="margin-top:4px">' +
       '<label style="font-size:12px;color:var(--dim);margin-top:4px">Interval (ms)</label>' +
       '<input id="chore-interval" type="number" value="1800000" placeholder="1800000">' +
-      '<div class="btn-row" style="margin-top:8px"><button class="btn-save" onclick="addChoreFromPane()">Add Chore</button></div>'
+      '<div class="btn-row" style="margin-top:8px"><button class="btn-save" onclick="addChoreFromPane()">Add Chore</button></div>',
+    archives:
+      '<div class="archive-search-bar" style="margin-bottom:10px">' +
+        '<input id="archive-search" placeholder="Search archives..." oninput="filterArchiveList()" style="width:100%;background:rgba(13,17,23,.9);border:1px solid var(--border);border-radius:10px;color:var(--text);padding:8px 12px;font-size:13px;font-family:inherit">' +
+      '</div>' +
+      '<div id="archive-list"></div>'
   };
   explorerBodyEl.innerHTML = scaffolds[name] || '';
 }
@@ -52,9 +59,10 @@ function refreshWorkspaceSection() {
   if (currentInspector === 'workspace') return loadWorkspaceTree();
   if (currentInspector === 'projects') { _scaffoldSection('projects'); return loadProjects(); }
   if (currentInspector === 'blueprints') { _scaffoldSection('blueprints'); return loadBlueprints(); }
-  if (currentInspector === 'session' || currentInspector === 'tasks') { _scaffoldSection('session'); return loadWorklog(); }
+  if (currentInspector === 'session' || currentInspector === 'tasks') { _scaffoldSection('session'); loadWorklog(); loadConversationHistory(); return; }
   if (currentInspector === 'todos') { _scaffoldSection('todos'); return renderTodos(); }
   if (currentInspector === 'chores') { _scaffoldSection('chores'); return loadChoresPane(); }
+  if (currentInspector === 'archives') { _scaffoldSection('archives'); return loadArchives(); }
   if (currentInspector === 'activity') {
     if (explorerBodyEl) {
       explorerBodyEl.innerHTML = '<div class="side-empty">Activity stream remains visible in chat interactions while workspace integration is being finalized.</div>';

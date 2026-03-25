@@ -8,20 +8,29 @@ const path = require('path');
 
 // ── Task types (no planning/orchestration — MA is single-entity) ────────────
 const TASK_TYPES = {
-  architect:    { maxSteps: 10, maxLLM: 50 },
+  architect:    { maxSteps: 10, maxLLM: 50, timeout: 300000 },
   delegate:     { maxSteps: 8,  maxLLM: 30 },
-  code:         { maxSteps: 8,  maxLLM: 25 },
+  code:         { maxSteps: 8,  maxLLM: 25, timeout: 240000 },
   research:      { maxSteps: 6,  maxLLM: 20 },
-  deep_research: { maxSteps: 10, maxLLM: 40 },
+  deep_research: { maxSteps: 10, maxLLM: 40, timeout: 300000 },
   writing:       { maxSteps: 6,  maxLLM: 20 },
   analysis:     { maxSteps: 6,  maxLLM: 20 },
-  project:      { maxSteps: 10, maxLLM: 40 },
+  project:      { maxSteps: 10, maxLLM: 40, timeout: 300000 },
   memory_query: { maxSteps: 3,  maxLLM: 10 },
-  entity_genesis: { maxSteps: 10, maxLLM: 50 }
+  entity_genesis: { maxSteps: 10, maxLLM: 50, timeout: 300000 },
+  book_ingestion: { maxSteps: 15, maxLLM: 80, timeout: 600000 },
+  study_guide:    { maxSteps: 8,  maxLLM: 30, timeout: 300000 },
+  dnd_create:     { maxSteps: 10, maxLLM: 50, timeout: 300000 },
+  tutor_entity:   { maxSteps: 10, maxLLM: 50, timeout: 300000 },
+  dnd_campaign:   { maxSteps: 12, maxLLM: 60, timeout: 480000 },
+  course_creator: { maxSteps: 12, maxLLM: 60, timeout: 480000 },
+  blueprint_builder: { maxSteps: 10, maxLLM: 40, timeout: 300000 },
+  prompt_engineering: { maxSteps: 8,  maxLLM: 30, timeout: 300000 },
+  app_builder:        { maxSteps: 10, maxLLM: 40, timeout: 300000 }
 };
 
 // Task types that benefit from extended thinking (complex reasoning required)
-const COMPLEX_TASK_TYPES = new Set(['architect', 'code', 'deep_research', 'project', 'entity_genesis']);
+const COMPLEX_TASK_TYPES = new Set(['architect', 'code', 'deep_research', 'project', 'entity_genesis', 'book_ingestion', 'study_guide', 'dnd_create', 'tutor_entity', 'dnd_campaign', 'course_creator', 'blueprint_builder', 'prompt_engineering', 'app_builder']);
 
 /** Strip <thinking>...</thinking> blocks from LLM output. */
 function _stripThinkingTags(text) {
@@ -49,8 +58,8 @@ function _loadBP(filePath) {
 
 function getBlueprint(taskType, phase) {
   const parts = [];
-  const coreDir = path.join(BP_DIR, 'core', 'core');
-  const modDir  = path.join(BP_DIR, 'modules', 'modules');
+  const coreDir = path.join(BP_DIR, 'core');
+  const modDir  = path.join(BP_DIR, 'modules');
 
   if (phase === 'plan') {
     parts.push(_loadBP(path.join(coreDir, 'task-decomposition.md')));
@@ -107,6 +116,42 @@ const RULES = {
   entity_genesis: {
     kw: ['entity','genesis','create entity','forge entity','new entity','character','backstory','persona','birth','evolve entity','spawn entity','generate entity','entity creation','build entity','bring to life'],
     re: [/(?:create|forge|birth|spawn|generate|build|make).{0,50}(?:entity|character|persona|being)/i, /entity.{0,30}(?:genesis|creation|evolution|backstory)/i, /(?:evolve|enrich|develop).{0,50}(?:entity|character|persona)/i]
+  },
+  book_ingestion: {
+    kw: ['book','novel','ingest book','extract characters','story characters','character extraction','book characters','ingest novel','book to entity','literary characters','fiction characters'],
+    re: [/(?:ingest|process|read|extract|import).{0,50}(?:book|novel|story|text|fiction)/i, /(?:book|novel|story).{0,50}(?:characters?|entities|cast)/i, /(?:extract|pull|get|find).{0,50}(?:characters?|cast).{0,50}(?:from|in|of)/i, /character.{0,30}(?:extraction|ingestion|import)/i]
+  },
+  study_guide: {
+    kw: ['study guide','study','flashcards','flash cards','outline','timeline','review material','help me study','study for','create outline','build timeline','make flashcards','key concepts','study notes','revision','cram'],
+    re: [/(?:create|build|make|generate).{0,30}(?:study guide|flashcards?|outline|timeline)/i, /(?:help me|I need to).{0,30}(?:study|review|learn|prepare)/i, /(?:study|review|revision).{0,30}(?:guide|notes|material|cards)/i, /(?:build|create).{0,30}(?:timeline|chronolog)/i]
+  },
+  dnd_create: {
+    kw: ['DnD','D&D','dungeons and dragons','encounter','NPC','character sheet','roll character','stat block','monster','combat encounter','dungeon','tabletop','5e','pathfinder','TTRPG','hit points','armor class'],
+    re: [/(?:create|build|design|generate|roll).{0,30}(?:encounter|NPC|character|stat block|dungeon)/i, /(?:DnD|D&D|dungeons?.{0,5}dragons?|5e|pathfinder|TTRPG)/i, /(?:combat|battle|fight).{0,30}(?:encounter|scenario|challenge)/i, /(?:populate|fill|stock).{0,30}(?:tavern|dungeon|town|village|guild|court)/i]
+  },
+  tutor_entity: {
+    kw: ['tutor','teacher','teaching assistant','TA','teach me','I need a teacher','create tutor','subject tutor','private tutor','study helper','homework help','build a TA','course helper'],
+    re: [/(?:create|build|make|I need).{0,30}(?:tutor|teacher|teaching assistant|TA)/i, /(?:tutor|teach).{0,30}(?:for|about|in|on).{0,30}(?:math|science|english|history|biology|chemistry|physics|calculus|spanish|french|music|programming|coding)/i, /(?:help me).{0,30}(?:learn|understand|study).{0,30}(?:with a|using a|through a)/i]
+  },
+  dnd_campaign: {
+    kw: ['campaign','DnD campaign','D&D campaign','session prep','prepare session','session recap','journal session','world lore','faction lore','deity lore','campaign arc','adventure','quest line','story arc'],
+    re: [/(?:build|create|design|plan|start).{0,30}(?:campaign|adventure|quest|story arc)/i, /(?:prep|prepare|plan).{0,30}(?:session|next session)/i, /(?:recap|journal|write up).{0,30}(?:session|last session|adventure)/i, /(?:build|create|expand).{0,30}(?:lore|faction|deity|region|world)/i]
+  },
+  course_creator: {
+    kw: ['course','curriculum','syllabus','lesson plan','create a course','build a course','book to course','study course','exam prep','prepare for exam','study for test','mock exam','final exam','midterm','assessment'],
+    re: [/(?:create|build|design|make).{0,30}(?:course|curriculum|syllabus|lesson plan)/i, /(?:turn|convert|transform).{0,30}(?:book|textbook|text).{0,30}(?:into|to|as).{0,30}(?:course|curriculum|study)/i, /(?:exam|test|midterm|final).{0,30}(?:prep|prepare|study|review|practice)/i, /(?:help me).{0,30}(?:prepare for|study for|get ready for).{0,30}(?:exam|test|assessment)/i]
+  },
+  blueprint_builder: {
+    kw: ['blueprint','create a blueprint','build a blueprint','make a blueprint','new blueprint','design a blueprint','write a blueprint','blueprint for','no blueprint','missing blueprint','need a blueprint','task type','new task type','add a task type','workflow','create a workflow','build a workflow'],
+    re: [/(?:create|build|make|write|design|draft).{0,30}(?:blueprint|workflow|task type|task template)/i, /(?:no|missing|need|there.{0,10}no).{0,30}(?:blueprint|workflow).{0,30}(?:for|to|that)/i, /blueprint.{0,30}(?:for|to|that).{0,30}(?:can|will|does|handles?)/i, /(?:teach|learn|know).{0,30}(?:how to).{0,30}(?:do|handle|process|create)/i]
+  },
+  prompt_engineering: {
+    kw: ['prompt','system prompt','write a prompt','create a prompt','build a prompt','design a prompt','prompt engineering','prompt template','few-shot','few shot','chain of thought','refine prompt','improve prompt','fix prompt','prompt refinement','custom instructions','agent instructions','structured output','prompt for'],
+    re: [/(?:create|write|build|design|draft|make).{0,30}(?:prompt|system prompt|instructions|few.?shot)/i, /(?:refine|improve|fix|rewrite|optimize).{0,30}(?:prompt|system prompt|instructions)/i, /(?:prompt|instructions).{0,30}(?:engineering|template|design|for)/i, /(?:few.?shot|chain.of.thought|structured.output).{0,30}(?:prompt|template|example)/i]
+  },
+  app_builder: {
+    kw: ['app','application','build an app','create an app','make an app','new app','app builder','install app','nekocore app','app window','tab app','desktop app','windowed app','add an app','app for nekocore','gui app'],
+    re: [/(?:create|build|make|design|develop).{0,30}(?:app|application|window|tab|gui)/i, /(?:install|add|register).{0,30}(?:app|application).{0,30}(?:nekocore|neko|desktop|os)/i, /(?:nekocore|neko).{0,30}(?:app|application|window)/i, /(?:app|application).{0,30}(?:builder|creator|installer|maker)/i]
   }
 };
 
@@ -174,6 +219,7 @@ async function runTask(opts) {
   if (!message) throw new Error('runTask: message required');
 
   const limits = TASK_TYPES[taskType] || { maxSteps: 6, maxLLM: 20 };
+  const taskTimeout = limits.timeout || undefined; // per-task-type timeout for LLM calls
   let llmCalls = 0;
   const allWrittenFiles = [];
 
@@ -185,7 +231,7 @@ async function runTask(opts) {
   const planResp = await callLLM([
     { role: 'system', content: planSys },
     { role: 'user', content: `${message}\n\nCreate a concise task plan.` }
-  ], { temperature: 0.7 });
+  ], { temperature: 0.7, ...(taskTimeout ? { timeout: taskTimeout } : {}) });
   llmCalls++;
 
   const plan = parsePlan(planResp, limits.maxSteps);
@@ -242,7 +288,7 @@ async function runTask(opts) {
     let resp = await callLLM([
       { role: 'system', content: sysMsg },
       { role: 'user', content: prompt }
-    ], { temperature: 0.7, ...(COMPLEX_TASK_TYPES.has(taskType) ? { thinking: true } : {}) });
+    ], { temperature: 0.7, ...(COMPLEX_TASK_TYPES.has(taskType) ? { thinking: true } : {}), ...(taskTimeout ? { timeout: taskTimeout } : {}) });
     llmCalls++;
 
     // Strip thinking tags before tool parsing (prompt-based fallback path)
@@ -313,7 +359,7 @@ async function runTask(opts) {
     finalResponse = await callLLM([
       { role: 'system', content: `You are ${entityName}. Summarize what you accomplished. Be brief and natural. List what files were created or modified — do NOT include code in the summary. The code is already in the workspace files.` + (sumBP ? `\n\n${sumBP}` : '') },
       { role: 'user', content: `Request: "${message}"\n\nCompleted ${stepOutputs.length} steps:\n${stepsBlock}\n\nBrief summary:` }
-    ], { temperature: 0.6 });
+    ], { temperature: 0.6, ...(taskTimeout ? { timeout: taskTimeout } : {}) });
     llmCalls++;
   } else {
     finalResponse = stepOutputs.map(s => `**${s.description}**\n${s.output}`).join('\n\n');

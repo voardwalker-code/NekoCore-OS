@@ -293,6 +293,9 @@
         'Memory toggle row: Recall and Save buttons',
         'Chat message area displays messages correctly',
         'Drop zone for archive files works (drag & drop)',
+        'Long-request timeout popup appears after delay',
+        'Auto Pilot toggle continues requests automatically',
+        'Timeout popup Cancel button stops request',
         'Empty state shows when no entity loaded',
         'Slash command picker appears when "/" typed',
         'Chat input textarea expands with content',
@@ -395,6 +398,17 @@
         'Reserved names blocked (NekoCore, Neko, Echo, AgentEcho)',
       ]},
 
+      /* ── BOOK UPLOAD & CHARACTER SELECTION ──────────────── */
+      { section: 'Book Upload & Character Selection', area: 'Entity', items: [
+        'Book upload accepts file (.txt, .md, .pdf)',
+        'Book chunking splits text into processable segments',
+        'Character extraction identifies characters from text',
+        'Character selection UI shows extracted characters',
+        'Quick-select buttons for prominent characters',
+        'Selected character entity created with POV-isolated memories',
+        'Book content ingested into entity memory',
+      ]},
+
       /* ── USER PROFILES ───────────────────────────────────── */
       { section: 'User Profiles', area: 'Entity', items: [
         'User Name and About inputs accept data',
@@ -455,6 +469,10 @@
         'Create Skill button saves new skill',
         'Enable/disable skill toggle',
         'Skill invocation via /skill trigger in chat',
+        'MA Skills section header displays',
+        'MA Skills Refresh button reloads list',
+        'MA skill cards show name, version, status badge, triggers',
+        'MA skill cards show enabled/disabled state',
       ]},
 
       /* ── POPOUTS ─────────────────────────────────────────── */
@@ -570,8 +588,8 @@
         'History manager: search, export, clear today, clear all',
       ]},
 
-      /* ── MA SERVER ───────────────────────────────────────── */
-      { section: 'MA Server', area: 'Server', items: [
+      /* ── MA SERVER (TAB INTEGRATION) ──────────────────────── */
+      { section: 'MA Server (Tab Integration)', area: 'Server', items: [
         'Status dot color matches server state (green/orange/gray)',
         'Status label shows port and health state',
         'Start button (▶) launches MA server',
@@ -580,15 +598,286 @@
         'Stop button (■) shuts down server',
         'Status changes to "Offline" and iframe hides',
         'Refresh button (↻) reloads iframe',
-        'MA Chat Mode toggle (Work/Chat) in MA GUI',
+      ]},
+
+      /* ── MA CHAT & CONVERSATION ──────────────────────────── */
+      { section: 'MA Chat & Conversation', area: 'MA', items: [
+        'Chat input accepts text and sends on Enter / button click',
+        'User message renders in chat display',
+        'MA response streams and renders in chat display',
+        'Markdown in responses renders correctly (code, lists, bold)',
+        'Chat Mode toggle: Work Mode vs Chat Mode',
         'Chat Mode restricts to read-only tools',
-        'Work Mode allows full tool access',
+        'Work Mode allows full tool access (file write, cmd, web)',
+        'Continuation button appears for multi-step tasks',
+        'Long-request timeout popup appears after delay',
+        'Auto Pilot mode continues automatically when enabled',
+        'Chat history preserves across page refresh',
+        'Clear chat removes all messages',
+        'Conversation history shows day-grouped sessions',
+        'Click a session restores that conversation',
+        'Slash command picker appears when "/" typed',
+      ]},
+
+      /* ── MA SLASH COMMANDS ───────────────────────────────── */
+      { section: 'MA Slash Commands', area: 'MA', items: [
+        '/help lists all available commands',
+        '/health runs health scan and returns report',
+        '/memory shows memory stats for current entity',
+        '/knowledge lists ingested knowledge documents',
+        '/ingest <path> ingests a document into knowledge base',
+        '/config shows current LLM provider and model config',
+        '/projects lists workspace projects',
+        '/whitelist shows shell command whitelist',
+      ]},
+
+      /* ── MA TASK SYSTEM ──────────────────────────────────── */
+      { section: 'MA Task System', area: 'MA', items: [
+        'Intent classifier detects task type from user message',
+        'Correct task type assigned (code, research, writing, etc.)',
+        'Blueprint loaded for detected task type',
+        'Step counter increments during task execution',
+        'Task respects maxSteps limit per type',
+        'Task respects maxLLM call limit per type',
+        'Task timeout fires correctly per type',
+        'Complex task types trigger extended thinking when available',
+        'Task cancel stops execution mid-task',
+        'Task result returned to chat display',
+        'code task: generates code with quality checks',
+        'research task: web search + synthesis',
+        'deep_research task: multi-step research with citations',
+        'writing task: structured prose generation',
+        'planning task: multi-phase plan with slices',
+        'analysis task: data analysis with findings',
+        'entity_genesis task: creates new entity',
+        'delegate task: dispatches to agent',
+        'architect task: system design blueprint',
+        'project task: project scaffolding',
+        'book_ingestion task: book parse and memory ingest',
+        'study_guide task: study material creation',
+        'course_creator task: course outline generation',
+        'tutor_entity task: tutor agent creation',
+        'dnd_create task: D&D content creation',
+        'dnd_campaign task: D&D campaign generation',
+        'blueprint_builder task: new blueprint creation',
+        'prompt_engineering task: prompt authoring/refinement',
+        'app_builder task: NekoCore OS app creation',
+      ]},
+
+      /* ── MA TOOL SYSTEM ──────────────────────────────────── */
+      { section: 'MA Tool System', area: 'MA', items: [
+        'Tool definitions convert to provider schemas (OpenAI/Anthropic)',
+        '[TOOL:name {json}] blocks parsed from LLM output',
+        'ws_read reads file from workspace',
+        'ws_write writes file to workspace',
+        'ws_list lists directory contents',
+        'ws_mkdir creates directory in workspace',
+        'ws_move moves/renames file in workspace',
+        'ws_delete deletes file from workspace',
+        'web_search performs DuckDuckGo search',
+        'web_fetch fetches URL content with SSRF protection',
+        'cmd_run executes whitelisted shell command',
+        'cmd_run blocks non-whitelisted command',
+        'cmd_run respects workspace jail (no path escape)',
+        'cmd_run timeout (60s) enforced',
+        'cmd_run output cap (16KB) enforced',
+        'Zod validation rejects malformed tool parameters',
+        'Tool result formatted back into LLM context',
+      ]},
+
+      /* ── MA MODEL ROUTER ─────────────────────────────────── */
+      { section: 'MA Model Router', area: 'MA', items: [
+        'Model roster loads from model-roster.json',
+        'Model selection uses task type to pick best model',
+        'Local models preferred when available and suitable',
+        'Performance tracking records task outcomes per model',
+        'Roster updates reflect in next model selection',
+        'Disabled models excluded from selection',
+        'Fallback to default model when no roster match',
+      ]},
+
+      /* ── MA AGENT SYSTEM ─────────────────────────────────── */
+      { section: 'MA Agent System', area: 'MA', items: [
+        'Default agents provisioned on first boot (senior-coder, researcher, architect, etc.)',
+        'Agent folder structure created: MA-entity/agent_{id}/',
+        'agent.json schema validated on create',
+        'Create new agent via API',
+        'List agents returns all agents',
+        'Get single agent by ID',
+        'Update agent profile',
+        'Delete agent removes folder and data',
+        'Agent dispatch routes task to correct agent',
+        'Usage tracking increments on agent use',
+        'Prompt history recorded for agent',
+      ]},
+
+      /* ── MA MEMORY & NLP ─────────────────────────────────── */
+      { section: 'MA Memory & NLP', area: 'MA', items: [
+        'Memory store created per entity ID',
+        'Episodic memory: store and retrieve events',
+        'Semantic memory: store and retrieve facts',
+        'Memory index (memoryIndex.json) updated on store',
+        'Memory search returns relevant results',
+        'RAKE extracts multi-word keyphrases from text',
+        'YAKE extracts statistical keywords from text',
+        'BM25 scoring ranks documents by topic relevance',
+        'Memory ingest from file creates indexed records',
+        'Memory list returns all stored memories',
+        'Memory stats returns count and distribution',
+        'Topic extraction feeds into memory index',
+      ]},
+
+      /* ── MA BLUEPRINTS ───────────────────────────────────── */
+      { section: 'MA Blueprints', area: 'MA', items: [
+        'Blueprint loader finds correct module by task type',
+        'Core blueprints load: error-recovery, output-format, quality-gate, task-decomposition, tool-guide',
+        'Module blueprints load: code, research, deep_research, writing, planning, analysis',
+        'Module blueprints load: entity_genesis, delegate, architect, project',
+        'Module blueprints load: book_ingestion, study_guide, course_creator, tutor_entity',
+        'Module blueprints load: dnd_create, dnd_campaign, blueprint_builder',
+        'Module blueprints load: prompt_engineering, app_builder',
+        'NekoCore architecture blueprints accessible (parts 1-5)',
+        'REM system layer blueprints accessible (layers 0-6)',
+        'Blueprint content injected into LLM prompt context',
+      ]},
+
+      /* ── MA SKILLS (DROP-IN) ─────────────────────────────── */
+      { section: 'MA Skills (Drop-in)', area: 'MA', items: [
+        'Skills auto-loaded from MA-skills/{name}/SKILL.md on boot',
+        'Skills auto-loaded from MA-entity/entity_ma/skills/*.md on boot',
+        'Skill frontmatter parsed (name, description, enabled, version, trigger)',
+        'Disabled skills excluded from prompt injection',
+        'Skill keyword matching injects relevant skill into context',
+        'app-builder skill loads and provides app creation guidance',
+        'blueprint-builder skill loads and provides blueprint authoring',
+        'coding skill loads and provides code writing guidance',
+        'python skill loads for Python tasks',
+        'rust skill loads for Rust tasks',
+        'entity-genesis skill loads for entity creation',
+        'memory-tools skill loads for memory operations',
+        'web-search skill loads for web research',
+        'self-repair skill loads for diagnostics',
+        'book-ingestion skill loads for book processing',
+        'study-guide skill loads for study material',
+        'course-creator skill loads for course building',
+        'tutor-entity skill loads for tutor creation',
+        'dnd-campaign skill loads for D&D campaigns',
+        'dnd-create skill loads for D&D content',
+        '/api/ma-skills endpoint returns skill list with metadata',
+        'MA Skills section in Skills tab renders skill cards',
+        'Skills tab Refresh button reloads MA skill list',
+      ]},
+
+      /* ── MA CLIENT UI ────────────────────────────────────── */
+      { section: 'MA Client UI', area: 'MA', items: [
+        'MA index page loads without errors',
+        'Chat display shows message history',
+        'Chat input sends message and shows response',
+        'Status dot shows connection state (green/orange/gray)',
+        'Inspector sidebar: Session panel with conversation list',
+        'Inspector sidebar: Activity panel with task status',
+        'Inspector sidebar: Blueprints panel lists available blueprints',
+        'Inspector sidebar: Projects panel shows workspace projects',
+        'Workspace explorer: file tree navigation',
+        'Workspace explorer: file preview on click',
+        'Workspace explorer: breadcrumb path navigation',
+        'Config panel: LLM provider form (type, endpoint, key, model)',
+        'Config panel: Save & Connect button',
+        'Config panel: Theme switcher',
+        'Code editor: blueprint/code viewer',
+        'Archives panel: search and filter memories',
+      ]},
+
+      /* ── MA WORKLOG & CONTINUITY ─────────────────────────── */
+      { section: 'MA Worklog & Continuity', area: 'MA', items: [
+        'MA-WORKLOG.md created in MA-workspace on first session',
+        'Worklog tracks active project name',
+        'Worklog tracks current task and plan',
+        'Worklog tracks recent work table (date, task, files, status)',
+        'Worklog tracks resume point for session continuity',
+        'Worklog state parsed correctly on boot',
+        'Worklog updated after task completion',
+      ]},
+
+      /* ── MA PULSE & HEALTH ───────────────────────────────── */
+      { section: 'MA Pulse & Health', area: 'MA', items: [
+        'Pulse system initializes on server start',
+        'Health scan pulse fires on configured interval (default 1hr)',
+        'Chore check pulse fires on configured interval (default 30min)',
+        'Health scan validates 20 core files exist and are non-zero',
+        'Health scan detects JSON syntax errors',
+        'Health report formatted with issue count and summary',
+        'Pulse logs written to MA-logs/pulse-health.log',
+        'Pulse config loaded from pulse-config.json',
+        'Enable/disable flags respected per pulse type',
+      ]},
+
+      /* ── MA CONFIG & PROVIDERS ───────────────────────────── */
+      { section: 'MA Config & Providers', area: 'MA', items: [
+        'ma-config.json loaded on boot',
+        'OpenRouter provider: endpoint, key, model configured',
+        'Anthropic provider: endpoint, key, model configured',
+        'Ollama provider: URL, model configured',
+        'Provider capability registry returns correct capabilities',
+        'Prompt caching capability detected for Anthropic',
+        'Extended thinking capability detected when available',
+        'Tool use capability detected per provider',
+        'Config saved and persisted across restarts',
+        'Config example template available (ma-config.example.json)',
+        'cmd-whitelist.json loaded and enforced',
+        'model-roster.json loaded for model selection',
+      ]},
+
+      /* ── MA KNOWLEDGE BASE ───────────────────────────────── */
+      { section: 'MA Knowledge Base', area: 'MA', items: [
+        'Knowledge docs loaded from MA-knowledge/ on boot',
+        'agent-delegation.md accessible for delegation tasks',
+        'architecture-patterns.md accessible for design tasks',
+        'code-quality.md accessible for code review',
+        'cognitive-pipeline.md accessible for pipeline queries',
+        'contracts-schemas.md accessible for schema tasks',
+        'entity-identity.md accessible for entity work',
+        'memory-system.md accessible for memory queries',
+        'project-architect.md accessible for project planning',
+        'project-archive.md accessible for archival tasks',
+      ]},
+
+      /* ── MA PROJECT ARCHIVE ──────────────────────────────── */
+      { section: 'MA Project Archive', area: 'MA', items: [
+        'Project node created with valid schema (type, content, topics, importance)',
+        'Node types supported: step, code, response, agent-dispatch, thought, decision, error, semantic',
+        'Nodes linked with edge relationships',
+        'Project graph retrievable by project ID',
+        'Archive project moves graph to completed state',
+        'Predictive memory fed from project node weights and decay',
+      ]},
+
+      /* ── MA RESET & MAINTENANCE ──────────────────────────── */
+      { section: 'MA Reset & Maintenance', area: 'MA', items: [
+        'MA-Reset-All.js deletes chat history, entity, agents, workspace, logs',
+        'MA-Reset-All.js preserves ma-config.json, cmd-whitelist.json, pulse-config.json, model-roster.json',
+        'MA-Reset-All.js recreates empty directories after wipe',
+        'Interactive confirmation prompt works (--yes skips)',
+        'Entity and agents auto-provisioned on next boot after reset',
+        'reset-all.js (root) calls MA-Reset-All.js as part of factory reset',
+        'MA workspace cleared but MA-WORKLOG.md can be restored',
+      ]},
+
+      /* ── MA SERVER STANDALONE ────────────────────────────── */
+      { section: 'MA Server Standalone', area: 'MA', items: [
+        'MA-Server.js starts HTTP server on configured port',
+        'MA-Server-standalone.js starts without port-guard dependency',
+        'MA-cli.js starts readline-based terminal chat',
+        'ma-start.js --stop kills background MA server',
+        'ma-start.js --status reports running state',
+        'Health check (_health-check.js) returns scan report',
       ]},
 
       /* ── BUG TRACKER ─────────────────────────────────────── */
       { section: 'Bug Tracker', area: 'Other', items: [
         'Load button opens file picker',
-        'Save button saves .bugtrack.json',
+        'Export button generates Markdown and opens native file picker',
+        'Export falls back to browser download if File System API unavailable',
         'Report button generates Markdown/JSON report',
         'New Bug button creates blank bug',
         'Project name input editable',
@@ -657,6 +946,9 @@
         'Compressed chat saved correctly',
         'Memories appear in Archive tab search',
         'Document ingest creates searchable memories',
+        'Predictive memory topology surfaces relevant predictions',
+        'Legacy memory records migrated to v2 format',
+        'Memory self-heal repairs corrupted index entries',
       ]},
 
       /* ── PROVIDER SWITCHING (INTEGRATION) ────────────────── */
@@ -694,6 +986,25 @@
         'Memory systems functional post-restore',
       ]},
 
+      /* ── ARCHIVE PANEL (INTEGRATION) ──────────────────────── */
+      { section: 'Archive Panel (Integration)', area: 'Memory System', items: [
+        'Archives panel accessible from sidebar',
+        'Archive search by keyword returns results',
+        'Archive filter by date range works',
+        'Archive filter by memory type works',
+        'Archive results display with metadata',
+        'Click archive result shows full content',
+      ]},
+
+      /* ── CONVERSATION HISTORY (INTEGRATION) ────────────── */
+      { section: 'Conversation History (Integration)', area: 'Chat', items: [
+        'Session explorer shows conversation list',
+        'Conversations grouped by day',
+        'Click conversation restores chat history',
+        'New conversation creates fresh session',
+        'Conversation count updates correctly',
+      ]},
+
       /* ── EDGE CASES ──────────────────────────────────────── */
       { section: 'Edge Cases & Error Handling', area: 'Other', items: [
         'No provider configured → setup wizard appears',
@@ -702,6 +1013,10 @@
         'Reserved entity name → creation blocked with message',
         'Very long message in chat → text wraps and scrolls',
         'Memory self-heal detects and repairs corrupted files',
+        'MA server offline → tab shows offline state gracefully',
+        'MA tool execution failure → error reported to chat',
+        'MA task exceeds step limit → task terminated with summary',
+        'Non-whitelisted command → blocked with security message',
       ]},
     ];
 

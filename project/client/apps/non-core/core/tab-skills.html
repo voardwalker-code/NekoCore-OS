@@ -67,6 +67,20 @@
         </div>
       </div>
 
+      <!-- ── MA Skills (drop-in folder) ── -->
+      <div class="settings-section">
+        <div class="settings-section-header">
+          <h2>🧠 MA Skills</h2>
+          <p>Skills available to Memory Architect — drop a folder with SKILL.md into <code style="background:var(--surface-3);padding:.1rem .35rem;border-radius:3px">MA/MA-skills/</code> to add new ones</p>
+        </div>
+        <div class="flex gap-3 mb-5 flex-wrap">
+          <button class="btn bp" onclick="loadMASkillsList()">Refresh</button>
+        </div>
+        <div id="maSkillsList" class="grid" style="gap:var(--space-3)">
+          <div class="placeholder-content">Loading MA skills...</div>
+        </div>
+      </div>
+
       <!-- ── Skills Overview ── -->
       <div class="settings-section">
         <div class="settings-section-header">

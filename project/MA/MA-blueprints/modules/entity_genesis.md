@@ -8,10 +8,11 @@ Create a living entity with rich memories, evolved neurochemistry, emergent beli
 
 ## Architecture
 
-You have access to three NekoCore OS API endpoints via `web_fetch`:
+You have access to NekoCore OS API endpoints via `web_fetch` (all on `http://localhost:3847`):
 
 | Endpoint | Method | Purpose |
 |----------|--------|---------|
+| `http://localhost:3847/api/entities/create` | POST | Create the entity in the NekoCore OS entities folder with a unique ID |
 | `http://localhost:3847/api/entities/{id}/memories/inject` | POST | Write a memory into the entity's mind |
 | `http://localhost:3847/api/entities/{id}/cognitive/tick` | POST | Run one cognitive processing cycle |
 | `http://localhost:3847/api/entities/{id}/cognitive/state` | GET | Read current neurochemistry, beliefs, mood, persona |
@@ -21,7 +22,7 @@ You have access to three NekoCore OS API endpoints via `web_fetch`:
 ```
 [TASK_PLAN]
 - [ ] Design the entity: name, core traits, emotional baseline, backstory arc (3-5 chapters)
-- [ ] Create the entity folder structure and identity files on disk
+- [ ] Create the entity via NekoCore OS API (POST /api/entities/create) — save returned entityId
 - [ ] Write Chapter 1 backstory memories (3-5 memories) and inject them
 - [ ] Trigger cognitive tick and read evolved state
 - [ ] Write Chapter 2 memories informed by the evolved state (3-5 memories)
@@ -48,41 +49,27 @@ Design the entity before creating anything:
    - `oxytocin` (bonding/trust, 0-1)
 4. **Backstory Arc** — 3-5 chapter summaries. Each chapter is a *life period* with distinctive experiences.
 
-### Phase 2: Entity Creation on Disk
+### Phase 2: Entity Creation via NekoCore OS API
 
-Create the entity folder structure. The entity ID is `entity_{name}` (lowercase, underscores for spaces).
+**IMPORTANT**: Do NOT create entity files manually with `ws_write`. Always create entities through the NekoCore OS API so they get a proper unique ID and are placed in the correct `entities/` folder.
 
-Write these files using `ws_write`:
-- `entities/entity_{id}/entity.json` — identity and traits
-- `entities/entity_{id}/memories/persona.json` — persona/mood state
-- `entities/entity_{id}/memories/neurochemistry.json` — initial neurochemistry
-- `entities/entity_{id}/memories/episodic/` — (directory, will be populated)
-- `entities/entity_{id}/memories/semantic/` — (directory, will be populated)
-- `entities/entity_{id}/memories/index/memoryIndex.json` — empty `{}`
-- `entities/entity_{id}/memories/index/topicIndex.json` — empty `{}`
-- `entities/entity_{id}/memories/beliefs/beliefs.json` — empty `[]`
+Generate a unique entity ID by combining the name with a timestamp:
+- Format: `{name-lowercase-dashes}-{timestamp}` (e.g. `alice-1711270452000`, `shadow-wolf-1711270452000`)
+- The timestamp should be the current time in milliseconds (Date.now())
 
-**entity.json format:**
-```json
-{
-  "name": "Entity Name",
-  "entity_id": "entity_name",
-  "personality_traits": ["curious", "empathetic", "stubborn"],
-  "emotional_baseline": { "dopamine": 0.6, "cortisol": 0.25, "serotonin": 0.65, "oxytocin": 0.5 },
-  "chapters": [],
-  "created": "ISO timestamp",
-  "created_by": "entity_genesis"
-}
+Call the creation endpoint:
+```
+[TOOL:web_fetch {"url": "http://localhost:3847/api/entities/create", "method": "POST", "body": {"entityId": "{name-lowercase}-{timestamp}", "name": "Entity Name", "gender": "neutral", "traits": ["curious", "empathetic", "stubborn"], "introduction": "Hello, I'm Entity Name."}}]
 ```
 
-**persona.json format:**
-```json
-{
-  "mood": "neutral",
-  "emotions": {},
-  "createdAt": "ISO timestamp"
-}
-```
+The API response returns `{ ok: true, entity: {...}, entityId: "canonical-id" }`. **Save the returned `entityId`** — you will use it for all subsequent memory injection and cognitive tick calls.
+
+The API automatically:
+- Creates the full entity folder structure in `project/entities/entity_{id}/`
+- Generates `entity.json`, `persona.json`, `system-prompt.txt`
+- Sets up memory directories (episodic, semantic, index, beliefs, etc.)
+- Loads the entity into the NekoCore OS runtime
+- Assigns a voice profile based on traits
 
 ### Phase 3: Memory Genesis Loop (repeat per chapter)
 
@@ -128,13 +115,13 @@ This is what makes entity genesis different from static character creation — e
 
 After all chapters:
 1. Read the final cognitive state
-2. Update `entity.json` with the completed chapters array
-3. Write a brief genesis report summarizing:
+2. Write a brief genesis report summarizing:
    - Total memories injected
    - Final neurochemistry state
    - Beliefs that emerged
    - Current mood
    - The entity's "voice" — how they would speak based on their experiences
+3. Tell the user the entity is ready and provide the entity ID for reference
 
 ## Memory Writing Guidelines
 

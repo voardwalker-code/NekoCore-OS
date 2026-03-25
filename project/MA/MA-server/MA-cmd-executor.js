@@ -158,9 +158,11 @@ function execCommand(cmdStr, workspacePath, opts = {}) {
     const timeout = Math.min(opts.timeout || parsed.config.timeout, HARD_MAX_TIMEOUT);
     let stdout = '', stderr = '', timedOut = false, done = false;
 
+    // Use shell mode on Windows for built-in commands (dir, type, find, etc.)
+    const useShell = process.platform === 'win32';
     const child = spawn(parsed.binary, parsed.args, {
       cwd: workspacePath,
-      shell: false,
+      shell: useShell,
       stdio: ['ignore', 'pipe', 'pipe'],
       env: { ...process.env, CI: 'true', NO_COLOR: '1' }
     });

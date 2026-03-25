@@ -3,11 +3,16 @@
 // /api/skills/web-search/*
 
 function createSkillsRoutes(ctx) {
+  const _fs = require('fs');
+  const _path = require('path');
+  const MA_SKILLS_DIR = _path.join(__dirname, '..', '..', 'MA', 'MA-skills');
+
   async function dispatch(req, res, url, apiHeaders, readBody) {
     const p = url.pathname;
     const m = req.method;
     const sm = ctx.skillManager;
 
+    if (p === '/api/ma-skills' && m === 'GET') { listMASkills(req, res, apiHeaders); return true; }
     if (p === '/api/skills' && m === 'GET') { listSkills(req, res, apiHeaders, sm); return true; }
     if (p === '/api/skills/approval-mode' && m === 'GET') { getApprovalMode(req, res, apiHeaders); return true; }
     if (p === '/api/skills/approval-mode' && m === 'POST') { await setApprovalMode(req, res, apiHeaders, readBody); return true; }
@@ -289,6 +294,55 @@ function createSkillsRoutes(ctx) {
       res.writeHead(200, apiHeaders);
       res.end(JSON.stringify({ ok: true, url: targetUrl, text: result.text, length: result.text.length }));
     } catch (e) { res.writeHead(500, apiHeaders); res.end(JSON.stringify({ ok: false, error: e.message })); }
+  }
+
+  // ── MA Skills (drop-in folder) ──────────────────────────────
+  function listMASkills(req, res, apiHeaders) {
+    const skills = [];
+    try {
+      if (_fs.existsSync(MA_SKILLS_DIR)) {
+        const dirs = _fs.readdirSync(MA_SKILLS_DIR).filter(d => {
+          const full = _path.join(MA_SKILLS_DIR, d);
+          return _fs.statSync(full).isDirectory();
+        });
+        for (const dir of dirs) {
+          let skillMdPath = _path.join(MA_SKILLS_DIR, dir, 'SKILL.md');
+          if (!_fs.existsSync(skillMdPath)) skillMdPath = _path.join(MA_SKILLS_DIR, dir, 'skill.md');
+          if (!_fs.existsSync(skillMdPath)) continue;
+          const raw = _fs.readFileSync(skillMdPath, 'utf-8');
+          const { meta, body } = _parseFrontmatter(raw);
+          skills.push({
+            name: meta.name || dir,
+            description: meta.description || '',
+            enabled: meta.enabled !== false,
+            version: meta.version || '1.0.0',
+            trigger: meta.trigger || dir
+          });
+        }
+      }
+    } catch (e) {
+      res.writeHead(500, apiHeaders);
+      res.end(JSON.stringify({ ok: false, error: e.message }));
+      return;
+    }
+    res.writeHead(200, apiHeaders);
+    res.end(JSON.stringify({ ok: true, skills }));
+  }
+
+  /** Minimal YAML-frontmatter parser for MA skill files */
+  function _parseFrontmatter(text) {
+    const match = text.match(/^---\r?\n([\s\S]*?)\r?\n---/);
+    if (!match) return { meta: {}, body: text };
+    const meta = {};
+    for (const line of match[1].split(/\r?\n/)) {
+      const kv = line.match(/^([A-Za-z0-9_-]+):\s*(.*)$/);
+      if (!kv) continue;
+      const val = kv[2].trim();
+      if (val === 'true') meta[kv[1]] = true;
+      else if (val === 'false') meta[kv[1]] = false;
+      else meta[kv[1]] = val;
+    }
+    return { meta, body: text.slice(match[0].length).trim() };
   }
 
   return { dispatch };

@@ -157,6 +157,8 @@ async function openConfig(defaultTab) {
     document.getElementById('cfg-mem-limit').value = memLimit;
     document.getElementById('cfg-mem-limit-val').textContent = memLimit;
     document.getElementById('cfg-mem-recall').checked = d.memoryRecall !== false;
+    // Hydrate Auto Pilot from localStorage
+    document.getElementById('cfg-autopilot').checked = isAutoPilot();
     // Hydrate capabilities toggles
     if (d.capabilities) {
       const c = d.capabilities;
@@ -197,6 +199,9 @@ async function saveConfig() {
 
   // Apply theme choice (client-side only)
   applyTheme(document.getElementById('cfg-theme').value);
+
+  // Save Auto Pilot (client-side only)
+  setAutoPilot(document.getElementById('cfg-autopilot').checked);
 
   // Include capabilities for Anthropic
   if (type === 'anthropic') {

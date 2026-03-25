@@ -131,17 +131,43 @@ function loadEntity() {
 
 function loadSkills() {
   const skillsDir = path.join(ENTITY_DIR, 'skills');
+  const maSkillsDir = path.join(MA_ROOT, 'MA-skills');
   skills = [];
+  const loaded = new Set();
+
+  // 1. Load compact runtime refs from MA-entity/entity_ma/skills/*.md
   try {
     if (fs.existsSync(skillsDir)) {
       const files = fs.readdirSync(skillsDir).filter(f => f.endsWith('.md'));
       for (const f of files) {
         const content = fs.readFileSync(path.join(skillsDir, f), 'utf8');
-        skills.push({ name: f.replace(/\.md$/, ''), content });
+        const name = f.replace(/\.md$/, '');
+        skills.push({ name, content });
+        loaded.add(name);
       }
-      if (skills.length) console.log(`  Skills loaded: ${skills.length} (${skills.map(s => s.name).join(', ')})`);
     }
-  } catch (e) { console.warn('  Skills load failed:', e.message); }
+  } catch (e) { console.warn('  Skills load (entity) failed:', e.message); }
+
+  // 2. Load drop-in skills from MA-skills/{name}/SKILL.md (user-added)
+  try {
+    if (fs.existsSync(maSkillsDir)) {
+      const dirs = fs.readdirSync(maSkillsDir).filter(d => {
+        const p = path.join(maSkillsDir, d);
+        return fs.statSync(p).isDirectory();
+      });
+      for (const dir of dirs) {
+        if (loaded.has(dir)) continue; // entity runtime ref takes precedence
+        let skillMd = path.join(maSkillsDir, dir, 'SKILL.md');
+        if (!fs.existsSync(skillMd)) skillMd = path.join(maSkillsDir, dir, 'skill.md');
+        if (!fs.existsSync(skillMd)) continue;
+        const content = fs.readFileSync(skillMd, 'utf8');
+        skills.push({ name: dir, content });
+        loaded.add(dir);
+      }
+    }
+  } catch (e) { console.warn('  Skills load (MA-skills) failed:', e.message); }
+
+  if (skills.length) console.log(`  Skills loaded: ${skills.length} (${skills.map(s => s.name).join(', ')})`);
 }
 
 function initMemory() {
@@ -448,7 +474,7 @@ async function compressHistory(hist, maxHistoryTokens, llmConfig) {
 
 // ── Chat handler (shared between server + CLI) ──────────────────────────────
 
-async function handleChat({ message, history = [], attachments = [], onStep, onActivity }) {
+async function handleChat({ message, history = [], attachments = [], autoPilot = false, onStep, onActivity }) {
   if (!config) throw new Error('No LLM configured. Run /config or POST /api/config first.');
   if (!message) throw new Error('No message');
 
@@ -694,6 +720,85 @@ Do NOT try to rush or compress your output to fit — it's better to stop cleanl
     if (onActivity) await onActivity('worklog', 'Loaded session worklog');
   }
 
+  // ── "Brief is ready" fast path — reads PROJECT-BRIEF.md and runs the task ──
+  let briefLoaded = false;
+  const briefReadyRe = /\b(?:brief\s+is\s+ready|start\s+building|build\s+(?:it|the\s+project|this)|ready\s+to\s+build)\b/i;
+  if (briefReadyRe.test(message)) {
+    try {
+      // Find most recent project folder with a PROJECT-BRIEF.md
+      const entries = fs.readdirSync(WORKSPACE_DIR).filter(f => {
+        const bp = path.join(WORKSPACE_DIR, f, 'PROJECT-BRIEF.md');
+        return fs.statSync(path.join(WORKSPACE_DIR, f)).isDirectory() && fs.existsSync(bp);
+      });
+      if (entries.length > 0) {
+        // Sort by modification time, newest first
+        entries.sort((a, b) => {
+          const ta = fs.statSync(path.join(WORKSPACE_DIR, a, 'PROJECT-BRIEF.md')).mtimeMs;
+          const tb = fs.statSync(path.join(WORKSPACE_DIR, b, 'PROJECT-BRIEF.md')).mtimeMs;
+          return tb - ta;
+        });
+        const projSlug = entries[0];
+        const briefContent = fs.readFileSync(path.join(WORKSPACE_DIR, projSlug, 'PROJECT-BRIEF.md'), 'utf8');
+        // Augment the message with the brief content and route to normal task runner
+        const augmented = `Build the project described in this brief. Project folder: ${projSlug}/\n\n---\n\n${briefContent}`;
+        // Override message for task runner
+        message = augmented;
+        // Force intent to project task
+        intent.intent = 'task';
+        intent.taskType = 'project';
+        intent.confidence = 1.0;
+        if (onActivity) await onActivity('brief_loaded', `Loaded brief from ${projSlug}/PROJECT-BRIEF.md`);
+        briefLoaded = true;
+        // Fall through to task path below
+      }
+    } catch { /* ignore — fall through to normal handling */ }
+  }
+
+  // ── Project-creation fast path (template brief) ──────────────────────
+  // If the user wants to CREATE a new project, scaffold the folder + brief
+  // template instead of running the full multi-step task runner. Saves tokens.
+  if (!briefLoaded && intent.intent === 'task' && intent.taskType === 'project' && intent.confidence >= 0.2) {
+    const createRe = /(?:create|start|new|scaffold|setup|init|begin|make)\b.{0,40}\bproject/i;
+    if (createRe.test(message)) {
+      try {
+        // Extract a project name from the message
+        const nameMatch = message.match(/(?:called|named|for)\s+["']?([A-Za-z0-9][A-Za-z0-9 _-]{1,40})["']?/i)
+          || message.match(/project\s+["']?([A-Za-z0-9][A-Za-z0-9 _-]{1,40})["']?/i);
+        const rawName = nameMatch ? nameMatch[1].trim() : `project-${Date.now().toString(36)}`;
+        const slug = rawName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9_-]/g, '').slice(0, 40);
+
+        // Create workspace folder
+        const projDir = path.join(WORKSPACE_DIR, slug);
+        if (!fs.existsSync(projDir)) fs.mkdirSync(projDir, { recursive: true });
+
+        // Copy brief template into the project
+        const templatePath = path.join(__dirname, '..', 'MA-blueprints', 'core', 'project-brief-template.md');
+        const briefDest = path.join(projDir, 'PROJECT-BRIEF.md');
+        if (fs.existsSync(templatePath) && !fs.existsSync(briefDest)) {
+          fs.copyFileSync(templatePath, briefDest);
+        }
+
+        // Create project archive entry
+        try { projectArchive.createProject(slug, { name: rawName, description: message.slice(0, 200) }); } catch { /* may already exist */ }
+
+        if (onActivity) await onActivity('project_create', `Created project folder: ${slug}/`);
+        if (memory) memory.store('episodic', `Created new project "${rawName}" (${slug}) — brief template placed at ${slug}/PROJECT-BRIEF.md`, { topics: ['project'], chainId });
+        worklog.recordTask('project', `Create project: ${rawName}`, 1, 'complete');
+
+        const reply = `I created **${rawName}** in your workspace:\n\n` +
+          `📁 \`${slug}/\`\n📄 \`${slug}/PROJECT-BRIEF.md\`\n\n` +
+          `Open the **PROJECT-BRIEF.md** file in the workspace explorer and fill out the sections — ` +
+          `project name, description, tech stack, features, and any constraints.\n\n` +
+          `When you're done, just tell me **"The brief is ready"** or **"Start building"** and I'll read it and get to work.`;
+
+        return { reply, taskType: 'project', steps: 1, filesChanged: [briefDest] };
+      } catch (e) {
+        console.error('[CORE] Project template fast-path error:', e.message);
+        // Fall through to normal task runner on error
+      }
+    }
+  }
+
   // ── Task path ───────────────────────────────────────────────────────
   if (intent.intent === 'task' && intent.confidence >= 0.2) {
     // Route to best available model for this task type
@@ -707,7 +812,7 @@ Do NOT try to rush or compress your output to fit — it's better to stop cleanl
       taskType: intent.taskType,
       message,
       entityName,
-      callLLM: (msgs, opts) => callLLM(taskLLMConfig, msgs, opts),
+      callLLM: (msgs, opts) => callLLM(taskLLMConfig, msgs, autoPilot ? { ...opts, timeout: 0 } : opts),
       execTools: wsTools.executeToolCalls,
       formatResults: wsTools.formatToolResults,
       stripTools: wsTools.stripToolCalls,
@@ -802,7 +907,8 @@ Do NOT try to rush or compress your output to fit — it's better to stop cleanl
 
   let reply = await callLLM(config, messages, {
     temperature: 0.7, maxTokens: responseReserve, ...thinkingOpt,
-    ...(nativeToolSchemas ? { tools: nativeToolSchemas } : {})
+    ...(nativeToolSchemas ? { tools: nativeToolSchemas } : {}),
+    ...(autoPilot ? { timeout: 0 } : {})
   });
 
   const toolOpts = {
@@ -868,7 +974,7 @@ Do NOT try to rush or compress your output to fit — it's better to stop cleanl
     reply = await callLLM(config, [
       { role: 'system', content: `You are ${entityName}. Incorporate tool results into your response. Be concise. Do NOT output [TOOL: ...] blocks — tools have already been executed.${writtenFiles.length ? '\n\nFiles were written and auto-verified. Check the verification results — if the file looks incomplete or has errors, tell the user what needs to be fixed and offer to continue.' : ''}` },
       { role: 'user', content: `${clean}\n\n${toolBlock}${verifyBlock}\n\nRespond naturally:` }
-    ], { temperature: 0.6, maxTokens: responseReserve });
+    ], { temperature: 0.6, maxTokens: responseReserve, ...(autoPilot ? { timeout: 0 } : {}) });
   }
 
   // Detect continuation marker in the reply

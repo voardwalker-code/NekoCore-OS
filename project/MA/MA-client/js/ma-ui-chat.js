@@ -4,6 +4,69 @@
 let activeSessionId = null; // null = new session (not yet saved)
 let allSessions = [];       // cached session list from server
 
+// ── Long-request timeout popup ────────────────────────────────────────────
+const LONG_REQUEST_THRESHOLD = 30000; // 30s before showing popup
+const AUTOPILOT_KEY = 'ma-autopilot-v1';
+let _lrTimer = null;
+let _lrStartTime = 0;
+let _lrAbortController = null;
+let _lrDismissed = false;
+
+function isAutoPilot() { return localStorage.getItem(AUTOPILOT_KEY) === '1'; }
+function setAutoPilot(on) { localStorage.setItem(AUTOPILOT_KEY, on ? '1' : '0'); }
+
+function _startLongRequestTimer() {
+  _lrStartTime = Date.now();
+  _lrDismissed = false;
+  _clearLongRequestTimer();
+  if (isAutoPilot()) return; // no popups in auto pilot
+  _lrTimer = setTimeout(_showLongRequestPopup, LONG_REQUEST_THRESHOLD);
+}
+
+function _resetLongRequestTimer() {
+  // Reset on any progress event (SSE activity/step)
+  if (_lrDismissed || isAutoPilot()) return;
+  _clearLongRequestTimer();
+  _lrTimer = setTimeout(_showLongRequestPopup, LONG_REQUEST_THRESHOLD);
+}
+
+function _clearLongRequestTimer() {
+  if (_lrTimer) { clearTimeout(_lrTimer); _lrTimer = null; }
+}
+
+function _showLongRequestPopup() {
+  const overlay = document.getElementById('long-request-overlay');
+  const elapsedEl = document.getElementById('lr-elapsed');
+  if (!overlay) return;
+  const elapsed = Math.round((Date.now() - _lrStartTime) / 1000);
+  if (elapsedEl) elapsedEl.textContent = elapsed;
+  overlay.classList.remove('hidden');
+}
+
+function dismissLongRequest() {
+  const overlay = document.getElementById('long-request-overlay');
+  if (overlay) overlay.classList.add('hidden');
+  _lrDismissed = true;
+  _clearLongRequestTimer();
+}
+
+function cancelLongRequest() {
+  const overlay = document.getElementById('long-request-overlay');
+  if (overlay) overlay.classList.add('hidden');
+  _clearLongRequestTimer();
+  if (_lrAbortController) { _lrAbortController.abort(); _lrAbortController = null; }
+  hideTyping();
+  addSystem('Request cancelled.');
+  sending = false;
+  sendBtn.disabled = false;
+  inputEl.focus();
+}
+
+function toggleAutoPilotFromPopup(checked) {
+  setAutoPilot(checked);
+  if (checked) dismissLongRequest();
+}
+
 // ── Session picker ────────────────────────────────────────────────────────
 async function loadSessionList() {
   try {
@@ -103,6 +166,7 @@ async function saveSession() {
     const d = await r.json();
     if (d.id) activeSessionId = d.id;
     loadSessionList(); // refresh picker
+    if (typeof loadConversationHistory === 'function') loadConversationHistory(); // refresh explorer
   } catch (_) { /* silent */ }
 }
 
@@ -240,19 +304,24 @@ async function send() {
   const payload = JSON.stringify({
     message: msgText,
     history: history.slice(-10),
-    attachments: attachments.length ? attachments : undefined
+    attachments: attachments.length ? attachments : undefined,
+    autoPilot: isAutoPilot()
   });
 
   try {
     // Use SSE streaming endpoint for step progress
+    _lrAbortController = new AbortController();
+    _startLongRequestTimer();
     const r = await fetch('/api/chat/stream', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: payload
+      body: payload,
+      signal: _lrAbortController.signal
     });
 
     if (!r.ok) {
       // Fallback: try regular endpoint
+      _clearLongRequestTimer();
       hideTyping();
       const r2 = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: payload });
       const d = await r2.json();
@@ -280,6 +349,7 @@ async function send() {
         if (line.startsWith('event: ')) {
           eventType = line.slice(7).trim();
         } else if (line.startsWith('data: ') && eventType) {
+          _resetLongRequestTimer(); // got data — reset timeout popup
           try {
             const data = JSON.parse(line.slice(6));
             if (eventType === 'activity') {
@@ -294,10 +364,12 @@ async function send() {
               }
               updateProgress(progressWidget, data);
             } else if (eventType === 'done') {
+              _clearLongRequestTimer();
               hideTyping();
               if (progressWidget) finalizeProgress(progressWidget);
               handleChatResult(data);
             } else if (eventType === 'error') {
+              _clearLongRequestTimer();
               hideTyping();
               if (progressWidget) finalizeProgress(progressWidget);
               addSystem('Error: ' + (data.error || 'Unknown error'));
@@ -310,12 +382,15 @@ async function send() {
       }
     }
 
+    _clearLongRequestTimer();
     // If no events came through at all, handle gracefully
     if (!gotSteps) hideTyping();
 
   } catch (e) {
+    _clearLongRequestTimer();
+    dismissLongRequest();
     hideTyping();
-    addSystem('Network error: ' + e.message);
+    if (e.name !== 'AbortError') addSystem('Network error: ' + e.message);
   }
 
   sending = false;
@@ -358,9 +433,72 @@ function handleChatResult(d) {
   } else {
     lastContinuation = null;
   }
+
+  // Book ingestion: render character selection UI when MA presents the list
+  if (reply.includes('Selection options') || reply.includes('Which would you like')) {
+    _renderCharacterSelectionButtons(msgDiv);
+  }
+
   loadWorklog();
   if (currentInspector === 'projects') loadProjects();
   saveSession();
+}
+
+/** Render quick-select buttons for book character selection below the MA message. */
+function _renderCharacterSelectionButtons(msgDiv) {
+  const container = msgDiv.querySelector('.bubble') || msgDiv;
+  const bar = document.createElement('div');
+  bar.className = 'book-selection-bar';
+
+  const modes = [
+    { label: '★ Main Characters Only', value: 'main' },
+    { label: '● All Characters', value: 'all' },
+    { label: '✎ Select Specific...', value: 'specific' }
+  ];
+
+  for (const mode of modes) {
+    const btn = document.createElement('button');
+    btn.className = 'book-select-btn';
+    btn.textContent = mode.label;
+    btn.onclick = function () {
+      bar.querySelectorAll('.book-select-btn').forEach(b => b.disabled = true);
+      if (mode.value === 'specific') {
+        // Show text input for character names
+        const inp = document.createElement('input');
+        inp.type = 'text';
+        inp.className = 'book-char-input';
+        inp.placeholder = 'Character names (comma-separated)...';
+        inp.onkeydown = function (e) {
+          if (e.key === 'Enter' && inp.value.trim()) {
+            const names = inp.value.trim();
+            inputEl.value = '[BOOK_SELECTION] mode=specific selected=' + names;
+            send();
+            inp.disabled = true;
+          }
+        };
+        const go = document.createElement('button');
+        go.className = 'book-select-btn';
+        go.textContent = 'Extract';
+        go.onclick = function () {
+          if (inp.value.trim()) {
+            inputEl.value = '[BOOK_SELECTION] mode=specific selected=' + inp.value.trim();
+            send();
+            inp.disabled = true;
+            go.disabled = true;
+          }
+        };
+        bar.appendChild(inp);
+        bar.appendChild(go);
+      } else {
+        inputEl.value = '[BOOK_SELECTION] mode=' + mode.value;
+        send();
+      }
+    };
+    bar.appendChild(btn);
+  }
+
+  container.appendChild(bar);
+  chatEl.scrollTop = chatEl.scrollHeight;
 }
 
 function handleKey(e) {

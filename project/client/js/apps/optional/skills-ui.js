@@ -52,6 +52,43 @@ async function toggleSkillApprovalMode(required) {
 }
 
 // ============================================================
+// MA SKILLS LIST (drop-in folder)
+// ============================================================
+
+async function loadMASkillsList() {
+  const container = document.getElementById('maSkillsList');
+  if (!container) return;
+  try {
+    const res = await fetch('/api/ma-skills');
+    if (!res.ok) throw new Error('Failed to load MA skills');
+    const data = await res.json();
+    const skills = data.skills || [];
+
+    if (!skills.length) {
+      container.innerHTML = '<div style="color:var(--td);text-align:center;padding:2rem">No MA skills found. Drop a folder with SKILL.md into MA/MA-skills/ to add one.</div>';
+      return;
+    }
+
+    container.innerHTML = skills.map(s => {
+      const trigger = s.trigger || s.name;
+      const versionBadge = s.version ? `<span style="font-size:.6rem;color:var(--td);margin-left:.5rem">v${escapeHtml(s.version)}</span>` : '';
+      const triggerBadge = `<span style="font-size:.6rem;padding:.15rem .4rem;border-radius:4px;background:rgba(52,211,153,.1);color:var(--em);margin-left:.5rem;font-family:var(--font-mono,monospace)">/skill ${escapeHtml(trigger)}</span>`;
+      return `
+      <div style="background:var(--sf2);border:1px solid var(--bd);border-radius:10px;padding:1rem;display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-weight:600;font-size:.9rem;margin-bottom:.25rem">${escapeHtml(s.name)}${versionBadge}</div>
+          <div style="font-size:.75rem;color:var(--td);margin-bottom:.2rem">${escapeHtml(s.description || 'No description')}</div>
+          <div>${triggerBadge}</div>
+        </div>
+        <div style="font-size:.65rem;padding:.25rem .6rem;border-radius:6px;background:${s.enabled ? 'rgba(52,211,153,.15)' : 'rgba(71,85,105,.2)'};color:${s.enabled ? 'var(--em)' : 'var(--td)'}">${s.enabled ? 'Available' : 'Disabled'}</div>
+      </div>`;
+    }).join('');
+  } catch (err) {
+    container.innerHTML = `<div style="color:var(--dn);text-align:center;padding:1rem">Error: ${escapeHtml(err.message)}</div>`;
+  }
+}
+
+// ============================================================
 // SKILLS LIST
 // ============================================================
 
@@ -1495,6 +1532,7 @@ function displayTaskPlan(taskPlan) {
 // INIT — Load skills and sleep config on page load
 // ============================================================
 document.addEventListener('DOMContentLoaded', () => {
+  loadMASkillsList();
   loadSkillsList();
   loadSleepConfig();
   loadMaxTokensConfig();

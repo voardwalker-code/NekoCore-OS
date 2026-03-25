@@ -70,6 +70,7 @@
     <button class="mode-btn" data-mode="chat" onclick="switchMode('chat')">Chat</button>
   </div>
   <div class="toolbar-actions">
+    <button class="act-toggle" onclick="selectWorkspaceSection('archives')" title="Project Archives">Archives</button>
     <button class="act-toggle" onclick="selectWorkspaceSection('activity')" title="Activity Feed">Activity</button>
   </div>
 </header>
@@ -107,6 +108,10 @@
       <button class="rail-btn" id="rail-session" data-label="Session History" onclick="selectWorkspaceSection('session')">
         <span class="icon">🧾</span>
         <span class="label">Session</span>
+      </button>
+      <button class="rail-btn" id="rail-archives" data-label="Archives" onclick="selectWorkspaceSection('archives')">
+        <span class="icon">🗄</span>
+        <span class="label">Archives</span>
       </button>
       <button class="rail-btn" id="rail-activity" data-label="Activity Feed" onclick="selectWorkspaceSection('activity')">
         <span class="icon">📡</span>
@@ -178,6 +183,7 @@
     <div id="session-picker">
       <div id="session-recent-bar"></div>
       <div id="session-dropdown-wrap">
+        <button class="sp-new-btn" onclick="startNewSession()" title="New conversation">＋ New Chat</button>
         <button id="session-dropdown-btn" onclick="toggleSessionDropdown()">History ▾</button>
         <div id="session-dropdown" class="hidden"></div>
       </div>
@@ -251,6 +257,7 @@
       <label>Memory Recall <span id="cfg-mem-limit-val" style="color:var(--accent)">6</span></label>
       <input id="cfg-mem-limit" type="range" min="6" max="50" step="1" value="6" oninput="document.getElementById('cfg-mem-limit-val').textContent=this.value" style="accent-color:var(--accent)">
       <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input id="cfg-mem-recall" type="checkbox" checked style="accent-color:var(--accent)"> Enable memory recall in chat</label>
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-top:6px"><input id="cfg-autopilot" type="checkbox" style="accent-color:var(--accent)"> Auto Pilot <span style="font-size:11px;color:var(--dim)">(no timeout popups — let MA run freely)</span></label>
       <div class="btn-row" style="margin-top:10px">
         <button class="btn-cancel" type="button" onclick="resetWorkspaceLayout()">Reset Workspace Layout</button>
       </div>
@@ -331,6 +338,22 @@
 
 <!-- Ingest progress overlay -->
 <div id="ingest-progress-overlay">
+
+<!-- Long-request popup -->
+<div id="long-request-overlay" class="hidden">
+  <div class="config-box" style="width:380px;text-align:center">
+    <div style="font-size:32px;margin-bottom:12px">⏳</div>
+    <h3 style="margin:0 0 8px;font-size:16px;color:var(--text)">Taking a while...</h3>
+    <p id="long-request-msg" style="font-size:13px;color:var(--dim);margin:0 0 16px">MA has been working for <span id="lr-elapsed">30</span>s. You can cancel or let it keep going.</p>
+    <div class="btn-row" style="justify-content:center;gap:10px">
+      <button class="btn-cancel" onclick="cancelLongRequest()">Cancel</button>
+      <button class="btn-save" onclick="dismissLongRequest()">Let it finish</button>
+    </div>
+    <label style="display:flex;align-items:center;gap:6px;justify-content:center;margin-top:14px;font-size:12px;color:var(--dim);cursor:pointer">
+      <input type="checkbox" id="lr-autopilot-check" style="accent-color:var(--accent)" onchange="toggleAutoPilotFromPopup(this.checked)"> Enable Auto Pilot (never show this again)
+    </label>
+  </div>
+</div>
   <div class="config-box" style="width:520px">
     <div class="ingest-prog-header">
       <span id="ingest-prog-label">Ingesting...</span>
