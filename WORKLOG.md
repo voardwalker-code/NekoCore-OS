@@ -44,11 +44,11 @@ Emergency exception log:
 
 ---
 
-## Stop/Resume Snapshot — 2026-03-24 (v0.9.0-alpha.6 Release)
+## Stop/Resume Snapshot — 2026-03-24 (Landing Page Info Update)
 
-- **Current phase:** `Version bump + documentation update + push`
+- **Current phase:** `Landing page deployment`
 - **Current slice:** `Complete`
-- **Last completed work:** `Bumped version to 0.9.0-alpha.6 in both package.json files. Updated CHANGELOG.md — promoted [Unreleased] to [0.9.0-alpha.6] with all session work (QA expansion, Bug Tracker Export, MA Skills GUI, Prompt Engineering Blueprint, App Builder Blueprint, Blueprint Builder, D&D+Study Blueprints, Book-to-Entity, Archives panel, etc.). Updated README.md — version text, test badge (2,605), QA Checklist (625/61), roadmap (Phases 4.26–4.33 + Phase 5), Bug Tracker export description.`
+- **Last completed work:** `Synced landing-deploy/ with updated HTML sources and deployed to Cloudflare Pages (nekocore-landing → neko-core.com). 3 files uploaded.`
 - **In-progress item:** `none`
 - **Blocking issue:** `none`
 - **Next action on resume:** `User direction.`
@@ -71,6 +71,25 @@ Emergency exception log:
   - `Documents/current/PLAN-DND-AND-STUDY-BLUEPRINTS-v1.md` — D&D + Education/Study Blueprints & Skills — `Complete (all 11 slices: -0 through 10)`
 - **Prior plan (paused):** `Documents/current/PLAN-SLASH-COMMAND-SYSTEM-v1.md — A0/A1/A2 complete; A3/A4 future`
 - **MA workspace projects:** `Moved to separate repo — MA-workspace is now fully cleared on reset`
+
+---
+
+## Session Ledger — 2026-03-24 (neko_fixer.py Bugfix)
+
+Status: `Complete`
+
+- **Request:** Diagnose and fix errors in neko_fixer.py.
+- **Root cause:** `generate-fixer.js` line 104 wrapped multi-line base64 in regular Python double-quotes (`"..."`). Python requires triple-quotes (`"""..."""`) for strings spanning multiple lines.
+- **Files changed:** `project/scripts/generate-fixer.js` (changed `"${b64Str}"` to `"""${b64Str}"""`), `project/neko_fixer.py` (regenerated — 301 files, 65,928 lines, all 301 b64 entries validated)
+
+---
+
+## Session Ledger — 2026-03-24 (White Paper Update)
+
+Status: `Complete`
+
+- **Request:** Update white paper to reflect current system state.
+- **Files changed:** `docs/NEKOCORE-OS-WHITE-PAPER-v2.md` (test counts 866→2,605, added Anthropic Direct, Memory Schema v1→v2, belief-retrieval gap→wired, roadmap all phases complete, Predictive Memory 13-slice table, desktop apps table, server routes expanded, Known Limitations #4 removed, Version History alpha.1–6, Claim-to-Source Map + Appendix A updated), `CHANGELOG.md`, `WORKLOG.md`
 
 ---
 

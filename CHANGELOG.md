@@ -5,6 +5,13 @@ Built with MA (Memory Architect v1).
 
 ## [Unreleased]
 
+### Fixed
+- **neko_fixer.py — invalid Python syntax** — Generator (`generate-fixer.js`) wrapped multi-line base64 strings in regular `"..."` quotes instead of triple-quotes `"""..."""`. Python cannot have newlines inside regular string literals. Fixed the generator and regenerated fixer (301 files, 65,928 lines).
+- **Landing page outdated stats** — Updated test count in Neko-Core.html specs table from 1369 to 2,600+. Updated MA dependency count from 0 to 1 across MA-Memory-Architect.html and VoardWalker-Code.html (Zod added as dependency). Updated Phase 1-3 roadmap description to remove stale test count. Synced landing-deploy/ and deployed to Cloudflare Pages (nekocore-landing).
+
+### Changed
+- **White paper updated to v2.1** — Corrected test counts (866→2,605), added Anthropic Direct to provider list, updated Memory Schema v1→v2 references, replaced belief-retrieval gap (now wired via Predictive Memory Slice 9), updated Implementation Roadmap (all phases through 4.33 + Phase 5 complete), updated Predictive Memory from "stub" to fully implemented (13 slices), expanded desktop environment app list, expanded server routes list, updated Known Limitations (removed resolved #4), expanded Version History through alpha.6, updated Claim-to-Source Map and Appendix A file map.
+
 ## [0.9.0-alpha.6] — 2026-03-24
 
 ### Added

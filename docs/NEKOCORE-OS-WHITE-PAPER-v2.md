@@ -95,7 +95,7 @@ NekoCore OS is a cognitive operating system built on the REM System (Recursive E
 
 ### Who This Is For
 
-This white paper is written for engineers, researchers, and builders interested in persistent agent architecture. It defines the system NekoCore OS has built, the constraints it has measured, and the roadmap it is pursuing. It is a statement of architecture and intent — grounded in running code, validated by 866+ tests, and honest about what remains planned.
+This white paper is written for engineers, researchers, and builders interested in persistent agent architecture. It defines the system NekoCore OS has built, the constraints it has measured, and the roadmap it is pursuing. It is a statement of architecture and intent — grounded in running code, validated by 2,605+ tests, and honest about what remains planned.
 
 ### Design Convictions
 
@@ -146,10 +146,10 @@ Five architectural convictions guide every decision in the system:
 |----------|-------|
 | Runtime | Node.js (server) + vanilla HTML/CSS/JS (client) |
 | Framework dependencies | **Zero** — no Express, no React, no ORM |
-| LLM providers | OpenRouter, Ollama, any OpenAI-compatible endpoint |
+| LLM providers | OpenRouter, Anthropic Direct, Ollama, any OpenAI-compatible endpoint |
 | Storage | Flat-file JSON/TXT with atomic write-to-temp-then-rename |
 | Transport | HTTP REST + Server-Sent Events (SSE) |
-| Test suite | 866+ tests on Node.js built-in `node:test` |
+| Test suite | 2,605+ tests on Node.js built-in `node:test` |
 
 The near-zero-dependency constraint is enforced at the server level. The only required dependency is Zod (schema validation). The only optional dependencies (`@napi-rs/canvas`, `gif-encoder-2`) are lazy-loaded for pixel art generation and are not required for core operation.
 
@@ -375,7 +375,7 @@ Confidence changes over time:
 
 This produces a dynamic worldview that shifts with experience rather than remaining static. During sleep cycles, dream narratives can reinforce or weaken beliefs, integrating nightly experience processing into the entity's belief structure.
 
-> **Roadmap note:** The belief graph includes a `routeAttention()` function designed to boost retrieval scores for memories related to strongly-held beliefs ($\text{retrievalScore} \mathrel{+}= 0.20 \times \text{belief.confidence}$). This function exists in code but is **not yet wired** into the live retrieval path in `memory-retrieval.js`. Belief-linked retrieval boosting is a planned integration for a future phase.
+> **Implementation note:** The belief graph's `getAttentionBoosts(topics)` function boosts retrieval scores for memories related to strongly-held beliefs (boost = `BELIEF_ACTIVATION_BOOST × confidence`). This is wired into `memory-retrieval.js` — belief source memories receive activation energy before scoring. `seedBeliefEdges()` in `edge-builder.js` creates `belief_linked` edges from new memories to belief source memories (strength `0.5 × confidence`). Wired into both `createCoreMemory` and `createSemanticKnowledge` via `creationContext.activeBeliefIds`.
 
 ---
 
@@ -626,7 +626,7 @@ Multi-stage decomposition only remains useful if stage boundaries are protected.
 
 | Contract | File | What It Governs |
 |----------|------|-----------------|
-| Memory Schema v1 | `server/contracts/memory-schema.js` | All persisted memory records |
+| Memory Schema v1 | `server/contracts/memory-schema.js` | All persisted memory records (v2 adds creationContext, shape, edges, activation) |
 | Contributor Contracts | `server/contracts/contributor-contracts.js` | Output shape of 1A, 1C, 1D |
 | Worker Output Contract | `server/contracts/worker-output-contract.js` | Worker Entity outputs |
 | Turn Signal Shape | `server/brain/utils/turn-signals.js` | Preprocessed user intent structure |
@@ -887,21 +887,31 @@ server/routes/
   auth-routes.js         — login, logout, session check
   chat-routes.js         — main conversation endpoint
   entity-routes.js       — entity CRUD, profiles, relationships, creation
+  entity-enrichment-routes.js — memory injection, cognitive ticks, state reads
   memory-routes.js       — memory read/write/search
   brain-routes.js        — brain loop control
   cognitive-routes.js    — sleep, dream, archive triggers
   document-routes.js     — document ingestion pipeline
   config-routes.js       — runtime config management
   sse-routes.js          — real-time event streaming
-  skills-routes.js       — skill invocation surface
+  skills-routes.js       — skill invocation surface + MA skills API
   browser-routes.js      — browser app endpoints
+  resource-manager-routes.js — todos, tasks, projects, blueprints, active state
+  process-manager-routes.js  — MA process lifecycle for /ma bridge
 ```
 
 ---
 
 ## 21. Desktop Environment
 
-The client is a vanilla HTML/CSS/JS desktop shell with a window manager, app launcher, theme engine, and the following applications: Chat, Entity Manager, Creator, Users, Settings, Browser, Task Manager, and Neural Visualizer.
+The client is a vanilla HTML/CSS/JS desktop shell with a window manager, app launcher, theme engine, and the following applications:
+
+| Category | Apps |
+|----------|------|
+| Core | Chat, Entity Manager, Creator, Users, Settings, Browser, Task Manager, Neural Visualizer |
+| Mind | Memory tab, Belief tab, Diary, Dream Gallery, Sleep tab |
+| Tools | Bug Tracker, Resource Manager, QA Checklist, Skills Manager |
+| System | MA Server (Memory Architect IDE with 19 task types, terminal, blueprints) |
 
 The client/server boundary is strictly enforced:
 
@@ -958,7 +968,7 @@ mem_<timestamp>_<random>/
     memory.zip     — compressed full content for reconstruction
 ```
 
-All memory records are normalized through `normalizeMemoryRecord()` before persistence. The memory schema (version 1) enforces a canonical field set across all record types.
+All memory records are normalized through `normalizeMemoryRecord()` before persistence. The memory schema (version 2) enforces a canonical field set across all record types, including five fields added for predictive memory topology: `creationContext` (cognitive state at creation), `shape` (emotional/anticipatory/reflective/factual/narrative/unclassified), `edges` (connections to other memories), `activationLevel` (pre-activation energy), and `lastActivationContext`.
 
 ```mermaid
 flowchart TD
@@ -1107,7 +1117,7 @@ The system works well within its current performance envelope. The design proble
 
 ---
 
-> **Readiness boundary:** The **REM Runtime described in Parts I–III is implemented and usable now**. The architectures in **Part IV are roadmap layers** derived from measured constraints and documented plans. Agent Echo, the relay hub, the adapter layer, and predictive-topology components should be read as **planned next-stage systems**, not current production capabilities.
+> **Readiness boundary:** The **REM Runtime described in Parts I–III is implemented and usable now**, including the Predictive Memory Topology (Phase 5, all 13 slices). The architectures below for **Agent Echo's multi-index narrowing** and the **distributed social-cognition relay hub** are roadmap layers derived from measured constraints and documented plans. These should be read as **planned next-stage systems**, not current production capabilities.
 
 ---
 
@@ -1129,8 +1139,8 @@ flowchart TD
         ECHO_PAST_R1 --> ECHO_PAST_R2["Round 2: Async\nDuring humanizer typing\nPromotes finds into hot window"]
     end
 
-    subgraph "Echo Future (Dream) — Phase 5 Stub"
-        ECHO_FUTURE["Predictive topology\nIndex contract defined\nNo-op implementation"]
+    subgraph "Echo Future (Dream) — Implemented"
+        ECHO_FUTURE["Predictive topology\nPre-activated memories\nAnticipatory shape boost"]
     end
 
     ECHO_NOW --> MERGE["Merged Results"]
@@ -1142,7 +1152,7 @@ flowchart TD
     style ECHO_FUTURE fill:#7f8c8d,stroke:#95a5a6,color:#fff
 ```
 
-**Figure 12.** Agent Echo retrieval architecture (planned). Echo Now provides instant recall from a hot memory window. Echo Past performs index-narrowed archive search with an asynchronous second round during the typing delay. Echo Future is a Phase 5 stub for predictive memory topology. This architecture is designed but not yet implemented.
+**Figure 12.** Agent Echo retrieval architecture. Echo Now provides instant recall from a hot memory window. Echo Past performs index-narrowed archive search with an asynchronous second round during the typing delay. Echo Future provides predictive recall from pre-activated memories with anticipatory shape boosting. The multi-index narrowing layer (Echo Past round-2 promotion) is designed but not yet implemented.
 
 ### Why Narrowing Is the Right Response
 
@@ -1240,7 +1250,24 @@ Beyond the Agent Echo retrieval pipeline, the longer-term research direction tar
 
 The connection to the social-cognition framework is direct: divergence data from distributed experiments provides exactly the kind of ground-truth material that predictive topology work requires. Memory-state comparisons across controlled histories and scenarios can inform models of expected memory evolution.
 
-This is a Phase 5 research direction. Echo Future currently exists as an index contract and no-op stub, ready for implementation once the upstream phases are complete.
+**Predictive Memory Topology is now fully implemented** across 13 slices:
+
+| Slice | Component | What It Does |
+|-------|-----------|--------------|
+| -0 | Guard Tests | 62 tests locking memory-schema, shape-classifier, echoFuture, rebuildShapeIndexes contracts |
+| 1 | Memory Schema v2 | 5 new fields: creationContext, shape, edges, activationLevel, lastActivationContext |
+| 2 | Shape Classifier | Heuristic priority chain: emotional > anticipatory > reflective > factual > narrative |
+| 3 | Creation Context Capture | Cognitive state (mood, emotions, beliefs, topics) captured at memory creation |
+| 4 | Shape Index | Per-shape `.idx.json` index files, intersectIndexes for multi-axis queries |
+| 5 | Edge Seeding | `temporal_adjacent`, `emotional_echo`, `topic_sibling` edges at creation, bidirectional |
+| 6 | Activation Propagation | 2-hop propagation engine, decay per brain loop, pre-activation threshold 0.15 |
+| 7 | Retrieval Wiring | Activation boost in scoring (activationLevel × 0.25), top-12 neighbor propagation |
+| 8 | Echo Future | Predictive recall from pre-activated memories, +0.2 boost for anticipatory shape |
+| 9 | Belief-Linked Activation | `getAttentionBoosts(topics)`, `seedBeliefEdges()`, belief source memory boosting |
+| 10 | Dream Reconsolidation | Edge strength adjustment, cluster detection, anticipatory stub creation |
+| 11 | Legacy Migration | CLI tool for v1→v2 backfill with heuristic classifier and duck-typed edge seeding |
+
+Echo Future is fully operational: it uses `getPreActivated()` to find pre-activated memories, filters by topic overlap, applies the anticipatory shape boost, and returns top-N sorted by activation level. Results are merged into the retrieval path with `_source: 'echo_future'` tagging and emit `ECHO_FUTURE_HIT` SSE events.
 
 ---
 
@@ -1252,9 +1279,23 @@ This is a Phase 5 research direction. Echo Future currently exists as an index c
 | 2 | Refactor / Cleanup | ✅ Complete |
 | 3 | App Folder Modularization | ✅ Complete (866 tests, 0 failures) |
 | 4.5 | Intelligent Memory Expansion | ✅ Complete |
-| 4.6 | Sharded Topic Archive | ✅ Complete |
-| **4.7** | **Agent Echo: Multi-Index Retrieval** | **Current — gate open** |
-| 5 | Predictive Memory Topology | Blocked on Phase 4.7 |
+| 4.6 | Slash Command System | ✅ Complete (A0–A2; A3/A4 future) |
+| 4.7 | HTML Shadow Cleanup | ✅ Complete (guard-first refactor) |
+| 4.8 | Cognitive State Integration | ✅ Complete (4 phases, 14 slices) |
+| 4.8 | Token Optimization | ✅ Complete (~68% per-turn reduction) |
+| 4.9 | Task Orchestration (MTOA) | ✅ Complete |
+| 4.10 | Entity Orchestration | ✅ Complete |
+| 4.11–4.16 | Blueprint System through Self-Repair | ✅ Complete |
+| 4.17 | OS Tool Upgrade | ✅ Complete |
+| 4.18 | Entity Genesis Skill | ✅ Complete |
+| 4.19 | MA Bridge | ✅ Complete |
+| 4.20 | Bug Tracker App | ✅ Complete |
+| 4.21 | Resource Manager App | ✅ Complete |
+| 4.22–4.24 | Port Management, Docs, MA Release | ✅ Complete |
+| 4.25 | Provider-Agnostic Capabilities | ✅ Complete (Anthropic Direct, native tools) |
+| 4.26 | QA Checklist App | ✅ Complete (625 items, 61 sections) |
+| 4.27–4.33 | MA Blueprints, Skills GUI, Book-to-Entity | ✅ Complete |
+| 5 | Predictive Memory Topology | ✅ Complete (13 slices, 2,605 tests) |
 | — | Distributed Social-Cognition Study | Infrastructure design phase |
 
 ---
@@ -1269,14 +1310,20 @@ This is a Phase 5 research direction. Echo Future currently exists as an index c
 
 | Test Suite | Count | What It Validates |
 |-----------|-------|-------------------|
+| Predictive memory topology | 62+ | Schema v2, shape classifier, edge seeding, activation, echo future |
+| Provider-agnostic capabilities | 80+ | Capability registry, thinking log, memory tool bridge, native tool use |
 | Worker subsystem | 46 | Contract validation, registry CRUD, dispatcher paths, integration guards |
 | Dream maintenance | 34 | Selector scoring, link writer, bus events |
 | Escalation guardrails | 31 | All reason triggers, budget cap paths, timeout rejection |
+| Book ingestion guards | 41 | Upload API, chunking, character extraction, entity creation |
+| D&D + Study blueprint guards | 128 | All 5 task types, classifier rules, blueprint structure |
+| Bug tracker guards | 22 | CRUD, screenshots, export, severity tracking |
+| Resource manager guards | 42 | Todos, tasks, projects, blueprints, active state |
 | Browser acceptance | 23 | Navigation, tab model, lifecycle, downloads |
 | Orchestrator integration | 14 | All 4 contributor artifacts, escalation shape, failure isolation |
 | Boundary cleanup guards | 12 | Service delegation enforcement in server.js |
 | Dream split guards | 4 | Live no-write enforcement, module wiring |
-| **Full suite (App Folder Modularization)** | **866** | **Complete system — 0 failures** |
+| **Full suite** | **2,605** | **Complete system — 0 failures** |
 
 ## 33. Refactor Metrics
 
@@ -1322,7 +1369,7 @@ This is a Phase 5 research direction. Echo Future currently exists as an index c
 | `entity.json`, `persona.json`, `system-prompt.txt` role separation | `ENTITY-AND-IDENTITY.md` |
 | Memory types, retrieval scoring, retrieval influence on context | `MEMORY-SYSTEM.md`, `memory-retrieval.js` |
 | Belief formation and confidence dynamics | `MEMORY-SYSTEM.md`, `beliefGraph.js` |
-| `routeAttention()` exists but not wired to live retrieval | `beliefGraph.js` (function present), `memory-retrieval.js` (no call site) |
+| `routeAttention()` / `getAttentionBoosts()` wired to live retrieval | `beliefGraph.js`, `memory-retrieval.js`, `edge-builder.js` |
 | Dream intuition vs. dream maintenance split | `DREAM-SYSTEM.md`, `dream-split-guards.test.js` |
 | Sleep-cycle persona update and context rebuild | `DREAM-SYSTEM.md`, `ENTITY-AND-IDENTITY.md` |
 | Relationship schema, trust cap, per-user tracking | `AUTH-AND-USERS.md`, `relationship-service.js` |
@@ -1356,7 +1403,8 @@ This is a Phase 5 research direction. Echo Future currently exists as an index c
 | Claim | Source |
 |-------|--------|
 | Agent Echo design and multi-index architecture | `PLAN-MULTI-INDEX-ARCHIVE-v1.md` |
-| Echo Now / Echo Past / Echo Future structure | `PLAN-MULTI-INDEX-ARCHIVE-v1.md` |
+| Echo Now / Echo Past / Echo Future structure | `PLAN-MULTI-INDEX-ARCHIVE-v1.md`, `agent-echo.js` |
+| Echo Future implemented: predictive recall from pre-activated memories | `agent-echo.js`, `activation-network.js`, `memory-retrieval.js` |
 | Distributed social-cognition framework design | Framework design documented in submission drafts |
 | Relay hub, adapter, snapshot exporter: not yet built | Explicitly stated as planned infrastructure |
 | Phase progression and gate status | `WORKLOG.md` |
@@ -1368,7 +1416,7 @@ This is a Phase 5 research direction. Echo Future currently exists as an index c
 - All source paths reference files in `project/server/`, `project/tests/`, or `Documents/current/` within the NekoCore OS repository
 - Test counts verified against `WORKLOG.md` and `CHANGELOG.md`
 - Benchmark numbers from `bench-archive.js` execution
-- `routeAttention()` verified present in `beliefGraph.js`, verified absent from `memory-retrieval.js` call sites
+- `routeAttention()` / `getAttentionBoosts()` verified present in `beliefGraph.js`, verified wired into `memory-retrieval.js`
 - `Promise.all([subconsciousPromise, dreamPromise])` verified in `orchestrator.js`
 - `enforceLatencyGuard` default 35,000ms verified in `orchestration-policy.js`
 - Bounded injection limits verified by direct code inspection of `context-consolidator.js` and `memory-retrieval.js`
@@ -1382,9 +1430,8 @@ This is a Phase 5 research direction. Echo Future currently exists as an index c
 1. **Single-machine deployment.** NekoCore OS currently runs as a single Node.js process. There is no distributed deployment, clustering, or horizontal scaling.
 2. **Flat-file storage.** All persistence uses JSON files with atomic writes. This is reliable for single-process access but does not support concurrent multi-process writes.
 3. **LLM dependency.** The cognitive pipeline requires at least one LLM provider. The quality of entity responses, relationship updates, and dream narratives depends on model capability.
-4. **Belief-retrieval gap.** The belief graph's `routeAttention()` function exists but is not wired into the live retrieval path. Beliefs currently influence dream processing and confidence dynamics but do not yet boost memory retrieval scores.
-5. **Entity-to-entity interaction.** The relationship system tracks entity-to-user relationships only. Entity-to-entity relay infrastructure is proposed but not implemented.
-6. **No formal evaluation.** Test suites validate engineering correctness (contracts, boundaries, policy behavior) but there is no formal evaluation of entity behavioral quality, identity coherence metrics, or user study data.
+4. **Entity-to-entity interaction.** The relationship system tracks entity-to-user relationships only. Entity-to-entity relay infrastructure is proposed but not implemented.
+5. **No formal evaluation.** Test suites validate engineering correctness (contracts, boundaries, policy behavior) but there is no formal evaluation of entity behavioral quality, identity coherence metrics, or user study data.
 
 ---
 
@@ -1405,7 +1452,12 @@ This is a Phase 5 research direction. Echo Future currently exists as an index c
 | Memory Decay | `server/brain/cognition/phases/phase-decay.js` | Decay tick orchestration |
 | Context Consolidation | `server/brain/generation/context-consolidator.js` | context.md assembly |
 | Aspect Prompts | `server/brain/generation/aspect-prompts.js` | System prompts per contributor |
-| Belief Graph | `server/brain/knowledge/beliefGraph.js` | Belief persistence and query |
+| Belief Graph | `server/brain/knowledge/beliefGraph.js` | Belief persistence, query, and attention boosts |
+| Edge Builder | `server/brain/knowledge/edge-builder.js` | Edge seeding at memory creation + belief-linked edges |
+| Activation Network | `server/brain/knowledge/activation-network.js` | Pre-activation propagation (2-hop), decay |
+| Shape Classifier | `server/brain/knowledge/shape-classifier.js` | Heuristic shape classification for memories |
+| Dream Reconsolidation | `server/brain/knowledge/reconsolidation.js` | Edge strength adjustment, cluster detection, anticipatory stubs |
+| Agent Echo | `server/brain/memory/agent-echo.js` | Echo Now / Echo Past / Echo Future retrieval |
 | Dream Intuition | `server/brain/cognition/dream-intuition-adapter.js` | Live 1D contributor (no writes) |
 | Dream Maintenance Selector | `server/brain/cognition/dream-maintenance-selector.js` | Multi-factor candidate scoring |
 | Dream Link Writer | `server/brain/knowledge/dream-link-writer.js` | Dream-to-source persistence |
@@ -1421,7 +1473,7 @@ This is a Phase 5 research direction. Echo Future currently exists as an index c
 | Runtime Lifecycle | `server/services/runtime-lifecycle.js` | Startup/shutdown orchestration |
 | Auth Service | `server/services/auth-service.js` | Login, session management |
 | Entity Checkout | `server/services/entity-checkout.js` | Multi-user checkout ownership |
-| Memory Schema | `server/contracts/memory-schema.js` | Schema v1 + normalize function |
+| Memory Schema | `server/contracts/memory-schema.js` | Schema v2 + normalize function |
 | Contributor Contracts | `server/contracts/contributor-contracts.js` | Output validators for 1A, 1C, 1D |
 | Worker Output Contract | `server/contracts/worker-output-contract.js` | Worker validation + normalize |
 
@@ -1452,7 +1504,11 @@ This is a Phase 5 research direction. Echo Future currently exists as an index c
 | 0.5.1-prealpha | Atomic memory writes, divergence audit/rebuild, brain-loop health counters |
 | 0.6.0 | Parallel pipeline (1A+1D → 1C → Final), policy layer, worker subsystem, dream split, server.js −46%, 308 tests |
 | 0.6.0+ | App folder modularization (866 tests), intelligent memory expansion, sharded topic archive, voice profiles |
-| 0.8.0 | Browser LLM Mode (research sessions, ask-page, structured extraction), Browser Phases NB-2 through NB-6, Bookmark Manager, History Manager, desktop shell enhancements |
+| 0.8.0 | Browser LLM Mode (research sessions, ask-page, structured extraction), Bookmark Manager, History Manager, desktop shell enhancements |
+| 0.9.0-alpha.1–.3 | Promoted staging to main, MA v1.0 (browser IDE, agents, model router, pulse engine, deep research, Zod tool schemas, vision support), slash command system, task orchestration (MTOA), entity orchestration, blueprint system, coding skill, health scanner, sandboxed execution, BIOS failsafe |
+| 0.9.0-alpha.4 | Smart port management, resource manager app, bug tracker app, OS tool upgrade (Zod + block format), entity genesis skill, MA bridge, user documentation, MA public release (factory reset) |
+| 0.9.0-alpha.5 | Provider-agnostic capabilities (Anthropic Direct with prompt caching, native tool use, extended thinking, memory tool bridge), token optimization (~68% reduction), cognitive state integration (14 slices), QA checklist app, setup wizard, theme persistence fixes |
+| 0.9.0-alpha.6 | Predictive Memory Topology (13 slices: schema v2, shape classifier, edge graphs, activation propagation, echo future, belief-linked activation, dream reconsolidation, legacy migration). QA Checklist expanded to 625 items / 61 sections. Bug Tracker Markdown export with native file picker. MA expanded to 19 task types with D&D, study, book-to-entity, prompt engineering, app builder, and self-extending blueprint builder. 2,605 tests. |
 
 ---
 

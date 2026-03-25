@@ -97,7 +97,7 @@ function generateFixer(options = {}) {
 
     dnaEntries.push(`    "${key}": {
         "b64": (
-            "${b64Str}"
+            """${b64Str}"""
         ),
         "sha256": "${entry.hash}",
         "size": ${entry.size},
