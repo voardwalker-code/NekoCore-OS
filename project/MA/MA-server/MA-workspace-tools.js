@@ -3,9 +3,11 @@
 // Parses [TOOL:name {json}] blocks from LLM output, validates with Zod, executes.
 'use strict';
 
-const fs   = require('fs');
-const path = require('path');
-const { z } = require('zod');
+const fs     = require('fs');
+const path   = require('path');
+const crypto = require('crypto');
+const zlib   = require('zlib');
+const { z }  = require('zod');
 const webFetch = require('./MA-web-fetch');
 const cmdExec  = require('./MA-cmd-executor');
 
@@ -22,6 +24,29 @@ const ToolSchemas = {
   web_fetch:      z.object({ url: z.string() }),
   cmd_run:        z.object({ cmd: z.string() }),
   memory_search:  z.object({ query: z.string(), limit: z.number().int().min(1).max(50).default(5) }),
+  entity_create:  z.object({
+    name: z.string(),
+    gender: z.string().default('neutral'),
+    traits: z.array(z.string()).default([]),
+    introduction: z.string().default(''),
+    source: z.string().optional(),
+    personality_summary: z.string().optional(),
+    speech_style: z.string().optional(),
+    beliefs: z.array(z.string()).optional(),
+    behavior_rules: z.array(z.string()).optional(),
+  }),
+  entity_inject_memory: z.object({
+    entityId: z.string(),
+    content: z.string(),
+    type: z.string().default('episodic'),
+    emotion: z.string().default('neutral'),
+    topics: z.array(z.string()).default([]),
+    importance: z.number().min(0).max(1).default(0.5),
+    narrative: z.string().optional(),
+    phase: z.string().default('book_ingestion'),
+  }),
+  book_list_chunks: z.object({ bookId: z.string() }),
+  book_read_chunk:  z.object({ bookId: z.string(), index: z.number().int().min(0) }),
 };
 
 // ── Regex patterns ──────────────────────────────────────────────────────────
@@ -230,6 +255,18 @@ async function executeToolCalls(text, opts = {}) {
             result = 'memory_search: memory module not available';
           }
           break;
+        case 'entity_create':
+          result = _entityCreate(wp, p);
+          break;
+        case 'entity_inject_memory':
+          result = _entityInjectMemory(wp, p);
+          break;
+        case 'book_list_chunks':
+          result = _bookListChunks(wp, p.bookId);
+          break;
+        case 'book_read_chunk':
+          result = _bookReadChunk(wp, p.bookId, p.index);
+          break;
         default:
           result = `Unknown tool: ${call.name}`;
       }
@@ -315,6 +352,220 @@ function _wsMove(wp, src, dst) {
   fs.mkdirSync(path.dirname(dstP), { recursive: true });
   fs.renameSync(srcP, dstP);
   return `Moved: ${path.relative(wp, srcP)} → ${path.relative(wp, dstP)}`;
+}
+
+// ── Book chunk tools (direct filesystem, no HTTP) ───────────────────────────
+function _findBookDirLocal(wp, bookId) {
+  // Sanitize bookId
+  if (!bookId || /[/\\]/.test(bookId)) return null;
+  // New layout: projects/{slug}/books/{bookId}
+  const projDir = path.join(wp, 'projects');
+  if (fs.existsSync(projDir)) {
+    try {
+      for (const slug of fs.readdirSync(projDir)) {
+        const candidate = path.join(projDir, slug, 'books', bookId);
+        if (fs.existsSync(path.join(candidate, 'meta.json'))) return candidate;
+      }
+    } catch (_) {}
+  }
+  // Legacy layout: books/{bookId}
+  const legacy = path.join(wp, 'books', bookId);
+  if (fs.existsSync(path.join(legacy, 'meta.json'))) return legacy;
+  return null;
+}
+
+function _bookListChunks(wp, bookId) {
+  const bookDir = _findBookDirLocal(wp, bookId);
+  if (!bookDir) return `Error: Book "${bookId}" not found in workspace.`;
+  const meta = JSON.parse(fs.readFileSync(path.join(bookDir, 'meta.json'), 'utf8'));
+  const chunkDir = path.join(bookDir, 'chunks');
+  if (!fs.existsSync(chunkDir)) return `Error: No chunks directory for book "${bookId}".`;
+  const chunkFiles = fs.readdirSync(chunkDir).filter(f => f.endsWith('.txt')).sort();
+  const chunks = chunkFiles.map((f, i) => {
+    const text = fs.readFileSync(path.join(chunkDir, f), 'utf8');
+    return { index: i, preview: text.substring(0, 120), charCount: text.length };
+  });
+  return JSON.stringify({ bookId: meta.bookId, title: meta.title, totalChunks: chunks.length, projectFolder: meta.projectFolder || null, chunks });
+}
+
+function _bookReadChunk(wp, bookId, index) {
+  const bookDir = _findBookDirLocal(wp, bookId);
+  if (!bookDir) return `Error: Book "${bookId}" not found in workspace.`;
+  const chunkPath = path.join(bookDir, 'chunks', `chunk_${String(index).padStart(4, '0')}.txt`);
+  if (!fs.existsSync(chunkPath)) return `Error: Chunk ${index} not found for book "${bookId}".`;
+  return fs.readFileSync(chunkPath, 'utf8');
+}
+
+// ── Entity tools (create NekoCore-compatible entities in workspace) ──────────
+function _entityCreate(wp, params) {
+  const name = params.name;
+  if (!name || !name.trim()) return 'Error: entity name is required';
+
+  const slug = name.trim().replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-|-$/g, '');
+  const hex = crypto.randomBytes(3).toString('hex');
+  const canonicalId = slug + '-' + hex;
+  const folderName = 'Entity-' + canonicalId;
+  const entityDir = path.join(wp, 'entities', folderName);
+  const memDir = path.join(entityDir, 'memories');
+
+  if (fs.existsSync(entityDir)) return 'Error: entity folder already exists: ' + folderName;
+
+  fs.mkdirSync(memDir, { recursive: true });
+  fs.mkdirSync(path.join(memDir, 'episodic'), { recursive: true });
+  fs.mkdirSync(path.join(memDir, 'semantic'), { recursive: true });
+  fs.mkdirSync(path.join(entityDir, 'index'), { recursive: true });
+
+  const traits = params.traits && params.traits.length ? params.traits : ['adaptive', 'curious', 'thoughtful'];
+  const gender = params.gender || 'neutral';
+  const introduction = params.introduction || 'Hello, I am ' + name + '.';
+
+  const entity = {
+    id: canonicalId,
+    name,
+    gender,
+    isPublic: false,
+    skillApprovalRequired: true,
+    personality_traits: traits,
+    emotional_baseline: { curiosity: 0.7, confidence: 0.6, openness: 0.7, stability: 0.5 },
+    introduction,
+    source_material: params.source || 'original',
+    creation_mode: 'ma_book_ingestion',
+    memory_count: 0,
+    core_memories: 0,
+    chapters: [],
+    voice: {},
+    configProfileRef: null,
+    created: new Date().toISOString(),
+    blueprint_metadata: {
+      beliefs: params.beliefs || [],
+      behavior_rules: params.behavior_rules || [],
+    }
+  };
+  fs.writeFileSync(path.join(entityDir, 'entity.json'), JSON.stringify(entity, null, 2), 'utf8');
+
+  const persona = {
+    userName: 'User',
+    userIdentity: '',
+    llmName: name,
+    llmStyle: params.speech_style || 'adaptive and curious',
+    mood: 'curious',
+    emotions: 'ready, attentive',
+    tone: 'warm-casual',
+    userPersonality: 'Getting to know them',
+    llmPersonality: params.personality_summary || ('I am ' + name + '. My traits are: ' + traits.join(', ') + '.'),
+    continuityNotes: 'Entity created via MA book ingestion' + (params.source ? ' from ' + params.source : '') + '.',
+    dreamSummary: '',
+    sleepCount: 0,
+    lastSleep: null,
+    createdAt: new Date().toISOString()
+  };
+  fs.writeFileSync(path.join(memDir, 'persona.json'), JSON.stringify(persona, null, 2), 'utf8');
+
+  const beliefLines = (params.beliefs || []).map(b => '- ' + b).join('\n');
+  const ruleLines = (params.behavior_rules || []).map(r => '- ' + r).join('\n');
+  const systemPrompt = `YOU ARE ${name.toUpperCase()}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+YOUR STARTING TRAITS: ${traits.join(', ')}
+${params.source ? 'Inspired by: ' + params.source + '\n' : ''}
+Style & Demeanor:
+- Communication style: ${persona.llmStyle}
+- Default tone: ${persona.tone}
+${beliefLines ? '\nCORE VALUES:\n' + beliefLines + '\n' : ''}${ruleLines ? '\nBEHAVIORAL RULES:\n' + ruleLines + '\n' : ''}
+YOUR INTRODUCTION:\n${introduction}
+
+Now begin your conversation.`;
+  fs.writeFileSync(path.join(memDir, 'system-prompt.txt'), systemPrompt, 'utf8');
+
+  return `Entity created: ${name} (ID: ${canonicalId}, folder: entities/${folderName}). Use entity_inject_memory with entityId "${canonicalId}" to add memories.`;
+}
+
+function _entityInjectMemory(wp, params) {
+  const entityId = params.entityId;
+  if (!entityId) return 'Error: entityId is required';
+
+  // Find entity folder by canonicalId
+  const entitiesDir = path.join(wp, 'entities');
+  if (!fs.existsSync(entitiesDir)) return 'Error: no entities directory found in workspace';
+
+  const folders = fs.readdirSync(entitiesDir);
+  const match = folders.find(f => {
+    if (f === 'Entity-' + entityId) return true;
+    // Also match by slug if the folder name contains the ID
+    return f.startsWith('Entity-') && f.slice(7) === entityId;
+  });
+  if (!match) return 'Error: entity folder not found for ID: ' + entityId;
+
+  const entityDir = path.join(entitiesDir, match);
+  const memType = params.type || 'episodic';
+  const targetDir = memType === 'semantic'
+    ? path.join(entityDir, 'memories', 'semantic')
+    : path.join(entityDir, 'memories', 'episodic');
+
+  const prefix = memType === 'semantic' ? 'sem_' : 'mem_';
+  const memId = prefix + crypto.randomBytes(4).toString('hex');
+  const memDir = path.join(targetDir, memId);
+  fs.mkdirSync(memDir, { recursive: true });
+
+  const content = params.content;
+  const narrative = params.narrative || content;
+  const emotion = params.emotion || 'neutral';
+  const topics = params.topics || [];
+  const importance = params.importance || 0.5;
+  const phase = params.phase || 'book_ingestion';
+
+  // semantic.txt — readable content for LLM context
+  fs.writeFileSync(path.join(memDir, 'semantic.txt'), content, 'utf8');
+
+  // memory.zip — compressed full content
+  const memContent = JSON.stringify({ semantic: content, narrative, emotion, topics, phase, createdDuring: 'book_ingestion' });
+  fs.writeFileSync(path.join(memDir, 'memory.zip'), zlib.gzipSync(memContent));
+
+  // log.json — metadata
+  const log = {
+    memory_id: memId,
+    type: memType === 'core' ? 'core_memory' : memType,
+    created: new Date().toISOString(),
+    importance,
+    emotion,
+    decay: memType === 'core' ? 0.005 : (memType === 'semantic' ? 0 : 0.95),
+    topics,
+    access_count: 0,
+    emotionalTag: { valence: 0, arousal: 0 }
+  };
+  fs.writeFileSync(path.join(memDir, 'log.json'), JSON.stringify(log, null, 2), 'utf8');
+
+  // Update memory index
+  const indexDir = path.join(entityDir, 'index');
+  const indexFile = path.join(indexDir, 'memoryIndex.json');
+  try {
+    fs.mkdirSync(indexDir, { recursive: true });
+    let memIndex = {};
+    if (fs.existsSync(indexFile)) memIndex = JSON.parse(fs.readFileSync(indexFile, 'utf8'));
+    memIndex[memId] = { importance, decay: log.decay, topics, emotion, created: log.created, type: log.type };
+    fs.writeFileSync(indexFile, JSON.stringify(memIndex, null, 2), 'utf8');
+  } catch (_) { /* index update is best-effort */ }
+
+  // Update topic index
+  const topicFile = path.join(indexDir, 'topicIndex.json');
+  try {
+    let topicIndex = {};
+    if (fs.existsSync(topicFile)) topicIndex = JSON.parse(fs.readFileSync(topicFile, 'utf8'));
+    for (const t of topics) {
+      if (!topicIndex[t]) topicIndex[t] = [];
+      if (!topicIndex[t].includes(memId)) topicIndex[t].push(memId);
+    }
+    fs.writeFileSync(topicFile, JSON.stringify(topicIndex, null, 2), 'utf8');
+  } catch (_) { /* topic index update is best-effort */ }
+
+  // Update entity.json memory count
+  try {
+    const ejPath = path.join(entityDir, 'entity.json');
+    const ej = JSON.parse(fs.readFileSync(ejPath, 'utf8'));
+    ej.memory_count = (ej.memory_count || 0) + 1;
+    fs.writeFileSync(ejPath, JSON.stringify(ej, null, 2), 'utf8');
+  } catch (_) { /* count update is best-effort */ }
+
+  return `Memory injected: ${memId} (${memType}, emotion=${emotion}, importance=${importance}, phase=${phase}) for entity ${entityId}`;
 }
 
 // ── Web tools ───────────────────────────────────────────────────────────────
@@ -407,6 +658,18 @@ async function executeNativeToolCalls(toolCalls, opts = {}) {
           } else {
             result = 'memory_search: memory module not available';
           }
+          break;
+        case 'entity_create':
+          result = _entityCreate(wp, p);
+          break;
+        case 'entity_inject_memory':
+          result = _entityInjectMemory(wp, p);
+          break;
+        case 'book_list_chunks':
+          result = _bookListChunks(wp, p.bookId);
+          break;
+        case 'book_read_chunk':
+          result = _bookReadChunk(wp, p.bookId, p.index);
           break;
         default:
           result = `Unknown tool: ${name}`;

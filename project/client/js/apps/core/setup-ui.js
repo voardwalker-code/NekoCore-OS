@@ -1,11 +1,15 @@
 // ============================================================
 // NekoCore OS — setup-ui.js
-// Extracted from app.js (P3-S7)
-// Owns: setup enforcement checks, setup wizard flow, user-name modal
-// Depends on globals from app.js: activeConfig, savedConfig, lg, updateProviderUI,
+// Owns: setup enforcement checks, setup wizard flow (3-step)
+// Step 1: Provider direction + API key(s)
+// Step 2: Pipeline configuration (all aspects with model selection)
+// Step 3: Skills selection (4-column grid) + save
+// Depends on globals from app.js: activeConfig, savedConfig, lg,
 //   persistConfig, refreshSidebarEntities, addChatBubble, openWindow,
-//   OPENROUTER_ROLE_MODELS, switchMainTab
+//   OPENROUTER_ROLE_MODELS, switchMainTab, setupActive, setupStep, setupData
 // Depends on globals from auth.js: OPENROUTER_PRESET
+// Depends on globals from config-profiles.js: RECOMMENDED_MODEL_STACKS,
+//   OLLAMA_RECOMMENDED_STACKS, RECOMMENDED_PANEL_COPY
 // ============================================================
 
 // ============================================================
@@ -13,11 +17,9 @@
 // ============================================================
 function isApiConfigured() {
   if (!activeConfig || !activeConfig.model || !activeConfig.endpoint) return false;
-  // OpenRouter and Anthropic require API key, Ollama does not
   if (activeConfig.type === 'openrouter' || activeConfig.type === 'anthropic') {
     return !!activeConfig.apiKey;
   }
-  // Ollama only needs endpoint and model
   return true;
 }
 
@@ -38,34 +40,14 @@ function hideSetupRequired() {
 }
 
 function goToSetupTab(provider) {
-  // Switch to Settings tab
   document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('on'));
   document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('on'));
-  
   const settingsBtn = document.querySelector('.tab-btn:nth-child(3)');
-  if (settingsBtn) {
-    settingsBtn.classList.add('on');
-  }
+  if (settingsBtn) settingsBtn.classList.add('on');
   document.getElementById('tab-settings').classList.add('on');
-  
-  // Switch to the requested provider tab
   setTimeout(() => {
-    if (provider === 'openrouter') {
-      const btn = document.querySelector('[onclick="showProviderTab(\'main\', this)"]');
-      if (btn) btn.click();
-      const tabBtn = document.querySelector('[onclick="switchTab(\'openrouter-main\', this)"]');
-      if (tabBtn) tabBtn.click();    } else if (provider === 'anthropic') {
-      const btn = document.querySelector('[onclick=\"showProviderTab(\'main\', this)\"]');
-      if (btn) btn.click();
-      simplePickProvider('anthropic');    } else if (provider === 'ollama') {
-      const btn = document.querySelector('[onclick="showProviderTab(\'main\', this)"]');
-      if (btn) btn.click();
-      const tabBtn = document.querySelector('[onclick="switchTab(\'ollama-main\', this)"]');
-      if (tabBtn) tabBtn.click();
-    }
+    if (typeof simplePickProvider === 'function') simplePickProvider(provider);
   }, 100);
-  
-  // Hide the setup modal
   hideSetupRequired();
 }
 
@@ -83,20 +65,43 @@ function guardEntityOperation(operationName) {
 // ============================================================
 
 const SETUP_STEPS = {
-  MAIN: 1,
-  READY: 2
+  PROVIDER: 1,
+  PIPELINE: 2,
+  FINISH: 3
 };
 
-const LLM_ROLES = {
-  main: 'Main Mind (Conscious)',
-  subconscious: 'Subconscious',
-  dream: 'Dream Engine'
+const SETUP_TOTAL_STEPS = 3;
+
+const SETUP_ASPECTS = ['main', 'subconscious', 'dream', 'orchestrator', 'nekocore'];
+
+const SETUP_ASPECT_LABELS = {
+  main: 'Main Mind',
+  subconscious: 'Background Processing',
+  dream: 'Dream Engine',
+  orchestrator: 'Orchestrator',
+  nekocore: 'NekoCore & MA'
 };
 
-// Store configs for onboarding.
-let setupAspectConfigs = {
-  main: null
+const SETUP_ANTHROPIC_MODELS = [
+  { id: 'claude-opus-4-6', l: 'Claude Opus 4.6 (strongest)' },
+  { id: 'claude-sonnet-4-6', l: 'Claude Sonnet 4.6 (balanced)' },
+  { id: 'claude-sonnet-4', l: 'Claude Sonnet 4 (strong)' },
+  { id: 'claude-haiku-4-5', l: 'Claude Haiku 4.5 (fast/cheap)' }
+];
+
+const SETUP_ANTHROPIC_ASPECT_DEFAULTS = {
+  main: 'claude-sonnet-4-6',
+  subconscious: 'claude-haiku-4-5',
+  dream: 'claude-sonnet-4-6',
+  orchestrator: 'claude-sonnet-4-6',
+  nekocore: 'claude-sonnet-4-6'
 };
+
+// Wizard state
+let setupDirection = null;       // 'openrouter' | 'anthropic' | 'ollama' | 'hybrid'
+let setupPrimaryKeys = { openrouter: '', anthropic: '', ollamaUrl: 'http://localhost:11434' };
+let setupAspectProviders = {};   // per-aspect provider for hybrid mode
+let setupAspectConfigs = {};
 let setupSkillSelection = new Set();
 let setupReadyAtMs = 0;
 
@@ -107,7 +112,6 @@ function applyOpenRouterModelSuggestions(fieldId, aspect = 'main') {
   const models = rolePreset.models || OPENROUTER_PRESET.models;
   const defaultModel = rolePreset.def || OPENROUTER_PRESET.def;
 
-  // Support legacy <select> and new <input list=...> fields.
   if (field.tagName === 'SELECT') {
     field.innerHTML = '';
     models.forEach(m => {
@@ -133,26 +137,37 @@ function applyOpenRouterModelSuggestions(fieldId, aspect = 'main') {
       });
     }
   }
-
-  // Hint that custom model IDs are supported.
   field.placeholder = defaultModel + ' (or paste any OpenRouter model id)';
 }
 
 // ============================================================
-// SETUP WIZARD — flow functions
+// SETUP WIZARD — navigation
 // ============================================================
 
 function showSetupWizard() {
   const overlay = document.getElementById('setupOverlay');
   if (overlay) overlay.classList.add('active');
   setupActive = true;
-  setupStep = SETUP_STEPS.MAIN;
+  setupStep = SETUP_STEPS.PROVIDER;
   setupReadyAtMs = 0;
-  setupAspectConfigs = { main: null };
+  setupDirection = null;
+  setupPrimaryKeys = { openrouter: '', anthropic: '', ollamaUrl: 'http://localhost:11434' };
+  setupAspectProviders = {};
+  setupAspectConfigs = {};
   setupSkillSelection = new Set();
   setupData = { currentAspect: 'main', provider: null };
-  updateSetupSteps(SETUP_STEPS.MAIN);
-  lg('info', 'Setup wizard opened — connect the Main Mind first');
+  updateSetupSteps(SETUP_STEPS.PROVIDER);
+  // Reset direction button highlight
+  ['openrouter', 'anthropic', 'ollama', 'hybrid'].forEach(d => {
+    const btn = document.getElementById('setupDirBtn-' + d);
+    if (btn) btn.classList.remove('selected');
+  });
+  const creds = document.getElementById('setupCredentials');
+  if (creds) creds.style.display = 'none';
+  // Reset card width
+  const card = document.getElementById('setupCard');
+  if (card) card.classList.remove('setup-card-wide');
+  lg('info', 'Setup wizard opened');
 }
 
 function hideSetupWizard() {
@@ -162,90 +177,90 @@ function hideSetupWizard() {
 }
 
 function updateSetupSteps(step) {
-  for (let i = 1; i <= 2; i++) {
+  for (let i = 1; i <= SETUP_TOTAL_STEPS; i++) {
     const el = document.getElementById('setupStep' + i);
     if (!el) continue;
     el.className = 'setup-step' + (i < step ? ' done' : '') + (i === step ? ' active' : '');
   }
-  for (let i = 1; i <= 2; i++) {
+  for (let i = 1; i <= SETUP_TOTAL_STEPS; i++) {
     const panel = document.getElementById('setupPanel' + i);
     if (panel) panel.style.display = (i === step) ? 'block' : 'none';
   }
+  // Widen card for pipeline and finish steps
+  const card = document.getElementById('setupCard');
+  if (card) card.classList.toggle('setup-card-wide', step >= SETUP_STEPS.PIPELINE);
 }
 
-/**
- * Setup a single LLM aspect (main, subconscious, or dream)
- */
-function setupSelectProviderForAspect(aspect, type) {
-  setupData.currentAspect = aspect;
-  setupData.provider = type;
-  
-  // Determine form suffixes based on aspect
-  let suffix = aspect === 'main' ? '' : (aspect === 'subconscious' ? '2' : '3');
-  
-  // Hide all provider section containers (use exact IDs to avoid hiding child inputs)
-  ['setupOpenrouter', 'setupOpenrouter2', 'setupOpenrouter3'].forEach(id => {
-    const el = document.getElementById(id); if (el) el.style.display = 'none';
-  });
-  ['setupAnthropic', 'setupAnthropic2', 'setupAnthropic3'].forEach(id => {
-    const el = document.getElementById(id); if (el) el.style.display = 'none';
-  });
-  ['setupOllama', 'setupOllama2', 'setupOllama3'].forEach(id => {
-    const el = document.getElementById(id); if (el) el.style.display = 'none';
-  });
-  
-  const orSectionId = 'setupOpenrouter' + suffix;
-  const antSectionId = 'setupAnthropic' + suffix;
-  const olSectionId = 'setupOllama' + suffix;
-  const orSection = document.getElementById(orSectionId);
-  const antSection = document.getElementById(antSectionId);
-  const olSection = document.getElementById(olSectionId);
+function setupGoBack(toStep) {
+  setupStep = toStep;
+  updateSetupSteps(toStep);
+  document.getElementById('setupStatus').textContent = '';
+}
 
-  if (type === 'openrouter') {
-    if (orSection) {
-      orSection.style.display = 'block';
-      applyOpenRouterModelSuggestions('setupOrModel' + suffix, aspect);
-    }
-  } else if (type === 'anthropic') {
-    if (antSection) antSection.style.display = 'block';
+// ============================================================
+// STEP 1: Provider Direction
+// ============================================================
+
+function setupPickDirection(direction) {
+  setupDirection = direction;
+  setupData.provider = direction === 'hybrid' ? null : direction;
+
+  // Highlight active direction button
+  ['openrouter', 'anthropic', 'ollama', 'hybrid'].forEach(d => {
+    const btn = document.getElementById('setupDirBtn-' + d);
+    if (btn) btn.classList.toggle('selected', d === direction);
+  });
+
+  // Show credential forms
+  const creds = document.getElementById('setupCredentials');
+  if (creds) creds.style.display = 'block';
+
+  const types = ['openrouter', 'anthropic', 'ollama', 'hybrid'];
+  types.forEach(t => {
+    const el = document.getElementById('setupCred-' + t);
+    if (el) el.style.display = 'none';
+  });
+
+  if (direction === 'hybrid') {
+    document.getElementById('setupCred-hybrid').style.display = 'block';
+    document.getElementById('setupTestBtn').textContent = 'Continue';
   } else {
-    if (olSection) olSection.style.display = 'block';
+    document.getElementById('setupCred-' + direction).style.display = 'block';
+    document.getElementById('setupTestBtn').textContent = 'Test & Continue';
   }
 
-  // Show the config section
-  const configSection = document.querySelector('#setupPanel1 .setup-config-section');
-  if (configSection) configSection.style.display = 'block';
-
   document.getElementById('setupStatus').textContent = '';
-  lg('info', 'Configuring ' + LLM_ROLES[aspect] + '...');
+  lg('info', 'Provider direction: ' + direction);
 }
 
-/**
- * Test and save config for current LLM aspect
- */
-async function setupTestConnectionForAspect() {
+async function setupTestAndContinue() {
   const statusEl = document.getElementById('setupStatus');
-  const aspect = setupData.currentAspect;
-  statusEl.textContent = 'Testing connection for ' + LLM_ROLES[aspect] + '...';
-  statusEl.style.color = 'var(--wn)';
+  if (!setupDirection) {
+    statusEl.textContent = 'Please choose a provider first.';
+    statusEl.style.color = 'var(--dn)';
+    return;
+  }
 
-  try {
-    let config = null;
-    let suffix = aspect === 'main' ? '' : (aspect === 'subconscious' ? '2' : '3');
+  // Gather primary keys from step 1
+  if (setupDirection === 'hybrid') {
+    setupPrimaryKeys.openrouter = (document.getElementById('setupHybridKeyOr')?.value || '').trim();
+    setupPrimaryKeys.anthropic = (document.getElementById('setupHybridKeyAnthropic')?.value || '').trim();
+    setupPrimaryKeys.ollamaUrl = (document.getElementById('setupHybridUrlOllama')?.value || 'http://localhost:11434').trim();
+    // Initialize per-aspect providers based on which keys were provided
+    const defaultHybrid = setupPrimaryKeys.openrouter ? 'openrouter'
+      : setupPrimaryKeys.anthropic ? 'anthropic' : 'ollama';
+    SETUP_ASPECTS.forEach(a => { setupAspectProviders[a] = defaultHybrid; });
+    setupAdvanceToPipeline();
+    return;
+  }
 
-    if (setupData.provider === 'openrouter') {
-      const keyId = 'setupOrKey' + suffix;
-      const modelId = 'setupOrModel' + suffix;
-      
-      const key = document.getElementById(keyId).value.trim();
-      const model = document.getElementById(modelId).value;
-      if (!key) { 
-        statusEl.textContent = 'API key is required'; 
-        statusEl.style.color = 'var(--dn)'; 
-        return; 
-      }
-
-      // Test with a minimal request
+  if (setupDirection === 'openrouter') {
+    const key = (document.getElementById('setupKeyOpenrouter')?.value || '').trim();
+    if (!key) { statusEl.textContent = 'API key is required'; statusEl.style.color = 'var(--dn)'; return; }
+    setupPrimaryKeys.openrouter = key;
+    statusEl.textContent = 'Testing OpenRouter connection...';
+    statusEl.style.color = 'var(--wn)';
+    try {
       const resp = await fetch('/api/proxy', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -253,190 +268,425 @@ async function setupTestConnectionForAspect() {
           url: OPENROUTER_PRESET.ep,
           method: 'POST',
           headers: { 'Authorization': 'Bearer ' + key, 'Content-Type': 'application/json' },
-          body: { model, messages: [{ role: 'user', content: 'Say "ok"' }], max_tokens: 5 }
+          body: { model: 'openai/gpt-4o', messages: [{ role: 'user', content: 'Say "ok"' }], max_tokens: 5 }
         })
       });
-      if (!resp.ok) {
-        const errText = await resp.text();
-        throw new Error('API returned ' + resp.status + ': ' + errText.slice(0, 200));
-      }
-
-      config = {
-        type: 'openrouter',
-        endpoint: OPENROUTER_PRESET.ep,
-        apiKey: key,
-        model: model
-      };
-
-      statusEl.textContent = LLM_ROLES[aspect] + ' connected (' + model.split('/').pop() + ')';
+      if (!resp.ok) { const t = await resp.text(); throw new Error('API ' + resp.status + ': ' + t.slice(0, 200)); }
+      statusEl.textContent = 'Connected \u2713';
       statusEl.style.color = 'var(--em)';
-
-    } else if (setupData.provider === 'anthropic') {
-      const keyId = 'setupAnthropicKey' + suffix;
-      const modelId = 'setupAnthropicModel' + suffix;
-
-      const key = document.getElementById(keyId).value.trim();
-      const model = document.getElementById(modelId).value.trim();
-      if (!key) {
-        statusEl.textContent = 'API key is required';
-        statusEl.style.color = 'var(--dn)';
-        return;
-      }
-      if (!model) {
-        statusEl.textContent = 'Model is required';
-        statusEl.style.color = 'var(--dn)';
-        return;
-      }
-
-      // Test with a minimal request via the proxy
+    } catch (err) {
+      statusEl.textContent = 'Connection failed: ' + err.message;
+      statusEl.style.color = 'var(--dn)';
+      return;
+    }
+  } else if (setupDirection === 'anthropic') {
+    const key = (document.getElementById('setupKeyAnthropic')?.value || '').trim();
+    if (!key) { statusEl.textContent = 'API key is required'; statusEl.style.color = 'var(--dn)'; return; }
+    setupPrimaryKeys.anthropic = key;
+    statusEl.textContent = 'Testing Anthropic connection...';
+    statusEl.style.color = 'var(--wn)';
+    try {
       const resp = await fetch('/api/proxy', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           url: 'https://api.anthropic.com/v1/messages',
           method: 'POST',
-          headers: {
-            'x-api-key': key,
-            'anthropic-version': '2023-06-01',
-            'Content-Type': 'application/json'
-          },
-          body: { model, max_tokens: 16, messages: [{ role: 'user', content: 'Say "ok"' }] }
+          headers: { 'x-api-key': key, 'anthropic-version': '2023-06-01', 'Content-Type': 'application/json' },
+          body: { model: 'claude-sonnet-4-6', max_tokens: 16, messages: [{ role: 'user', content: 'Say "ok"' }] }
         })
       });
-      if (!resp.ok) {
-        const errText = await resp.text();
-        throw new Error('API returned ' + resp.status + ': ' + errText.slice(0, 200));
-      }
-
-      config = {
-        type: 'anthropic',
-        endpoint: 'https://api.anthropic.com/v1/messages',
-        apiKey: key,
-        model: model
-      };
-
-      statusEl.textContent = LLM_ROLES[aspect] + ' connected (' + model + ') — prompt caching enabled';
+      if (!resp.ok) { const t = await resp.text(); throw new Error('API ' + resp.status + ': ' + t.slice(0, 200)); }
+      statusEl.textContent = 'Connected \u2713 — prompt caching enabled';
       statusEl.style.color = 'var(--em)';
-
-    } else {
-      // Ollama
-      const urlId = 'setupOllamaUrl' + suffix;
-      const modelId = 'setupOllamaModel' + suffix;
-      
-      const url = document.getElementById(urlId).value.trim() || 'http://localhost:11434';
-      const model = document.getElementById(modelId).value.trim() || 'llama3';
-
+    } catch (err) {
+      statusEl.textContent = 'Connection failed: ' + err.message;
+      statusEl.style.color = 'var(--dn)';
+      return;
+    }
+  } else if (setupDirection === 'ollama') {
+    const url = (document.getElementById('setupUrlOllama')?.value || 'http://localhost:11434').trim();
+    setupPrimaryKeys.ollamaUrl = url;
+    statusEl.textContent = 'Testing Ollama connection...';
+    statusEl.style.color = 'var(--wn)';
+    try {
       const resp = await fetch(url + '/api/tags');
       if (!resp.ok) throw new Error('Cannot reach Ollama at ' + url);
-      const data = await resp.json();
-      const models = (data.models || []).map(m => m.name);
-
-      config = {
-        type: 'ollama',
-        endpoint: url,
-        model: model
-      };
-
-      statusEl.textContent = LLM_ROLES[aspect] + ' connected (' + model + ')';
+      statusEl.textContent = 'Connected \u2713';
       statusEl.style.color = 'var(--em)';
+    } catch (err) {
+      statusEl.textContent = 'Connection failed: ' + err.message;
+      statusEl.style.color = 'var(--dn)';
+      return;
     }
-
-    // Save to aspect-specific config
-    setupAspectConfigs[aspect] = config;
-    lg('ok', LLM_ROLES[aspect] + ' configured successfully');
-
-    // Move to next step
-    advanceSetupStep();
-
-  } catch (err) {
-    statusEl.textContent = 'Connection failed: ' + err.message;
-    statusEl.style.color = 'var(--dn)';
-    lg('err', 'Setup test failed: ' + err.message);
   }
+
+  // Short delay so user sees success message, then advance
+  setTimeout(() => setupAdvanceToPipeline(), 600);
 }
 
-/**
- * Advance to next setup step
- */
-function advanceSetupStep() {
-  setupStep = SETUP_STEPS.READY;
-  setupReadyAtMs = Date.now();
-  updateSetupSteps(SETUP_STEPS.READY);
-  updateSetupSummary();
-  setupRefreshSkillSummary();
+// ============================================================
+// STEP 2: Pipeline Configuration
+// ============================================================
+
+function setupAdvanceToPipeline() {
+  setupStep = SETUP_STEPS.PIPELINE;
+  updateSetupSteps(SETUP_STEPS.PIPELINE);
+  setupPopulateModelLists();
+  setupApplyPreset('best'); // auto-apply best preset as default
+
+  // Show hardware panel for Ollama/hybrid-with-ollama
+  const useOllama = setupDirection === 'ollama' || (setupDirection === 'hybrid' && setupPrimaryKeys.ollamaUrl);
+  const hwPanel = document.getElementById('setupHardwarePanel');
+  if (hwPanel) hwPanel.style.display = useOllama ? 'block' : 'none';
+
+  if (useOllama) {
+    // Pre-fetch installed models for datalist population
+    setupFetchInstalledOllamaModels().then(models => {
+      setupInstalledOllamaModels = models;
+      if (models.length > 0) {
+        SETUP_ASPECTS.forEach(aspect => {
+          const prov = setupGetAspectProvider(aspect);
+          if (prov === 'ollama') {
+            const list = document.getElementById('setupModelList-' + aspect);
+            if (list) { list.innerHTML = ''; models.forEach(m => { const o = document.createElement('option'); o.value = m; list.appendChild(o); }); }
+          }
+        });
+      }
+    });
+  }
+
+  if (setupDirection === 'hybrid') setupShowHybridProviderPickers();
   document.getElementById('setupStatus').textContent = '';
 }
 
-/**
- * Clear form fields for the next setup aspect
- */
-function clearSetupFormFields() {
-  const suffix = '';
-  
-  const keyInputId = 'setupOrKey' + suffix;
-  const modelSelectId = 'setupOrModel' + suffix;
-  const urlInputId = 'setupOllamaUrl' + suffix;
-  const ollamaModelId = 'setupOllamaModel' + suffix;
-  
-  const keyInput = document.getElementById(keyInputId);
-  const modelSelect = document.getElementById(modelSelectId);
-  const urlInput = document.getElementById(urlInputId);
-  const ollamaModel = document.getElementById(ollamaModelId);
-  
-  if (keyInput) keyInput.value = '';
-  if (urlInput) urlInput.value = 'http://localhost:11434';
-  if (ollamaModel) ollamaModel.value = 'llama3';
-  
-  // Hide provider section containers (use exact IDs to avoid hiding child inputs)
-  ['setupOpenrouter', 'setupOpenrouter2', 'setupOpenrouter3'].forEach(id => {
-    const el = document.getElementById(id); if (el) el.style.display = 'none';
-  });
-  ['setupAnthropic', 'setupAnthropic2', 'setupAnthropic3'].forEach(id => {
-    const el = document.getElementById(id); if (el) el.style.display = 'none';
-  });
-  ['setupOllama', 'setupOllama2', 'setupOllama3'].forEach(id => {
-    const el = document.getElementById(id); if (el) el.style.display = 'none';
-  });
-  
-  // Hide config section
-  const configSection = document.querySelector('#setupPanel1 .setup-config-section');
-  if (configSection) configSection.style.display = 'none';
+function setupGetAspectProvider(aspect) {
+  if (setupDirection === 'hybrid') return setupAspectProviders[aspect] || 'openrouter';
+  return setupDirection;
 }
 
-/**
- * Update the summary display before hatch
- */
-function updateSetupSummary() {
-  const summaryMain = document.getElementById('setupSummaryMain');
-  const summaryMA = document.getElementById('setupSummaryMA');
-  
-  if (summaryMain && setupAspectConfigs.main) {
-    const model = String(setupAspectConfigs.main.model || '').split('/').pop();
-    summaryMain.textContent = setupAspectConfigs.main.type + ' (' + model + ')';
-  }
-  if (summaryMA && setupAspectConfigs.main) {
-    const model = String(setupAspectConfigs.main.model || '').split('/').pop();
-    summaryMA.textContent = setupAspectConfigs.main.type + ' (' + model + ')';
+function setupPopulateModelLists() {
+  SETUP_ASPECTS.forEach(aspect => {
+    const provider = setupGetAspectProvider(aspect);
+    setupPopulateModelListForAspect(aspect, provider);
+  });
+}
+
+function setupPopulateModelListForAspect(aspect, provider) {
+  const fieldId = 'setupAspectModel-' + aspect;
+  const listId = 'setupModelList-' + aspect;
+  const recEl = document.getElementById('setupRec-' + aspect);
+  const field = document.getElementById(fieldId);
+  const list = document.getElementById(listId);
+  if (!field || !list) return;
+
+  list.innerHTML = '';
+
+  if (provider === 'openrouter') {
+    const rolePreset = OPENROUTER_ROLE_MODELS[aspect] || OPENROUTER_ROLE_MODELS.main;
+    const models = rolePreset.models || [];
+    models.forEach(m => {
+      const opt = document.createElement('option');
+      opt.value = m.id;
+      if (m.l) opt.label = m.l;
+      list.appendChild(opt);
+    });
+    if (recEl) recEl.textContent = '(rec: ' + (rolePreset.def || '') + ')';
+  } else if (provider === 'anthropic') {
+    SETUP_ANTHROPIC_MODELS.forEach(m => {
+      const opt = document.createElement('option');
+      opt.value = m.id;
+      if (m.l) opt.label = m.l;
+      list.appendChild(opt);
+    });
+    if (recEl) recEl.textContent = '(rec: ' + (SETUP_ANTHROPIC_ASPECT_DEFAULTS[aspect] || 'claude-sonnet-4-6') + ')';
+  } else {
+    // Ollama — show installed models if available, otherwise hardcoded recommendations
+    const models = setupInstalledOllamaModels.length > 0
+      ? setupInstalledOllamaModels
+      : ['llama3', 'qwen2.5:7b', 'qwen2.5:3b', 'gemma3:1b', 'mistral'];
+    models.forEach(m => {
+      const opt = document.createElement('option');
+      opt.value = m;
+      list.appendChild(opt);
+    });
+    if (recEl) recEl.textContent = setupInstalledOllamaModels.length > 0
+      ? '(' + setupInstalledOllamaModels.length + ' model' + (setupInstalledOllamaModels.length === 1 ? '' : 's') + ' installed)'
+      : '(type your installed model)';
   }
 }
 
-/**
- * Get the LLM aspect for a given setup step
- */
-function getAspectForStep(step) {
-  return step === SETUP_STEPS.READY ? 'main' : 'main';
+// ============================================================
+// OLLAMA HARDWARE DETECTION + MODEL PULL
+// ============================================================
+
+let setupInstalledOllamaModels = []; // populated from /api/tags
+
+const OLLAMA_HW_TIERS = {
+  low:    { label: 'Low-end',   models: { main: 'qwen2.5:1.5b', subconscious: 'qwen2.5:0.5b', dream: 'qwen2.5:0.5b', orchestrator: 'qwen2.5:1.5b', nekocore: 'qwen2.5:1.5b' } },
+  medium: { label: 'Mid-range', models: { main: 'qwen2.5:3b',   subconscious: 'qwen2.5:1.5b', dream: 'qwen2.5:1.5b', orchestrator: 'qwen2.5:3b',   nekocore: 'qwen2.5:3b' } },
+  high:   { label: 'High-end',  models: { main: 'qwen2.5:7b',   subconscious: 'qwen2.5:3b',   dream: 'qwen2.5:3b',   orchestrator: 'qwen2.5:7b',   nekocore: 'qwen2.5:7b' } },
+  ultra:  { label: 'Ultra',     models: { main: 'qwen2.5:14b',  subconscious: 'qwen2.5:7b',   dream: 'qwen2.5:7b',   orchestrator: 'qwen2.5:14b',  nekocore: 'qwen2.5:14b' } }
+};
+
+function setupDetectHardwareTier() {
+  const ram = parseInt(document.getElementById('setupHwRam')?.value || '0', 10);
+  const gpu = document.getElementById('setupHwGpu')?.value || '';
+  const vram = parseInt(document.getElementById('setupHwVram')?.value || '0', 10);
+
+  if (!ram) return null;
+
+  // Determine tier based on available memory for models
+  // With dedicated GPU, VRAM is what matters most
+  if (gpu === 'dedicated' && vram >= 16) return 'ultra';
+  if (gpu === 'dedicated' && vram >= 8)  return 'high';
+  if (gpu === 'dedicated' && vram >= 4)  return 'medium';
+  // Integrated GPU or low VRAM — rely on system RAM
+  if (ram >= 32) return 'high';
+  if (ram >= 16) return 'medium';
+  return 'low';
 }
 
-/**
- * Go back to previous setup step
- */
-function previousSetupStep() {
-  if (setupStep > SETUP_STEPS.MAIN) {
-    setupStep--;
-    updateSetupSteps(setupStep);
-    document.getElementById('setupStatus').textContent = '';
+async function setupFetchInstalledOllamaModels() {
+  const url = setupPrimaryKeys.ollamaUrl || 'http://localhost:11434';
+  try {
+    const resp = await fetch(url + '/api/tags');
+    if (!resp.ok) return [];
+    const data = await resp.json();
+    const models = Array.isArray(data.models) ? data.models : [];
+    return models.map(m => String(m.name || m.model || '').toLowerCase());
+  } catch { return []; }
+}
+
+function setupIsModelInstalled(modelName) {
+  const needle = modelName.toLowerCase();
+  return setupInstalledOllamaModels.some(m => m === needle || m.startsWith(needle + ':') || needle.startsWith(m.split(':')[0] + ':'));
+}
+
+function setupApplyHardwareRecommendation() {
+  const tier = setupDetectHardwareTier();
+  if (!tier) {
+    const statusEl = document.getElementById('setupStatus');
+    if (statusEl) { statusEl.textContent = 'Please fill in your RAM at minimum.'; statusEl.style.color = 'var(--dn)'; }
+    return;
+  }
+
+  const hwTier = OLLAMA_HW_TIERS[tier];
+  const stack = hwTier.models;
+
+  // Apply this tier's models to all aspect fields
+  SETUP_ASPECTS.forEach(aspect => {
+    const el = document.getElementById('setupAspectModel-' + aspect);
+    if (el) el.value = stack[aspect] || stack.main;
+  });
+
+  const descEl = document.getElementById('setupPresetDesc');
+  if (descEl) descEl.textContent = hwTier.label + ' hardware detected — models chosen to fit your system.';
+
+  // Clear preset highlight since this is hardware-based
+  ['best', 'fast', 'cheap', 'balanced'].forEach(k => {
+    const btn = document.getElementById('setupPreset-' + k);
+    if (btn) btn.classList.remove('on');
+  });
+
+  // Show model status (installed vs missing)
+  setupShowOllamaModelStatus(stack);
+}
+
+async function setupShowOllamaModelStatus(stack) {
+  const panel = document.getElementById('setupOllamaModelStatus');
+  const listHost = document.getElementById('setupOllamaModelList');
+  const descEl = document.getElementById('setupOllamaModelDesc');
+  if (!panel || !listHost) return;
+
+  panel.style.display = 'block';
+  if (descEl) descEl.textContent = 'Checking installed models...';
+
+  setupInstalledOllamaModels = await setupFetchInstalledOllamaModels();
+
+  // Collect unique models from the recommended stack
+  const uniqueModels = [...new Set(Object.values(stack))];
+  const installed = uniqueModels.filter(m => setupIsModelInstalled(m));
+  const missing = uniqueModels.filter(m => !setupIsModelInstalled(m));
+
+  if (descEl) {
+    if (missing.length === 0) {
+      descEl.textContent = 'All recommended models are installed!';
+    } else {
+      descEl.textContent = installed.length + ' installed, ' + missing.length + ' need pulling.';
+    }
+  }
+
+  listHost.innerHTML = '';
+  for (const model of uniqueModels) {
+    const isInst = setupIsModelInstalled(model);
+    const row = document.createElement('div');
+    row.className = 'setup-model-row';
+    row.innerHTML = '<span class="model-name">' + model + '</span>'
+      + (isInst
+        ? '<span class="model-status installed">&#10003; Installed</span>'
+        : '<span class="model-status missing">Not installed</span>'
+          + '<button class="btn-pull" onclick="setupPullOllamaModel(this,\'' + model.replace(/'/g, "\\'") + '\')">Pull</button>');
+    listHost.appendChild(row);
+  }
+
+  // Populate datalists with installed models for better autocomplete
+  if (setupInstalledOllamaModels.length > 0) {
+    SETUP_ASPECTS.forEach(aspect => {
+      const list = document.getElementById('setupModelList-' + aspect);
+      if (!list) return;
+      list.innerHTML = '';
+      setupInstalledOllamaModels.forEach(m => {
+        const opt = document.createElement('option');
+        opt.value = m;
+        list.appendChild(opt);
+      });
+    });
   }
 }
+
+async function setupPullOllamaModel(btnEl, modelName) {
+  const url = setupPrimaryKeys.ollamaUrl || 'http://localhost:11434';
+  btnEl.disabled = true;
+  btnEl.textContent = 'Pulling...';
+
+  const statusSpan = btnEl.previousElementSibling;
+
+  try {
+    const resp = await fetch(url + '/api/pull', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: modelName, stream: false })
+    });
+    if (!resp.ok) {
+      const errText = await resp.text();
+      throw new Error(errText.slice(0, 200));
+    }
+    // Pull succeeded
+    btnEl.style.display = 'none';
+    if (statusSpan) { statusSpan.className = 'model-status installed'; statusSpan.innerHTML = '&#10003; Installed'; }
+    setupInstalledOllamaModels.push(modelName.toLowerCase());
+    // Re-populate datalists
+    SETUP_ASPECTS.forEach(aspect => {
+      const list = document.getElementById('setupModelList-' + aspect);
+      if (!list) return;
+      if (![...list.options].some(o => o.value.toLowerCase() === modelName.toLowerCase())) {
+        const opt = document.createElement('option');
+        opt.value = modelName;
+        list.appendChild(opt);
+      }
+    });
+  } catch (err) {
+    btnEl.disabled = false;
+    btnEl.textContent = 'Retry';
+    if (statusSpan) statusSpan.textContent = 'Failed: ' + err.message.slice(0, 60);
+  }
+}
+
+function setupApplyPreset(presetKey) {
+  const provider = setupDirection === 'hybrid' ? 'openrouter' : setupDirection;
+  let stack;
+
+  if (provider === 'openrouter') {
+    stack = (typeof RECOMMENDED_MODEL_STACKS !== 'undefined' && RECOMMENDED_MODEL_STACKS[presetKey]) || null;
+  } else if (provider === 'ollama') {
+    stack = (typeof OLLAMA_RECOMMENDED_STACKS !== 'undefined' && OLLAMA_RECOMMENDED_STACKS[presetKey]) || null;
+  } else if (provider === 'anthropic') {
+    // Anthropic has limited models; build aspect-appropriate defaults per preset
+    const tiers = {
+      best: { main: 'claude-opus-4-6', subconscious: 'claude-sonnet-4-6', dream: 'claude-sonnet-4-6', orchestrator: 'claude-sonnet-4-6', nekocore: 'claude-sonnet-4-6' },
+      fast: { main: 'claude-sonnet-4-6', subconscious: 'claude-haiku-4-5', dream: 'claude-haiku-4-5', orchestrator: 'claude-sonnet-4', nekocore: 'claude-sonnet-4-6' },
+      cheap: { main: 'claude-haiku-4-5', subconscious: 'claude-haiku-4-5', dream: 'claude-haiku-4-5', orchestrator: 'claude-haiku-4-5', nekocore: 'claude-haiku-4-5' },
+      hybrid: { main: 'claude-sonnet-4-6', subconscious: 'claude-haiku-4-5', dream: 'claude-sonnet-4', orchestrator: 'claude-sonnet-4-6', nekocore: 'claude-sonnet-4-6' }
+    };
+    stack = tiers[presetKey] || tiers.best;
+  }
+
+  if (stack) {
+    SETUP_ASPECTS.forEach(aspect => {
+      const el = document.getElementById('setupAspectModel-' + aspect);
+      // Map nekocore to main's value in the stack since stacks don't have nekocore key
+      const model = stack[aspect] || stack.main || '';
+      if (el) el.value = model;
+    });
+  }
+
+  // Highlight active preset button
+  ['best', 'fast', 'cheap', 'balanced'].forEach(k => {
+    const btn = document.getElementById('setupPreset-' + k);
+    if (btn) btn.classList.toggle('on', k === presetKey || (k === 'balanced' && presetKey === 'hybrid'));
+  });
+
+  // Show preset description
+  const descEl = document.getElementById('setupPresetDesc');
+  if (descEl) {
+    const provKey = (provider === 'ollama') ? 'ollama' : 'openrouter';
+    const copy = (typeof RECOMMENDED_PANEL_COPY !== 'undefined' && RECOMMENDED_PANEL_COPY[provKey]) || {};
+    descEl.textContent = copy[presetKey] || '';
+  }
+}
+
+function setupShowHybridProviderPickers() {
+  SETUP_ASPECTS.forEach(aspect => {
+    const container = document.querySelector('.setup-aspect-card[data-aspect="' + aspect + '"] .setup-aspect-provider-pick');
+    if (!container) return;
+    container.style.display = 'block';
+    container.innerHTML = '<div class="flex gap-1 mb-2" style="flex-wrap:wrap">'
+      + '<button class="setup-mini-provider-btn' + (setupAspectProviders[aspect] === 'openrouter' ? ' on' : '') + '" onclick="setupPickAspectProvider(\'' + aspect + '\',\'openrouter\',this)">OR</button>'
+      + '<button class="setup-mini-provider-btn' + (setupAspectProviders[aspect] === 'anthropic' ? ' on' : '') + '" onclick="setupPickAspectProvider(\'' + aspect + '\',\'anthropic\',this)">Ant</button>'
+      + '<button class="setup-mini-provider-btn' + (setupAspectProviders[aspect] === 'ollama' ? ' on' : '') + '" onclick="setupPickAspectProvider(\'' + aspect + '\',\'ollama\',this)">Oll</button>'
+      + '</div>';
+  });
+}
+
+function setupPickAspectProvider(aspect, provider, btnEl) {
+  setupAspectProviders[aspect] = provider;
+  // Highlight active button
+  const container = btnEl.closest('.setup-aspect-provider-pick');
+  container.querySelectorAll('.setup-mini-provider-btn').forEach(b => b.classList.remove('on'));
+  btnEl.classList.add('on');
+  // Repopulate model list for this aspect
+  setupPopulateModelListForAspect(aspect, provider);
+  // Clear current model value
+  const el = document.getElementById('setupAspectModel-' + aspect);
+  if (el) el.value = '';
+}
+
+function setupAdvanceToFinish() {
+  // Validate at least main has a model
+  const mainModel = (document.getElementById('setupAspectModel-main')?.value || '').trim();
+  const statusEl = document.getElementById('setupStatus');
+  if (!mainModel) {
+    statusEl.textContent = 'Please select a model for Main Mind at minimum.';
+    statusEl.style.color = 'var(--dn)';
+    return;
+  }
+
+  setupStep = SETUP_STEPS.FINISH;
+  setupReadyAtMs = Date.now();
+  updateSetupSteps(SETUP_STEPS.FINISH);
+  setupBuildFinalSummary();
+  setupRefreshSkillSummary();
+  statusEl.textContent = '';
+}
+
+function setupBuildFinalSummary() {
+  const host = document.getElementById('setupFinalSummary');
+  if (!host) return;
+  let html = '';
+  SETUP_ASPECTS.forEach(aspect => {
+    const model = (document.getElementById('setupAspectModel-' + aspect)?.value || '').trim();
+    const provider = setupGetAspectProvider(aspect);
+    const label = SETUP_ASPECT_LABELS[aspect] || aspect;
+    const displayModel = model ? model.split('/').pop() : '(same as main)';
+    html += '<div class="summary-row">' + label + ': <strong>' + provider + '</strong> \u2014 ' + displayModel + '</div>';
+  });
+  host.innerHTML = html;
+}
+
+// ============================================================
+// STEP 3: Skills & Finish
+// ============================================================
 
 function setupRenderSkillSummary(skills) {
   const host = document.getElementById('setupSkillSummary');
@@ -446,14 +696,14 @@ function setupRenderSkillSummary(skills) {
     return;
   }
 
+  // 4-column grid layout
+  host.className = 'setup-skill-grid text-xs-c text-secondary-c';
   host.innerHTML = skills.map((skill) => {
     const name = String(skill?.name || 'Unnamed skill');
-    const desc = String(skill?.description || 'No description');
     const checked = setupSkillSelection.has(name) ? ' checked' : '';
-    return '<label style="display:block;margin:.32rem 0;padding:.28rem .35rem;border:1px solid var(--border-default);border-radius:8px">'
-      + '<input type="checkbox" data-setup-skill="' + name.replace(/"/g, '&quot;') + '"' + checked + ' style="margin-right:.45rem;vertical-align:middle">'
-      + '<strong>' + name + '</strong>'
-      + '<div style="margin:.2rem 0 0 1.35rem;opacity:.9">' + desc + '</div>'
+    return '<label class="setup-skill-item">'
+      + '<input type="checkbox" data-setup-skill="' + name.replace(/"/g, '&quot;') + '"' + checked + '>'
+      + ' ' + name
       + '</label>';
   }).join('');
 
@@ -534,88 +784,92 @@ async function setupEnsureDefaultWorkspace() {
 }
 
 /**
- * Finalize setup: save all configs and hatch entity
+ * Build a config object for an aspect from wizard state.
+ * Uses the primary API key from step 1, or per-aspect override if provided.
+ */
+function setupBuildAspectConfig(aspect) {
+  const provider = setupGetAspectProvider(aspect);
+  const model = (document.getElementById('setupAspectModel-' + aspect)?.value || '').trim();
+  const overrideKey = (document.getElementById('setupAspectKey-' + aspect)?.value || '').trim();
+
+  const config = { type: provider, model: model };
+
+  if (provider === 'openrouter') {
+    config.endpoint = OPENROUTER_PRESET.ep;
+    config.apiKey = overrideKey || setupPrimaryKeys.openrouter;
+  } else if (provider === 'anthropic') {
+    config.endpoint = 'https://api.anthropic.com/v1/messages';
+    config.apiKey = overrideKey || setupPrimaryKeys.anthropic;
+  } else {
+    config.endpoint = setupPrimaryKeys.ollamaUrl || 'http://localhost:11434';
+  }
+
+  return config;
+}
+
+/**
+ * Finalize setup: save all aspect configs and open NekoCore OS
  */
 async function setupFinish() {
   const statusEl = document.getElementById('setupStatus');
-  const btn = document.querySelector('#setupPanel' + SETUP_STEPS.READY + ' .btn');
+  const btn = document.getElementById('setupFinishBtn');
 
-  // Guard against accidental click-through when step 1 transitions to step 2.
-  if (setupStep !== SETUP_STEPS.READY) return;
+  if (setupStep !== SETUP_STEPS.FINISH) return;
   if (setupReadyAtMs && (Date.now() - setupReadyAtMs) < 450) {
-    statusEl.textContent = 'Step 2 is ready. Review options, then click Save & Open.';
+    statusEl.textContent = 'Review your configuration, then click Save & Open.';
     statusEl.style.color = 'var(--wn)';
     return;
   }
 
-  if (btn) {
-    btn.disabled = true;
-    btn.textContent = 'Saving...';
-  }
+  if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
   statusEl.textContent = 'Saving LLM configurations...';
   statusEl.style.color = 'var(--wn)';
 
   try {
-    const mainConfig = setupAspectConfigs.main;
-    if (!mainConfig) throw new Error('Main provider config is missing');
+    // Build configs for all profile aspects (main, sub, dream, orch)
+    const mainCfg = setupBuildAspectConfig('main');
+    if (!mainCfg.model) throw new Error('Main Mind model is required');
+    if (mainCfg.type !== 'ollama' && !mainCfg.apiKey) throw new Error('API key is required for Main Mind');
 
-    const normalizedMain = {
-      type: mainConfig.type,
-      endpoint: String(mainConfig.endpoint || '').trim(),
-      model: String(mainConfig.model || '').trim()
-    };
-    if (mainConfig.type !== 'ollama') {
-      normalizedMain.apiKey = String(mainConfig.apiKey || mainConfig.key || '').trim();
-      if (!normalizedMain.apiKey) throw new Error('API key is required');
-    }
+    const subCfg = setupBuildAspectConfig('subconscious');
+    const dreamCfg = setupBuildAspectConfig('dream');
+    const orchCfg = setupBuildAspectConfig('orchestrator');
+    const nekocoreCfg = setupBuildAspectConfig('nekocore');
+
+    // Fill empty models with main's model as fallback
+    if (!subCfg.model) { subCfg.model = mainCfg.model; subCfg.type = mainCfg.type; subCfg.endpoint = mainCfg.endpoint; subCfg.apiKey = mainCfg.apiKey; }
+    if (!dreamCfg.model) { dreamCfg.model = mainCfg.model; dreamCfg.type = mainCfg.type; dreamCfg.endpoint = mainCfg.endpoint; dreamCfg.apiKey = mainCfg.apiKey; }
+    if (!orchCfg.model) { orchCfg.model = mainCfg.model; orchCfg.type = mainCfg.type; orchCfg.endpoint = mainCfg.endpoint; orchCfg.apiKey = mainCfg.apiKey; }
+    if (!nekocoreCfg.model) { nekocoreCfg.model = mainCfg.model; nekocoreCfg.type = mainCfg.type; nekocoreCfg.endpoint = mainCfg.endpoint; nekocoreCfg.apiKey = mainCfg.apiKey; }
 
     const profileName = savedConfig.lastActive || 'default-multi-llm';
     const existing = savedConfig.profiles[profileName] || {};
     const profile = {
       ...existing,
-      main: normalizedMain,
-      // Seed inherited aspect configs so saved profile shape matches ma-config.example.json.
-      subconscious: existing.subconscious && typeof existing.subconscious === 'object'
-        ? existing.subconscious
-        : { ...normalizedMain },
-      dream: existing.dream && typeof existing.dream === 'object'
-        ? existing.dream
-        : { ...normalizedMain },
-      orchestrator: existing.orchestrator && typeof existing.orchestrator === 'object'
-        ? existing.orchestrator
-        : { ...normalizedMain }
+      main: mainCfg,
+      subconscious: subCfg,
+      dream: dreamCfg,
+      orchestrator: orchCfg,
+      ma: { ...nekocoreCfg }
     };
 
-    // MA gets its own dedicated config slot unless already customized.
-    if (!profile.ma || typeof profile.ma !== 'object') {
-      profile.ma = { ...normalizedMain };
-    }
-
-    profile._activeType = profile.main.type;
+    profile._activeType = mainCfg.type;
     profile._activeTypes = {
-      ...(existing._activeTypes || {}),
-      main: profile.main.type,
-      subconscious: profile.subconscious?.type || profile.main.type,
-      dream: profile.dream?.type || profile.main.type,
-      orchestrator: profile.orchestrator?.type || profile.main.type,
-      ma: profile.ma?.type || profile.main.type
+      main: mainCfg.type,
+      subconscious: subCfg.type,
+      dream: dreamCfg.type,
+      orchestrator: orchCfg.type,
+      ma: nekocoreCfg.type
     };
 
-    if (profile.main.type === 'openrouter') {
-      profile.apikey = {
-        endpoint: profile.main.endpoint,
-        key: profile.main.apiKey,
-        model: profile.main.model
-      };
+    // Set legacy fields for backward compatibility
+    if (mainCfg.type === 'openrouter') {
+      profile.apikey = { endpoint: mainCfg.endpoint, key: mainCfg.apiKey, model: mainCfg.model };
       delete profile.ollama;
-    } else if (profile.main.type === 'ollama') {
-      profile.ollama = {
-        url: profile.main.endpoint,
-        model: profile.main.model
-      };
+    } else if (mainCfg.type === 'ollama') {
+      profile.ollama = { url: mainCfg.endpoint, model: mainCfg.model };
       delete profile.apikey;
-    } else if (profile.main.type === 'anthropic') {
-      // Keep legacy fields coherent for older clients that still read _activeType + apikey/ollama.
+    } else if (mainCfg.type === 'anthropic') {
       delete profile.apikey;
       delete profile.ollama;
     }
@@ -624,26 +878,34 @@ async function setupFinish() {
     savedConfig.lastActive = profileName;
     await persistConfig();
 
+    // Save NekoCore config separately via entity-config endpoint
+    try {
+      await fetch('/api/entity-config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ provider: 'nekocore', config: nekocoreCfg })
+      });
+    } catch (_) { /* best effort */ }
+
     // Auto-provision a default workspace path so first-time users can use tools immediately.
     await setupEnsureDefaultWorkspace();
     // Skills default OFF; apply only user-selected skills from setup.
     await setupApplySelectedNekoSkills();
 
     // Set main provider as active for UI
-    const m = setupAspectConfigs.main;
-    if (m.type === 'openrouter') {
-      activeConfig = { type: 'openrouter', endpoint: m.endpoint, apiKey: (m.apiKey || m.key), model: m.model };
-      updateProviderUI('openrouter', true, 'OpenRouter (' + m.model.split('/').pop() + ')');
-    } else if (m.type === 'anthropic') {
-      activeConfig = { type: 'anthropic', endpoint: m.endpoint, apiKey: (m.apiKey || m.key), model: m.model };
-      updateProviderUI('anthropic', true, 'Anthropic (' + m.model + ')');
+    if (mainCfg.type === 'openrouter') {
+      activeConfig = { type: 'openrouter', endpoint: mainCfg.endpoint, apiKey: mainCfg.apiKey, model: mainCfg.model };
+      updateProviderUI('openrouter', true, 'OpenRouter (' + mainCfg.model.split('/').pop() + ')');
+    } else if (mainCfg.type === 'anthropic') {
+      activeConfig = { type: 'anthropic', endpoint: mainCfg.endpoint, apiKey: mainCfg.apiKey, model: mainCfg.model };
+      updateProviderUI('anthropic', true, 'Anthropic (' + mainCfg.model + ')');
     } else {
-      activeConfig = { type: 'ollama', endpoint: m.endpoint, model: m.model };
-      updateProviderUI('ollama', true, 'Ollama (' + m.model + ')');
+      activeConfig = { type: 'ollama', endpoint: mainCfg.endpoint, model: mainCfg.model };
+      updateProviderUI('ollama', true, 'Ollama (' + mainCfg.model + ')');
     }
 
     hideSetupWizard();
-    lg('ok', 'Main provider saved. Advanced roles will inherit it until you customize them later.');
+    lg('ok', 'All pipeline stages configured and saved.');
 
     // Flag to auto-open Welcome tab after first setup (backup for page-reload case)
     try { localStorage.setItem('nk-show-welcome', '1'); } catch (_) {}

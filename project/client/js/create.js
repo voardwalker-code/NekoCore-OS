@@ -134,6 +134,13 @@ function creatorContinueToModeSelection() {
 }
 
 function selectEntityMode(mode) {
+  if (mode === 'novel') {
+    // Switch to the Book Ingest app tab
+    if (typeof switchMainTab === 'function') {
+      switchMainTab('bookingest');
+    }
+    return;
+  }
   entityCreationMode = mode;
   document.getElementById('entityCreationModeStep').style.display = 'none';
   document.getElementById('creatorOnboardingBlock').style.display = 'block';
@@ -167,6 +174,22 @@ function backToModeSelection() {
   document.getElementById('entityCreationModeStep').style.display = 'block';
   document.getElementById('createEntityBtn').style.display = 'none';
   lg('info', 'Pick a creation mode below.');
+}
+
+async function launchNovelIngest() {
+  lg('info', 'Launching Memory Architect for novel ingestion…');
+  try {
+    const resp = await fetch('/api/servers/ma/start', { method: 'POST' });
+    if (resp.ok) {
+      window.open('http://localhost:3850', '_blank');
+      lg('info', 'Memory Architect launched. Use its Book Ingestion feature to create an entity from a novel.');
+    } else {
+      const data = await resp.json().catch(() => ({}));
+      lg('err', 'Failed to start Memory Architect: ' + (data.error || 'Server returned ' + resp.status));
+    }
+  } catch (err) {
+    lg('err', 'Failed to launch Memory Architect: ' + err.message);
+  }
 }
 
 function updateEmptyEntityModeForm() {
@@ -262,14 +285,6 @@ function syncParentAfterCreate() {
     if (!window.parent || window.parent === window) return;
     const p = window.parent;
     if (typeof p.refreshSidebarEntities === 'function') p.refreshSidebarEntities();
-
-    if (lastCreatedEntityId && typeof p.sidebarSelectEntity === 'function') {
-      // Open the entity preview/details card and let the user explicitly choose checkout.
-      p.sidebarSelectEntity(lastCreatedEntityId);
-    } else {
-      if (typeof p.ensureEntityWindowContent === 'function') p.ensureEntityWindowContent(true);
-      if (typeof p.switchMainTab === 'function') p.switchMainTab('entity');
-    }
     if (typeof p.closeWindow === 'function') p.closeWindow('creator');
   } catch (_) {
     // Ignore cross-frame sync errors; creation still succeeded.
@@ -323,8 +338,46 @@ function updateHatchStep(stepIndex, status) {
   if (!steps[stepIndex]) return;
   steps[stepIndex].classList.remove('pending', 'active', 'complete');
   steps[stepIndex].classList.add(status);
+  if (status === 'active' || status === 'complete') steps[stepIndex].style.opacity = '1';
   const icon = steps[stepIndex].querySelector('.hatch-step-icon');
   if (icon) icon.textContent = status === 'complete' ? '✓' : '⏳';
+}
+
+let _hatchStepTimer = null;
+let _hatchStepIndex = 0;
+
+function resetHatchSteps() {
+  const container = document.getElementById('hatchProgressSteps');
+  const steps = container.querySelectorAll('.hatch-step');
+  steps.forEach((s, i) => {
+    s.classList.remove('pending', 'active', 'complete');
+    s.style.opacity = i === 0 ? '.6' : '.4';
+    const icon = s.querySelector('.hatch-step-icon');
+    if (icon) icon.textContent = '⏳';
+  });
+  const seedStep = document.getElementById('hatchStepSeed');
+  if (seedStep) seedStep.style.display = 'none';
+}
+
+function startHatchStepTimer(totalSteps, intervalMs) {
+  stopHatchStepTimer();
+  _hatchStepIndex = 0;
+  updateHatchStep(0, 'active');
+  _hatchStepTimer = setInterval(() => {
+    if (_hatchStepIndex >= totalSteps - 1) return; // stay on last step until server responds
+    updateHatchStep(_hatchStepIndex, 'complete');
+    _hatchStepIndex++;
+    updateHatchStep(_hatchStepIndex, 'active');
+  }, intervalMs || 4000);
+}
+
+function completeAllHatchSteps(totalSteps) {
+  stopHatchStepTimer();
+  for (let i = 0; i < totalSteps; i++) updateHatchStep(i, 'complete');
+}
+
+function stopHatchStepTimer() {
+  if (_hatchStepTimer) { clearInterval(_hatchStepTimer); _hatchStepTimer = null; }
 }
 
 // ── Onboarding payload ───────────────────────────────────────
@@ -460,6 +513,7 @@ async function executeEntityCreation() {
     }
   } catch (err) {
     lg('err', 'Creation failed: ' + err.message);
+    stopHatchStepTimer();
     closeHatchProgress();
     document.getElementById('createEntityBtn').disabled = false;
     document.getElementById('creatorCardFooter').style.display = 'flex';
@@ -485,7 +539,7 @@ async function createEmptyEntity() {
 
   lg('info', 'Creating ' + name + '…');
 
-  const entityId = name.toLowerCase().replace(/\s+/g, '-') + '-' + Date.now();
+  const entityId = name.replace(/[^a-zA-Z0-9\s-]/g, '').replace(/[\s_]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '').slice(0, 30) + '-' + Array.from(crypto.getRandomValues(new Uint8Array(3)), b => b.toString(16).padStart(2, '0')).join('');
   const resp = await fetch('/api/entities/create', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -509,7 +563,8 @@ async function createRandomEntity() {
 
   lg('info', 'Generating random entity…');
   showHatchProgress();
-  updateHatchStep(0, 'active');
+  resetHatchSteps();
+  startHatchStepTimer(5, 4000);
   await sleep(200);
 
   const controller = new AbortController();
@@ -525,15 +580,13 @@ async function createRandomEntity() {
   clearTimeout(timeoutId);
 
   if (!resp.ok) {
+    stopHatchStepTimer();
     const d = await resp.json().catch(() => ({}));
     throw new Error(d.error || 'Server returned ' + resp.status);
   }
 
-  [0, 1, 2, 3].forEach(i => updateHatchStep(i, 'complete'));
-  updateHatchStep(4, 'active');
-
   const data = await resp.json();
-  updateHatchStep(4, 'complete');
+  completeAllHatchSteps(5);
 
   closeHatchProgress();
   await applyCreatorOnboarding(data.entityId);
@@ -552,7 +605,8 @@ async function createCharacterEntity() {
 
   lg('info', 'Running character ingestion for ' + name + '…');
   showHatchProgress();
-  updateHatchStep(0, 'active');
+  resetHatchSteps();
+  startHatchStepTimer(5, 5000);
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 300000);
@@ -567,15 +621,13 @@ async function createCharacterEntity() {
   clearTimeout(timeoutId);
 
   if (!resp.ok) {
+    stopHatchStepTimer();
     const d = await resp.json().catch(() => ({}));
     throw new Error(d.error || 'Server returned ' + resp.status);
   }
 
-  [0, 1, 2, 3].forEach(i => updateHatchStep(i, 'complete'));
-  updateHatchStep(4, 'active');
-
   const data = await resp.json();
-  updateHatchStep(4, 'complete');
+  completeAllHatchSteps(5);
 
   closeHatchProgress();
   await applyCreatorOnboarding(data.entityId);
@@ -611,7 +663,8 @@ async function createGuidedEntity() {
 
   lg('info', 'Generating guided entity: ' + name + '…');
   showHatchProgress();
-  updateHatchStep(0, 'active');
+  resetHatchSteps();
+  startHatchStepTimer(5, 4000);
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 180000);
@@ -626,15 +679,13 @@ async function createGuidedEntity() {
   clearTimeout(timeoutId);
 
   if (!resp.ok) {
+    stopHatchStepTimer();
     const d = await resp.json().catch(() => ({}));
     throw new Error(d.error || 'Server returned ' + resp.status);
   }
 
-  [0, 1, 2, 3].forEach(i => updateHatchStep(i, 'complete'));
-  updateHatchStep(4, 'active');
-
   const data = await resp.json();
-  updateHatchStep(4, 'complete');
+  completeAllHatchSteps(5);
 
   // ── Knowledge seed ingestion ────────────────────────────────
   let seedChunkCount = 0;

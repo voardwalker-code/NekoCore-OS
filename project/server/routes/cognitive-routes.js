@@ -505,8 +505,20 @@ function createCognitiveRoutes(ctx) {
       try {
         const reqEntityId = url ? url.searchParams.get('entityId') : null;
         const isActiveEntity = !reqEntityId || reqEntityId === ctx.currentEntityId;
-        const traces = (isActiveEntity && ctx.traceGraph) ? ctx.traceGraph.analyzeTraces() : {};
-        const connectionGraph = (isActiveEntity && ctx.traceGraph) ? ctx.traceGraph.buildConnectionGraph(200) : {};
+        let traces = {};
+        let connectionGraph = {};
+        if (isActiveEntity && ctx.traceGraph) {
+          traces = ctx.traceGraph.analyzeTraces();
+          connectionGraph = ctx.traceGraph.buildConnectionGraph(200);
+        } else if (reqEntityId) {
+          // Disk fallback for non-active entities
+          const entityPathsMod = require('../entityPaths');
+          const TraceGraph = require('../brain/trace-graph');
+          const entityMemDir = entityPathsMod.getMemoryRoot(reqEntityId);
+          const tg = new TraceGraph({ memDir: path.join(entityMemDir, 'episodic') });
+          traces = tg.analyzeTraces();
+          connectionGraph = tg.buildConnectionGraph(200);
+        }
         res.writeHead(200, apiHeaders);
         res.end(JSON.stringify({ ok: true, analysis: traces, graph: connectionGraph }));
       } catch (e) {
@@ -520,13 +532,19 @@ function createCognitiveRoutes(ctx) {
       try {
         const reqEntityId = url ? url.searchParams.get('entityId') : null;
         const isActiveEntity = !reqEntityId || reqEntityId === ctx.currentEntityId;
-        if (!isActiveEntity || !ctx.beliefGraph) {
+        const limit = parseInt(url?.searchParams?.get('limit')) || 100;
+        let beliefSource = (isActiveEntity && ctx.beliefGraph) ? ctx.beliefGraph : null;
+        // Disk fallback for non-active entities
+        if (!beliefSource && reqEntityId) {
+          const BeliefGraph = require('../brain/knowledge/beliefGraph');
+          beliefSource = new BeliefGraph({ entityId: reqEntityId });
+        }
+        if (!beliefSource) {
           res.writeHead(200, apiHeaders);
           res.end(JSON.stringify({ ok: true, beliefs: [], edges: [], stats: {} }));
           return;
         }
-        const limit = parseInt(url.searchParams.get('limit')) || 100;
-        const beliefs = ctx.beliefGraph.getAllBeliefs(limit);
+        const beliefs = beliefSource.getAllBeliefs(limit);
         const edges = [];
         for (const b of beliefs) {
           for (const conn of b.connections) {
@@ -536,7 +554,7 @@ function createCognitiveRoutes(ctx) {
             edges.push({ source: b.belief_id, target: memId, relation: 'sourced_from', strength: 0.6, type: 'belief_memory' });
           }
         }
-        const stats = ctx.beliefGraph.getStats();
+        const stats = beliefSource.getStats();
         res.writeHead(200, apiHeaders);
         res.end(JSON.stringify({ ok: true, beliefs, edges, stats }));
       } catch (e) {

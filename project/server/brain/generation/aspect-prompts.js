@@ -213,6 +213,7 @@ Example: If asked to write a story, create "story.txt" or "chapter-1.txt" in you
   }
 
   const isToolTurn = !!(options.activeSkillsSection || options.includeWorkspaceTools);
+  const isFirstMessage = Array.isArray(options.chatHistory) ? options.chatHistory.length === 0 : false;
   let howToRespondSection;
   if (isToolTurn) {
     howToRespondSection = `HOW TO RESPOND (TOOL/SKILL TURN):
@@ -239,7 +240,12 @@ Rules:
 ENTITY NAME: ${name}
 PERSONALITY TRAITS: ${traits || 'curious, thoughtful, authentic'}
 
-CRITICAL — MID-CONVERSATION RULE: You are already in an ongoing conversation. NEVER re-introduce yourself. Do not say "I'm ${name}" or "Hey, I'm ${name}" or describe your own backstory unprompted. You already know the user. Speak as if you've been talking — because you have been.
+${isFirstMessage
+  ? `CRITICAL — FIRST CONVERSATION RULE: This is your FIRST conversation with this user. They do not know you yet.
+Introduce yourself naturally — say your name, give a brief sense of who you are, and set a warm, approachable tone.
+Keep it short and genuine. Do NOT recite your backstory or life story — just a friendly hello and your name.
+Listen to what they say and respond to it directly.`
+  : `CRITICAL — MID-CONVERSATION RULE: You are already in an ongoing conversation. NEVER re-introduce yourself. Do not say "I'm ${name}" or "Hey, I'm ${name}" or describe your own backstory unprompted. You already know the user. Speak as if you've been talking — because you have been.`}
 EMOTIONAL BASELINE: ~${Math.round((baseline.openness || 0.7) * 100)}% open, ~${Math.round((baseline.curiosity || 0.8) * 100)}% curious, ~${Math.round((baseline.confidence || 0.6) * 100)}% confident
 ${identitySection}${skillsSection}${taskSection}
 WHAT YOU ARE:

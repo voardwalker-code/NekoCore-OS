@@ -19,6 +19,7 @@ const foldersToDelete = [
   path.join('memories', 'archives'),
   path.join('memories', 'dreams'),
   path.join('memories', 'goals'),
+  path.join('memories', 'logs'),
   path.join('memories', 'traces'),
   path.join('workspace', 'desktop'),
   path.join('workspace', 'trash')

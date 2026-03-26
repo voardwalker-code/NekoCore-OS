@@ -45,8 +45,8 @@ test('archive-index: ensureArchiveDirs creates episodic and docs subdirs', () =>
   try {
     const { ensureArchiveDirs } = require('../../server/brain/utils/archive-index');
     ensureArchiveDirs('test_guard');
-    assert.ok(fs.existsSync(path.join(tmp, 'entity_test_guard', 'memories', 'archive', 'episodic')));
-    assert.ok(fs.existsSync(path.join(tmp, 'entity_test_guard', 'memories', 'archive', 'docs')));
+    assert.ok(fs.existsSync(path.join(tmp, 'Entity-test_guard', 'memories', 'archive', 'episodic')));
+    assert.ok(fs.existsSync(path.join(tmp, 'Entity-test_guard', 'memories', 'archive', 'docs')));
   } finally {
     entityPaths.ENTITIES_DIR = origDir;
   }
@@ -411,7 +411,7 @@ test('archive-index (S2): appendArchiveEntry writes entry to primary bucket file
       type: 'episodic',
       created: '2025-01-01T00:00:00.000Z'
     });
-    const bucketPath = path.join(tmp, 'entity_s2_001', 'memories', 'archive', 'bucket_neuroscience.ndjson');
+    const bucketPath = path.join(tmp, 'Entity-s2_001', 'memories', 'archive', 'bucket_neuroscience.ndjson');
     assert.ok(fs.existsSync(bucketPath), 'primary bucket file should exist');
     const lines = fs.readFileSync(bucketPath, 'utf8').trim().split('\n').filter(Boolean);
     assert.equal(lines.length, 1, 'should have exactly one line in bucket');
@@ -450,7 +450,7 @@ test('archive-index (S2): appendArchiveEntry writes stubs for secondary topics',
       topics: ['biology', 'genetics', 'evolution']
     });
     // Secondary bucket for 'genetics' should have a stub
-    const geneticsBucket = path.join(tmp, 'entity_s2_003', 'memories', 'archive', 'bucket_genetics.ndjson');
+    const geneticsBucket = path.join(tmp, 'Entity-s2_003', 'memories', 'archive', 'bucket_genetics.ndjson');
     assert.ok(fs.existsSync(geneticsBucket), 'secondary bucket should exist');
     const lines = fs.readFileSync(geneticsBucket, 'utf8').trim().split('\n').filter(Boolean);
     const stub = JSON.parse(lines[0]);

@@ -99,7 +99,7 @@ class HatchEntity {
     try {
       // If no entityId, generate one
       if (!this.entityId) {
-        this.entityId = 'entity_' + crypto.randomBytes(3).toString('hex');
+        this.entityId = crypto.randomBytes(3).toString('hex');
         this.entityDir = entityPaths.getEntityRoot(this.entityId);
         this.entityFile = path.join(this.entityDir, 'entity.json');
       }

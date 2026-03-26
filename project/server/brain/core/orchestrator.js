@@ -708,7 +708,7 @@ Rules:
     // Detect /tool — inject workspace tools documentation
     const includeWorkspaceTools = /\/tool\b/i.test(userMessage);
 
-    const systemPrompt = getConsciousPrompt(this.entity, conciseSubconsciousHint, conciseDreamHint, { activeSkillsSection, includeWorkspaceTools });
+    const systemPrompt = getConsciousPrompt(this.entity, conciseSubconsciousHint, conciseDreamHint, { activeSkillsSection, includeWorkspaceTools, chatHistory });
 
     // Prompt-based thinking: inject thinking instruction for providers that
     // don't support native extended thinking (non-Anthropic). Anthropic native

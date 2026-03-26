@@ -115,6 +115,13 @@ function resolveCapabilities(providerType, userOverrides) {
       merged[key] = userOverrides[key];
     }
   }
+  // Enforce provider hard constraints — capabilities a provider cannot
+  // support must stay disabled regardless of profile-level overrides.
+  const type = String(providerType || '').toLowerCase().trim();
+  if (type === 'ollama') {
+    merged.extendedThinking = false;
+    merged.adaptiveThinking = false;
+  }
   return Object.freeze(merged);
 }
 

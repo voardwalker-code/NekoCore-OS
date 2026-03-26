@@ -219,7 +219,7 @@ function createConfigRoutes(ctx) {
   async function getConfig(req, res, apiHeaders) {
     const config = ctx.loadConfig();
     res.writeHead(200, apiHeaders);
-    res.end(JSON.stringify(redactKeys(config)));
+    res.end(JSON.stringify(config));
   }
 
   async function postConfig(req, res, apiHeaders, readBody) {

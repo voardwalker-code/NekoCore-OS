@@ -90,6 +90,24 @@
         refreshEntityPickerList();
       }
     });
+
+    // Also refresh when the Visualizer window gains focus within the OS shell
+    // (visibilitychange only fires for browser-level tab changes, not internal OS windows)
+    const vizContainer = document.getElementById('tab-visualizer');
+    if (vizContainer) {
+      const vizWindow = vizContainer.closest('.wm-window');
+      if (vizWindow) {
+        const observer = new MutationObserver((mutations) => {
+          for (const m of mutations) {
+            if (m.attributeName === 'class' && vizWindow.classList.contains('focused')) {
+              refreshEntityPickerList();
+              break;
+            }
+          }
+        });
+        observer.observe(vizWindow, { attributes: true, attributeFilter: ['class'] });
+      }
+    }
   });
 
   function setEntitySwitchStatus(text, cls) {

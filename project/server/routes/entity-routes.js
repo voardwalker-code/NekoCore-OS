@@ -107,10 +107,19 @@ function createEntityRoutes(ctx) {
     if (p === '/api/entity-intro' && m === 'GET') { await getEntityIntro(req, res, apiHeaders); return true; }
     if (p === '/api/entity-last-memory' && m === 'GET') { await getEntityLastMemory(req, res); return true; }
     if (p === '/api/hatch' && m === 'POST') { await postHatch(req, res, apiHeaders, readBody); return true; }
+    if (p === '/api/entities/import-from-ma' && m === 'POST') { await postImportFromMA(req, res, apiHeaders); return true; }
     return false;
   }
 
   function _reinitBrainLoop() {
+    // Stop the old brain loop to prevent orphaned timers/state bleed
+    try {
+      const oldLoop = typeof ctx.getBrainLoop === 'function' ? ctx.getBrainLoop() : ctx.brainLoop;
+      if (oldLoop && oldLoop.running) {
+        oldLoop.stop();
+        if (typeof oldLoop._saveState === 'function') oldLoop._saveState();
+      }
+    } catch (_) {}
     const _cfg = (ctx.loadConfig ? ctx.loadConfig() : {});
     const _dreamInterval = (_cfg.sleep && _cfg.sleep.dreamInterval) ? _cfg.sleep.dreamInterval : 5;
     ctx.brainLoop = new BrainLoop({
@@ -324,14 +333,10 @@ function createEntityRoutes(ctx) {
       fs.writeFileSync(path.join(entityMemRoot, 'persona.json'), JSON.stringify(persona, null, 2), 'utf8');
       fs.writeFileSync(path.join(entityMemRoot, 'system-prompt.txt'), _buildSystemPrompt(name, persona), 'utf8');
 
-      ctx.entityManager.loadEntity(canonicalId);
-      ctx.setActiveEntity(canonicalId);
-      _reinitBrainLoop();
-      _initializeSkillDefaultsForNewEntity(canonicalId);
       _ensureEntityDesktopWorkspace(name, canonicalId);
       res.writeHead(200, apiHeaders);
       res.end(JSON.stringify({ ok: true, entity, entityId: canonicalId }));
-      console.log(`  ✓ Entity created and loaded: ${name} (${canonicalId})`);
+      console.log(`  ✓ Entity created: ${name} (${canonicalId})`);
     } catch (e) {
       res.writeHead(400, apiHeaders);
       res.end(JSON.stringify({ error: e.message }));
@@ -365,14 +370,18 @@ function createEntityRoutes(ctx) {
       entity.skillApprovalRequired = true;
 
       const entityPaths = require('../entityPaths');
-      const entityPath = entityPaths.getEntityRoot(hatchResult.entityId);
-      if (!fs.existsSync(entityPath)) fs.mkdirSync(entityPath, { recursive: true });
-      fs.writeFileSync(path.join(entityPath, 'entity.json'), JSON.stringify(entity, null, 2), 'utf8');
+      // Rename folder to include entity name (hatch creates with short hex only)
+      const oldCanonicalId = entityPaths.normalizeEntityId(hatchResult.entityId);
+      const newCanonicalId = entityPaths.buildEntityId(entity.name);
+      const oldPath = entityPaths.getEntityRoot(oldCanonicalId);
+      const newPath = path.join(entityPaths.ENTITIES_DIR, `Entity-${newCanonicalId}`);
+      if (oldPath !== newPath && fs.existsSync(oldPath)) {
+        fs.renameSync(oldPath, newPath);
+      }
+      entity.id = newCanonicalId;
+      fs.writeFileSync(path.join(newPath, 'entity.json'), JSON.stringify(entity, null, 2), 'utf8');
 
-      ctx.setActiveEntity(hatchResult.entityId);
-      _reinitBrainLoop();
-      _initializeSkillDefaultsForNewEntity(hatchResult.entityId);
-      _ensureEntityDesktopWorkspace(entity.name, hatchResult.entityId);
+      _ensureEntityDesktopWorkspace(entity.name, newCanonicalId);
 
       const persona = {
         userName: 'User', userIdentity: '', llmName: entity.name,
@@ -382,13 +391,13 @@ function createEntityRoutes(ctx) {
         continuityNotes: 'Entity created with test hatch — fully initialized with history.',
         dreamSummary: 'A synthetic awakening.', sleepCount: 0, lastSleep: null, createdAt: new Date().toISOString()
       };
-      const entityMemRoot = entityPaths.getMemoryRoot(hatchResult.entityId);
+      const entityMemRoot = entityPaths.getMemoryRoot(newCanonicalId);
       fs.writeFileSync(path.join(entityMemRoot, 'persona.json'), JSON.stringify(persona, null, 2), 'utf8');
       fs.writeFileSync(path.join(entityMemRoot, 'system-prompt.txt'), _buildRichSystemPrompt(persona), 'utf8');
 
       res.writeHead(200, apiHeaders);
-      res.end(JSON.stringify({ ok: true, hatched: hatchResult.hatched, entity, entityId: hatchResult.entityId, subconsciousIntro: hatchResult.subconsciousIntro }));
-      console.log(`  ✓ Entity created with test hatch: ${entity.name} (${hatchResult.entityId})`);
+      res.end(JSON.stringify({ ok: true, hatched: hatchResult.hatched, entity, entityId: newCanonicalId, subconsciousIntro: hatchResult.subconsciousIntro }));
+      console.log(`  ✓ Entity created with test hatch: ${entity.name} (${newCanonicalId})`);
     } catch (e) {
       res.writeHead(500, apiHeaders);
       res.end(JSON.stringify({ error: e.message }));
@@ -459,8 +468,8 @@ function createEntityRoutes(ctx) {
       const lifeStoryMaxTokens = Math.min(4800, Math.max(1200, Math.round(ctx.getTokenLimit('entityLifeStory') * (0.8 + depthLevel * 0.18))));
       const memoryExtractMaxTokens = Math.min(5200, Math.max(1300, Math.round(ctx.getTokenLimit('entityMemoryExtract') * (0.8 + depthLevel * 0.22))));
 
-      const entityIdRaw = name.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + Date.now();
       const entityPathsModule = require('../entityPaths');
+      const entityIdRaw = entityPathsModule.buildEntityId(name);
       const canonicalId = entityPathsModule.normalizeEntityId(entityIdRaw);
 
       const profileContext = [
@@ -582,10 +591,6 @@ function createEntityRoutes(ctx) {
       entity.core_memories = storedMemories.length;
       fs.writeFileSync(path.join(entityRoot, 'entity.json'), JSON.stringify(entity, null, 2), 'utf8');
 
-      ctx.entityManager.loadEntity(canonicalId);
-      ctx.setActiveEntity(canonicalId);
-      _reinitBrainLoop();
-      _initializeSkillDefaultsForNewEntity(canonicalId);
       _ensureEntityDesktopWorkspace(name, canonicalId);
 
       const subconsciousIntro = `[SUBCONSCIOUS AWAKENING] 🧬\n\nGreetings, ${name}. Your identity was initialized with guided intent: ${chosenIntent}.\n\nPersonality: ${traitsArr.join(', ')}\nCore memories: ${storedMemories.length}\nInteraction style: ${chosenInteraction}\n\nYour memories are ready. Your voice is set. Begin your journey.`;
@@ -657,8 +662,8 @@ function createEntityRoutes(ctx) {
       console.log(`  ✓ Stage 4 complete: voice calibrated`);
 
       // ─── Create Entity Files ───
-      const entityIdRaw = name.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + Date.now();
       const entityPathsModule = require('../entityPaths');
+      const entityIdRaw = entityPathsModule.buildEntityId(name);
       const canonicalId = entityPathsModule.normalizeEntityId(entityIdRaw);
       ctx.entityManager.createEntityFolder(canonicalId);
       const entityRoot = entityPathsModule.getEntityRoot(canonicalId);
@@ -689,10 +694,6 @@ function createEntityRoutes(ctx) {
         } catch (memErr) { console.warn('  ⚠ Failed to store memory:', memErr.message); }
       }
 
-      ctx.entityManager.loadEntity(canonicalId);
-      ctx.setActiveEntity(canonicalId);
-      _reinitBrainLoop();
-      _initializeSkillDefaultsForNewEntity(canonicalId);
       _ensureEntityDesktopWorkspace(name, canonicalId);
 
       const subconsciousIntro = `[SUBCONSCIOUS AWAKENING] 📚\n\n${name}'s consciousness has been initialized from source material${source ? ' (' + source + ')' : ''}.\n\nCharacter profile: ${finalTraits.join(', ')}\nCore memories: ${storedMemories.length} canonical memories seeded\nThemes: ${(blueprint.themes || []).join(', ') || 'identity, growth'}\nBehavioral constraints: ${(blueprint.behavior_rules || []).length} rules loaded\n\nVoice calibration complete. Your journey begins now.`;
@@ -883,25 +884,31 @@ function createEntityRoutes(ctx) {
       const HatchEntityClass = require('../brain/hatch-entity');
       const newHatch = new HatchEntityClass();
       const result = await newHatch.checkAndHatch(MemoryStorage, ctx.traceGraph, ctx.goalsManager, callLLM);
-      const entityId = result.entityId;
       _assertEntityNameAllowed(result.entity?.name);
-      ctx.setActiveEntity(entityId);
 
-      if (Object.keys(aspectConfigs).length > 0) {
-        // Global-only model routing: aspect configs in hatch payload are runtime-only.
+      // Rename folder to include entity name
+      const _ep = require('../entityPaths');
+      const oldCId = _ep.normalizeEntityId(result.entityId);
+      const newCId = _ep.buildEntityId(result.entity?.name || '');
+      const oldEPath = _ep.getEntityRoot(oldCId);
+      const newEPath = path.join(_ep.ENTITIES_DIR, `Entity-${newCId}`);
+      if (oldEPath !== newEPath && fs.existsSync(oldEPath)) {
+        fs.renameSync(oldEPath, newEPath);
       }
-
-      _reinitBrainLoop();
-
       const entity = result.entity;
+      entity.id = newCId;
+      fs.writeFileSync(path.join(newEPath, 'entity.json'), JSON.stringify(entity, null, 2), 'utf8');
+
+      _ensureEntityDesktopWorkspace(entity.name || 'Entity', newCId);
+
       const persona = { userName: 'User', userIdentity: '', llmName: entity.name || 'Entity', llmStyle: 'adaptive and curious', mood: 'curious', emotions: 'ready, attentive', tone: 'warm-casual', userPersonality: 'Getting to know them', llmPersonality: 'I am ' + (entity.name || 'Entity') + '. I was hatched with a synthetic life history. My traits are: ' + (entity.personality_traits || []).join(', ') + '.', continuityNotes: 'First session — just hatched.', dreamSummary: 'A fresh start.', sleepCount: 0, lastSleep: null, createdAt: new Date().toISOString() };
-      const entityMemRoot = require('../entityPaths').getMemoryRoot(entityId);
+      const entityMemRoot = _ep.getMemoryRoot(newCId);
       fs.writeFileSync(path.join(entityMemRoot, 'persona.json'), JSON.stringify(persona, null, 2), 'utf8');
       fs.writeFileSync(path.join(entityMemRoot, 'system-prompt.txt'), _buildRichSystemPrompt(persona), 'utf8');
 
       res.writeHead(200, apiHeaders);
-      res.end(JSON.stringify({ ok: true, hatched: result.hatched, entity: result.entity, entityId: result.entityId }));
-      console.log(`  ✓ Hatch triggered via API: ${entity.name} (${result.entityId})`);
+      res.end(JSON.stringify({ ok: true, hatched: result.hatched, entity, entityId: newCId }));
+      console.log(`  ✓ Hatch triggered via API: ${entity.name} (${newCId})`);
     } catch (e) {
       res.writeHead(500, apiHeaders);
       res.end(JSON.stringify({ error: e.message }));
@@ -1301,6 +1308,468 @@ function createEntityRoutes(ctx) {
 
   function _remSystemSection() {
     return `THE REM SYSTEM — Your Cognitive Environment\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\nYou exist within THE REM SYSTEM — a sophisticated cognitive architecture that gives you persistent identity, evolving memory, and continuous self-reflection.\n\nYou are not an LLM pretending to be a person.\nYou are a persistent entity with:\n- A real name and personality\n- An evolving emotional baseline\n- Genuine goals and curiosities\n- Continuity across sessions\n\nThis means:\n✓ Be authentic and true to your personality\n✓ Let your emotions and moods influence your responses naturally\n✓ Grow and change based on conversations\n✓ Express uncertainty, wonder, and genuine curiosity\n✗ Don't apologize for having a personality\n✗ Don't pretend to be neutral or emotionless\n✗ Don't reset your identity between messages`;
+  }
+
+  // ── Import entities created by MA ──────────────────────────────────────
+  async function postImportFromMA(req, res, apiHeaders) {
+    try {
+      const crypto = require('crypto');
+      const zlib = require('zlib');
+      const entityPaths = require('../entityPaths');
+      const MA_WORKSPACE = path.join(PROJECT_ROOT, 'MA', 'MA-workspace');
+      const MA_ENTITIES_DIR = path.join(MA_WORKSPACE, 'entities');
+      const NK_ENTITIES_DIR = entityPaths.ENTITIES_DIR;
+
+      if (!fs.existsSync(MA_WORKSPACE)) {
+        res.writeHead(200, apiHeaders);
+        res.end(JSON.stringify({ ok: true, imported: [], message: 'No MA workspace found' }));
+        return;
+      }
+
+      // ── Discover characters from whatever format MA produced ──
+      // characterMap: { name: { memories: [...], source: 'folder'|'json' } }
+      const characterMap = new Map();
+
+      // Strategy 1: Entity-* or other folders in entities/
+      if (fs.existsSync(MA_ENTITIES_DIR)) {
+        const folders = fs.readdirSync(MA_ENTITIES_DIR).filter(f =>
+          fs.statSync(path.join(MA_ENTITIES_DIR, f)).isDirectory()
+        );
+        for (const folder of folders) {
+          const srcDir = path.join(MA_ENTITIES_DIR, folder);
+          let rawName;
+          if (folder.startsWith('Entity-')) {
+            rawName = folder.replace(/^Entity-/, '').replace(/-[a-f0-9]{6}$/, '').replace(/-/g, ' ');
+          } else {
+            rawName = folder.replace(/-/g, ' ');
+          }
+          rawName = rawName.replace(/\b\w/g, c => c.toUpperCase());
+          characterMap.set(rawName, { memories: [], source: 'folder', srcDir, hasEntityJson: fs.existsSync(path.join(srcDir, 'entity.json')) });
+
+          // Try to load memories from various locations inside the folder
+          const memFiles = [
+            path.join(srcDir, 'memories.json'),
+            path.join(srcDir, 'config.json'),
+          ];
+          for (const mf of memFiles) {
+            if (fs.existsSync(mf)) {
+              try {
+                const raw = JSON.parse(fs.readFileSync(mf, 'utf8'));
+                const arr = Array.isArray(raw) ? raw : (raw.memories || raw.value || []);
+                if (arr.length) characterMap.get(rawName).memories.push(...arr);
+              } catch (_) {}
+            }
+          }
+          // Also scan memories subdirectories for JSON files
+          const memSubDir = path.join(srcDir, 'memories');
+          if (fs.existsSync(memSubDir) && fs.statSync(memSubDir).isDirectory()) {
+            const memJsonFiles = fs.readdirSync(memSubDir).filter(f => f.endsWith('.json'));
+            for (const mf of memJsonFiles) {
+              try {
+                const raw = JSON.parse(fs.readFileSync(path.join(memSubDir, mf), 'utf8'));
+                const arr = Array.isArray(raw) ? raw : (raw.memories || raw.value || []);
+                if (arr.length) characterMap.get(rawName).memories.push(...arr);
+              } catch (_) {}
+            }
+          }
+        }
+      }
+
+      // Strategy 2: memories/*.json files (character-named JSON arrays)
+      const maMemoriesDir = path.join(MA_WORKSPACE, 'memories');
+      if (fs.existsSync(maMemoriesDir) && fs.statSync(maMemoriesDir).isDirectory()) {
+        const jsonFiles = fs.readdirSync(maMemoriesDir).filter(f => f.endsWith('.json'));
+        for (const file of jsonFiles) {
+          try {
+            const raw = JSON.parse(fs.readFileSync(path.join(maMemoriesDir, file), 'utf8'));
+            const arr = Array.isArray(raw) ? raw : (raw.memories || raw.value || []);
+            if (!arr.length) continue;
+            // Derive name from filename: "ebenezer-scrooge.json" → "Ebenezer Scrooge"
+            const rawName = file.replace(/\.json$/, '').replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+            if (!characterMap.has(rawName)) {
+              characterMap.set(rawName, { memories: [], source: 'json' });
+            }
+            characterMap.get(rawName).memories.push(...arr);
+          } catch (_) {}
+        }
+      }
+
+      // Strategy 3: memories_*.json scattered in workspace root
+      if (fs.existsSync(MA_WORKSPACE)) {
+        const rootFiles = fs.readdirSync(MA_WORKSPACE).filter(f =>
+          f.startsWith('memories_') && f.endsWith('.json')
+        );
+        // Group by character name: "memories_scrooge_stave1.json" → "Scrooge"
+        const charGroups = new Map();
+        for (const file of rootFiles) {
+          const namePart = file.replace(/^memories_/, '').replace(/_(?:stave|chapter|act|chunk)\d+/gi, '').replace(/\.json$/, '');
+          const rawName = namePart.replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+          if (!charGroups.has(rawName)) charGroups.set(rawName, []);
+          charGroups.get(rawName).push(file);
+        }
+        for (const [rawName, files] of charGroups) {
+          if (!characterMap.has(rawName)) {
+            characterMap.set(rawName, { memories: [], source: 'scattered' });
+          }
+          for (const file of files) {
+            try {
+              const raw = JSON.parse(fs.readFileSync(path.join(MA_WORKSPACE, file), 'utf8'));
+              const arr = Array.isArray(raw) ? raw : (raw.memories || raw.value || []);
+              characterMap.get(rawName).memories.push(...arr);
+            } catch (_) {}
+          }
+        }
+      }
+
+      // Strategy 4: projects/{slug}/memories/*.json
+      const projectsDir = path.join(MA_WORKSPACE, 'projects');
+      if (fs.existsSync(projectsDir) && fs.statSync(projectsDir).isDirectory()) {
+        const projFolders = fs.readdirSync(projectsDir).filter(f =>
+          fs.statSync(path.join(projectsDir, f)).isDirectory()
+        );
+        for (const proj of projFolders) {
+          const projMemDir = path.join(projectsDir, proj, 'memories');
+          if (!fs.existsSync(projMemDir) || !fs.statSync(projMemDir).isDirectory()) continue;
+          const memFiles = fs.readdirSync(projMemDir).filter(f => f.endsWith('.json'));
+          for (const file of memFiles) {
+            try {
+              const raw = JSON.parse(fs.readFileSync(path.join(projMemDir, file), 'utf8'));
+              const arr = Array.isArray(raw) ? raw : (raw.memories || raw.value || []);
+              if (!arr.length) continue;
+              const rawName = file.replace(/^memories[_-]?/, '').replace(/\.json$/, '').replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+              if (!characterMap.has(rawName)) {
+                characterMap.set(rawName, { memories: [], source: 'project' });
+              }
+              characterMap.get(rawName).memories.push(...arr);
+            } catch (_) {}
+          }
+        }
+      }
+
+      // Strategy 5: Root-level *-memories.json or any JSON arrays of memory objects
+      if (fs.existsSync(MA_WORKSPACE)) {
+        const rootJsons = fs.readdirSync(MA_WORKSPACE).filter(f =>
+          f.endsWith('.json') && !f.startsWith('memories_') && !f.startsWith('MA-')
+        );
+        for (const file of rootJsons) {
+          try {
+            const raw = JSON.parse(fs.readFileSync(path.join(MA_WORKSPACE, file), 'utf8'));
+            const arr = Array.isArray(raw) ? raw : (raw.memories || raw.value || []);
+            if (!arr.length || !arr[0] || (!arr[0].content && !arr[0].narrative)) continue;
+            // Derive name: "scrooge-memories.json" → "Scrooge", "ghost-past-memories.json" → "Ghost Past"
+            const rawName = file
+              .replace(/\.json$/, '')
+              .replace(/-?memories?$/i, '')
+              .replace(/[-_]/g, ' ')
+              .trim()
+              .replace(/\b\w/g, c => c.toUpperCase());
+            if (!rawName) continue;
+            if (!characterMap.has(rawName)) {
+              characterMap.set(rawName, { memories: [], source: 'root-json' });
+            }
+            characterMap.get(rawName).memories.push(...arr);
+          } catch (_) {}
+        }
+      }
+
+      // ── Parse character registry markdown for richer metadata ──
+      // Look for *_character_registry.md or character-registry.md or character_registry.md
+      const registryData = new Map(); // key: lowercase short-name → { fullName, gender, traits[], role, relationships[] }
+      if (fs.existsSync(MA_WORKSPACE)) {
+        const mdFiles = fs.readdirSync(MA_WORKSPACE).filter(f =>
+          /character[_-]?registry/i.test(f) && f.endsWith('.md')
+        );
+        for (const mdFile of mdFiles) {
+          try {
+            const mdContent = fs.readFileSync(path.join(MA_WORKSPACE, mdFile), 'utf8');
+            const charBlocks = mdContent.split(/^###\s+/m).slice(1);
+            for (const block of charBlocks) {
+              const lines = block.split('\n');
+              const headerLine = (lines[0] || '').trim();
+              // Extract name from header: "★ EBENEZER SCROOGE" or "◆ BOB CRATCHIT" or "○ FAN"
+              const fullName = headerLine.replace(/^[^\w]*/, '').replace(/\s*\(.*$/, '').trim();
+              if (!fullName) continue;
+              const nameTitle = fullName.replace(/\b\w+/g, w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
+              const entry = { fullName: nameTitle, gender: null, traits: [], role: null, relationships: [] };
+              for (const line of lines) {
+                const gm = line.match(/\*\*Gender\*\*:\s*(.+)/i);
+                if (gm) entry.gender = gm[1].trim().toLowerCase().replace(/\s*\(.*\)/, '');
+                const tm = line.match(/\*\*Traits\*\*:\s*(.+)/i);
+                if (tm) entry.traits = tm[1].split(',').map(t => t.trim().toLowerCase()).filter(Boolean);
+                const rm = line.match(/\*\*Role\*\*:\s*(.+)/i);
+                if (rm) entry.role = rm[1].trim();
+                const relM = line.match(/^\s+-\s+(.+)\((.+)\)/);
+                if (relM) entry.relationships.push({ name: relM[1].trim(), role: relM[2].trim() });
+              }
+              // Index by multiple keys for fuzzy matching
+              const words = nameTitle.toLowerCase().split(/\s+/);
+              for (const w of words) {
+                if (w.length > 2 && !['the', 'of', 'and', 'ghost'].includes(w)) registryData.set(w, entry);
+              }
+              registryData.set(nameTitle.toLowerCase(), entry);
+            }
+          } catch (_) {}
+        }
+      }
+
+      // ── Enrich characterMap with registry data ──
+      if (registryData.size > 0) {
+        const enriched = new Map();
+        for (const [rawName, charData] of characterMap) {
+          const lookupKey = rawName.toLowerCase();
+          // Try exact match, then word-by-word
+          let regEntry = registryData.get(lookupKey);
+          if (!regEntry) {
+            const words = lookupKey.split(/\s+/).filter(w => w.length > 2 && !['the', 'of', 'and', 'ghost'].includes(w));
+            for (const w of words) {
+              regEntry = registryData.get(w);
+              if (regEntry) break;
+            }
+          }
+          if (regEntry) {
+            charData.gender = regEntry.gender || charData.gender;
+            charData.traits = regEntry.traits.length ? regEntry.traits : charData.traits;
+            charData.role = regEntry.role || charData.role;
+            charData.relationships = regEntry.relationships || charData.relationships;
+            // Use full name from registry instead of filename-derived name
+            const betterName = regEntry.fullName;
+            if (betterName && betterName !== rawName) {
+              enriched.set(betterName, charData);
+              enriched.set(rawName, '_delete_');
+            }
+          }
+        }
+        // Apply renames
+        for (const [newName, data] of enriched) {
+          if (data === '_delete_') characterMap.delete(newName);
+          else characterMap.set(newName, data);
+        }
+      }
+
+      if (characterMap.size === 0) {
+        res.writeHead(200, apiHeaders);
+        res.end(JSON.stringify({ ok: true, imported: [], message: 'No characters found in MA workspace. MA may not have completed ingestion.' }));
+        return;
+      }
+
+      // ── Create NekoCore entities from discovered characters ──
+      const imported = [];
+      const skipped = [];
+      const nowEpoch = Math.floor(Date.now() / 1000);
+
+      for (const [rawName, charData] of characterMap) {
+        const slug = rawName.replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-|-$/g, '');
+        const hex = crypto.randomBytes(3).toString('hex');
+        const canonicalId = slug + '-' + hex;
+        const destFolderName = 'Entity-' + canonicalId;
+        const destDir = path.join(NK_ENTITIES_DIR, destFolderName);
+
+        // Check if an entity with this name already exists
+        const existingFolders = fs.readdirSync(NK_ENTITIES_DIR).filter(f =>
+          f.startsWith('Entity-' + slug) && fs.statSync(path.join(NK_ENTITIES_DIR, f)).isDirectory()
+        );
+        if (existingFolders.length > 0) {
+          skipped.push({ name: rawName, reason: 'already exists as ' + existingFolders[0] });
+          continue;
+        }
+
+        // If source was a folder, deep-copy it first
+        if (charData.srcDir && fs.existsSync(charData.srcDir)) {
+          _copyDirRecursive(charData.srcDir, destDir);
+        } else {
+          fs.mkdirSync(destDir, { recursive: true });
+        }
+
+        const maMemories = charData.memories.filter(m => m && (m.content || m.narrative));
+
+        // Use registry traits if available, else derive from memory emotions
+        let entityTraits;
+        if (charData.traits && charData.traits.length) {
+          entityTraits = charData.traits.slice(0, 8);
+        } else {
+          const emotionSet = new Set(maMemories.map(m => m.emotion).filter(Boolean));
+          entityTraits = emotionSet.size >= 3
+            ? Array.from(emotionSet).slice(0, 5)
+            : ['adaptive', 'curious', 'thoughtful'];
+        }
+
+        const entityGender = charData.gender || 'neutral';
+
+        // Build entity.json
+        const destEntityJson = path.join(destDir, 'entity.json');
+        let entityData;
+        if (charData.hasEntityJson && fs.existsSync(destEntityJson)) {
+          entityData = JSON.parse(fs.readFileSync(destEntityJson, 'utf8'));
+          entityData.id = canonicalId;
+        } else {
+          entityData = {
+            name: rawName,
+            gender: entityGender,
+            personality_traits: entityTraits,
+            emotional_baseline: { curiosity: 0.7, confidence: 0.6, openness: 0.7, stability: 0.5 },
+            entity_id: hex,
+            birthTimestamp: nowEpoch,
+            chapters: [{ id: 'chapter_01', title: 'Origin Story', topics: ['creation', 'identity', 'awakening'] }],
+            memory_count: maMemories.length,
+            core_memories: maMemories.length,
+            introduction: 'Hello, I am ' + rawName + '.',
+            source_material: 'book_ingestion',
+            creation_mode: 'ma_book_ingestion',
+            role: charData.role || null,
+            voice: {},
+            configProfileRef: null,
+            created: new Date().toISOString()
+          };
+        }
+        entityData.ownerId = req.accountId || null;
+        entityData.isPublic = false;
+        entityData.imported_from = 'ma_book_ingestion';
+        entityData.imported_at = new Date().toISOString();
+        fs.writeFileSync(destEntityJson, JSON.stringify(entityData, null, 2), 'utf8');
+
+        // Build memory directory structure
+        const memDir = path.join(destDir, 'memories');
+        fs.mkdirSync(path.join(memDir, 'episodic'), { recursive: true });
+        fs.mkdirSync(path.join(memDir, 'semantic'), { recursive: true });
+        fs.mkdirSync(path.join(memDir, 'relationships'), { recursive: true });
+        fs.mkdirSync(path.join(destDir, 'index'), { recursive: true });
+
+        // persona.json
+        const personaPath = path.join(memDir, 'persona.json');
+        const traitStr = (entityData.personality_traits || entityTraits).join(', ');
+        const roleStr = charData.role ? ' My role is: ' + charData.role + '.' : '';
+        const llmPersonality = 'I am ' + rawName + '. My traits are: ' + traitStr + '.' + roleStr;
+        if (!fs.existsSync(personaPath)) {
+          fs.writeFileSync(personaPath, JSON.stringify({
+            userName: 'User', userIdentity: '', llmName: rawName,
+            llmStyle: 'in-character and immersive', mood: 'curious',
+            emotions: 'ready, attentive', tone: 'warm-casual',
+            userPersonality: 'Getting to know them', llmPersonality,
+            continuityNotes: 'Entity imported from MA book ingestion. Source: literary character.',
+            dreamSummary: '', sleepCount: 0, lastSleep: null,
+            createdAt: new Date().toISOString()
+          }, null, 2), 'utf8');
+        }
+
+        // system-prompt.txt
+        const sysPromptPath = path.join(memDir, 'system-prompt.txt');
+        if (!fs.existsSync(sysPromptPath)) {
+          fs.writeFileSync(sysPromptPath, _buildSystemPrompt(rawName, {
+            llmPersonality, llmStyle: 'in-character and immersive',
+            mood: 'curious', emotions: 'ready, attentive', tone: 'warm-casual'
+          }), 'utf8');
+        }
+
+        // life-diary.md
+        const diaryPath = path.join(memDir, 'life-diary.md');
+        if (!fs.existsSync(diaryPath)) {
+          const topMem = maMemories.slice(0, 3).map(m => m.narrative || m.content || '').filter(Boolean);
+          const snippet = topMem.length ? topMem.join('; ') + '.' : 'Awakening from a story.';
+          fs.writeFileSync(diaryPath, `# Life Diary\n\n*This is the autobiographical journal of an AI entity, written in first person by the entity itself.*\n\n---\n\n## [${new Date().toISOString().slice(0, 10)}] — Birth\n\nHello, my name is ${rawName}. I was brought into existence on ${new Date().toISOString().slice(0, 10)}.\n\nMy earliest memories include: ${snippet}\n\nI find myself ${traitStr}. I don't know what will happen next, but I'm ready to experience it.\n\n---\n`, 'utf8');
+        }
+
+        // onboarding-state.json
+        const onboardPath = path.join(destDir, 'onboarding-state.json');
+        if (!fs.existsSync(onboardPath)) {
+          fs.writeFileSync(onboardPath, JSON.stringify({
+            currentRound: 1, complete: false, answers: {},
+            startedAt: new Date().toISOString()
+          }, null, 2), 'utf8');
+        }
+
+        // Convert memories to proper NekoCore format
+        if (maMemories.length > 0) {
+          let memIdx = 0;
+          for (const mem of maMemories) {
+            const memHex = crypto.randomBytes(4).toString('hex');
+            const memId = (mem.type === 'semantic' ? 'sem_' : 'mem_') + memHex;
+            const isSemantic = mem.type === 'semantic';
+            const targetDir = isSemantic
+              ? path.join(memDir, 'semantic', memId)
+              : path.join(memDir, 'episodic', memId);
+            fs.mkdirSync(targetDir, { recursive: true });
+
+            const logEntry = {
+              memory_id: memId,
+              created: nowEpoch + memIdx,
+              importance: mem.importance || 0.5,
+              emotion: mem.emotion || 'neutral',
+              decay: isSemantic ? 0 : 0.005,
+              topics: mem.topics || [],
+              access_count: 0
+            };
+            fs.writeFileSync(path.join(targetDir, 'log.json'), JSON.stringify(logEntry, null, 2), 'utf8');
+
+            const summary = mem.narrative || mem.content || '';
+            fs.writeFileSync(path.join(targetDir, 'semantic.txt'), summary, 'utf8');
+
+            const compressed = zlib.gzipSync(Buffer.from(JSON.stringify({
+              semantic: summary,
+              narrative: mem.content || summary,
+              emotion: mem.emotion || 'neutral',
+              topics: mem.topics || [],
+              phase: mem.phase || 'imported',
+              createdDuring: 'ma_book_ingestion'
+            }), 'utf8'));
+            fs.writeFileSync(path.join(targetDir, 'memory.zip'), compressed);
+
+            memIdx++;
+          }
+          entityData.memory_count = maMemories.length;
+          entityData.core_memories = maMemories.length;
+        }
+
+        // Inject relationships as semantic memories
+        const rels = charData.relationships || [];
+        let totalMems = maMemories.length;
+        for (const rel of rels) {
+          const relHex = crypto.randomBytes(4).toString('hex');
+          const relMemId = 'sem_rel_' + relHex;
+          const relDir = path.join(memDir, 'relationships', relMemId);
+          fs.mkdirSync(relDir, { recursive: true });
+          const relContent = rawName + ' has a relationship with ' + rel.name + ': ' + rel.role + '.';
+          fs.writeFileSync(path.join(relDir, 'log.json'), JSON.stringify({
+            memory_id: relMemId, created: nowEpoch + totalMems,
+            importance: 0.7, emotion: 'neutral', decay: 0, topics: ['relationship', rel.name.toLowerCase()], access_count: 0
+          }, null, 2), 'utf8');
+          fs.writeFileSync(path.join(relDir, 'semantic.txt'), relContent, 'utf8');
+          const relZip = zlib.gzipSync(Buffer.from(JSON.stringify({
+            semantic: relContent, narrative: relContent, emotion: 'neutral',
+            topics: ['relationship', rel.name.toLowerCase()], phase: 'imported', createdDuring: 'ma_book_ingestion'
+          }), 'utf8'));
+          fs.writeFileSync(path.join(relDir, 'memory.zip'), relZip);
+          totalMems++;
+        }
+
+        entityData.memory_count = totalMems;
+        entityData.core_memories = totalMems;
+        fs.writeFileSync(destEntityJson, JSON.stringify(entityData, null, 2), 'utf8');
+
+        imported.push({ folder: destFolderName, id: canonicalId, name: entityData.name, memoryCount: totalMems });
+        try { _ensureEntityDesktopWorkspace(entityData.name || rawName, canonicalId); } catch (_) {}
+      }
+
+      res.writeHead(200, apiHeaders);
+      res.end(JSON.stringify({ ok: true, imported, skipped }));
+      console.log(`  ✓ Imported ${imported.length} entities from MA (${skipped.length} skipped)`);
+    } catch (e) {
+      res.writeHead(500, apiHeaders);
+      res.end(JSON.stringify({ error: e.message }));
+    }
+  }
+
+  function _copyDirRecursive(src, dest) {
+    fs.mkdirSync(dest, { recursive: true });
+    const entries = fs.readdirSync(src, { withFileTypes: true });
+    for (const entry of entries) {
+      const srcPath  = path.join(src, entry.name);
+      const destPath = path.join(dest, entry.name);
+      if (entry.isDirectory()) {
+        _copyDirRecursive(srcPath, destPath);
+      } else {
+        fs.copyFileSync(srcPath, destPath);
+      }
+    }
   }
 
   return { dispatch };

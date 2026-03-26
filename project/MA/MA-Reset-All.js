@@ -16,6 +16,8 @@ const ROOT = __dirname;
 const TARGETS = [
   // Chat history
   { path: 'MA-Config/chat-history.json', type: 'file', label: 'Chat history' },
+  // Chat sessions (saved task/project conversations)
+  { path: 'MA-Config/chat-sessions', type: 'dir', label: 'Chat sessions' },
   // Model performance tracking
   { path: 'MA-Config/model-performance.json', type: 'file', label: 'Model performance data' },
   // Chores / scheduled tasks

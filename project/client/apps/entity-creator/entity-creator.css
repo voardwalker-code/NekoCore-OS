@@ -297,6 +297,13 @@ body.embed-mode .creator-card {
     linear-gradient(155deg, rgba(127, 29, 29, 0.82), rgba(88, 28, 135, 0.68) 52%, rgba(30, 41, 59, 0.82));
 }
 
+.creator-shell .entity-mode-card--novel::before {
+  background-image:
+    radial-gradient(circle at 26% 74%, rgba(167, 139, 250, 0.5) 0 12%, rgba(167, 139, 250, 0) 28%),
+    radial-gradient(circle at 78% 32%, rgba(52, 211, 153, 0.4) 0 10%, rgba(52, 211, 153, 0) 26%),
+    linear-gradient(140deg, rgba(91, 33, 182, 0.78), rgba(21, 94, 117, 0.66) 50%, rgba(15, 23, 42, 0.82));
+}
+
 @media (max-width: 680px) {
   .creator-main {
     padding: .5rem;

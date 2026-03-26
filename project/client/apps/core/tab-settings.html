@@ -25,7 +25,7 @@
         <div id="simplePanel-openrouter" class="config-card">
           <div class="fl">
             <label>API Key</label>
-            <input type="password" id="simpleOrKey" placeholder="sk-or-v1-...">
+            <input type="text" id="simpleOrKey" placeholder="sk-or-v1-...">
           </div>
           <p class="text-xs-c text-secondary-c" style="margin:.55rem 0 0">
             New to OpenRouter? <a href="https://openrouter.ai" target="_blank" rel="noopener noreferrer">Sign up here &#8599;</a>
@@ -58,7 +58,7 @@
         <div id="simplePanel-anthropic" class="config-card" style="display:none">
           <div class="fl">
             <label>Anthropic API Key</label>
-            <input type="password" id="simpleAnthropicKey" placeholder="sk-ant-...">
+            <input type="text" id="simpleAnthropicKey" placeholder="sk-ant-...">
           </div>
           <p class="text-xs-c text-secondary-c" style="margin:.55rem 0 0">
             Get your API key at <a href="https://console.anthropic.com" target="_blank" rel="noopener noreferrer">console.anthropic.com &#8599;</a>
@@ -188,10 +188,7 @@
           </div>
           <div class="fl">
             <label>API Key</label>
-            <div class="flex gap-2" style="align-items:center">
-              <input type="password" id="nekocoreApiKey" placeholder="sk-or-v1-...">
-              <button class="btn bg" id="nekocoreApiKeyToggle" type="button" style="font-size:.78rem;padding:.35rem .6rem;white-space:nowrap" onclick="nkToggleApiKey('openrouter')">See</button>
-            </div>
+            <input type="text" id="nekocoreApiKey" placeholder="sk-or-v1-...">
           </div>
           <div class="fl">
             <label>Model <span class="text-xs-c text-secondary-c">(reasoning-capable model recommended)</span></label>
@@ -207,10 +204,7 @@
         <div id="nkPanel-anthropic" class="config-card" style="display:none;border-left:3px solid var(--accent-blue,#4a9eff)">
           <div class="fl">
             <label>Anthropic API Key</label>
-            <div class="flex gap-2" style="align-items:center">
-              <input type="password" id="nekocoreAnthropicKey" placeholder="sk-ant-...">
-              <button class="btn bg" id="nekocoreAnthropicKeyToggle" type="button" style="font-size:.78rem;padding:.35rem .6rem;white-space:nowrap" onclick="nkToggleApiKey('anthropic')">See</button>
-            </div>
+            <input type="text" id="nekocoreAnthropicKey" placeholder="sk-ant-...">
           </div>
           <p class="text-xs-c text-secondary-c" style="margin:.55rem 0 0">
             Get your API key at <a href="https://console.anthropic.com" target="_blank" rel="noopener noreferrer">console.anthropic.com &#8599;</a>

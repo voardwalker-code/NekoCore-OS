@@ -548,6 +548,24 @@ async function handleRequest(req, res) {
 
     // ── Book ingestion routes ──────────────────────────────────────────────
 
+    // Find a book directory in old (books/{bookId}) or new (projects/*/books/{bookId}) locations
+    function _findBookDir(bookId) {
+      // New layout: projects/{slug}/books/{bookId}
+      const projDir = path.join(core.WORKSPACE_DIR, 'projects');
+      if (fs.existsSync(projDir)) {
+        try {
+          for (const slug of fs.readdirSync(projDir)) {
+            const candidate = path.join(projDir, slug, 'books', bookId);
+            if (fs.existsSync(path.join(candidate, 'meta.json'))) return candidate;
+          }
+        } catch (_) {}
+      }
+      // Legacy layout: books/{bookId}
+      const legacy = path.join(core.WORKSPACE_DIR, 'books', bookId);
+      if (fs.existsSync(path.join(legacy, 'meta.json'))) return legacy;
+      return null;
+    }
+
     if (url.pathname === '/api/book/upload' && method === 'POST') {
       const body = JSON.parse(await readBody(req));
       let text = '';
@@ -565,7 +583,14 @@ async function handleRequest(req, res) {
       const bookId = 'book_' + Date.now();
       const title = (body.title || 'Untitled').substring(0, 200);
       const author = (body.author || 'Unknown').substring(0, 200);
-      const bookDir = path.join(core.WORKSPACE_DIR, 'books', bookId);
+
+      // Create project folder from title slug
+      const projectSlug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'untitled';
+      const projectFolder = 'projects/' + projectSlug;
+      const projectDir = path.join(core.WORKSPACE_DIR, projectFolder);
+      fs.mkdirSync(projectDir, { recursive: true });
+
+      const bookDir = path.join(projectDir, 'books', bookId);
       const chunkDir = path.join(bookDir, 'chunks');
       fs.mkdirSync(chunkDir, { recursive: true });
 
@@ -575,7 +600,7 @@ async function handleRequest(req, res) {
         fs.writeFileSync(path.join(chunkDir, `chunk_${String(i).padStart(4, '0')}.txt`), chunks[i], 'utf8');
       }
 
-      const meta = { bookId, title, author, totalChunks: chunks.length, totalChars: text.length, uploadedAt: new Date().toISOString() };
+      const meta = { bookId, title, author, totalChunks: chunks.length, totalChars: text.length, projectFolder, uploadedAt: new Date().toISOString() };
       fs.writeFileSync(path.join(bookDir, 'meta.json'), JSON.stringify(meta, null, 2), 'utf8');
       return json(res, 200, { ok: true, ...meta });
     }
@@ -583,9 +608,9 @@ async function handleRequest(req, res) {
     if (url.pathname.startsWith('/api/book/') && url.pathname.endsWith('/chunks') && method === 'GET') {
       const bookId = url.pathname.slice('/api/book/'.length, -'/chunks'.length);
       if (!bookId || /[/\\]/.test(bookId)) return json(res, 400, { error: 'Invalid book id' });
-      const bookDir = path.join(core.WORKSPACE_DIR, 'books', bookId);
+      const bookDir = _findBookDir(bookId);
+      if (!bookDir) return json(res, 404, { error: 'Book not found' });
       const metaPath = path.join(bookDir, 'meta.json');
-      if (!fs.existsSync(metaPath)) return json(res, 404, { error: 'Book not found' });
       const meta = JSON.parse(fs.readFileSync(metaPath, 'utf8'));
       const chunkDir = path.join(bookDir, 'chunks');
       const chunkFiles = fs.readdirSync(chunkDir).filter(f => f.endsWith('.txt')).sort();
@@ -593,7 +618,7 @@ async function handleRequest(req, res) {
         const text = fs.readFileSync(path.join(chunkDir, f), 'utf8');
         return { index: i, preview: text.substring(0, 120), charCount: text.length };
       });
-      return json(res, 200, { bookId: meta.bookId, title: meta.title, chunks });
+      return json(res, 200, { bookId: meta.bookId, title: meta.title, projectFolder: meta.projectFolder || null, chunks });
     }
 
     if (url.pathname.match(/^\/api\/book\/[^/]+\/chunk\/\d+$/) && method === 'GET') {
@@ -601,7 +626,9 @@ async function handleRequest(req, res) {
       const bookId = parts[3];
       const chunkIndex = parseInt(parts[5], 10);
       if (!bookId || /[/\\]/.test(bookId)) return json(res, 400, { error: 'Invalid book id' });
-      const chunkPath = path.join(core.WORKSPACE_DIR, 'books', bookId, 'chunks', `chunk_${String(chunkIndex).padStart(4, '0')}.txt`);
+      const bookDir = _findBookDir(bookId);
+      if (!bookDir) return json(res, 404, { error: 'Chunk not found' });
+      const chunkPath = path.join(bookDir, 'chunks', `chunk_${String(chunkIndex).padStart(4, '0')}.txt`);
       if (!fs.existsSync(chunkPath)) return json(res, 404, { error: 'Chunk not found' });
       return json(res, 200, { text: fs.readFileSync(chunkPath, 'utf8'), index: chunkIndex });
     }

@@ -673,12 +673,12 @@ test('isWorkerEntity returns false for regular entities', () => {
   const folders = fs.readdirSync(entitiesDir).filter(f =>
     fs.statSync(path.join(entitiesDir, f)).isDirectory()
   );
-  const regularFolder = folders.find(f => !f.startsWith('entity_worker_') && !f.startsWith('worker_'));
+  const regularFolder = folders.find(f => !f.startsWith('entity_worker_') && !f.startsWith('Entity-worker_') && !f.startsWith('worker_'));
   if (!regularFolder) return; // no regular entities to test against
   const entityJson = path.join(entitiesDir, regularFolder, 'entity.json');
   if (!fs.existsSync(entityJson)) return;
   const data = JSON.parse(fs.readFileSync(entityJson, 'utf-8'));
-  const canonicalId = regularFolder.replace(/^entity_/, '');
+  const canonicalId = regularFolder.replace(/^Entity-/, '').replace(/^entity_/, '');
   assert.equal(mgr.isWorkerEntity(canonicalId), false, `regular entity ${canonicalId} should not be a worker`);
 });
 

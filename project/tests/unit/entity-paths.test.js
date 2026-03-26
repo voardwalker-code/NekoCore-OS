@@ -45,15 +45,15 @@ test('getEntityRoot throws for empty entityId', () => {
   assert.throws(() => getEntityRoot(''), /Invalid entityId/);
 });
 
-test('getEntityRoot returns path containing entity_ prefix', () => {
+test('getEntityRoot returns path containing Entity- prefix', () => {
   const root = getEntityRoot(TEST_ENTITY);
-  assert.ok(root.includes('entity_'), `expected path to contain entity_, got: ${root}`);
+  assert.ok(root.includes('Entity-'), `expected path to contain Entity-, got: ${root}`);
 });
 
 test('getEntityRoot result ends with normalized entity folder', () => {
   const root = getEntityRoot(TEST_ENTITY);
   const basename = path.basename(root);
-  assert.equal(basename, `entity_${TEST_ENTITY}`);
+  assert.equal(basename, `Entity-${TEST_ENTITY}`);
 });
 
 test('getMemoryRoot is inside getEntityRoot', () => {

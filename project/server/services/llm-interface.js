@@ -420,9 +420,17 @@ function createLLMInterface({ getSomaticAwareness = () => null, getDefaultMaxTok
       return content;
     }
 
-    // Ollama branch
+    // Ollama branch — strip thinking parameters (Ollama does not support them)
     const endpoint = toChatEndpoint(runtime.endpoint);
     if (!endpoint) throw new Error('Ollama runtime missing endpoint');
+    // Defense-in-depth: strip any thinking instruction suffixes from system messages
+    const thinkingSuffix = 'Before responding, reason through your answer step by step inside <thinking>';
+    messages = messages.map(m => {
+      if (m.role === 'system' && typeof m.content === 'string' && m.content.includes(thinkingSuffix)) {
+        return { ...m, content: m.content.slice(0, m.content.indexOf(thinkingSuffix)).trimEnd() };
+      }
+      return m;
+    });
     const ac2 = new AbortController();
     const timer2 = setTimeout(() => ac2.abort(), timeoutMs);
     if (externalSignal) {

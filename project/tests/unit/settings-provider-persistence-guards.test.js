@@ -11,10 +11,9 @@ const configRoutesSrc = fs.readFileSync(path.join(ROOT, 'server', 'routes', 'con
 const indexHtmlSrc = fs.readFileSync(path.join(ROOT, 'client', 'index.html'), 'utf8');
 const tabSettingsHtmlSrc = fs.readFileSync(path.join(ROOT, 'client', 'apps', 'core', 'tab-settings.html'), 'utf8');
 
-test('simple provider preserves saved OpenRouter key when settings field is blank', () => {
-  assert.match(simpleProviderSrc, /const SIMPLE_PROVIDER_REDACTED_KEY = '••••••••';/, 'simple-provider.js must define the redacted API key sentinel');
-  assert.match(simpleProviderSrc, /function _simpleHasStoredOpenRouterKey\(\)/, 'simple-provider.js must detect an already-saved OpenRouter key');
-  assert.match(simpleProviderSrc, /mainKey = typedKey \|\| \(hasStoredKey \? SIMPLE_PROVIDER_REDACTED_KEY : ''\);/, 'simple-provider.js must preserve a saved key when the visible field is blank');
+test('simple provider reads API key directly from input fields (no redaction)', () => {
+  assert.match(simpleProviderSrc, /mainKey = \(keyEl\?\.value \|\| ''\)\.trim\(\);/, 'simple-provider.js must read the API key directly from the input field value');
+  assert.doesNotMatch(simpleProviderSrc, /mainKey = typedKey \|\| \(hasStoredKey \? SIMPLE_PROVIDER_REDACTED_KEY/, 'simple-provider.js must not use redacted key fallback pattern');
 });
 
 test('entity config route merges redacted keys back before normalizing runtime config', () => {

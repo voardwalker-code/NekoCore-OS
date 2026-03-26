@@ -45,7 +45,7 @@ test('system-apps manifest contains expected app ids including installer-managed
     'popouts', 'documents', 'visualizer', 'physical', 'dreamgallery', 'lifediary',
     'dreamdiary', 'helloworld', 'themes', 'settings', 'advanced', 'activity',
     'observability', 'debugcore', 'archive', 'nekocore', 'ma-server',
-    'bugtracker', 'resourcemgr', 'qachecklist', 'profiler', 'welcome'
+    'bugtracker', 'resourcemgr', 'qachecklist', 'profiler', 'welcome', 'bookingest'
   ];
   assert.deepEqual(ids, expected);
 });

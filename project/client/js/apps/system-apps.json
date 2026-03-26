@@ -597,6 +597,26 @@
         "sharedSourceGroup": null
       },
       "notes": ["Getting Started intro slideshow — mounted non-core HTML with interactive slides"]
+    },
+    {
+      "id": "bookingest",
+      "name": "Book Ingest",
+      "icon": "WINDOW_APPS:inline-svg",
+      "sourcePath": "apps/non-core/core/tab-bookingest.html",
+      "appType": "html-only",
+      "defaultWindow": { "width": 600, "height": 500 },
+      "standalonePath": null,
+      "optional": true,
+      "launchMode": "both",
+      "embedded": { "tabId": "bookingest", "target": "#tab-bookingest", "hostPath": "apps/non-core/core/tab-bookingest.html", "navTarget": "#navOptionalAppsHost" },
+      "popout": { "eligible": true, "queryParam": "?popout=bookingest" },
+      "ownership": {
+        "controllerPath": null,
+        "hostPath": "apps/non-core/core/tab-bookingest.html",
+        "pagePath": null,
+        "sharedSourceGroup": null
+      },
+      "notes": ["Book/novel upload to MA for character extraction and entity creation"]
     }
   ]
 }

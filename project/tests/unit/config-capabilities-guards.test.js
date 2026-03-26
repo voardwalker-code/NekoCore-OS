@@ -124,9 +124,8 @@ test('Config Capabilities Integration', async (t) => {
     assert.equal(rt.type, 'ollama');
     assert.ok(rt.capabilities);
     assert.equal(rt.capabilities.nativeToolUse, false);
-    // Profile-level override applies to all aspects in the profile
-    // extendedThinking=true from profile overrides ollama default of false
-    assert.equal(rt.capabilities.extendedThinking, true);
+    // Provider hard constraint: Ollama never gets extendedThinking regardless of profile overrides
+    assert.equal(rt.capabilities.extendedThinking, false);
   });
 
   await t.test('loadAspectRuntimeConfig: inline config gets capabilities', () => {

@@ -18,7 +18,7 @@ const TASK_TYPES = {
   project:      { maxSteps: 10, maxLLM: 40, timeout: 300000 },
   memory_query: { maxSteps: 3,  maxLLM: 10 },
   entity_genesis: { maxSteps: 10, maxLLM: 50, timeout: 300000 },
-  book_ingestion: { maxSteps: 15, maxLLM: 80, timeout: 600000 },
+  book_ingestion: { maxSteps: 50, maxLLM: 300, timeout: 1800000 },
   study_guide:    { maxSteps: 8,  maxLLM: 30, timeout: 300000 },
   dnd_create:     { maxSteps: 10, maxLLM: 50, timeout: 300000 },
   tutor_entity:   { maxSteps: 10, maxLLM: 50, timeout: 300000 },
@@ -212,8 +212,9 @@ function parsePlan(text, maxSteps = 6) {
  * @returns {Promise<{finalResponse, steps, llmCalls}>}
  */
 async function runTask(opts) {
-  const { taskType = 'code', message, entityName = 'MA', callLLM, execTools,
-          formatResults, stripTools, workspacePath = '', memorySearch, onStep, onActivity, agentCatalog } = opts;
+  const { taskType = 'code', message, entityName = 'MA', callLLM, execTools, execNativeTools,
+          formatResults, stripTools, workspacePath = '', memorySearch, onStep, onActivity, agentCatalog,
+          nativeToolSchemas } = opts;
 
   if (!callLLM) throw new Error('runTask: callLLM required');
   if (!message) throw new Error('runTask: message required');
@@ -225,7 +226,13 @@ async function runTask(opts) {
 
   // Phase 1: Generate plan
   const planBP = getBlueprint(taskType, 'plan');
+  let planFolderHint = '';
+  if (taskType === 'book_ingestion') {
+    const pfm = message.match(/YOUR PROJECT FOLDER IS:\s*"([^"]+)"/);
+    if (pfm) planFolderHint = `\nAll output files MUST be written inside "${pfm[1]}/". Never write to the workspace root.`;
+  }
   const planSys = `You are ${entityName}. Create a step-by-step task plan using [TASK_PLAN]...[/TASK_PLAN] blocks.` +
+    planFolderHint +
     (planBP ? `\n\n[Planning Instructions]\n${planBP}` : '');
   if (onActivity) await onActivity('llm_call', 'Generating task plan...');
   const planResp = await callLLM([
@@ -276,29 +283,70 @@ async function runTask(opts) {
     if (stepOutputs.length) {
       prompt += 'COMPLETED:\n' + stepOutputs.map(s => `  ✓ ${s.step}. ${s.description} — ${(s.output || '').slice(0, 150)}`).join('\n') + '\n\n';
     }
-    prompt += `Execute step ${i + 1} now. Write files with [TOOL:ws_write {"path":"file"}]\ncontent\n[/TOOL]`;
 
-    const sysMsg = `You are ${entityName}. Executing step ${i + 1}/${plan.steps.length}.` +
-      (agentCtx || '') +
-      `\nALWAYS write code to workspace files using [TOOL:ws_write {"path":"file"}]\ncontent\n[/TOOL]. NEVER paste raw code into the chat.` +
-      `\nKeep your chat text to brief status updates — what you are doing and what was written. The code goes in files.` +
-      `\nAFTER writing any file, ALWAYS verify it with [TOOL:ws_read {"path":"file"}] to check completeness.` +
-      (execBP ? `\n\n[Execution Instructions]\n${execBP}` : '');
+    // Entity-related tasks get entity-tool instructions; others get ws_write instructions
+    const isEntityTask = taskType === 'book_ingestion' || taskType === 'entity_genesis';
+
+    // Extract project folder from user message if present (injected by Book Ingest UI)
+    let projectFolderRule = '';
+    if (taskType === 'book_ingestion') {
+      const pfMatch = message.match(/YOUR PROJECT FOLDER IS:\s*"([^"]+)"/);
+      if (pfMatch) {
+        projectFolderRule = `\nMANDATORY FILE ORGANIZATION: ALL output files (character registries, memory JSONs, reports, summaries, progress logs) MUST be written inside "${pfMatch[1]}". NEVER write files to the workspace root. Example: ws_write path should be "${pfMatch[1]}/character-registry.md", NOT "character-registry.md".`;
+      }
+    }
+
+    if (isEntityTask) {
+      prompt += `Execute step ${i + 1} now. Use [TOOL:entity_create {...}] to create entities and [TOOL:entity_inject_memory {...}] to add memories. Use [TOOL:ws_write {"path":"file"}]\\ncontent\\n[/TOOL] for non-entity files (reports, registries, etc).`;
+    } else {
+      prompt += `Execute step ${i + 1} now. Write files with [TOOL:ws_write {"path":"file"}]\ncontent\n[/TOOL]`;
+    }
+
+    let sysMsg;
+    if (isEntityTask) {
+      sysMsg = `You are ${entityName}. Executing step ${i + 1}/${plan.steps.length}.` +
+        (agentCtx || '') +
+        projectFolderRule +
+        `\nCRITICAL: For creating entities, you MUST use [TOOL:entity_create {"name":"...","traits":[...],...}]. For adding memories to entities, you MUST use [TOOL:entity_inject_memory {"entityId":"...","content":"...","emotion":"...","topics":[...],...}]. NEVER use ws_mkdir or ws_write to create entity folders or memory files — only the dedicated tools produce valid NekoCore entities.` +
+        `\nUse [TOOL:ws_write {"path":"file"}]\\ncontent\\n[/TOOL] ONLY for non-entity files like reports, registries, and summaries.` +
+        `\nKeep your chat text to brief status updates — what you are doing and what was written.` +
+        `\nAFTER writing any file, ALWAYS verify it with [TOOL:ws_read {"path":"file"}] to check completeness.` +
+        (execBP ? `\n\n[Execution Instructions]\n${execBP}` : '');
+    } else {
+      sysMsg = `You are ${entityName}. Executing step ${i + 1}/${plan.steps.length}.` +
+        (agentCtx || '') +
+        `\nALWAYS write code to workspace files using [TOOL:ws_write {"path":"file"}]\ncontent\n[/TOOL]. NEVER paste raw code into the chat.` +
+        `\nKeep your chat text to brief status updates — what you are doing and what was written. The code goes in files.` +
+        `\nAFTER writing any file, ALWAYS verify it with [TOOL:ws_read {"path":"file"}] to check completeness.` +
+        (execBP ? `\n\n[Execution Instructions]\n${execBP}` : '');
+    }
 
     let resp = await callLLM([
       { role: 'system', content: sysMsg },
       { role: 'user', content: prompt }
-    ], { temperature: 0.7, ...(COMPLEX_TASK_TYPES.has(taskType) ? { thinking: true } : {}), ...(taskTimeout ? { timeout: taskTimeout } : {}) });
+    ], { temperature: 0.7, ...(COMPLEX_TASK_TYPES.has(taskType) ? { thinking: true } : {}), ...(taskTimeout ? { timeout: taskTimeout } : {}), ...(nativeToolSchemas ? { tools: nativeToolSchemas } : {}) });
     llmCalls++;
+
+    // Handle native tool_use response (object with toolCalls) vs text string
+    let nativeToolResults = [];
+    if (resp && typeof resp === 'object' && resp.toolCalls && resp.toolCalls.length) {
+      const respText = resp.content || '';
+      if (execNativeTools) {
+        nativeToolResults = await execNativeTools(resp.toolCalls, { workspacePath, webFetchEnabled: true, cmdRunEnabled: true, memorySearch });
+      }
+      resp = respText;
+    } else {
+      resp = typeof resp === 'object' ? (resp.content || '') : (resp || '');
+    }
 
     // Strip thinking tags before tool parsing (prompt-based fallback path)
     resp = _stripThinkingTags(resp);
 
     if (onActivity) await onActivity('llm_call', `LLM response for step ${i + 1}`);
 
-    // Execute tool calls
+    // Execute tool calls (text-based parsing for any [TOOL:...] in the text)
     if (execTools) {
-      const results = await execTools(resp, { workspacePath, webFetchEnabled: true, cmdRunEnabled: true, memorySearch });
+      const results = [...nativeToolResults, ...await execTools(resp, { workspacePath, webFetchEnabled: true, cmdRunEnabled: true, memorySearch })];
       if (onActivity && results.length) {
         for (const r of results) await onActivity(r.ok ? 'tool_result' : 'error', `${r.tool}: ${r.result || (r.ok ? '' : 'FAILED')}`);
       }

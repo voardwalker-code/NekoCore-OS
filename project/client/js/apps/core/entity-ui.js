@@ -204,7 +204,7 @@ async function refreshSidebarEntities() {
   let activeEntityState = null;
 
   try {
-    const normalizeEntityId = (value) => String(value || '').replace(/^entity_+/, '');
+    const normalizeEntityId = (value) => String(value || '').replace(/^Entity-/, '').replace(/^entity_+/, '');
 
     // Sync active entity from server so release controls remain accurate
     // even if local currentEntityId gets out of sync after reloads.

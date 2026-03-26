@@ -8,27 +8,25 @@ Create a living entity with rich memories, evolved neurochemistry, emergent beli
 
 ## Architecture
 
-You have access to NekoCore OS API endpoints via `web_fetch` (all on `http://localhost:3847`):
+You have access to local entity tools (no network calls needed):
 
-| Endpoint | Method | Purpose |
-|----------|--------|---------|
-| `http://localhost:3847/api/entities/create` | POST | Create the entity in the NekoCore OS entities folder with a unique ID |
-| `http://localhost:3847/api/entities/{id}/memories/inject` | POST | Write a memory into the entity's mind |
-| `http://localhost:3847/api/entities/{id}/cognitive/tick` | POST | Run one cognitive processing cycle |
-| `http://localhost:3847/api/entities/{id}/cognitive/state` | GET | Read current neurochemistry, beliefs, mood, persona |
+| Tool | Purpose |
+|------|--------|
+| `entity_create` | Create a NekoCore-compatible entity folder in `MA-workspace/entities/` |
+| `entity_inject_memory` | Write a memory into an entity's memory folder |
+
+> **Note:** Entities are created in MA's workspace (`MA-workspace/entities/`). The user can then copy or move them into NekoCore OS's `entities/` folder to activate them. Cognitive processing (ticks, neurochemistry, belief evolution) will run automatically once the entity is loaded into NekoCore OS.
 
 ## Step Pattern
 
 ```
 [TASK_PLAN]
 - [ ] Design the entity: name, core traits, emotional baseline, backstory arc (3-5 chapters)
-- [ ] Create the entity via NekoCore OS API (POST /api/entities/create) — save returned entityId
+- [ ] Create the entity via entity_create tool — save returned entityId
 - [ ] Write Chapter 1 backstory memories (3-5 memories) and inject them
-- [ ] Trigger cognitive tick and read evolved state
-- [ ] Write Chapter 2 memories informed by the evolved state (3-5 memories)
-- [ ] Trigger cognitive tick and read evolved state
-- [ ] Write Chapter 3 memories informed by the evolved state (3-5 memories)
-- [ ] Final cognitive tick, read state, and write the entity summary
+- [ ] Write Chapter 2 memories informed by accumulated emotional arc (3-5 memories)
+- [ ] Write Chapter 3 memories informed by accumulated emotional arc (3-5 memories)
+- [ ] Write the entity summary and report to user
 [/TASK_PLAN]
 ```
 
@@ -49,27 +47,21 @@ Design the entity before creating anything:
    - `oxytocin` (bonding/trust, 0-1)
 4. **Backstory Arc** — 3-5 chapter summaries. Each chapter is a *life period* with distinctive experiences.
 
-### Phase 2: Entity Creation via NekoCore OS API
+### Phase 2: Entity Creation
 
-**IMPORTANT**: Do NOT create entity files manually with `ws_write`. Always create entities through the NekoCore OS API so they get a proper unique ID and are placed in the correct `entities/` folder.
+**IMPORTANT**: Do NOT create entity files manually with `ws_write`. Always use the `entity_create` tool so entities get a proper unique ID and NekoCore-compatible folder structure.
 
-Generate a unique entity ID by combining the name with a timestamp:
-- Format: `{name-lowercase-dashes}-{timestamp}` (e.g. `alice-1711270452000`, `shadow-wolf-1711270452000`)
-- The timestamp should be the current time in milliseconds (Date.now())
-
-Call the creation endpoint:
+Call the creation tool:
 ```
-[TOOL:web_fetch {"url": "http://localhost:3847/api/entities/create", "method": "POST", "body": {"entityId": "{name-lowercase}-{timestamp}", "name": "Entity Name", "gender": "neutral", "traits": ["curious", "empathetic", "stubborn"], "introduction": "Hello, I'm Entity Name."}}]
+[TOOL:entity_create {"name": "Entity Name", "gender": "neutral", "traits": ["curious", "empathetic", "stubborn"], "introduction": "Hello, I'm Entity Name.", "personality_summary": "A curious and empathetic soul with a stubborn streak.", "speech_style": "warm and thoughtful", "beliefs": ["Knowledge is worth pursuing", "Everyone deserves kindness"], "behavior_rules": ["Think before acting", "Stand firm on principles"]}]
 ```
 
-The API response returns `{ ok: true, entity: {...}, entityId: "canonical-id" }`. **Save the returned `entityId`** — you will use it for all subsequent memory injection and cognitive tick calls.
+The tool returns the `entityId` — **save it** for all subsequent memory injection calls.
 
-The API automatically:
-- Creates the full entity folder structure in `project/entities/entity_{id}/`
+The tool automatically:
+- Creates the full entity folder structure in `MA-workspace/entities/Entity-{id}/`
 - Generates `entity.json`, `persona.json`, `system-prompt.txt`
-- Sets up memory directories (episodic, semantic, index, beliefs, etc.)
-- Loads the entity into the NekoCore OS runtime
-- Assigns a voice profile based on traits
+- Sets up memory directories (episodic, semantic, index)
 
 ### Phase 3: Memory Genesis Loop (repeat per chapter)
 
@@ -89,39 +81,27 @@ Write 3-5 memories for this chapter. Each memory needs:
 
 For each memory, call:
 ```
-[TOOL:web_fetch {"url": "http://localhost:3847/api/entities/{id}/memories/inject", "method": "POST", "body": {"content": "...", "emotion": "...", "topics": [...], "importance": 0.8, "narrative": "...", "type": "episodic", "phase": "chapter_1"}}]
+[TOOL:entity_inject_memory {"entityId": "{id}", "content": "...", "emotion": "...", "topics": [...], "importance": 0.8, "narrative": "...", "type": "episodic", "phase": "chapter_1"}]
 ```
 
-#### 3c. Trigger Cognitive Tick
+#### 3c. Emotional Tracking Between Chapters
 
-After injecting all memories for a chapter:
-```
-[TOOL:web_fetch {"url": "http://localhost:3847/api/entities/{id}/cognitive/tick", "method": "POST", "body": {}}]
-```
+After injecting all memories for a chapter, reflect on the emotional arc so far. Use the entity's accumulated memories, personality traits, and the emotional tags you've assigned to inform the *next* chapter's memories. If you wrote traumatic memories, the next chapter should reflect that stress. If bonding memories, subsequent ones should carry warmth.
 
-This processes the memories through the entity's cognitive pipeline — updating neurochemistry, forming beliefs, and adjusting mood.
-
-#### 3d. Read Evolved State
-
-```
-[TOOL:web_fetch {"url": "http://localhost:3847/api/entities/{id}/cognitive/state", "method": "GET"}]
-```
-
-**CRITICAL**: Read the response carefully. The entity's neurochemistry, mood, and emerging beliefs should *inform your next chapter's memories*. If cortisol is high after a traumatic chapter, the next chapter's memories should reflect that stress. If new beliefs formed, reference them.
-
-This is what makes entity genesis different from static character creation — each chapter builds on the *actual cognitive state* from the previous one.
+> **Note:** Full cognitive processing (neurochemistry ticks, belief emergence) will happen automatically once the entity is loaded into NekoCore OS. During genesis, focus on writing memories with accurate emotional progression.
 
 ### Phase 4: Final Summary
 
 After all chapters:
-1. Read the final cognitive state
+1. Review the full set of injected memories
 2. Write a brief genesis report summarizing:
-   - Total memories injected
-   - Final neurochemistry state
-   - Beliefs that emerged
-   - Current mood
+   - Total memories injected, broken down by chapter
+   - The entity's personality trajectory across chapters
+   - Key emotional themes
    - The entity's "voice" — how they would speak based on their experiences
-3. Tell the user the entity is ready and provide the entity ID for reference
+   - Location of entity files: `MA-workspace/entities/Entity-{entityId}/`
+3. Tell the user to copy the entity folder into NekoCore OS's `entities/` directory to activate it
+4. Provide the entity ID for reference
 
 ## Memory Writing Guidelines
 

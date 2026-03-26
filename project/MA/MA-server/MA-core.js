@@ -808,12 +808,18 @@ Do NOT try to rush or compress your output to fit — it's better to stop cleanl
     worklog.setActiveTask(message.slice(0, 100), null, null);
     if (onActivity) await onActivity('llm_call', `Starting ${intent.taskType} task...`);
 
+    // Build native tool schemas if provider supports native function calling
+    const taskUseNativeTools = hasCapability(taskLLMConfig, 'nativeToolUse');
+    const taskToolSchemas = taskUseNativeTools ? buildToolSchemas(taskLLMConfig.type) : null;
+
     const result = await tasks.runTask({
       taskType: intent.taskType,
       message,
       entityName,
       callLLM: (msgs, opts) => callLLM(taskLLMConfig, msgs, autoPilot ? { ...opts, timeout: 0 } : opts),
       execTools: wsTools.executeToolCalls,
+      execNativeTools: taskUseNativeTools ? wsTools.executeNativeToolCalls : null,
+      nativeToolSchemas: taskToolSchemas,
       formatResults: wsTools.formatToolResults,
       stripTools: wsTools.stripToolCalls,
       workspacePath: WORKSPACE_DIR,

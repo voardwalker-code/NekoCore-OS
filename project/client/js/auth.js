@@ -254,10 +254,8 @@ async function saveNekocoreConfig() {
   if (provider === 'anthropic') {
     statusEl = document.getElementById('nekocoreAnthropicStatus');
     key = (document.getElementById('nekocoreAnthropicKey')?.value || '').trim();
-    if (key === NK_MASKED_KEY) key = '';
     const model = (document.getElementById('nekocoreAnthropicModel')?.value || '').trim();
     if (!model) { _nkStatus(statusEl, 'Model is required', false); return; }
-    if (!key) key = await _nkFetchStoredKey();
     if (!key) { _nkStatus(statusEl, 'API key is required', false); return; }
     cfg = { type: 'anthropic', endpoint: 'https://api.anthropic.com/v1/messages', apiKey: key, model };
   } else if (provider === 'ollama') {
@@ -271,11 +269,9 @@ async function saveNekocoreConfig() {
     const endpoint = (document.getElementById('apikeyEndpoint-nekocore')?.value || '').trim()
       || 'https://openrouter.ai/api/v1/chat/completions';
     key = (document.getElementById('nekocoreApiKey')?.value || '').trim();
-    if (key === NK_MASKED_KEY) key = '';
     const model = (document.getElementById('nekocoreModel')?.value || '').trim();
     if (!model) { _nkStatus(statusEl, 'Model is required', false); return; }
-    if (!key) key = await _nkFetchStoredKey();
-    if (!key) { _nkStatus(statusEl, 'API key is required (or save one once first)', false); return; }
+    if (!key) { _nkStatus(statusEl, 'API key is required', false); return; }
     cfg = { type: 'openrouter', endpoint, key, model };
   }
 
@@ -321,10 +317,7 @@ async function loadNekocoreConfig() {
       const keyEl = document.getElementById('nekocoreAnthropicKey');
       const modelEl = document.getElementById('nekocoreAnthropicModel');
       if (modelEl && cfg.model) modelEl.value = cfg.model;
-      if (keyEl) {
-        _nkSetMaskedKeyState('anthropic', !!(cfg.apiKey || cfg.key));
-        if (cfg.apiKey || cfg.key) keyEl.placeholder = 'Saved key on file (leave blank to keep current key)';
-      }
+      if (keyEl && (cfg.apiKey || cfg.key)) keyEl.value = String(cfg.apiKey || cfg.key);
     } else if (type === 'ollama') {
       nkPickProvider('ollama');
       const urlEl = document.getElementById('nekocoreOllamaUrl');
@@ -338,10 +331,7 @@ async function loadNekocoreConfig() {
       const modelEl = document.getElementById('nekocoreModel');
       if (endpointEl && cfg.endpoint) endpointEl.value = cfg.endpoint;
       if (modelEl && cfg.model) modelEl.value = cfg.model;
-      if (keyEl) {
-        _nkSetMaskedKeyState('openrouter', !!(cfg.apiKey || cfg.key));
-        if (cfg.apiKey || cfg.key) keyEl.placeholder = 'Saved key on file (leave blank to keep current key)';
-      }
+      if (keyEl && (cfg.apiKey || cfg.key)) keyEl.value = String(cfg.apiKey || cfg.key);
     }
   } catch (_) {}
 }

@@ -105,6 +105,14 @@
             "label": "Profiler",
             "icon": "⚡",
             "navTarget": "#navOptionalAppsHost"
+        },
+        {
+            "tabId": "bookingest",
+            "enabled": true,
+            "path": "apps/non-core/core/tab-bookingest.html",
+            "label": "Book Ingest",
+            "icon": "📚",
+            "navTarget": "#navOptionalAppsHost"
         }
     ],
     "customApps": [

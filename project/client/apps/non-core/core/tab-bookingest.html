@@ -1,0 +1,250 @@
+<div class="tab-content" id="tab-bookingest">
+  <div style="max-width:520px;margin:var(--space-6) auto;padding:0 var(--space-4)">
+
+    <!-- Header -->
+    <div style="margin-bottom:var(--space-4)">
+      <h2 style="font-size:var(--text-lg);font-weight:700;color:var(--text-primary);margin:0 0 var(--space-1) 0">&#128218; Book Ingest</h2>
+      <p style="font-size:var(--text-sm);color:var(--text-tertiary);margin:0;line-height:1.5">
+        Upload a novel or book (.txt) to Memory Architect. MA will extract characters, personality, and memories to create rich entities.
+      </p>
+    </div>
+
+    <!-- Project Name -->
+    <div id="biNameRow" style="margin-bottom:var(--space-3)">
+      <label for="biProjectName" style="display:block;font-size:var(--text-sm);font-weight:600;color:var(--text-secondary);margin-bottom:var(--space-1)">Project Name</label>
+      <input type="text" id="biProjectName" placeholder="e.g. A Christmas Carol" style="width:100%;padding:var(--space-2);border-radius:var(--radius-md);border:1px solid var(--border-default);background:var(--input-bg,var(--window-bg));color:var(--text-primary);font-size:var(--text-sm)">
+      <p style="font-size:var(--text-xs);color:var(--text-tertiary);margin:var(--space-1) 0 0 0">All output files will be organized under this name</p>
+    </div>
+
+    <!-- Drop Zone -->
+    <div class="book-upload-drop" id="biDropZone">
+      <div style="font-size:3rem;opacity:0.4;margin-bottom:var(--space-3)">&#128214;</div>
+      <p class="text-tertiary-c" style="margin-bottom:var(--space-3)">Drag &amp; drop a .txt file here</p>
+      <button class="btn bp" id="biBrowseBtn">Browse Files</button>
+      <input type="file" id="biFileInput" accept=".txt" style="display:none">
+    </div>
+
+    <!-- Progress -->
+    <div class="book-upload-progress" id="biProgress" style="display:none">
+      <div class="book-upload-progress-header">
+        <span id="biStatusText">Uploading...</span>
+      </div>
+      <div class="book-upload-bar-track">
+        <div class="book-upload-bar-fill" id="biBar"></div>
+      </div>
+    </div>
+
+    <!-- Result -->
+    <div class="book-upload-result" id="biResult" style="display:none"></div>
+
+    <!-- Import Section -->
+    <div id="biImportSection" style="margin-top:var(--space-5);padding-top:var(--space-4);border-top:1px solid var(--border-default)">
+      <h3 style="font-size:var(--text-base);font-weight:700;color:var(--text-primary);margin:0 0 var(--space-2) 0">&#128229; Import Entities to NekoCore</h3>
+      <p style="font-size:var(--text-sm);color:var(--text-tertiary);margin:0 0 var(--space-3) 0;line-height:1.5">
+        After MA finishes extracting characters, click below to import the created entities into NekoCore. They'll appear in your Entity list ready to chat with.
+      </p>
+      <button class="btn bp" id="biImportBtn">Import Entities from MA</button>
+      <div id="biImportStatus" style="display:none;margin-top:var(--space-3);font-size:var(--text-sm);color:var(--text-secondary);line-height:1.6"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  var dropZone = document.getElementById('biDropZone');
+  var browseBtn = document.getElementById('biBrowseBtn');
+  var fileInput = document.getElementById('biFileInput');
+  var progressEl = document.getElementById('biProgress');
+  var barEl = document.getElementById('biBar');
+  var statusText = document.getElementById('biStatusText');
+  var resultEl = document.getElementById('biResult');
+  var projectNameInput = document.getElementById('biProjectName');
+  var uploading = false;
+
+  // Drag & drop
+  if (dropZone) {
+    dropZone.addEventListener('dragover', function (e) {
+      e.preventDefault(); e.stopPropagation();
+      dropZone.classList.add('drag-over');
+    });
+    dropZone.addEventListener('dragleave', function (e) {
+      e.preventDefault(); e.stopPropagation();
+      dropZone.classList.remove('drag-over');
+    });
+    dropZone.addEventListener('drop', function (e) {
+      e.preventDefault(); e.stopPropagation();
+      dropZone.classList.remove('drag-over');
+      if (e.dataTransfer.files.length > 0) handleBookFile(e.dataTransfer.files[0]);
+    });
+  }
+
+  // Browse button
+  if (browseBtn && fileInput) {
+    browseBtn.addEventListener('click', function () { fileInput.click(); });
+    fileInput.addEventListener('change', function () {
+      if (fileInput.files.length > 0) handleBookFile(fileInput.files[0]);
+      fileInput.value = '';
+    });
+  }
+
+  // Upload handler
+  function handleBookFile(file) {
+    if (uploading) return;
+    if (!file.name.toLowerCase().endsWith('.txt')) {
+      showNotice('Only .txt files are supported.', 'error');
+      return;
+    }
+
+    var projectName = (projectNameInput && projectNameInput.value.trim()) || file.name.replace(/\.txt$/i, '');
+
+    uploading = true;
+    if (dropZone) dropZone.style.display = 'none';
+    var nameRow = document.getElementById('biNameRow');
+    if (nameRow) nameRow.style.display = 'none';
+    if (progressEl) progressEl.style.display = 'block';
+    if (resultEl) { resultEl.style.display = 'none'; resultEl.innerHTML = ''; }
+    if (statusText) statusText.textContent = 'Starting MA server\u2026';
+    if (barEl) barEl.style.width = '10%';
+
+    // 1. Start MA
+    fetch('/api/servers/ma/start', { method: 'POST' })
+      .then(function (r) {
+        if (!r.ok) throw new Error('Failed to start MA server');
+        if (statusText) statusText.textContent = 'Reading file\u2026';
+        if (barEl) barEl.style.width = '30%';
+        return readFileAsText(file);
+      })
+      .then(function (text) {
+        if (!text.trim()) throw new Error('File is empty');
+        if (statusText) statusText.textContent = 'Uploading to MA\u2026';
+        if (barEl) barEl.style.width = '50%';
+        return fetch('http://localhost:3850/api/book/upload', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: text, title: projectName })
+        }).then(function (r2) {
+          if (!r2.ok) return r2.json().catch(function () { return {}; }).then(function (e) { throw new Error(e.error || 'Upload failed: ' + r2.status); });
+          return r2.json().then(function (data) { return { data: data, title: projectName }; });
+        });
+      })
+      .then(function (result) {
+        if (barEl) barEl.style.width = '100%';
+        if (statusText) statusText.textContent = 'Upload complete';
+        showResult(result.data, result.title);
+      })
+      .catch(function (err) {
+        console.error('[BookIngest] Error:', err);
+        showNotice('Upload failed: ' + err.message, 'error');
+        resetToDropZone();
+      })
+      .then(function () { uploading = false; });
+  }
+
+  function readFileAsText(file) {
+    return new Promise(function (resolve, reject) {
+      var reader = new FileReader();
+      reader.onload = function (e) { resolve(e.target.result); };
+      reader.onerror = function () { reject(new Error('Failed to read file')); };
+      reader.readAsText(file);
+    });
+  }
+
+  function showResult(data, title) {
+    if (!resultEl) return;
+    resultEl.style.display = 'block';
+    var html = '<strong>\u2705 Book uploaded successfully</strong><br>';
+    html += '<span style="color:var(--text-secondary)">Title:</span> ' + esc(title) + '<br>';
+    html += '<span style="color:var(--text-secondary)">Chunks:</span> ' + (data.totalChunks || '?') + '<br>';
+    html += '<span style="color:var(--text-secondary)">Characters:</span> ' + ((data.totalChars || 0).toLocaleString()) + '<br>';
+    html += '<span style="color:var(--text-secondary)">Book ID:</span> <code style="font-size:.8em;background:rgba(0,0,0,.2);padding:1px 5px;border-radius:4px">' + esc(data.bookId || '') + '</code><br><br>';
+    html += '<button class="btn bp" id="biOpenMA">Open MA \u2192</button>';
+    html += ' <button class="btn bd" id="biReset">Upload Another</button>';
+    resultEl.innerHTML = html;
+
+    var openBtn = document.getElementById('biOpenMA');
+    if (openBtn) {
+      openBtn.addEventListener('click', function () {
+        window.open('http://localhost:3850?bookId=' + encodeURIComponent(data.bookId || '') + '&title=' + encodeURIComponent(title) + '&projectFolder=' + encodeURIComponent(data.projectFolder || ''), '_blank');
+      });
+    }
+    var resetBtn = document.getElementById('biReset');
+    if (resetBtn) {
+      resetBtn.addEventListener('click', function () { resetToDropZone(); });
+    }
+  }
+
+  function resetToDropZone() {
+    if (dropZone) dropZone.style.display = '';
+    var nameRow = document.getElementById('biNameRow');
+    if (nameRow) nameRow.style.display = '';
+    if (progressEl) progressEl.style.display = 'none';
+    if (resultEl) { resultEl.style.display = 'none'; resultEl.innerHTML = ''; }
+    if (barEl) barEl.style.width = '0%';
+  }
+
+  function esc(s) {
+    var d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
+  }
+
+  function showNotice(msg, type) {
+    if (window.notify && typeof window.notify.show === 'function') {
+      var map = { success: 'ok', error: 'error', info: 'info' };
+      window.notify.show(msg, map[type] || 'info');
+    } else {
+      console.log('[BookIngest:' + (type || 'info') + '] ' + msg);
+    }
+  }
+
+  // Expose for Novel Ingest button in Creator
+  window.openBookIngestTab = function () {
+    if (typeof switchMainTab === 'function') switchMainTab('bookingest');
+  };
+
+  // ── Import from MA ──────────────────────────────────────────────────────
+  var importBtn = document.getElementById('biImportBtn');
+  var importStatus = document.getElementById('biImportStatus');
+
+  if (importBtn) {
+    importBtn.addEventListener('click', function () {
+      importBtn.disabled = true;
+      importBtn.textContent = 'Importing\u2026';
+      if (importStatus) { importStatus.style.display = 'block'; importStatus.innerHTML = 'Scanning MA workspace\u2026'; }
+
+      fetch('/api/entities/import-from-ma', { method: 'POST' })
+        .then(function (r) {
+          if (!r.ok) return r.json().catch(function () { return {}; }).then(function (e) { throw new Error(e.error || 'Import failed'); });
+          return r.json();
+        })
+        .then(function (data) {
+          var html = '';
+          if (data.imported && data.imported.length) {
+            html += '<strong>\u2705 Imported ' + data.imported.length + ' entit' + (data.imported.length === 1 ? 'y' : 'ies') + ':</strong><br>';
+            data.imported.forEach(function (e) {
+              html += '\u2022 ' + esc(e.name || e.folder) + ' <span style="color:var(--text-tertiary)">(ID: ' + esc(e.id || '') + ')</span><br>';
+            });
+            html += '<br><span style="color:var(--text-tertiary)">Switch to the Entity tab to see them.</span>';
+          } else {
+            html += '<span style="color:var(--text-tertiary)">No new entities found in MA workspace.';
+            if (data.skipped && data.skipped.length) {
+              html += ' (' + data.skipped.length + ' already imported)';
+            }
+            html += '</span>';
+          }
+          if (importStatus) importStatus.innerHTML = html;
+          importBtn.textContent = 'Import Entities from MA';
+          importBtn.disabled = false;
+        })
+        .catch(function (err) {
+          if (importStatus) importStatus.innerHTML = '<span style="color:var(--danger,#f87171)">\u274c Import failed: ' + esc(err.message) + '</span>';
+          importBtn.textContent = 'Import Entities from MA';
+          importBtn.disabled = false;
+        });
+    });
+  }
+}());
+</script>

@@ -1,5 +1,5 @@
 <div class="setup-overlay" id="setupOverlay">
-      <div class="setup-card">
+  <div class="setup-card" id="setupCard">
     <div class="setup-logo">NKO</div>
     <h1 class="setup-title">NekoCore OS</h1>
     <p class="setup-subtitle">Cognitive WebOS runtime powered by the REM architecture (MA v1).</p>
@@ -8,109 +8,302 @@
       <div class="setup-step active" id="setupStep1">1</div>
       <div class="setup-step-line"></div>
       <div class="setup-step" id="setupStep2">2</div>
+      <div class="setup-step-line"></div>
+      <div class="setup-step" id="setupStep3">3</div>
     </div>
 
-    <!-- Step 1: Configure Main LLM (Conscious Mind) -->
+    <!-- Step 1: Provider & API Key -->
     <div class="setup-panel" id="setupPanel1">
-      <h2 class="setup-panel-title">Main Mind (Conscious)</h2>
-      <p class="text-secondary-c text-sm-c mb-4">Your primary conversational AI that interacts directly with the user.</p>
+      <h2 class="setup-panel-title">Choose Your Provider</h2>
+      <p class="text-secondary-c text-sm-c mb-4">Select how you want to connect to LLMs. This sets the default for all pipeline stages.</p>
+
       <div class="setup-provider-options">
-        <button class="setup-provider-btn" onclick="setupSelectProviderForAspect('main', 'openrouter')">
+        <button class="setup-provider-btn" id="setupDirBtn-openrouter" onclick="setupPickDirection('openrouter')">
           <div class="setup-provider-icon">&#9729;</div>
           <div class="setup-provider-name">OpenRouter</div>
           <div class="setup-provider-desc">Cloud LLMs via API key</div>
         </button>
-        <button class="setup-provider-btn" onclick="setupSelectProviderForAspect('main', 'anthropic')">
+        <button class="setup-provider-btn" id="setupDirBtn-anthropic" onclick="setupPickDirection('anthropic')">
           <div class="setup-provider-icon">&#9880;</div>
           <div class="setup-provider-name">Anthropic Direct</div>
           <div class="setup-provider-desc">Claude API + prompt caching</div>
         </button>
-        <button class="setup-provider-btn" onclick="setupSelectProviderForAspect('main', 'ollama')">
+        <button class="setup-provider-btn" id="setupDirBtn-ollama" onclick="setupPickDirection('ollama')">
           <div class="setup-provider-icon">&#129302;</div>
           <div class="setup-provider-name">Ollama</div>
           <div class="setup-provider-desc">Local LLMs on your machine</div>
         </button>
+        <button class="setup-provider-btn" id="setupDirBtn-hybrid" onclick="setupPickDirection('hybrid')">
+          <div class="setup-provider-icon">&#128256;</div>
+          <div class="setup-provider-name">Hybrid</div>
+          <div class="setup-provider-desc">Mix providers per stage</div>
+        </button>
       </div>
-      <div class="setup-config-section" style="display:none;margin-top:1.5rem">
-        <div id="setupOpenrouter" style="display:none">
+
+      <!-- Credential forms (shown based on direction) -->
+      <div id="setupCredentials" style="display:none;margin-top:1.5rem">
+        <div id="setupCred-openrouter" style="display:none">
           <div class="fl mb-3">
-            <label>API Key</label>
-            <input type="password" id="setupOrKey" placeholder="sk-or-..." autocomplete="off" data-lpignore="true" spellcheck="false" style="background:#ffffff;color:#111111;-webkit-text-fill-color:#111111;caret-color:#111111;">
+            <label>OpenRouter API Key</label>
+            <input type="text" id="setupKeyOpenrouter" placeholder="sk-or-v1-..." autocomplete="off" data-lpignore="true" spellcheck="false">
           </div>
           <p class="text-xs-c text-secondary-c" style="margin:-.2rem 0 .75rem">
-            Need an API key? <a href="https://openrouter.ai" target="_blank" rel="noopener noreferrer">Sign up here ?</a>
-          </p>
-          <div class="fl mb-3">
-            <label>Model</label>
-            <input type="text" id="setupOrModel" list="setupOrModelList" placeholder="openai/gpt-4o, anthropic/claude-sonnet-4, ...">
-            <datalist id="setupOrModelList">
-              <option value="openai/gpt-4o"></option>
-              <option value="anthropic/claude-sonnet-4.6"></option>
-              <option value="anthropic/claude-sonnet-4"></option>
-              <option value="google/gemini-2.5-flash"></option>
-              <option value="meta-llama/llama-3.3-70b-instruct"></option>
-              <option value="deepseek/deepseek-chat-v3-0324"></option>
-            </datalist>
-          </div>
-          <p class="text-xs-c text-secondary-c" style="margin-top:-.15rem">
-            BYOK is supported: in Settings, you can point endpoint/key/model to any OpenAI-compatible provider.
+            Need an API key? <a href="https://openrouter.ai" target="_blank" rel="noopener noreferrer">Sign up here &#8599;</a>
           </p>
         </div>
-        <div id="setupAnthropic" style="display:none">
+        <div id="setupCred-anthropic" style="display:none">
           <div class="fl mb-3">
             <label>Anthropic API Key</label>
-            <input type="password" id="setupAnthropicKey" placeholder="sk-ant-..." autocomplete="off" data-lpignore="true" spellcheck="false" style="background:#ffffff;color:#111111;-webkit-text-fill-color:#111111;caret-color:#111111;">
+            <input type="text" id="setupKeyAnthropic" placeholder="sk-ant-..." autocomplete="off" data-lpignore="true" spellcheck="false">
           </div>
           <p class="text-xs-c text-secondary-c" style="margin:-.2rem 0 .75rem">
             Get your API key at <a href="https://console.anthropic.com" target="_blank" rel="noopener noreferrer">console.anthropic.com &#8599;</a>
           </p>
-          <div class="fl mb-3">
-            <label>Model</label>
-            <input type="text" id="setupAnthropicModel" list="setupAnthropicModelList" placeholder="claude-sonnet-4-6">
-            <datalist id="setupAnthropicModelList">
-              <option value="claude-opus-4-6"></option>
-              <option value="claude-sonnet-4-6"></option>
-              <option value="claude-haiku-4-5"></option>
-            </datalist>
-          </div>
-          <p class="text-xs-c" style="margin-top:-.15rem;color:var(--em)">
-            &#9889; Prompt Caching enabled — system prompts are cached server-side for up to 90% input-token savings on repeated calls.
-          </p>
         </div>
-        <div id="setupOllama" style="display:none">
+        <div id="setupCred-ollama" style="display:none">
           <div class="fl mb-3">
             <label>Ollama URL</label>
-            <input type="text" id="setupOllamaUrl" value="http://localhost:11434">
-          </div>
-          <div class="fl mb-3">
-            <label>Model</label>
-            <input type="text" id="setupOllamaModel" value="llama3" placeholder="llama3, mistral, etc.">
+            <input type="text" id="setupUrlOllama" value="http://localhost:11434" placeholder="http://localhost:11434">
           </div>
         </div>
-        <button class="btn bp w-full mt-2" onclick="setupTestConnectionForAspect()">Test &amp; Continue</button>
+        <div id="setupCred-hybrid" style="display:none">
+          <p class="text-xs-c text-secondary-c mb-3">Enter any API keys you plan to use. You'll assign providers per stage in the next step.</p>
+          <div class="fl mb-3">
+            <label>OpenRouter API Key <span class="text-xs-c text-secondary-c">(if using)</span></label>
+            <input type="text" id="setupHybridKeyOr" placeholder="sk-or-v1-..." autocomplete="off" data-lpignore="true" spellcheck="false">
+          </div>
+          <div class="fl mb-3">
+            <label>Anthropic API Key <span class="text-xs-c text-secondary-c">(if using)</span></label>
+            <input type="text" id="setupHybridKeyAnthropic" placeholder="sk-ant-..." autocomplete="off" data-lpignore="true" spellcheck="false">
+          </div>
+          <div class="fl mb-3">
+            <label>Ollama URL <span class="text-xs-c text-secondary-c">(if using)</span></label>
+            <input type="text" id="setupHybridUrlOllama" value="http://localhost:11434" placeholder="http://localhost:11434">
+          </div>
+        </div>
+        <button class="btn bp w-full mt-2" id="setupTestBtn" onclick="setupTestAndContinue()">Test &amp; Continue</button>
       </div>
     </div>
 
-    <!-- Step 2: Ready to Go -->
+    <!-- Step 2: Configure Pipeline -->
     <div class="setup-panel" id="setupPanel2" style="display:none">
-      <h2 class="setup-panel-title">Ready to Go</h2>
-      <p class="text-secondary-c text-sm-c mb-5">Your Main Mind is connected. The other cognitive roles and MA will inherit this runtime until you customize them later in Settings.</p>
-      <p class="text-xs-c text-secondary-c" style="margin-top:-1rem;margin-bottom:1.1rem">
-        Pipeline tip: avoid using one model for both Main Mind and Orchestrator. Mercury 2 + Claude Sonnet 4/4.6 tends to preserve character consistency better.
-      </p>
-      <div class="summary-card">
-        <div class="summary-row" style="margin-bottom:.5rem"><strong>Configuration Summary:</strong></div>
-        <div class="summary-row">Main Mind: <span id="setupSummaryMain">Configured</span></div>
-        <div class="summary-row">MA (Memory Architect): <span id="setupSummaryMA">Inherit from NekoCore OS</span></div>
+      <h2 class="setup-panel-title">Configure Your Pipeline</h2>
+      <p class="text-secondary-c text-sm-c mb-3">NekoCore OS uses specialized LLM roles for different cognitive tasks. Choose models for each, or pick a preset to fill them all.</p>
+
+      <!-- Hardware info panel (Ollama only) -->
+      <div id="setupHardwarePanel" style="display:none">
+        <div class="setup-aspect-card" style="margin-bottom:var(--space-3)">
+          <div class="setup-aspect-header" style="margin-bottom:var(--space-2)">
+            <span class="setup-aspect-icon">&#128187;</span>
+            <div>
+              <div class="setup-aspect-name">Your Hardware</div>
+              <div class="setup-aspect-desc">Tell us about your system so we can recommend the right models.</div>
+            </div>
+          </div>
+          <div class="setup-hw-fields">
+            <div class="fl" style="flex:1;min-width:120px">
+              <label class="text-xs-c">System RAM</label>
+              <select id="setupHwRam">
+                <option value="">Select...</option>
+                <option value="4">4 GB</option>
+                <option value="8">8 GB</option>
+                <option value="16">16 GB</option>
+                <option value="32">32 GB</option>
+                <option value="64">64 GB+</option>
+              </select>
+            </div>
+            <div class="fl" style="flex:1;min-width:120px">
+              <label class="text-xs-c">GPU Type</label>
+              <select id="setupHwGpu">
+                <option value="">Select...</option>
+                <option value="integrated">Integrated (iGPU)</option>
+                <option value="dedicated">Dedicated (dGPU)</option>
+              </select>
+            </div>
+            <div class="fl" style="flex:1;min-width:120px">
+              <label class="text-xs-c">VRAM</label>
+              <select id="setupHwVram">
+                <option value="">Select...</option>
+                <option value="0">N/A (iGPU)</option>
+                <option value="2">2 GB</option>
+                <option value="4">4 GB</option>
+                <option value="6">6 GB</option>
+                <option value="8">8 GB</option>
+                <option value="12">12 GB</option>
+                <option value="16">16 GB</option>
+                <option value="24">24 GB+</option>
+              </select>
+            </div>
+          </div>
+          <button class="btn bp mt-3 w-full" style="font-size:var(--text-xs)" id="setupHwApplyBtn" onclick="setupApplyHardwareRecommendation()">Recommend Models for My Hardware</button>
+        </div>
+
+        <!-- Installed / missing models panel (populated by JS) -->
+        <div id="setupOllamaModelStatus" style="display:none" class="setup-aspect-card" style="margin-bottom:var(--space-3)">
+          <div class="setup-aspect-header" style="margin-bottom:var(--space-2)">
+            <span class="setup-aspect-icon">&#128230;</span>
+            <div>
+              <div class="setup-aspect-name">Ollama Models</div>
+              <div class="setup-aspect-desc" id="setupOllamaModelDesc">Checking installed models...</div>
+            </div>
+          </div>
+          <div id="setupOllamaModelList"></div>
+        </div>
       </div>
-      <div class="summary-card" style="margin-top:.75rem">
-        <div class="summary-row" style="margin-bottom:.4rem"><strong>Skills (Safe Default):</strong></div>
-        <p class="text-xs-c text-secondary-c" style="margin:0 0 .55rem">
-          Skills start disabled by default. Optionally select skills to enable now, or leave all off and enable later in NekoCore OS.
-        </p>
+
+      <div class="flex gap-2 mb-3" style="flex-wrap:wrap;justify-content:center">
+        <button class="setup-preset-btn" id="setupPreset-best" onclick="setupApplyPreset('best')">&#11088; Best</button>
+        <button class="setup-preset-btn" id="setupPreset-fast" onclick="setupApplyPreset('fast')">&#9889; Fast</button>
+        <button class="setup-preset-btn" id="setupPreset-cheap" onclick="setupApplyPreset('cheap')">&#128176; Cheap</button>
+        <button class="setup-preset-btn" id="setupPreset-balanced" onclick="setupApplyPreset('hybrid')">&#9878; Balanced</button>
+      </div>
+      <p class="text-xs-c text-secondary-c" id="setupPresetDesc" style="text-align:center;margin:0 0 .75rem"></p>
+      <p class="text-xs-c" style="margin:0 0 .8rem;color:var(--warning,#f59e0b);text-align:center">
+        Tip: avoid using the same model for both Main Mind and Orchestrator for best persona consistency.
+      </p>
+
+      <div class="setup-aspect-list" id="setupAspectList">
+        <!-- Main Mind -->
+        <div class="setup-aspect-card" data-aspect="main">
+          <div class="setup-aspect-header">
+            <span class="setup-aspect-icon">&#129504;</span>
+            <div>
+              <div class="setup-aspect-name">Main Mind</div>
+              <div class="setup-aspect-desc">Direct conversation with the user. Needs strong reasoning, personality, and context awareness.</div>
+            </div>
+          </div>
+          <div class="setup-aspect-provider-pick" style="display:none"></div>
+          <div class="fl">
+            <label class="text-xs-c">Model <span class="text-secondary-c setup-aspect-rec" id="setupRec-main"></span></label>
+            <input type="text" id="setupAspectModel-main" list="setupModelList-main" placeholder="Select model...">
+            <datalist id="setupModelList-main"></datalist>
+          </div>
+          <details class="setup-aspect-key-details">
+            <summary class="text-xs-c">Use different API key for this stage</summary>
+            <div class="fl mt-2">
+              <input type="text" id="setupAspectKey-main" placeholder="API key for this stage...">
+            </div>
+          </details>
+        </div>
+
+        <!-- Background Processing (Subconscious) -->
+        <div class="setup-aspect-card" data-aspect="subconscious">
+          <div class="setup-aspect-header">
+            <span class="setup-aspect-icon">&#128164;</span>
+            <div>
+              <div class="setup-aspect-name">Background Processing</div>
+              <div class="setup-aspect-desc">Memory reflection, journal encoding, and background tasks. Fast, cost-effective models work well here.</div>
+            </div>
+          </div>
+          <div class="setup-aspect-provider-pick" style="display:none"></div>
+          <div class="fl">
+            <label class="text-xs-c">Model <span class="text-secondary-c setup-aspect-rec" id="setupRec-subconscious"></span></label>
+            <input type="text" id="setupAspectModel-subconscious" list="setupModelList-subconscious" placeholder="Select model...">
+            <datalist id="setupModelList-subconscious"></datalist>
+          </div>
+          <details class="setup-aspect-key-details">
+            <summary class="text-xs-c">Use different API key for this stage</summary>
+            <div class="fl mt-2">
+              <input type="text" id="setupAspectKey-subconscious" placeholder="API key for this stage...">
+            </div>
+          </details>
+        </div>
+
+        <!-- Dream Engine -->
+        <div class="setup-aspect-card" data-aspect="dream">
+          <div class="setup-aspect-header">
+            <span class="setup-aspect-icon">&#127769;</span>
+            <div>
+              <div class="setup-aspect-name">Dream Engine</div>
+              <div class="setup-aspect-desc">Creative association and sleep consolidation. Narrative-oriented and creative models preferred.</div>
+            </div>
+          </div>
+          <div class="setup-aspect-provider-pick" style="display:none"></div>
+          <div class="fl">
+            <label class="text-xs-c">Model <span class="text-secondary-c setup-aspect-rec" id="setupRec-dream"></span></label>
+            <input type="text" id="setupAspectModel-dream" list="setupModelList-dream" placeholder="Select model...">
+            <datalist id="setupModelList-dream"></datalist>
+          </div>
+          <details class="setup-aspect-key-details">
+            <summary class="text-xs-c">Use different API key for this stage</summary>
+            <div class="fl mt-2">
+              <input type="text" id="setupAspectKey-dream" placeholder="API key for this stage...">
+            </div>
+          </details>
+        </div>
+
+        <!-- Orchestrator -->
+        <div class="setup-aspect-card" data-aspect="orchestrator">
+          <div class="setup-aspect-header">
+            <span class="setup-aspect-icon">&#127891;</span>
+            <div>
+              <div class="setup-aspect-name">Orchestrator</div>
+              <div class="setup-aspect-desc">Final synthesis of all pipeline outputs. Modulates persona consistency. Needs strong coherence.</div>
+            </div>
+          </div>
+          <div class="setup-aspect-provider-pick" style="display:none"></div>
+          <div class="fl">
+            <label class="text-xs-c">Model <span class="text-secondary-c setup-aspect-rec" id="setupRec-orchestrator"></span></label>
+            <input type="text" id="setupAspectModel-orchestrator" list="setupModelList-orchestrator" placeholder="Select model...">
+            <datalist id="setupModelList-orchestrator"></datalist>
+          </div>
+          <details class="setup-aspect-key-details">
+            <summary class="text-xs-c">Use different API key for this stage</summary>
+            <div class="fl mt-2">
+              <input type="text" id="setupAspectKey-orchestrator" placeholder="API key for this stage...">
+            </div>
+          </details>
+        </div>
+
+        <!-- NekoCore & MA -->
+        <div class="setup-aspect-card" data-aspect="nekocore">
+          <div class="setup-aspect-header">
+            <span class="setup-aspect-icon">&#129302;</span>
+            <div>
+              <div class="setup-aspect-name">NekoCore &amp; MA</div>
+              <div class="setup-aspect-desc">OS governance layer and development agent. Manages entities, health monitoring, and tools.</div>
+            </div>
+          </div>
+          <div class="setup-aspect-provider-pick" style="display:none"></div>
+          <div class="fl">
+            <label class="text-xs-c">Model <span class="text-secondary-c setup-aspect-rec" id="setupRec-nekocore"></span></label>
+            <input type="text" id="setupAspectModel-nekocore" list="setupModelList-nekocore" placeholder="Select model...">
+            <datalist id="setupModelList-nekocore"></datalist>
+          </div>
+          <details class="setup-aspect-key-details">
+            <summary class="text-xs-c">Use different API key for this stage</summary>
+            <div class="fl mt-2">
+              <input type="text" id="setupAspectKey-nekocore" placeholder="API key for this stage...">
+            </div>
+          </details>
+        </div>
+      </div>
+
+      <div class="flex gap-2 mt-4" style="justify-content:space-between">
+        <button class="btn bg" onclick="setupGoBack(1)">&#8592; Back</button>
+        <button class="btn bp" onclick="setupAdvanceToFinish()">Continue &#8594;</button>
+      </div>
+    </div>
+
+    <!-- Step 3: Skills & Finish -->
+    <div class="setup-panel" id="setupPanel3" style="display:none">
+      <h2 class="setup-panel-title">Skills &amp; Finish</h2>
+      <p class="text-secondary-c text-sm-c mb-3">Optionally enable skills now, or leave all off and enable later.</p>
+
+      <div class="summary-card mb-4">
+        <div class="summary-row" style="margin-bottom:.5rem"><strong>Configuration Summary:</strong></div>
+        <div id="setupFinalSummary"></div>
+      </div>
+
+      <div class="summary-card" style="margin-bottom:1rem">
+        <div class="summary-row" style="margin-bottom:.4rem"><strong>Skills:</strong></div>
         <div id="setupSkillSummary" class="text-xs-c text-secondary-c">Loading available skills...</div>
       </div>
-      <button class="btn bp w-full" onclick="setupFinish()">Save &amp; Open NekoCore OS</button>
+
+      <div class="flex gap-2" style="justify-content:space-between">
+        <button class="btn bg" onclick="setupGoBack(2)">&#8592; Back</button>
+        <button class="btn bp" id="setupFinishBtn" onclick="setupFinish()">Save &amp; Open NekoCore OS</button>
+      </div>
     </div>
 
     <div class="setup-status" id="setupStatus"></div>

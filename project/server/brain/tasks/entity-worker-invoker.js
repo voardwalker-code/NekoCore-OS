@@ -23,8 +23,8 @@ const ENTITY_DIR = path.join(__dirname, '../../../entities');
  * @returns {{ name: string, traits: string[], persona: Object|null, systemPromptText: string|null }}
  */
 function loadEntityProfile(entityId, fallback = {}) {
-  const dirName = entityId.startsWith('entity_') ? entityId : `entity_${entityId}`;
-  const entityRoot = path.join(ENTITY_DIR, dirName);
+  const entityPaths = require('../../entityPaths');
+  const entityRoot = entityPaths.getEntityRoot(entityId);
   const entityJsonPath = path.join(entityRoot, 'entity.json');
   const personaJsonPath = path.join(entityRoot, 'memories', 'persona.json');
 

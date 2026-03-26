@@ -6,7 +6,8 @@
 //
 // Entity folder layout (under <project_root>/entities/):
 //
-//   entity_<id>/
+//   Entity-<Name>-<shortId>/           (new format)
+//   entity_<id>/                        (legacy format — still resolved)
 //     entity.json
 //     index/              ← memoryIndex / topicIndex / recencyIndex
 //     beliefs/            ← belief graph persistence
@@ -39,6 +40,8 @@
 'use strict';
 
 const path = require('path');
+const fs = require('fs');
+const crypto = require('crypto');
 
 // Absolute path to the top-level entities/ data directory
 // (one level up from server/ → project root → entities/)
@@ -47,8 +50,8 @@ const ENTITIES_DIR = path.join(__dirname, '..', 'entities');
 // ── Normalisation ───────────────────────────────────────────
 
 /**
- * Strip any leading "entity_" prefix(es) and whitespace from an
- * entityId so callers can pass either form interchangeably.
+ * Strip any leading folder prefix ("Entity-" or legacy "entity_")
+ * and whitespace from an entityId so callers can pass either form.
  *
  * @param {*} entityId
  * @returns {string}  canonical id (no prefix), or '' for null/empty
@@ -56,22 +59,56 @@ const ENTITIES_DIR = path.join(__dirname, '..', 'entities');
 function normalizeEntityId(entityId) {
   if (entityId === null || entityId === undefined) return '';
   let id = String(entityId).trim();
+  // New format prefix (strip once)
+  if (id.startsWith('Entity-')) {
+    id = id.slice('Entity-'.length);
+  }
+  // Legacy prefix(es)
   while (id.startsWith('entity_')) {
     id = id.slice('entity_'.length);
   }
   return id;
 }
 
+/**
+ * Create a filesystem-safe slug from an entity name.
+ * Preserves original case, replaces non-alphanumeric with hyphens.
+ */
+function slugifyName(name) {
+  return String(name || '').trim()
+    .replace(/[^a-zA-Z0-9\s-]/g, '')
+    .replace(/[\s_]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+    .slice(0, 30);
+}
+
+/**
+ * Build a human-readable entity ID from a name.
+ * Format: <NameSlug>-<shortHex>  e.g. "Luna-a1b2c3"
+ */
+function buildEntityId(name) {
+  const slug = slugifyName(name);
+  const shortHex = crypto.randomBytes(3).toString('hex');
+  return slug ? `${slug}-${shortHex}` : shortHex;
+}
+
 // ── Core helpers ────────────────────────────────────────────
 
 /**
  * Absolute path to the entity root folder.
+ * Checks new format (Entity-<id>) first, falls back to legacy (entity_<id>).
+ * For new entities, defaults to new format.
  * Throws if entityId normalises to empty.
  */
 function getEntityRoot(entityId) {
   const id = normalizeEntityId(entityId);
   if (!id) throw new Error(`Invalid entityId: ${JSON.stringify(entityId)}`);
-  return path.join(module.exports.ENTITIES_DIR, `entity_${id}`);
+  const newPath = path.join(module.exports.ENTITIES_DIR, `Entity-${id}`);
+  if (fs.existsSync(newPath)) return newPath;
+  const legacyPath = path.join(module.exports.ENTITIES_DIR, `entity_${id}`);
+  if (fs.existsSync(legacyPath)) return legacyPath;
+  return newPath;
 }
 
 /**
@@ -211,6 +248,8 @@ module.exports = {
   ENTITIES_DIR,
 
   normalizeEntityId,
+  slugifyName,
+  buildEntityId,
 
   getEntityRoot,
   getMemoryRoot,

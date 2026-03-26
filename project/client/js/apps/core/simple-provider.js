@@ -75,11 +75,7 @@ function initSimpleProviderUI() {
           simplePickProvider('anthropic');
           const keyEl = document.getElementById('simpleAnthropicKey');
           const modelEl = document.getElementById('simpleAnthropicModel');
-          if (keyEl) {
-            keyEl.value = '';
-            keyEl.dataset.hasStoredKey = mainCfg.apiKey ? 'true' : 'false';
-            if (mainCfg.apiKey) keyEl.placeholder = 'Saved API key on file';
-          }
+          if (keyEl && mainCfg.apiKey) keyEl.value = mainCfg.apiKey;
           if (modelEl && mainCfg.model) modelEl.value = mainCfg.model;
           // Hydrate capability toggles from saved profile
           if (profile.capabilities) _hydrateCapabilityToggles(profile.capabilities);
@@ -87,11 +83,7 @@ function initSimpleProviderUI() {
           simplePickProvider('openrouter');
           const keyEl = document.getElementById('simpleOrKey');
           const modelEl = document.getElementById('simpleOrModel');
-          if (keyEl) {
-            keyEl.value = '';
-            keyEl.dataset.hasStoredKey = mainCfg.apiKey ? 'true' : 'false';
-            if (mainCfg.apiKey) keyEl.placeholder = 'Saved API key on file';
-          }
+          if (keyEl && mainCfg.apiKey) keyEl.value = mainCfg.apiKey;
           if (modelEl && mainCfg.model) modelEl.value = mainCfg.model;
         }
       }
@@ -214,20 +206,7 @@ async function simpleSaveConfig() {
     mainType = 'anthropic';
     mainEndpoint = 'https://api.anthropic.com/v1/messages';
     keyEl = document.getElementById('simpleAnthropicKey');
-    typedKey = (keyEl?.value || '').trim();
-    const hasStoredKey = keyEl?.dataset.hasStoredKey === 'true';
-    mainKey = typedKey || (hasStoredKey ? SIMPLE_PROVIDER_REDACTED_KEY : '');
-
-    if (!mainKey) {
-      try {
-        const existingResp = await fetch('/api/entity-config?provider=main');
-        if (existingResp.ok) {
-          const existing = await existingResp.json();
-          const storedKey = String(existing?.apiKey || existing?.key || '').trim();
-          if (storedKey) mainKey = SIMPLE_PROVIDER_REDACTED_KEY;
-        }
-      } catch (_) {}
-    }
+    mainKey = (keyEl?.value || '').trim();
 
     mainModel = (document.getElementById('simpleAnthropicModel')?.value || '').trim();
     if (!mainKey) {
@@ -242,21 +221,7 @@ async function simpleSaveConfig() {
     mainType = 'openrouter';
     mainEndpoint = OPENROUTER_PRESET.ep;
     keyEl = document.getElementById('simpleOrKey');
-    typedKey = (keyEl?.value || '').trim();
-    const hasStoredKey = keyEl?.dataset.hasStoredKey === 'true' || _simpleHasStoredOpenRouterKey();
-    mainKey = typedKey || (hasStoredKey ? SIMPLE_PROVIDER_REDACTED_KEY : '');
-
-    // If field is blank and no stored key detected in-memory, try fetching from server
-    if (!mainKey) {
-      try {
-        const existingResp = await fetch('/api/entity-config?provider=main');
-        if (existingResp.ok) {
-          const existing = await existingResp.json();
-          const storedKey = String(existing?.apiKey || existing?.key || '').trim();
-          if (storedKey) mainKey = SIMPLE_PROVIDER_REDACTED_KEY;
-        }
-      } catch (_) {}
-    }
+    mainKey = (keyEl?.value || '').trim();
 
     mainModel = (document.getElementById('simpleOrModel')?.value || '').trim();
     if (!mainKey) {
@@ -289,22 +254,35 @@ async function simpleSaveConfig() {
     });
     if (!resp.ok) throw new Error('Failed to save main provider');
 
+    // Save per-stage model overrides
+    const stageFields = [
+      ['subconscious', 'simpleAdvSub'],
+      ['dream',        'simpleAdvDream'],
+      ['orchestrator', 'simpleAdvOrch'],
+    ];
+    for (const [aspect, fieldId] of stageFields) {
+      const val = (document.getElementById(fieldId)?.value || '').trim();
+      if (!val) continue;
+      // Build config inheriting connection details from main, override model only
+      const stCfg = { type: mainType, endpoint: mainEndpoint, model: val };
+      if (mainKey) stCfg.apiKey = mainKey;
+      await fetch('/api/entity-config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ provider: aspect, config: stCfg })
+      });
+    }
+
     // Update local active config
     activeConfig = {
       type: mainType,
       endpoint: mainEndpoint,
-      ...(typedKey ? { apiKey: typedKey } : {}),
+      ...(mainKey ? { apiKey: mainKey } : {}),
       model: mainModel
     };
 
     // Sync savedConfig from server
     await refreshSavedConfig();
-
-    if (!isOllama && keyEl) {
-      keyEl.value = '';
-      keyEl.dataset.hasStoredKey = 'true';
-      keyEl.placeholder = 'Saved API key on file';
-    }
 
     // On first setup, seed any unconfigured aspects with role-appropriate default models
     if (!isOllama && !isAnthropic && mainKey) {

@@ -117,6 +117,66 @@ const TOOL_DEFS = [
       },
       required: ['query']
     }
+  },
+  {
+    name: 'entity_create',
+    description: 'Create a NekoCore-compatible entity with a unique hex ID and proper folder structure (entity.json, persona.json, system-prompt.txt, episodic/semantic memory dirs). MUST be used instead of ws_mkdir/ws_write for entity creation.',
+    parameters: {
+      type: 'object',
+      properties: {
+        name: { type: 'string', description: 'Display name for the entity (e.g. "Ebenezer Scrooge").' },
+        gender: { type: 'string', description: 'Gender identity. Default: "neutral".' },
+        traits: { type: 'array', items: { type: 'string' }, description: 'Personality trait strings (5-8 recommended).' },
+        introduction: { type: 'string', description: 'The entity\'s self-introduction in their own voice.' },
+        source: { type: 'string', description: 'Source material (e.g. "A Christmas Carol by Charles Dickens").' },
+        personality_summary: { type: 'string', description: 'Extended personality description in first person.' },
+        speech_style: { type: 'string', description: 'How the entity speaks (e.g. "formal Victorian English, clipped and dismissive").' },
+        beliefs: { type: 'array', items: { type: 'string' }, description: 'Core beliefs and values.' },
+        behavior_rules: { type: 'array', items: { type: 'string' }, description: 'Behavioral rules the entity follows.' }
+      },
+      required: ['name']
+    }
+  },
+  {
+    name: 'entity_inject_memory',
+    description: 'Inject a memory into an existing entity\'s memory store. Creates proper log.json, memory.zip (gzipped), and semantic.txt files. MUST be used instead of ws_write for adding memories to entities.',
+    parameters: {
+      type: 'object',
+      properties: {
+        entityId: { type: 'string', description: 'The canonical entity ID returned by entity_create (e.g. "Ebenezer-Scrooge-a3f2b1").' },
+        content: { type: 'string', description: 'The memory content in first-person POV (2-5 sentences, rich with sensory/emotional detail).' },
+        type: { type: 'string', description: 'Memory type: "episodic" (default) or "semantic".' },
+        emotion: { type: 'string', description: 'Primary emotion (e.g. "fear", "joy", "anger", "sadness", "neutral").' },
+        topics: { type: 'array', items: { type: 'string' }, description: 'Topic tags for this memory (3-6 recommended).' },
+        importance: { type: 'number', description: 'Importance score 0.0-1.0 (0.2=routine, 0.5=notable, 0.8=life-changing).' },
+        narrative: { type: 'string', description: 'Third-person summary of what happened.' },
+        phase: { type: 'string', description: 'Book structure reference (e.g. "chapter_1", "stave_2").' }
+      },
+      required: ['entityId', 'content']
+    }
+  },
+  {
+    name: 'book_list_chunks',
+    description: 'List all chunks for a previously uploaded book. Returns chunk index, preview text, and character count for each chunk. Use before reading individual chunks.',
+    parameters: {
+      type: 'object',
+      properties: {
+        bookId: { type: 'string', description: 'The book ID from the upload (e.g. "book_1774503455912").' }
+      },
+      required: ['bookId']
+    }
+  },
+  {
+    name: 'book_read_chunk',
+    description: 'Read the full text of a single book chunk by index. Use book_list_chunks first to see available chunks.',
+    parameters: {
+      type: 'object',
+      properties: {
+        bookId: { type: 'string', description: 'The book ID from the upload.' },
+        index: { type: 'number', description: 'Zero-based chunk index to read.' }
+      },
+      required: ['bookId', 'index']
+    }
   }
 ];
 

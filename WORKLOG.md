@@ -1,7 +1,7 @@
 # WORKLOG
 
 Status: active architecture refactor tracking.
-Last updated: 2026-03-24
+Last updated: 2026-03-25
 
 Repository packaging note:
 1. The runnable source tree now lives under `project/`.
@@ -10,15 +10,49 @@ Repository packaging note:
 
 ---
 
-## ✅ PHASE 4 GATE — OPEN (2026-03-16)
+## ✅ PHASE 4 GATE — COMPLETE (2026-03-16)
 
 Phases 1 (Bug Fixes), 2 (Refactor/Cleanup), and 3 (Modularization) are all confirmed complete.
 App Folder Modularization plan is complete (866 pass, 0 fail).
-Feature work is now authorized. Active mandate below is satisfied.
+Feature work authorized. Phase 4 feature streams all complete.
 
-**Phase 4.5 status:** `Documents/current/PLAN-IME-v1.md` — Intelligent Memory Expansion (`Complete` by user declaration on 2026-03-18; detailed exit summary can be backfilled if needed)
-**Active bounded cleanup workstream:** `Documents/current/PLAN-APP-MANIFEST-SHADOW-REFACTOR-v1.md` — HTML shadow cleanup (guard-first)
-**Active Phase 5 plan:** `Documents/current/PLAN-PREDICTIVE-MEMORY-v1.md` — Predictive Memory Topology (`Active — Slice -0 not started`)
+**Phase 4.5 status:** `Documents/current/PLAN-IME-v1.md` — Intelligent Memory Expansion (`Complete` by user declaration on 2026-03-18)
+**Phase 4.10 status:** `Documents/current/PLAN-ENTITY-ORCHESTRATION-v1.md` — Entity Orchestration (`Complete`)
+
+---
+
+## 🚀 PHASE 5 — AgentEcho (Active)
+
+Codename: **AgentEcho**
+Phase 5 encompasses the cognitive-layer and entity intelligence work built on the Phase 4 foundation.
+
+**Completed Phase 5 plans:**
+- `Documents/current/PLAN-PREDICTIVE-MEMORY-v1.md` — Predictive Memory Topology — `COMPLETE (all 13 slices: -0 through 11)`
+- `Documents/current/PLAN-COGNITIVE-STATE-INTEGRATION-v1.md` — Cognitive State Integration — `COMPLETE (all 4 phases, 14 slices)`
+- `Documents/current/PLAN-PROVIDER-AGNOSTIC-CAPABILITIES-v1.md` — Provider-Agnostic Capabilities Layer — `COMPLETE (all 11 slices: -0 through 10)`
+- `Documents/current/PLAN-MA-PROVIDER-AGNOSTIC-CAPABILITIES-v1.md` — MA Provider-Agnostic Capabilities — `COMPLETE (all 10 slices)`
+- `Documents/current/PLAN-TOKEN-OPTIMIZATION-v1.md` — Token Optimization — `COMPLETE (Phases 1–4 done, Phase 5 cancelled)`
+- `Documents/current/PLAN-ENTITY-GENESIS-v1.md` — Entity Genesis Skill — `COMPLETE`
+- `Documents/current/PLAN-BOOK-TO-ENTITY-v1.md` — Book-to-Entity Character Ingestion — `COMPLETE (all 7 slices: -0 through 6)`
+- `Documents/current/PLAN-DND-AND-STUDY-BLUEPRINTS-v1.md` — D&D + Education/Study Blueprints & Skills — `COMPLETE (all 11 slices: -0 through 10)`
+- `Documents/current/PLAN-OS-TOOL-UPGRADE-v1.md` — OS Tool Upgrade — `COMPLETE`
+- `Documents/current/PLAN-MA-BRIDGE-v1.md` — MA Bridge Slash Command — `COMPLETE`
+- `Documents/current/PLAN-RESOURCE-MANAGER-APP-v1.md` — Resource Manager App — `COMPLETE`
+- `Documents/current/PLAN-BUG-TRACKER-APP-v1.md` — Bug Tracker App — `COMPLETE`
+
+**Active/pending Phase 5 plans:**
+- `Documents/current/PLAN-INTROSPECTION-LOOP-v1.md` — 6-axis self-inquiry brain-loop phase with local model
+- `Documents/current/PLAN-ANTHROPIC-BATCH-API-v1.md` — Anthropic Batch API — `In planning`
+- `Documents/current/PLAN-SETUP-WIZARD-v1.md` — Setup Wizard — `Plan ready, awaiting review`
+
+**Bounded cleanup workstream:** `Documents/current/PLAN-APP-MANIFEST-SHADOW-REFACTOR-v1.md` — HTML shadow cleanup (guard-first)
+
+---
+
+## 📋 PHASE 6 — PhoenixCore (Next)
+
+Codename: **PhoenixCore**
+Phase 6 is the next major milestone after AgentEcho. Scope to be defined.
 
 ---
 
@@ -44,33 +78,151 @@ Emergency exception log:
 
 ---
 
-## Stop/Resume Snapshot — 2026-03-25 (Test Suite Green)
+## Stop/Resume Snapshot — 2026-03-26 (Book Chunk Direct Tools + Blueprint Fix)
 
 - **Current phase:** `Feature`
 - **Current slice:** `Complete`
-- **Last completed work:** `Fixed all 31 test suite failures. Root causes: stale frontmatter assertions (enabled: true removed), runtime skill paths, task type count drift, blueprint path typos, missing system-apps manifest entries, chat route mocks missing event stubs, app category renames, entity visibility regression assertion, shadow cleanup regex. Added --test-concurrency=1 to fix Node.js test runner IPC deserialization bug when HTTP-server tests run in parallel. Full suite: 2816 pass, 0 fail.`
+- **Last completed work:** `Fixed two root causes from failed "A Christmas Carol" ingestion: (1) Book chunk API was blocked because blueprint told LLM to use web_fetch for localhost:3850 but SSRF guard correctly blocks localhost. Added book_list_chunks and book_read_chunk as direct workspace tools that read chunk files from the filesystem — no HTTP needed. (2) Entity tools were registered but blueprint used web_fetch patterns. Updated entire blueprint to use only workspace tools. Also registered new tools in TOOL_DEFS and added to both text-based and native tool execution paths. Full suite: 2816 pass, 0 fail.`
 - **In-progress item:** `none`
 - **Blocking issue:** `none`
-- **Next action on resume:** `Push to git and verify CI workflow passes green on GitHub Actions.`
+- **Next action on resume:** `Re-run book ingestion for "A Christmas Carol" with the fixed tools — should now read actual book chunks and create entities via entity_create/entity_inject_memory instead of falling back to LLM knowledge.`
 - **Active plans:**
-  - `Documents/current/PLAN-PREDICTIVE-MEMORY-v1.md` — Phase 5: Predictive Memory Topology — `COMPLETE — all 13 slices (-0 through 11), archived`
-  - `Documents/current/PLAN-RESOURCE-MANAGER-APP-v1.md` — Resource Manager App — `Complete`
-  - `Documents/current/PLAN-BUG-TRACKER-APP-v1.md` — Bug Tracker App — `Complete`
-  - `Documents/current/PLAN-SETUP-WIZARD-v1.md` — Setup Wizard — `Plan ready, awaiting review`
-  - `Documents/current/PLAN-ANTHROPIC-BATCH-API-v1.md` — Anthropic Batch API — `In planning — async latency concerns for tight-loop call sites need design resolution`
-  - `Documents/current/PLAN-PROVIDER-AGNOSTIC-CAPABILITIES-v1.md` — Provider-Agnostic Capabilities Layer — `Complete (all 11 slices: -0 through 10) — awaiting archive`
-  - `Documents/current/PLAN-MA-PROVIDER-AGNOSTIC-CAPABILITIES-v1.md` — MA Provider-Agnostic Capabilities — `Complete (all 10 slices)`
-  - `Documents/current/PLAN-OS-TOOL-UPGRADE-v1.md` — OS Tool Upgrade — `Complete`
-  - `Documents/current/PLAN-ENTITY-GENESIS-v1.md` — Entity Genesis Skill — `Complete`
-  - `Documents/current/PLAN-MA-BRIDGE-v1.md` — MA Bridge Slash Command — `Complete`
-  - `Documents/current/PLAN-ENTITY-ORCHESTRATION-v1.md` — Phase 4.10: Entity Orchestration — `Complete`
-  - `Documents/current/PLAN-TOKEN-OPTIMIZATION-v1.md` — COMPLETE (Phases 1–4 done, Phase 5 cancelled)
-  - `Documents/current/PLAN-COGNITIVE-STATE-INTEGRATION-v1.md` — COMPLETE (all 4 phases, 14 slices)
   - `Documents/current/PLAN-INTROSPECTION-LOOP-v1.md` — 6-axis self-inquiry brain-loop phase with local model
-  - `Documents/current/PLAN-BOOK-TO-ENTITY-v1.md` — Book-to-Entity Character Ingestion — `Complete (all 7 slices: -0 through 6)`
-  - `Documents/current/PLAN-DND-AND-STUDY-BLUEPRINTS-v1.md` — D&D + Education/Study Blueprints & Skills — `Complete (all 11 slices: -0 through 10)`
+  - `Documents/current/PLAN-ANTHROPIC-BATCH-API-v1.md` — Anthropic Batch API — `In planning`
+  - `Documents/current/PLAN-SETUP-WIZARD-v1.md` — Setup Wizard — `Plan ready, awaiting review`
 - **Prior plan (paused):** `Documents/current/PLAN-SLASH-COMMAND-SYSTEM-v1.md — A0/A1/A2 complete; A3/A4 future`
 - **MA workspace projects:** `Moved to separate repo — MA-workspace is now fully cleared on reset`
+
+---
+
+## Session Ledger — 2026-03-26 (Book Chunk Direct Tools + Blueprint Fix)
+
+| Date | Slice | Outcome | Note |
+|------|-------|---------|------|
+| 2026-03-26 | Feature | Complete | Fixed two root causes of failed book ingestion. (1) **Chunk API blocked**: Blueprint instructed LLM to use `web_fetch` to call `localhost:3850/api/book/{bookId}/chunk/{index}`, but `MA-web-fetch.js` has an SSRF guard (`BLOCKED_HOSTS` regex) that correctly blocks all localhost/127.x/private IPs. Fix: Added `book_list_chunks` and `book_read_chunk` as direct workspace tools in `MA-workspace-tools.js` that read chunk files from the filesystem (replicating `_findBookDir()` logic locally). Registered both in `TOOL_DEFS` in `MA-tool-adapter.js` with full JSON Schema. Added Zod schemas and execution cases in both text-based (`executeToolCalls`) and native (`executeNativeToolCalls`) paths. (2) **Entity tools not recognized**: `entity_create` and `entity_inject_memory` were properly registered but the blueprint used `web_fetch` patterns for chunk access, so the LLM fell back to `ws_write` for everything. Updated `book_ingestion.md` blueprint: replaced Architecture table with workspace tool docs, removed all `web_fetch` HTTP examples, replaced Phase 1 (upload) with `book_list_chunks` since upload is handled by Book Ingest UI, replaced Phase 2a chunk fetching with `book_read_chunk` examples, updated step pattern. 2816 pass, 0 fail. |
+
+Status: `Complete`
+
+---
+
+## Session Ledger — 2026-03-25 (Project Folder Organization)
+
+| Date | Slice | Outcome | Note |
+|------|-------|---------|------|
+| 2026-03-25 | Feature | Complete | Added project folder organization for book ingestion output files. Changes across 4 files: (1) `tab-bookingest.html` — added "Project Name" text input above drop zone; upload uses typed name as title instead of filename; "Open MA" button passes `projectFolder` query param. (2) `MA-Server.js` — upload handler slugifies title and creates `projects/{slug}/` folder; books stored at `projects/{slug}/books/{bookId}/chunks/`; added `_findBookDir(bookId)` helper for backward-compatible lookup (searches project folders first, then legacy `books/` path); chunk listing/reading endpoints use the helper. (3) `ma-ui-bootstrap.js` — extracts `projectFolder` URL param and injects into pre-filled message: `YOUR PROJECT FOLDER IS: "{folder}/"`. (4) `MA-tasks.js` — extracts project folder from message via regex; injects `MANDATORY FILE ORGANIZATION` rule into both planning system prompt and step execution system prompt, enforcing all output files go inside the named project folder. 2816 pass, 0 fail. |
+
+Status: `Complete`
+
+---
+
+## Session Ledger — 2026-03-25 (MA Import Strategy + Task Budget Fix)
+
+| Date | Slice | Outcome | Note |
+|------|-------|---------|------|
+| 2026-03-25 | Feature | Complete | Hardened `postImportFromMA` in entity-routes.js with 3 additions: (1) Strategy 5 — scans root-level `*.json` files in MA workspace for memory arrays (handles `scrooge-memories.json`, `cratchit-memories.json`, etc. pattern that latest Grok runs produce). (2) Character registry parser — finds `*character*registry*.md` files and extracts full names, gender, traits, role, relationships via markdown parsing. (3) Registry enrichment — cross-references discovered characters against registry entries to upgrade filename-derived names ("Scrooge" → "Ebenezer Scrooge"), add proper gender/traits, and inject relationships as semantic memories in the `relationships/` folder. Import now handles 5 MA output formats: Entity-* folders, memories/ subfolder JSONs, memories_* prefix files, root-level JSONs, and project subfolder memories. Also raised `book_ingestion` task limits from 15 steps/80 LLM calls/10min timeout to 50 steps/300 LLM calls/30min timeout — previous limits caused the task runner to terminate early at chunk 14 out of 83 total chunks, resulting in only 5 characters with 31 total memories instead of the full book. 2816 pass, 0 fail. |
+
+Status: `Complete`
+
+---
+
+## Session Ledger — 2026-03-25 (File Menu + Book Upload Overlay)
+
+| Date | Slice | Outcome | Note |
+|------|-------|---------|------|
+| 2026-03-25 | Feature | Complete | Added "File" dropdown menu to header bar (`.hdr-l`). Two items: "Document Ingest" opens existing Documents non-core tab via `switchMainTab('documents')`, "Book to MA" opens a centered overlay with drag-and-drop .txt upload. Upload flow: starts MA server via `/api/servers/ma/start`, reads file as text via FileReader, POSTs to `localhost:3850/api/book/upload`, shows progress bar, displays result (title, chunk count, character count, book ID) with "Open MA" button that passes `bookId` as URL query param. CSS uses existing design tokens (window-bg, border-emphasis, accent). 2816 pass, 0 fail. |
+
+Status: `Complete`
+
+---
+
+## Session Ledger — 2026-03-25 (MA Entity Creation Tools)
+
+| Date | Slice | Outcome | Note |
+|------|-------|---------|------|
+| 2026-03-25 | Feature | Complete | Added `entity_create` and `entity_inject_memory` as direct local tools in MA-workspace-tools.js. Root cause: MA's `web_fetch` SSRF protection correctly blocks all localhost calls, so entity creation via `web_fetch` to NekoCore's localhost:3847 API always failed. New tools create NekoCore-compatible entity folders (Entity-{slug}-{hex}/) in `MA-workspace/entities/` with full structure: entity.json, persona.json, system-prompt.txt, memories/episodic/, memories/semantic/, index/. Memory injection creates `mem_xxxx/` folders with semantic.txt + memory.zip (gzipped) + log.json, updating memory and topic indexes. Updated both book_ingestion.md and entity_genesis.md blueprints to use new local tools instead of web_fetch. Updated guard test. 2816 pass, 0 fail. |
+
+Status: `Complete`
+
+---
+
+## Session Ledger — 2026-03-25 (Creator Progress Spinner Fix)
+
+| Date | Slice | Outcome | Note |
+|------|-------|---------|------|
+| 2026-03-25 | Bugfix | Complete | Creator progress overlay spinner now advances through steps on a timed interval (4-5s per step) instead of staying frozen on step 1. Added `startHatchStepTimer()`, `stopHatchStepTimer()`, `completeAllHatchSteps()`, `resetHatchSteps()`. All 3 creation flows (random, guided, character) updated. CSS `.complete` state now sets `opacity:1`. Timer cleaned up on error. 2816 pass, 0 fail. |
+
+Status: `Complete`
+
+---
+
+## Session Ledger — 2026-03-25 (No Auto-Checkout After Entity Creation)
+
+| Date | Slice | Outcome | Note |
+|------|-------|---------|------|
+| 2026-03-25 | Bugfix | Complete | Entity creation no longer auto-activates — removed activation blocks (releaseAll, loadEntity, setActiveEntity, checkout, reinitBrainLoop, initializeSkillDefaults) from all 5 creation endpoints. Client `syncParentAfterCreate()` simplified to just refresh sidebar + close creator. `_ensureEntityDesktopWorkspace()` kept (pure filesystem). 2816 pass, 0 fail. |
+
+Status: `Complete`
+
+---
+
+## Session Ledger — 2026-03-25 (Setup Wizard HW + First-Chat + Visualizer Fix)
+
+| Date | Slice | Outcome | Note |
+|------|-------|---------|------|
+| 2026-03-25 | Feature | Complete | Setup wizard Ollama pipeline step now includes hardware info fields (RAM, GPU type, VRAM) with 4 hardware tiers (low/medium/high/ultra). Fetches installed models from `/api/tags`, shows installed vs missing status, and offers one-click pull via Ollama `/api/pull`. Datalists auto-populate with installed models. |
+| 2026-03-25 | Bugfix | Complete | Entity first-chat introduction — `getConsciousPrompt()` now checks `options.chatHistory` length. When empty, injects FIRST CONVERSATION RULE (introduce yourself naturally) instead of the existing MID-CONVERSATION RULE. `runConscious()` now passes chatHistory through to getConsciousPrompt options. |
+| 2026-03-25 | Bugfix | Complete | Visualizer entity dropdown still not showing entities — `postEntitiesCreateHatch` and `postHatch` called `setActiveEntity()` but not `entityManager.loadEntity()`, so `getEntityState()` (used by `/api/entities/current`) returned null. Added `loadEntity()` calls before `setActiveEntity()` in both endpoints. |
+
+Status: `Complete`
+
+---
+
+## Session Ledger — 2026-03-25 (Settings Per-Stage Override Fix)
+
+| Date | Slice | Outcome | Note |
+|------|-------|---------|------|
+| 2026-03-25 | Bugfix | Complete | Fixed settings per-stage model overrides not persisting. `simpleSaveConfig()` only saved the main provider config but never read or sent the 3 per-stage fields (subconscious, dream, orchestrator). Added post-save loop that reads each field, detects provider type (ollama pattern vs openrouter), inherits API key from main provider, and POSTs to `/api/entity-config` with the correct aspect name. Cleared (blank) fields delete the aspect override so it falls back to main. Full suite: 2816 pass, 0 fail. |
+
+Status: `Complete`
+
+---
+
+## Session Ledger — 2026-03-25 (Entity Checkout & Visualizer Fix)
+
+| Date | Slice | Outcome | Note |
+|------|-------|---------|------|
+| 2026-03-25 | Bugfix | Complete | Fixed brain loop orphan leak — `_reinitBrainLoop()` now stops old loop (with state save) before creating new one. Prevents timer bleed between entity switches. |
+| 2026-03-25 | Bugfix | Complete | Fixed entity creation checkout state — all 5 creation endpoints (postEntitiesCreate, postEntitiesCreateHatch, postEntitiesCreateGuided, postEntitiesCreateCharacter, postHatch) now call `entityCheckout.releaseAllForAccount()` + `entityCheckout.checkout()` so created entities are properly checked out for the requesting account. |
+| 2026-03-25 | Bugfix | Complete | Client auto-checkout after creation — `syncParentAfterCreate()` now calls `checkoutEntity()` instead of `sidebarSelectEntity()` so chat UI resets, entity switches cleanly, and the new entity is immediately usable in chat. |
+| 2026-03-25 | Bugfix | Complete | Visualizer entity dropdown refresh — added MutationObserver on Visualizer window `focused` class change. Dropdown now refreshes when user switches to Visualizer within the OS shell (previously only refreshed on browser-level `visibilitychange`). |
+| 2026-03-25 | Bugfix | Complete | Client `normalizeEntityId` in entity-ui.js now strips `Entity-` prefix in addition to `entity_+`, matching server-side normalization. Updated source-scan guard test. Full suite: 2816 pass, 0 fail. |
+
+Status: `Complete`
+
+---
+
+## Session Ledger — 2026-03-25 (5-Bug Fix Sprint)
+
+| Date | Slice | Outcome | Note |
+|------|-------|---------|------|
+| 2026-03-25 | Bugfix | Complete | Bug 1 — Entity naming: Changed entity folder format from `entity_<hex>` to `Entity-<NameSlug>-<hex>`. Added `slugifyName()` and `buildEntityId()` to entityPaths.js. `getEntityRoot()` now checks Entity- first, falls back to entity_ for backward compat. Updated hatch-entity.js, entity-routes.js (hatch/guided/character creation + post-hatch rename), create.js (client-side ID generation), entity-worker-invoker.js (loadEntityProfile uses entityPaths). |
+| 2026-03-25 | Bugfix | Complete | Bug 2 — Visualizer: Added disk fallback in cognitive-routes.js for `/api/traces` and `/api/belief-graph/nodes`. Non-active entities now get a temporary TraceGraph/BeliefGraph instantiated from their disk paths instead of returning empty. |
+| 2026-03-25 | Bugfix | Complete | Bug 3 — App menu: Widened grid columns (minmax 200→240px), enlarged app icons (30→34px), added flex:1 + overflow:hidden on launcher-app-left in ui-v2.css. |
+| 2026-03-25 | Bugfix | Complete | Bug 4 — Novel Ingest: Added 5th mode card (entity-mode-card--novel) to entity-creator/index.html. Added `launchNovelIngest()` to create.js — boots MA server via POST /api/servers/ma/start then opens localhost:3850. Added purple/teal gradient CSS. |
+| 2026-03-25 | Bugfix | Complete | Bug 5 — Ollama thinking guard: Hard constraint in resolveCapabilities() forces extendedThinking=false and adaptiveThinking=false for Ollama regardless of profile overrides. Defense-in-depth in llm-interface.js strips thinking prompt suffix from Ollama system messages. |
+| 2026-03-25 | Test Fix | Complete | Fixed 10 test failures caused by entity naming change: updated entity-paths.test.js (Entity- prefix expectations), config-capabilities-guards.test.js (Ollama extendedThinking=false), archive-sharding.test.js (Entity- folder paths ×3), entity-orchestration-guards.test.js (worker filter + canonicalId strip), entity-workspace-creation.test.js (newCanonicalId source scan), entity-worker-invoker.js (use entityPaths.getEntityRoot). Full suite: 2816 pass, 0 fail. |
+
+Status: `Complete`
+
+---
+
+## Session Ledger — 2026-03-25 (Setup Wizard & Settings Overhaul)
+
+| Date | Slice | Outcome | Note |
+|------|-------|---------|------|
+| 2026-03-25 | Feature | Complete | Setup wizard rewritten: 3-step per-aspect pipeline flow (provider direction → per-aspect model/key config → skills/finish). Each pipeline aspect (Orchestrator, Subconscious, Dream/Intuition, Conscious) gets its own card with provider selector, model input, and API key field. Wizard tracks entered keys and auto-fills when same provider reused. Hybrid mode lets each aspect use a different provider. Skills grid changed from 1-column list to 4-column grid so the info window stays visible. Settings now show real unredacted API keys from config — removed password masking, NK_MASKED_KEY logic, and "See" toggle buttons from auth.js and simple-provider.js. Updated settings-provider-persistence guard test. Full suite: 2816 pass, 0 fail. |
+
+Status: `Complete`
 
 ---
 

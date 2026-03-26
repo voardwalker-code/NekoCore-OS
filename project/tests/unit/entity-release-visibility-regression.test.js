@@ -35,7 +35,7 @@ test('refreshSidebarEntities normalizes active id before filtering visible entit
   const block = src.slice(start, end > start ? end : start + 1600);
 
   assert.ok(
-    block.includes('const normalizeEntityId = (value) => String(value || \'\').replace(/^entity_+/, \'\');'),
+    block.includes('const normalizeEntityId = (value) => String(value || \'\').replace(/^Entity-/, \'\').replace(/^entity_+/, \'\');'),
     'refreshSidebarEntities should define canonical id normalization'
   );
   assert.ok(

@@ -34,7 +34,7 @@ test('postEntitiesCreateHatch ensures entity desktop workspace folder', () => {
   const start = src.indexOf('async function postEntitiesCreateHatch(');
   const end = src.indexOf('async function postEntitiesCreateGuided(');
   const block = src.slice(start, end > start ? end : start + 2600);
-  assert.ok(block.includes('_ensureEntityDesktopWorkspace(entity.name, hatchResult.entityId);'),
+  assert.ok(block.includes('_ensureEntityDesktopWorkspace(entity.name, newCanonicalId);'),
     'postEntitiesCreateHatch must create workspace/desktop/<Entity Name> folder');
 });
 

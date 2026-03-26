@@ -147,12 +147,11 @@ test('classify: "do you remember what we talked about" → memory_query', () => 
 
 // ── Blueprint content guards ────────────────────────────────────────────────
 
-test('entity_genesis blueprint has entity creation API reference', () => {
+test('entity_genesis blueprint has entity creation tool references', () => {
   const bp = readFileSync(resolve('MA/MA-blueprints/modules/entity_genesis.md'), 'utf8');
-  assert.ok(bp.includes('localhost:3847'), 'must reference NekoCore OS API');
-  assert.ok(bp.includes('/api/entities/create'), 'must reference entity creation');
-  assert.ok(bp.includes('/api/entities/{id}/memories/inject'), 'must reference memory injection');
-  assert.ok(bp.includes('/api/entities/{id}/cognitive/tick'), 'must reference cognitive tick');
+  assert.ok(bp.includes('entity_create'), 'must reference entity_create tool');
+  assert.ok(bp.includes('entity_inject_memory'), 'must reference entity_inject_memory tool');
+  assert.ok(bp.includes('MA-workspace/entities/'), 'must reference workspace entity output path');
 });
 
 test('book_ingestion blueprint has POV Isolation', () => {
