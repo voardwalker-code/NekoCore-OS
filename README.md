@@ -1,11 +1,11 @@
 <p align="center">
-  <img src="project/assets/neko-cat.svg" width="180" alt="NekoCore mascot"/>
+  <img src="project/assets/neko-cat.svg" width="160" alt="NekoCore mascot"/>
 </p>
 
 <h1 align="center">NekoCore OS</h1>
 
 <p align="center">
-  <samp>A COGNITIVE OPERATING SYSTEM</samp>
+  <code>A COGNITIVE OPERATING SYSTEM</code>
 </p>
 
 <p align="center">
@@ -14,32 +14,28 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/node-%3E%3D18-brightgreen?style=flat-square&logo=node.js" alt="Node 18+"/>
+  <a href="https://neko-core.com"><img src="https://img.shields.io/badge/🌐_website-neko--core.com-8b5cf6?style=for-the-badge" alt="Website"/></a>
   &nbsp;
-  <img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"/>
+  <a href="docs/USER-GUIDE.md"><img src="https://img.shields.io/badge/📖_user_guide-docs-34d399?style=for-the-badge" alt="User Guide"/></a>
   &nbsp;
-  <img src="https://img.shields.io/badge/dependencies-1%20(zod)-brightgreen?style=flat-square" alt="1 dep (zod)"/>
-  &nbsp;
-  <img src="https://img.shields.io/badge/tests-2%2C605%20passing-brightgreen?style=flat-square" alt="2,605 tests passing"/>
+  <a href="project/Neko-Core.html"><img src="https://img.shields.io/badge/🏗️_architecture-deck-ec4899?style=for-the-badge" alt="Architecture Deck"/></a>
 </p>
 
 <p align="center">
-  <a href="https://neko-core.com"><strong>neko-core.com</strong></a>
-  &nbsp;·&nbsp;
-  <a href="project/Neko-Core.html">Architecture Deck</a>
-  &nbsp;·&nbsp;
-  <a href="docs/USER-GUIDE.md">User Guide</a>
-  &nbsp;·&nbsp;
-  <strong>v0.9.0-alpha.6</strong>
+  <img src="https://img.shields.io/badge/node-%3E%3D18-brightgreen?style=flat-square&logo=node.js" alt="Node 18+"/>
+  <img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"/>
+  <img src="https://img.shields.io/badge/dependencies-1_(zod)-brightgreen?style=flat-square" alt="1 dep"/>
+  <img src="https://img.shields.io/badge/tests-2%2C816_passing-brightgreen?style=flat-square" alt="Tests"/>
+  <img src="https://img.shields.io/badge/version-0.9.0--alpha.6-orange?style=flat-square" alt="Version"/>
 </p>
 
 <br>
 
 <div align="center">
 
-| 2,605 | 1 | 5 | 20+ |
+| 2,816 | 1 | 5 | 31 |
 |:-----:|:-:|:-:|:----:|
-| **Tests Passing** | **Runtime Dependency** | **Pipeline Phases** | **Desktop Apps** |
+| **Tests Passing** | **Runtime Dep** | **Pipeline Phases** | **Desktop Apps** |
 
 </div>
 
@@ -48,25 +44,261 @@
 > [!CAUTION]
 > **PRE-ALPHA SOFTWARE — USE AT YOUR OWN RISK**
 >
-> NekoCore OS is in **pre-alpha**. All subsystems — including entity orchestration, blueprint-driven
-> project execution, sandboxed code execution, the Memory Architect (MA) AI coding assistant,
-> self-repair/diagnostics, the failsafe console, resource manager, bug tracker, smart port management,
-> and server-to-server MA integration — are **functional but not yet battle-tested**.
->
-> There are **2,505 passing unit tests** covering these features, but they have **not been
-> stress-tested in production environments**. APIs, data formats, and behaviour may change
-> without notice between releases.
+> NekoCore OS is in **pre-alpha**. All subsystems are **functional but not yet battle-tested**.
+> APIs, data formats, and behaviour may change without notice between releases.
 >
 > **Before experimenting:** back up your `entities/` and `memories/` folders.
-> Report issues via GitHub Issues — contributions and feedback are welcome.
 >
-> **Python is NOT required to run NekoCore.** The only runtime dependency is Node.js 18+.
-> Python 3 is used *only* by the optional self-repair fixer script (`neko_fixer.py`) — a standalone
-> emergency rebuild tool generated on demand. It uses only the Python 3 standard library.
+> **Python is NOT required.** The only runtime dependency is Node.js 18+.
 
 <br>
 
+> *"A system that stores interaction history but applies no policy about which part of the past should govern current behavior is not a continuity architecture — it is a log browser."*
+
 > **Core conviction:** an entity should be shaped by what it has experienced, not only by what it was told on day one.
+
+---
+
+## 📸 Screenshots
+
+<!-- ╔══════════════════════════════════════════════════════════════════╗
+     ║  HOW TO ADD SCREENSHOTS:                                       ║
+     ║                                                                 ║
+     ║  1. Take screenshots at 1920×1080 or higher                    ║
+     ║  2. Save them to: project/assets/screenshots/                  ║
+     ║  3. Replace the placeholder src paths below                    ║
+     ║  4. Delete the "placeholder" alt text suffix                   ║
+     ║                                                                 ║
+     ║  Active screenshots:                                            ║
+     ║  • os-web-browser.png   — Full OS running in browser           ║
+     ║  • os-desktop-hybrid.png — Pop-out desktop hybrid mode         ║
+     ║  • dream-gallery.png    — Dream narratives + replay            ║
+     ║  • visualizer-3d.png    — WebGL neural cognitive graph         ║
+     ║  • bug-tracker.png      — Bug tracker with screenshots         ║
+     ║  • qa-checklist.png     — QA checklist progress view           ║
+     ║  • physical-neurochem.png — Neurochemistry gauges              ║
+     ║  • profiler.png         — Pipeline profiler breakdown          ║
+     ║                                                                 ║
+     ║  Commented out (uncomment when ready):                          ║
+     ║  • memory-browser.png   — Episodic/semantic echo browser       ║
+     ║  • belief-graph.png     — Emergent belief inspection           ║
+     ║  • ma-ide.png           — Memory Architect browser IDE         ║
+     ╚══════════════════════════════════════════════════════════════════╝ -->
+
+<h3 align="center">NekoCore OS — Web Browser</h3>
+<p align="center">
+  <em>The full cognitive desktop running in your browser — entity chat, Start menu, taskbar, and 31 windowed apps.</em>
+</p>
+<p align="center">
+  <picture>
+    <img src="project/assets/screenshots/os-web-browser.png" width="900" alt="NekoCore OS running in web browser"/>
+  </picture>
+</p>
+
+<br>
+
+<h3 align="center">Entity Chat & Identity</h3>
+<p align="center">
+  <em>Entity profile with personality traits and active skills alongside live cognitive chat.</em>
+</p>
+<p align="center">
+  <picture>
+    <img src="project/assets/screenshots/chat-interface.png" width="900" alt="NekoCore OS entity chat and identity"/>
+  </picture>
+</p>
+
+<br>
+
+<!-- COMMENTED OUT — screenshot not yet available
+<h3 align="center">NekoCore OS — Pop-Out Desktop Hybrid</h3>
+<p align="center">
+  <em>The same OS popped out as a standalone window — native desktop feel with full browser engine underneath.</em>
+</p>
+<p align="center">
+  <picture>
+    <img src="project/assets/screenshots/os-desktop-hybrid.png" width="900" alt="NekoCore OS in pop-out desktop hybrid mode"/>
+  </picture>
+</p>
+-->
+
+<br>
+
+<!-- ╔═══════════════════════════════════════════════════════════════╗
+     ║  COMMENTED OUT — Uncomment when screenshots are ready        ║
+     ╚═══════════════════════════════════════════════════════════════╝
+
+<table>
+<tr>
+<td width="50%">
+
+<h3 align="center">Memory Browser</h3>
+<p align="center"><em>Episodic, semantic, and long-term echoes with salience scores.</em></p>
+<p align="center">
+  <picture>
+    <img src="project/assets/screenshots/memory-browser.png" width="440" alt="Memory browser"/>
+  </picture>
+</p>
+
+</td>
+<td width="50%">
+
+<h3 align="center">Belief Graph</h3>
+<p align="center"><em>Emergent beliefs with confidence weights and source echoes.</em></p>
+<p align="center">
+  <picture>
+    <img src="project/assets/screenshots/belief-graph.png" width="440" alt="Belief graph"/>
+  </picture>
+</p>
+
+</td>
+</tr>
+</table>
+
+-->
+
+<table>
+<tr>
+<td width="50%" valign="top">
+
+<h3 align="center">╱╱ Neural Cognitive Graph</h3>
+
+<p align="center">
+  <strong>See what your entity is thinking.</strong>
+</p>
+
+<p align="center">
+Every pipeline phase fires a pulse through the 3D WebGL graph — memory retrieval, dream associations, conscious reasoning, and final voicing all light up as distinct node clusters in real time.
+</p>
+
+<p align="center">
+  ◇ <strong>Live SSE events</strong> drive node activation<br>
+  ◇ <strong>Edge weights</strong> reflect memory topology connections<br>
+  ◇ <strong>Color channels</strong> map to pipeline phases<br>
+  ◇ <strong>Rotate, zoom, inspect</strong> — full Three.js interaction
+</p>
+
+</td>
+<td width="50%">
+
+<h3 align="center">3D Neural Visualizer</h3>
+<p align="center"><em>WebGL cognitive graph — nodes pulse with live pipeline events.</em></p>
+<p align="center">
+  <picture>
+    <img src="project/assets/screenshots/visualizer-3d.png" width="440" alt="3D neural visualizer"/>
+  </picture>
+</p>
+
+</td>
+</tr>
+</table>
+
+<br>
+
+<table>
+<tr>
+<td width="50%">
+
+<h3 align="center">QA Checklist & Bug Tracker</h3>
+<p align="center"><em>625-item QA checklist with pass/fail tracking alongside the bug tracker with severity and export.</em></p>
+<p align="center">
+  <picture>
+    <img src="project/assets/screenshots/bug-tracker.png" width="440" alt="Bug tracker"/>
+  </picture>
+</p>
+
+</td>
+<td width="50%" valign="top">
+
+<h3 align="center">╱╱ Quality & Issue Tracking</h3>
+
+<p align="center">
+  <strong>Ship with confidence.</strong>
+</p>
+
+<p align="center">
+The QA Checklist covers <strong>625 test items</strong> across <strong>61 sections</strong> — every subsystem, every edge case, with pass/fail/untested state and persistent progress tracking.
+</p>
+
+<p align="center">
+  ◇ <strong>Bug Tracker</strong> with screenshot capture + severity + Markdown export<br>
+  ◇ <strong>Progress bars</strong> and per-section completion counts<br>
+  ◇ <strong>Save/load</strong> results as JSON for CI or manual QA runs<br>
+  ◇ <strong>Filter</strong> by pass, fail, or untested across all sections
+</p>
+
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+<h3 align="center">Physical / Neurochemistry</h3>
+<p align="center"><em>Real-time dopamine, cortisol, serotonin, and oxytocin levels shaping entity mood and tone.</em></p>
+<p align="center">
+  <picture>
+    <img src="project/assets/screenshots/physical-neurochem.png" width="440" alt="Physical and neurochemistry panel"/>
+  </picture>
+</p>
+
+</td>
+<td width="50%">
+
+<h3 align="center">Profiler</h3>
+<p align="center"><em>Pipeline timing, token usage, and per-phase performance breakdown.</em></p>
+<p align="center">
+  <picture>
+    <img src="project/assets/screenshots/profiler.png" width="440" alt="Profiler panel"/>
+  </picture>
+</p>
+
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+<h3 align="center">Start Menu & App Launcher</h3>
+<p align="center"><em>31 desktop apps organized by category — search, pin, and launch from one place.</em></p>
+<p align="center">
+  <picture>
+    <img src="project/assets/screenshots/start-menu-apps.png" width="440" alt="NekoCore OS start menu and app launcher"/>
+  </picture>
+</p>
+
+</td>
+<td width="50%" valign="top">
+
+<h3 align="center">╱╱ 31 Desktop Applications</h3>
+
+<p align="center">
+  <strong>A full operating system, not just a chatbot.</strong><br>
+  Every app runs in its own draggable, resizable window with minimize, maximize, snap-dock, and pop-out support.
+</p>
+
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
+
+<h3 align="center">╱╱ Memory Architect (MA)</h3>
+
+<p align="center">
+  <strong>A full AI coding assistant — inside the OS.</strong><br>
+  Built-in browser IDE with blueprint execution, agent delegation, deep research, and workspace management.
+</p>
+
+</td>
+<td width="50%">
+
+<h3 align="center">Memory Architect — Browser IDE</h3>
+<p align="center"><em>Blueprint execution, file explorer, chat, and terminal in one window.</em></p>
+<p align="center">
+  <picture>
+    <img src="project/assets/screenshots/ma-ide.png" width="440" alt="Memory Architect IDE running inside NekoCore OS"/>
+  </picture>
+</p>
+
+</td>
+</tr>
+</table>
 
 ---
 
@@ -75,72 +307,82 @@
 <table>
 <tr>
 <td width="33%" valign="top">
-<strong>🧠 Episodic Memory</strong><br><br>
-<em>Echoes</em> — structured memory fragments across three tiers (episodic, semantic, long-term) with salience decay curves, reinforcement on recall, and automatic divergence repair between index and disk.
+
+### 🧠 Episodic Memory
+*Echoes* — structured memory fragments across three tiers (episodic, semantic, long-term) with salience decay curves, reinforcement on recall, and automatic divergence repair.
+
 </td>
 <td width="33%" valign="top">
-<strong>🌙 Dream Processing</strong><br><br>
-Phase 1D dream-intuition runs concurrently with every conversation turn. Offline REM sleep consolidates memory, updates beliefs, and generates dream narratives — all viewable in the Dream Gallery.
+
+### 🌙 Dream Processing
+Phase 1D dream-intuition runs concurrently with every turn. Offline REM sleep consolidates memory, updates beliefs, and generates dream narratives.
+
 </td>
 <td width="33%" valign="top">
-<strong>🔮 Belief Graph</strong><br><br>
-Beliefs emerge from memory cross-reference — not hand-authored. Each belief carries a confidence weight and source echoes. New evidence shifts belief strength dynamically across the entity's lifetime.
-</td>
-</tr>
-<tr>
-<td width="33%" valign="top">
-<strong>⚗️ Neurochemistry</strong><br><br>
-Dopamine, cortisol, serotonin, and oxytocin simulate in real time and modulate every response. Graduated mood shift means conversations influence chemistry proportionally to interaction magnitude.
-</td>
-<td width="33%" valign="top">
-<strong>🪪 Entity Hatching</strong><br><br>
-Structured multi-phase birth — name → traits → life history → core memories → goals. <em>Unbreakable Mode</em> locks the origin post-hatch for NPCs and fixed characters that must never drift.
-</td>
-<td width="33%" valign="top">
-<strong>🔌 Skills & Routing</strong><br><br>
-Drop-in function-call plugins with per-phase model routing. Assign different LLMs to 1A, 1D, 1C, and Final. Ollama (local), OpenRouter (cloud), and Anthropic Direct supported out of the box.
+
+### 🔮 Belief Graph
+Beliefs emerge from memory cross-reference — not hand-authored. Each carries a confidence weight and source echoes. New evidence shifts strength dynamically.
+
 </td>
 </tr>
 <tr>
 <td width="33%" valign="top">
-<strong>⚡ Token Optimization</strong><br><br>
-Hybrid router classifies simple turns and serves template responses without touching the LLM pipeline. NLP memory encoding, prompt compression, and semantic caching cut ~68% of per-turn token usage.
+
+### ⚗️ Neurochemistry
+Dopamine, cortisol, serotonin, and oxytocin simulate in real time and modulate every response. Graduated mood shift proportional to interaction magnitude.
+
 </td>
 <td width="33%" valign="top">
-<strong>🧬 Cognitive State</strong><br><br>
-Pre-turn snapshot assembles beliefs, goals, mood, diary, and curiosity into the Subconscious prompt. Post-turn feedback reinforces beliefs, tracks goals, resolves curiosity, and nudges neurochemistry.
+
+### 🪪 Entity Hatching
+Structured multi-phase birth — name → traits → life history → core memories → goals. *Unbreakable Mode* locks the origin post-hatch for fixed characters.
+
 </td>
 <td width="33%" valign="top">
-<strong>📋 Task Orchestration</strong><br><br>
-Slash commands (<code>/task</code>, <code>/skill</code>, <code>/project</code>, <code>/websearch</code>, <code>/ma</code>) dispatch structured work. The Frontman bridge translates worker progress into entity-voice milestone messages.
-</td>
-</tr>
-<tr>
-<td width="33%" valign="top">
-<strong>🏗️ Memory Architect (MA)</strong><br><br>
-Built-in AI coding assistant with a full browser IDE, blueprint-driven project execution, agent delegation, deep research, terminal access, and workspace management. Ships with full blueprints for two companion projects: REM System Core and NekoCore Cognitive Mind.
-</td>
-<td width="33%" valign="top">
-<strong>🐛 Developer Tools</strong><br><br>
-Bug Tracker with screenshot capture, severity tracking, and Markdown report export. Resource Manager for entity active resource and task/project tracking. Both ship as desktop apps inside the OS.
-</td>
-<td width="33%" valign="top">
-<strong>🔌 Smart Port Management</strong><br><br>
-Auto-detects port conflicts, identifies running instances (NekoCore OS vs MA), and prompts before spawning duplicates. Power users can run multiple servers simultaneously on fallback ports.
+
+### 🔌 Skills & Routing
+Drop-in function-call plugins with per-phase model routing. Assign different LLMs to 1A, 1D, 1C, and Final. Ollama, OpenRouter, and Anthropic Direct supported.
+
 </td>
 </tr>
 <tr>
 <td width="33%" valign="top">
-<strong>🔗 Predictive Memory</strong><br><br>
-Memory topology with shape classification, edge graphs, activation propagation, and dream reconsolidation. Echo Future predicts relevant memories before they're needed. Belief-linked activation boosts retrieval.
+
+### ⚡ Token Optimization
+Hybrid router, NLP memory encoding, prompt compression, and semantic caching cut **~68%** of per-turn token usage across four optimization phases.
+
 </td>
 <td width="33%" valign="top">
-<strong>🔑 Anthropic Direct</strong><br><br>
-Native Anthropic Messages API with prompt caching (up to 90% input-token savings), extended thinking, native tool use, and provider-agnostic capability layer. MA and NekoCore both support all three providers.
+
+### 🧬 Cognitive State
+Pre-turn snapshot assembles beliefs, goals, mood, diary, and curiosity. Post-turn feedback reinforces beliefs, tracks goals, resolves curiosity, and nudges neurochemistry.
+
 </td>
 <td width="33%" valign="top">
-<strong>✅ QA Checklist</strong><br><br>
-625 test items across 61 sections covering the full OS + MA surface. Pass/Fail buttons per item — failures auto-open Bug Tracker with pre-filled details. Progress tracking, filtering, and JSON export/import.
+
+### 📋 Task Orchestration
+Slash commands (`/task`, `/skill`, `/project`, `/websearch`, `/ma`) dispatch structured work. The Frontman bridge translates progress into entity-voice messages.
+
+</td>
+</tr>
+<tr>
+<td width="33%" valign="top">
+
+### 🏗️ Memory Architect
+Built-in AI coding assistant with browser IDE, blueprint-driven project execution, agent delegation, deep research, terminal access, and workspace management.
+
+</td>
+<td width="33%" valign="top">
+
+### 🔗 Predictive Memory
+Memory topology with shape classification, edge graphs, activation propagation, and dream reconsolidation. Echo Future predicts relevant memories before needed.
+
+</td>
+<td width="33%" valign="top">
+
+### 🔑 Anthropic Direct
+Native Anthropic Messages API with prompt caching (up to 90% savings), extended thinking, native tool use, and provider-agnostic capability layer.
+
 </td>
 </tr>
 </table>
@@ -159,213 +401,180 @@ Native Anthropic Messages API with prompt caching (up to 90% input-token savings
 └──────┴──────────────────────┴─────────────────────────────────────┘
 ```
 
-| Layer | Component | Role |
-|-------|-----------|------|
-| L5 | Final Orchestrator | Personality, neurochemistry, response refinement |
-| L4 | Conscious (1C) | Reasoning with full memory + dream context |
-| L3 | Dream-Intuition (1D) | Abstract associations, runs in parallel with 1A |
-| L2 | Subconscious (1A) | Memory retrieval, context block assembly |
-| L1 | Brain Loop | Background ticker — decay, consolidation, REM trigger |
+### Cognitive Pipeline
 
-See [docs/NEKOCORE-OS-WHITE-PAPER-v2.md](docs/NEKOCORE-OS-WHITE-PAPER-v2.md) for the full identity model and cognitive pipeline deep-dive, or [docs/NEKOCORE-OS-ARCHITECTURE-v1.md](docs/NEKOCORE-OS-ARCHITECTURE-v1.md) for subsystem contracts and file map.
+```mermaid
+flowchart TD
+    A["🎤 User Input"] --> B{"Turn Classifier\n(hybrid router)"}
+    B -->|Simple| C["⚡ Template Response"]
+    B -->|Complex| D["Phase 1A\n🧠 Subconscious\nmemory retrieval"]
+    B -->|Complex| E["Phase 1D\n🌙 Dream-Intuition\nabstract associations"]
+    D --> F["Phase 1C\n💭 Conscious\nreasoning · full context"]
+    E --> F
+    F --> G["Final Orchestrator\n🎭 Voicing\npersonality · neurochemistry"]
+    C --> H["💬 Response → User"]
+    G --> H
+    H -.->|async| I["📝 NLP Memory Encoding\n🔄 Cognitive Feedback\n💕 Relationship Update"]
 
----
-
-## ⟶ Cognitive Pipeline
-
-```
-                    User Input
-                        │
-                   Turn Classifier
-                   (hybrid router)
-                        │
-              ┌─────────┴─────────┐
-              │                   │
-         simple turn         complex turn
-              │                   │
-      template response    ┌──────┴──────┐
-              │            ▼             ▼
-              │    Phase 1A        Phase 1D
-              │    (Subconscious)  (Dream-Intuition)
-              │    memory retrieval   abstract associations
-              │            │             │
-              │            └──────┬──────┘
-              │                   │  Promise.all()
-              │                   ▼
-              │         Phase 1C (Conscious)
-              │         reasoning · full context
-              │                   │
-              │                   ▼
-              │        Final Orchestrator (voicing)
-              │        personality · neurochemistry
-              │                   │
-              └─────────┬─────────┘
-                        │
-                        ▼
-                 Response → User
-                        │
-                        ▼  async, non-blocking
-             NLP Memory Encoding
-             Cognitive Feedback Loop
-             Relationship Update
+    style A fill:#fbbf24,stroke:#92400e,color:#000
+    style B fill:#1a1726,stroke:#8b5cf6,color:#e8e4f0
+    style C fill:#1a1726,stroke:#34d399,color:#34d399
+    style D fill:#1a1726,stroke:#34d399,color:#34d399
+    style E fill:#1a1726,stroke:#22d3ee,color:#22d3ee
+    style F fill:#1a1726,stroke:#ec4899,color:#ec4899
+    style G fill:#1a1726,stroke:#8b5cf6,color:#8b5cf6
+    style H fill:#fbbf24,stroke:#92400e,color:#000
+    style I fill:#1a1726,stroke:#6b6280,color:#9d95b0
 ```
 
 ### Brain Loop
 
 The brain loop ticks independently of conversation:
 
-- **Memory consolidation** — decay tick, LTM compression, index sync
-- **Belief formation** — scan recent echoes for cross-referencing patterns
-- **Goal review** — assess progress against exploration goals
-- **Curiosity engine** — track open questions, mark resolved when addressed
-- **REM sleep trigger** — schedules sleep cycles when the entity is idle
-- **Neurochemistry drift** — baseline levels drift back toward resting state
-- **Somatic awareness** — energy, discomfort, arousal, valence state updates
+```mermaid
+flowchart LR
+    subgraph BrainLoop["🔄 Brain Loop — Background Ticker"]
+        direction LR
+        M["Memory\nConsolidation"] --> BF["Belief\nFormation"]
+        BF --> GR["Goal\nReview"]
+        GR --> CE["Curiosity\nEngine"]
+        CE --> RS["REM Sleep\nTrigger"]
+        RS --> ND["Neurochemistry\nDrift"]
+        ND --> SA["Somatic\nAwareness"]
+        SA --> M
+    end
+
+    style BrainLoop fill:#0e0c15,stroke:#2a2540,color:#e8e4f0
+    style M fill:#1a1726,stroke:#8b5cf6,color:#8b5cf6
+    style BF fill:#1a1726,stroke:#ec4899,color:#ec4899
+    style GR fill:#1a1726,stroke:#34d399,color:#34d399
+    style CE fill:#1a1726,stroke:#22d3ee,color:#22d3ee
+    style RS fill:#1a1726,stroke:#fbbf24,color:#fbbf24
+    style ND fill:#1a1726,stroke:#fb7185,color:#fb7185
+    style SA fill:#1a1726,stroke:#8b5cf6,color:#8b5cf6
+```
 
 ---
 
-## ◈ Built On Convictions
+## 📊 Project Metrics
 
-> **Experience over instruction** — memory shaped by what is lived, not scripted on day one.
+### Test Suite Growth
 
-> **Layered cognition** — subconscious, dream-intuition, and conscious phases run in formation; parallel where it counts, sequential where it must.
+```mermaid
+xychart-beta
+    title "Test Suite Growth by Phase"
+    x-axis ["Phase 3", "4.0", "4.8", "4.16", "4.24", "Phase 5"]
+    y-axis "Passing Tests" 0 --> 3000
+    bar [866, 950, 1200, 2012, 2247, 2816]
+```
 
-> **Near-zero dependencies** — the entire runtime is pure Node.js (no Express, no frameworks) with a single dependency: [Zod](https://zod.dev) for schema validation. No vector database. No external SDKs. File-system JSON persistence. Run `npm install` once and you're set.
+### Token Optimization — ~68% Reduction
 
-> **Open architecture** — every subsystem is observable via the SSE cognitive bus. Nothing the entity thinks is hidden from the developer.
+Each phase stacks on the last, progressively eliminating unnecessary LLM calls and token waste:
 
----
+| Phase | Strategy | Savings Per Turn | Applies To |
+|:-----:|----------|:----------------:|:----------:|
+| **1** | NLP memory encoding + reranker bypass | **~2,700 tokens** | All turns |
+| **2** | Hybrid router diverts simple turns | **~15,000 tokens** | ~60% of casual turns |
+| **3** | Prompt compression across all 4 nodes | **~4,700–9,300 tokens** | All complex turns |
+| **4** | Semantic cache for similar inputs | **~16,000 tokens** | Cache hits |
 
-## ◫ Technical Specification
+```mermaid
+xychart-beta
+    title "Tokens Saved Per Turn by Optimization Phase"
+    x-axis ["Phase 1: NLP", "Phase 2: Router", "Phase 3: Compress", "Phase 4: Cache"]
+    y-axis "Tokens Saved" 0 --> 18000
+    bar [2700, 15000, 7000, 16000]
+```
 
-| Capability | Detail |
-|---|---|
-| **Runtime** | Pure Node.js 18+ — one dependency (Zod), no Express, no frameworks |
-| **Persistence** | File-system JSON — no database required |
-| **Memory types** | Episodic · Semantic · Long-Term (compressed chatlog chunks) |
-| **Pipeline phases** | 1A (subconscious) · 1D (dream) · 1C (conscious) · Final · Brain Loop |
-| **LLM support** | Ollama (local) · OpenRouter · Anthropic Direct · Any OpenAI-compatible endpoint |
-| **Auth** | Account system with session token management |
-| **Realtime** | SSE cognitive bus — all pipeline events streamed to the browser |
-| **Visualizer** | Three.js WebGL 3D neural node graph — live cognitive bus events |
-| **Memory topology** | Shape classification · Edge graphs · Activation propagation · Dream reconsolidation |
-| **Skills** | Drop-in function-call plugins: web search, memory tools, workspace ops |
-| **Test suite** | 2,505 passing — unit + integration (Node built-in `--test` runner) |
-| **Installer** | Contract-driven app install/uninstall with rollback and file lifecycle |
-
-### Memory System
+### Memory Architecture
 
 | Layer | Type | Decay | Contents |
-|-------|------|-------|----------|
-| Episodic | JSON echo files | Yes (salience curve) | Specific events and interactions |
-| Semantic | JSON echo files | Slower | Concepts, facts, generalizations |
-| Long-Term | Compressed chatlog chunks | No | Full conversation history (chunked) |
-| Context | Assembled `.md` file | Rebuilt each turn | Ranked retrieval block sent to LLM |
+|:------|:-----|:-----:|:---------|
+| **Episodic** | JSON echo files | ✓ Salience curve | Specific events and interactions |
+| **Semantic** | JSON echo files | ✓ Slower | Concepts, facts, generalizations |
+| **Long-Term** | Compressed chatlog chunks | ✗ | Full conversation history (chunked) |
+| **Context** | Assembled `.md` file | Rebuilt each turn | Ranked retrieval block sent to LLM |
 
-### Neurochemistry
+```mermaid
+pie title Memory Tier Distribution
+    "Episodic (active recall)" : 40
+    "Semantic (concepts)" : 25
+    "Long-Term (compressed)" : 25
+    "Context (rebuilt/turn)" : 10
+```
 
-| Chemical | High State | Low State | Influence |
-|----------|-----------|-----------|-----------|
-| Dopamine | Energetic, curious | Flat, disengaged | Drive, curiosity tone |
-| Cortisol | Guarded, stressed | Relaxed, open | Caution, defensive phrasing |
-| Serotonin | Stable, warm | Unstable, irritable | Emotional baseline |
-| Oxytocin | Warm, connected | Detached | Social tone, relational warmth |
+### Neurochemistry Engine
 
-### Somatic State
+| Chemical | High State | Low State | Modulates |
+|:---------|:-----------|:----------|:----------|
+| ⚡ **Dopamine** | Energetic, curious | Flat, disengaged | Drive & curiosity tone |
+| 🛡️ **Cortisol** | Guarded, stressed | Relaxed, open | Caution & defensive phrasing |
+| ☀️ **Serotonin** | Stable, warm | Unstable, irritable | Emotional baseline |
+| 💜 **Oxytocin** | Warm, connected | Detached | Social tone & relational warmth |
 
-| Signal | Effect |
-|--------|--------|
-| Energy level | Affects verbosity and enthusiasm |
-| Discomfort | Increases cortisol, triggers hedging |
-| Arousal | Heightens focus and response detail |
-| Valence | Overall positive/negative emotional tone |
+### Pipeline Token Budget
 
-### Cognitive Bus (SSE)
-
-| Event | Description |
-|-------|-------------|
-| `1a_start` / `1a_done` | Subconscious phase markers |
-| `1d_start` / `1d_done` | Dream-intuition phase markers |
-| `1c_start` / `1c_done` | Conscious phase markers |
-| `final_start` / `final_done` | Final orchestrator pass markers |
-| `orchestration_complete` | Full pipeline finished — includes token counts |
-| `turn_classified` | Hybrid router classification result |
-| `cache_hit` | Semantic cache hit — cached response reused |
-| `cognitive_snapshot_assembled` | Pre-turn cognitive state snapshot built |
-| `belief_feedback_applied` | Belief reinforced or contradicted post-turn |
-| `goal_status_changed` | Goal progress detected post-turn |
-| `curiosity_resolved` | Curiosity question addressed post-turn |
-| `mood_nudge_applied` | Neurochemistry nudged by interaction magnitude |
-| `memory_write` | Echo newly encoded |
-| `belief_update` | Belief created or reinforced |
-| `chemistry_update` | Neurochemical state delta |
-| `relationship_update` | User relationship record updated |
-| `sleep_start` / `sleep_done` | REM cycle boundaries |
-| `dream_fragment` | Dream narrative fragment emitted |
-| `task_milestone` | Task orchestration step completed |
-| `task_complete` / `task_error` | Task lifecycle events |
+```mermaid
+pie title Estimated Per-Turn Token Allocation
+    "Subconscious (1A)" : 30
+    "Conscious (1C)" : 35
+    "Final Orchestrator" : 20
+    "Dream-Intuition (1D)" : 10
+    "Brain Loop" : 5
+```
 
 ---
 
-## ◉ Roadmap
+## ⟶ Development Roadmap
 
+All **35 phases** complete — from initial bug fixes to predictive memory topology:
+
+```mermaid
+timeline
+    title NekoCore OS Development Phases
+    section Foundation
+        Phase 1  : Bug Fixes
+        Phase 2  : Refactor / Cleanup
+        Phase 3  : Full App Modularization (866 tests)
+        Phase 4  : Feature Foundation
+    section Memory & Cognition
+        Phase 4.5  : Intelligent Memory Expansion
+        Phase 4.6  : Slash Command System
+        Phase 4.7  : HTML Shadow Cleanup
+        Phase 4.8  : Cognitive State + Token Optimization (~68% reduction)
+    section Orchestration
+        Phase 4.9   : Task Orchestration (MTOA)
+        Phase 4.10  : Entity Orchestration
+        Phase 4.11  : Blueprint System
+        Phase 4.12  : Coding Skill + Project Executor
+    section Resilience
+        Phase 4.13 : Health Scanner + Fixer Generator
+        Phase 4.14 : Sandboxed Code Execution
+        Phase 4.15 : BIOS + Failsafe (300 registry entries)
+        Phase 4.16 : Self-Repair Skill (2,012 tests)
+    section Expansion
+        Phase 4.17 : OS Tool Upgrade
+        Phase 4.18 : Entity Genesis Skill
+        Phase 4.19 : MA Bridge
+        Phase 4.20 : Bug Tracker App
+        Phase 4.21 : Resource Manager App
+        Phase 4.22 : Smart Port Management
+    section Polish
+        Phase 4.23 : User Documentation (24 sections)
+        Phase 4.24 : MA Public Release (2,247 tests)
+        Phase 4.25 : Provider-Agnostic Capabilities
+        Phase 4.26 : QA Checklist (625 items)
+    section Intelligence
+        Phase 4.27 : MA Skills GUI
+        Phase 4.28 : Prompt Engineering Blueprint
+        Phase 4.29 : App Builder Blueprint
+        Phase 4.30 : Blueprint Builder Meta-Blueprint
+        Phase 4.31 : D&D + Study Blueprints
+        Phase 4.32 : Book-to-Entity Ingestion
+        Phase 4.33 : Bug Tracker Export
+        Phase 5   : Predictive Memory Topology (2,816 tests)
 ```
-✔  Phase 1     Bug Fixes                       Complete
-✔  Phase 2     Refactor / Cleanup              Complete
-✔  Phase 3     Full App Modularization         Complete  (866 tests, 0 fail)
-✔  Phase 4     Feature Foundation              Complete
-✔  Phase 4.5   Intelligent Memory Expansion    Complete
-✔  Phase 4.6   Slash Command System            Complete  (A0–A2; A3/A4 future)
-✔  Phase 4.7   HTML Shadow Cleanup             Complete  (guard-first refactor)
-✔  Phase 4.8   Cognitive State Integration     Complete  (4 phases, 14 slices)
-✔  Phase 4.8   Token Optimization              Complete  (Phases 1–4, ~68% reduction)
-✔  Phase 4.9   Task Orchestration (MTOA)       Complete  (T-1 → T-7)
-✔  Phase 4.10  Entity Orchestration            Complete  (E-0 → E-7)
-✔  Phase 4.11  Blueprint System                Complete
-✔  Phase 4.12  Coding Skill + Project Executor Complete
-✔  Phase 4.13  Health Scanner + Fixer Generator Complete  (self-repair chain)
-✔  Phase 4.14  Sandboxed Code Execution        Complete  (cmd_run tool)
-✔  Phase 4.15  BIOS Completeness + Failsafe    Complete  (300 registry entries)
-✔  Phase 4.16  Self-Repair Skill               Complete  (2,012 tests, 0 fail)
-✔  Phase 4.17  OS Tool Upgrade                 Complete  (workspace-tools expansion)
-✔  Phase 4.18  Entity Genesis Skill            Complete  (multi-round entity creation)
-✔  Phase 4.19  MA Bridge                       Complete  (/ma slash command, auto-boot)
-✔  Phase 4.20  Bug Tracker App                 Complete  (screenshots, severity, export)
-✔  Phase 4.21  Resource Manager App            Complete  (task/project tracking)
-✔  Phase 4.22  Smart Port Management           Complete  (port-guard for all servers)
-✔  Phase 4.23  User Documentation              Complete  (24-section user guide)
-✔  Phase 4.24  MA Public Release               Complete  (2,247 tests, factory reset)
-✔  Phase 4.25  Provider-Agnostic Capabilities  Complete  (Anthropic direct, native tools)
-✔  Phase 4.26  QA Checklist App                Complete  (625 test items, 61 sections)
-✔  Phase 4.27  MA Skills GUI                   Complete  (auto-pickup + Skills tab)
-✔  Phase 4.28  Prompt Engineering Blueprint     Complete  (6 modes)
-✔  Phase 4.29  App Builder Blueprint + Skill    Complete  (4 app modes, 7-phase workflow)
-✔  Phase 4.30  Blueprint Builder Meta-Blueprint Complete  (self-extending MA)
-✔  Phase 4.31  D&D + Study Blueprints           Complete  (5 task types, 111 tests)
-✔  Phase 4.32  Book-to-Entity Ingestion         Complete  (7 slices, character extraction)
-✔  Phase 4.33  Bug Tracker Export               Complete  (Markdown + native file picker)
-✔  Phase 5     Predictive Memory Topology      Complete  (13 slices, 2,605 tests)
-```
-
-**Token Optimization** eliminated ~68% of per-turn token usage across 4 phases:
-- **Phase 1** — NLP memory encoding + reranker bypass (~2,700 tokens/turn saved)
-- **Phase 2** — Hybrid router diverts simple turns away from the full pipeline (~15K tokens/turn for ~60% of casual turns)
-- **Phase 3** — Prompt compression across all 4 pipeline nodes (~4,700–9,300 tokens/turn)
-- **Phase 4** — Semantic cache for similar inputs (~16K tokens on cache hits)
-
-**Cognitive State Integration** gives entities live inner life that evolves through conversation:
-- Pre-turn cognitive snapshot (beliefs, goals, mood, diary, curiosity) injected into the Subconscious prompt
-- Post-turn feedback loop (belief reinforcement, goal tracking, curiosity resolution, mood signals)
-- Graduated mood shift — conversations nudge neurochemistry proportionally to interaction magnitude
-- Full SSE observability for all cognitive state changes
-
----
-
-## ⬡ Why NekoCore? Why Open Source?
-
-> Right now, AI feels like the moment the wheel was invented. But instead of building cars, most people are still waiting for a bigger, better wheel. We have barely begun to explore what we can build with what already exists.
->
-> NekoCore exists because I wanted to see what I could build with this new wheel. I open-sourced it because I want to see what you can do with more!
 
 ---
 
@@ -373,28 +582,34 @@ The brain loop ticks independently of conversation:
 
 ### Prerequisites
 
-- Node.js 18+ *(the only runtime requirement)*
-- An LLM provider — [Ollama](https://ollama.ai) (local), [OpenRouter](https://openrouter.ai), or [Anthropic](https://console.anthropic.com) API key
-- Python 3 — **not required**. Only used by the optional `neko_fixer.py` self-repair script
+- **Node.js 18+** — the only runtime requirement
+- **An LLM provider** — [Ollama](https://ollama.ai) (local), [OpenRouter](https://openrouter.ai), or [Anthropic](https://console.anthropic.com) API key
+- **Python 3** — NOT required. Only used by the optional `neko_fixer.py` emergency tool
 
-### Clone & Start
+### Quick Start
 
 ```bash
+# 1. Clone
 git clone https://github.com/voardwalker-code/NekoCore-OS.git
+
+# 2. Install (one dependency: Zod)
 cd NekoCore-OS/project
 npm install
+
+# 3. Launch
 npm start
 ```
 
-Open `http://localhost:3847` in your browser.
+Open **`http://localhost:3847`** in your browser.
 
-### Configure
+### Configure Your LLM Provider
 
 ```bash
 cp Config/ma-config.example.json Config/ma-config.json
 ```
 
-**Ollama (local):**
+<details>
+<summary><b>Ollama (local)</b></summary>
 
 ```json
 {
@@ -404,7 +619,10 @@ cp Config/ma-config.example.json Config/ma-config.json
 }
 ```
 
-**OpenRouter (cloud):**
+</details>
+
+<details>
+<summary><b>OpenRouter (cloud)</b></summary>
 
 ```json
 {
@@ -414,7 +632,10 @@ cp Config/ma-config.example.json Config/ma-config.json
 }
 ```
 
-**Anthropic Direct:**
+</details>
+
+<details>
+<summary><b>Anthropic Direct</b></summary>
 
 ```json
 {
@@ -424,24 +645,22 @@ cp Config/ma-config.example.json Config/ma-config.json
 }
 ```
 
-The server port (default 3847) is not set in the config file — it uses `PORT` environment variable or the built-in default. If the port is busy, the server identifies what's running and offers to start on the next available port.
+</details>
 
-### Recommended Multi-Phase Setup
+### Recommended Multi-Phase Model Routing
 
 Route each pipeline phase to a specialized model for best results:
 
-| Phase | Model | Why |
-|-------|-------|-----|
-| main / conscious (1C) | `inception/mercury-2` | Fast, strong reasoning |
-| subconscious (1A) | `inception/mercury-2` | Context assembly, memory retrieval |
-| dream (1D) | `google/gemini-2.5-flash` | Abstract association — cheap is fine |
-| background | `google/gemini-2.5-flash` | Brain loop — high frequency |
-| orchestrator (final) | `anthropic/claude-sonnet-4.6` | Final voicing — quality matters |
-
-Any OpenAI-compatible model works. For fully local: set all phases to an Ollama model like `mistral` or `llama3`.
+| Phase | Recommended Model | Why |
+|:------|:------------------|:----|
+| **main / conscious (1C)** | `inception/mercury-2` | Fast, strong reasoning |
+| **subconscious (1A)** | `inception/mercury-2` | Context assembly, memory retrieval |
+| **dream (1D)** | `google/gemini-2.5-flash` | Abstract association — cheap is fine |
+| **background** | `google/gemini-2.5-flash` | Brain loop — high frequency |
+| **orchestrator (final)** | `anthropic/claude-sonnet-4.6` | Final voicing — quality matters |
 
 <details>
-<summary>Full multi-phase profile JSON</summary>
+<summary><b>Full multi-phase profile JSON</b></summary>
 
 ```json
 {
@@ -466,7 +685,7 @@ Any OpenAI-compatible model works. For fully local: set all phases to an Ollama 
 ### Browser UI
 
 | Surface | Description |
-|---------|-------------|
+|:--------|:------------|
 | `/` — Chat | Main entity chat interface |
 | `/` — Memory tab | Browse episodic, semantic, and LTM echoes |
 | `/` — Belief tab | Inspect emergent beliefs |
@@ -479,85 +698,88 @@ Any OpenAI-compatible model works. For fully local: set all phases to an Ollama 
 | `/` — MA Server | Memory Architect control panel |
 | `/visualizer.html` | 3D WebGL neural cognitive state graph |
 
-### Desktop Shell
-
-1. Click the **Start** button for the categorized app launcher.
-2. Pinned apps on the taskbar for one-click launch.
-3. **Users** tab for account actions and logout.
-4. Power control for Sleep, Restart UI, Sign out, or Shut Down Server.
-5. In the Browser app: *Search Web* runs in-app search · *Search Home* returns to history · *Show Results* restores minimized results · *Show Page* focuses the current page.
-
 ### Creating an Entity
 
-1. Open the browser UI.
-2. Click **New Entity**.
-3. Follow the hatching wizard: name → traits → life history → goals.
-4. The entity is ready to chat once hatching completes.
+1. Open the browser UI
+2. Click **New Entity**
+3. Follow the hatching wizard: name → traits → life history → goals
+4. The entity is ready to chat once hatching completes
 
 ### Skills
 
-Skills live in `project/skills/<name>/`. The entity's LLM invokes them via function call syntax. Available by default:
+Skills live in `project/skills/<name>/`. The entity's LLM invokes them via function call syntax:
 
-- `web-search` — searches the web and summarizes results
-- `memory-tools` — query, tag, or reinforce specific memories
-- `search-archive` — search archived conversation history
-- `ws_mkdir` / `ws_move` — workspace file operations
-- `vscode` — VS Code workspace integration
-- `coding` — write, run, test, and debug code projects
-- `python` / `rust` — language-specific programming skills
-- `entity-genesis` — guided multi-round entity creation wizard
-- `self-repair` — diagnose and fix NekoCore's own system (health scanner, fixer generator, failsafe console)
+| Skill | Description |
+|:------|:------------|
+| `web-search` | Search the web and summarize results |
+| `memory-tools` | Query, tag, or reinforce specific memories |
+| `search-archive` | Search archived conversation history |
+| `coding` | Write, run, test, and debug code projects |
+| `entity-genesis` | Guided multi-round entity creation wizard |
+| `self-repair` | Diagnose and fix NekoCore's own system |
+| `python` / `rust` | Language-specific programming skills |
+| `ws_mkdir` / `ws_move` | Workspace file operations |
 
 ### Self-Repair & Failsafe
 
-NekoCore includes a full self-healing chain for disaster recovery:
-
-| Tool | What it does | Requires |
-|------|-------------|----------|
+| Tool | What It Does | Requires |
+|:-----|:-------------|:---------|
 | **Health Scanner** (`node scripts/health-scan.js`) | Scans 300 core files for missing/corrupt entries | Node.js |
 | **Fixer Generator** (`node scripts/generate-fixer.js`) | Produces `neko_fixer.py` — a standalone rebuild script | Node.js |
 | **neko_fixer.py** | Restores missing/corrupt files from embedded DNA hashes | Python 3 (stdlib only) |
 | **Failsafe Console** (`/failsafe.html`) | Zero-dependency emergency WebGUI — auth, LLM setup, chat | Browser |
 
-> **Python is not required to run NekoCore.** The fixer script is an optional emergency tool generated on demand. It uses only the Python 3 standard library — no pip, no packages.
-
 ### Memory Architect (MA)
 
-MA is a built-in AI coding assistant that lives at `project/MA/`. It features a full browser IDE with tabbed editing, syntax highlighting, a built-in terminal, dropdown menus, session management, memory ingest, and theme switching. MA builds entire Node.js projects from blueprints, delegates to specialized agents, runs deep research, and manages a workspace of in-progress builds.
+MA is a built-in AI coding assistant at `project/MA/`. Start it from NekoCore OS via the `/ma` slash command, the Start menu, or standalone:
 
-**Start MA from NekoCore OS:**
-- Use the `/ma` slash command in any entity chat, or
-- Launch the MA Server app from the Start menu
-
-**Start MA standalone:**
 ```bash
-cd project/MA
-npm install
-npm start
+cd project/MA && npm install && npm start
 ```
 
-**Browser GUI highlights:**
-- Dropdown menu bar (File, Edit, View, Terminal, Help)
-- Built-in file editor with syntax highlighting and preview modes
-- Terminal panel for running shell commands
-- Session picker with chat history management
-- Memory ingest with live progress and archive tracking
-- Dark / Light / System theme switching
-- Workspace file tree with collapsible folders
+MA ships with blueprints for two companion projects: **REM System Core** and **NekoCore Cognitive Mind**. See [project/MA/README.md](project/MA/README.md) for the full guide. Also available as a [standalone repo](https://github.com/voardwalker-code/MA-Memory-Architect).
 
-MA ships with blueprints for two companion projects:
-- **REM System Core** — a 26-module memory/cognition server (port 3860)
-- **NekoCore Cognitive Mind** — a 97-module cognitive engine (port 3870)
+---
 
-Both are starter scaffolds with `PROJECT-MANIFEST.json`, `BUILD-ORDER.md`, and `package.json`. MA builds the actual source code from the blueprints.
+## ◧ Cognitive Bus (SSE Events)
 
-See [project/MA/README.md](project/MA/README.md) for the full MA guide.
+All pipeline activity streams over SSE — nothing the entity thinks is hidden from the developer:
 
-MA is also available as a [standalone repository](https://github.com/voardwalker-code/MA-Memory-Architect).
+| Event | Description |
+|:------|:------------|
+| `1a_start` / `1a_done` | Subconscious phase markers |
+| `1d_start` / `1d_done` | Dream-intuition phase markers |
+| `1c_start` / `1c_done` | Conscious phase markers |
+| `final_start` / `final_done` | Final orchestrator markers |
+| `orchestration_complete` | Full pipeline finished (includes token counts) |
+| `turn_classified` | Hybrid router classification result |
+| `cache_hit` | Semantic cache hit — cached response reused |
+| `memory_write` | Echo newly encoded |
+| `belief_update` | Belief created or reinforced |
+| `chemistry_update` | Neurochemical state delta |
+| `sleep_start` / `sleep_done` | REM cycle boundaries |
+| `dream_fragment` | Dream narrative fragment emitted |
 
-### Telegram Integration
+---
 
-Set `telegramBotToken` and `telegramAllowedUsers` in `Config/ma-config.json`. The bot attaches to your configured entity automatically on server start.
+## ◎ API Reference
+
+| Method | Endpoint | Description |
+|:-------|:---------|:------------|
+| `POST` | `/api/chat` | Send a message, get a response |
+| `GET` | `/api/entities` | List all entities |
+| `POST` | `/api/entities` | Create a new entity |
+| `GET` | `/api/entities/:id` | Get entity state |
+| `POST` | `/api/entities/:id/sleep` | Trigger REM sleep cycle |
+| `GET` | `/api/entities/:id/memories` | List memories |
+| `GET` | `/api/entities/:id/beliefs` | List beliefs |
+| `GET` | `/api/entities/:id/dreams` | List dreams |
+| `GET` | `/api/entities/:id/diary` | Self-reflection log |
+| `GET` | `/api/entities/:id/relationships` | Per-user relationship records |
+| `POST` | `/api/task/run` | Dispatch a task |
+| `GET` | `/api/task/session/:id` | Task session details |
+| `POST` | `/api/auth/login` | Authenticate |
+| `GET` | `/events` | SSE cognitive bus stream |
 
 ---
 
@@ -565,103 +787,116 @@ Set `telegramBotToken` and `telegramAllowedUsers` in `Config/ma-config.json`. Th
 
 ```
 NekoCore-OS/
-├── README.md                  # Visitor-first overview
-├── docs/                      # Public documentation
-│   ├── WORKLOG.md             # Active process and phase ledger
-│   ├── BUGS.md                # Bug queue and status tracking
-│   ├── CHANGELOG.md           # Release notes
-│   ├── AGENTS.md              # Agent operating rules
+├── README.md
+├── docs/
+│   ├── CHANGELOG.md                    # Release notes
+│   ├── WORKLOG.md                      # Active process and phase ledger
+│   ├── BUGS.md                         # Bug queue and status tracking
+│   ├── AGENTS.md                       # Agent operating rules
 │   ├── USER-GUIDE.md                   # 24-section user guide
-│   ├── MA-AND-PROJECT-STRUCTURE.md     # MA architecture and layout
 │   ├── NEKOCORE-OS-WHITE-PAPER-v2.md   # Technical white paper
 │   └── NEKOCORE-OS-ARCHITECTURE-v1.md  # Architecture reference
 └── project/
-    ├── client/                # Browser frontend (desktop shell + 20+ apps)
+    ├── client/                # Browser frontend (desktop shell + 31 apps)
     ├── server/                # Backend server
-    ├── browser-host/          # Browser host modules
-    ├── skills/                # Pluggable skill plugins (11 skills)
-    ├── scripts/               # Health scanner, fixer generator, safety scripts
-    ├── tests/                 # Unit + integration tests (2,505 passing)
+    ├── skills/                # 11 pluggable skill plugins
+    ├── scripts/               # Health scanner, fixer generator
+    ├── tests/                 # 2,816 passing tests
     ├── MA/                    # Memory Architect — AI coding assistant
-    │   ├── MA-Server.js       #   MA HTTP server (port 3850)
-    │   ├── MA-server/         #   Core modules (LLM, memory, tasks, agents)
-    │   ├── MA-client/         #   Browser GUI (8 modular JS + CSS)
-    │   ├── MA-blueprints/     #   Build blueprints (NekoCore + REM System)
-    │   ├── MA-knowledge/      #   Injected knowledge base
-    │   ├── MA-skills/         #   MA skill plugins
-    │   ├── MA-entity/         #   Agent profiles + MA entity definition
-    │   └── MA-workspace/      #   Project scaffolds (build targets)
-    ├── Config/                # Runtime config template/example
+    │   ├── MA-Server.js       #   HTTP server (port 3850)
+    │   ├── MA-server/         #   Core modules
+    │   ├── MA-client/         #   Browser GUI
+    │   ├── MA-blueprints/     #   Build blueprints
+    │   └── MA-workspace/      #   Project scaffolds
+    ├── Config/                # Runtime config
     ├── entities/              # Runtime entity data (gitignored)
-    ├── memories/              # System memory (gitignored)
-    ├── Neko-Core.html          # Interactive architecture deck
-    └── package.json
+    └── memories/              # System memory (gitignored)
 ```
 
 ---
 
-## ◎ API Reference
+## ◈ Technical Specification
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `POST` | `/api/chat` | Send a message, get a response |
-| `GET` | `/api/entities` | List all entities |
-| `POST` | `/api/entities` | Create a new entity |
-| `GET` | `/api/entities/:id` | Get entity state |
-| `POST` | `/api/entities/release` | Release the active entity (cleanup lifecycle) |
-| `POST` | `/api/entities/:id/sleep` | Trigger REM sleep cycle |
-| `GET` | `/api/entities/:id/memories` | List memories |
-| `GET` | `/api/entities/:id/beliefs` | List beliefs |
-| `GET` | `/api/entities/:id/dreams` | List dreams |
-| `GET` | `/api/entities/:id/diary` | Entity self-reflection log |
-| `GET` | `/api/entities/:id/relationships` | Per-user relationship records |
-| `POST` | `/api/task/run` | Dispatch a task (research, skill, project) |
-| `GET` | `/api/task/session/:id` | Get task session details |
-| `POST` | `/api/task/cancel/:id` | Cancel an active task |
-| `GET` | `/api/task/history/:entityId` | Task history for an entity |
-| `POST` | `/api/entity/chat/create` | Create a multi-entity chat session |
-| `POST` | `/api/entity/chat/message` | Send message to entity chat |
-| `POST` | `/api/auth/login` | Authenticate |
-| `POST` | `/api/auth/logout` | Invalidate session |
-| `GET` | `/events` | SSE cognitive bus stream |
+| Capability | Detail |
+|:-----------|:-------|
+| **Runtime** | Pure Node.js 18+ — one dependency (Zod), no Express, no frameworks |
+| **Persistence** | File-system JSON — no database required |
+| **Memory** | Episodic · Semantic · Long-Term (compressed chatlog chunks) |
+| **Pipeline** | 1A (subconscious) · 1D (dream) · 1C (conscious) · Final · Brain Loop |
+| **LLM Support** | Ollama (local) · OpenRouter · Anthropic Direct · Any OpenAI-compatible |
+| **Realtime** | SSE cognitive bus — all pipeline events streamed to browser |
+| **Visualizer** | Three.js WebGL 3D neural node graph |
+| **Memory Topology** | Shape classification · Edge graphs · Activation propagation |
+| **Test Suite** | 2,816 passing — unit + integration |
 
 ---
 
-## ◍ Reset / Uninstall
-
-**Reset all entity data** (keeps server code, wipes all entity memories and session state):
+## ◉ Reset / Uninstall
 
 ```bash
+# Reset all entity data (keeps server code)
 node reset-all.js
+
+# Full uninstall
+cd .. && rm -rf NekoCore-OS
 ```
 
-**Full uninstall:**
+---
 
-```bash
-cd ..
-rm -rf NekoCore-OS
-```
+## ⬡ Why NekoCore? Why Open Source?
+
+> Right now, AI feels like the moment the wheel was invented. But instead of building cars, most people are still waiting for a bigger, better wheel. We have barely begun to explore what we can build with what already exists.
+>
+> NekoCore exists because I wanted to see what I could build with this new wheel. I open-sourced it because I want to see what you can do with more!
 
 ---
 
 ## ⚖ Copyright and Community Safety
 
-NekoCore is MIT licensed and intended for safe open-source collaboration.
+NekoCore is MIT licensed and intended for safe open-source collaboration. See [LICENSE](LICENSE) for details.
 
-1. Avoid features designed to bypass DRM, paywalls, CSP, frame restrictions, or other site security controls.
-2. Keep AI content extraction user-directed and transparent.
-3. Do not silently persist page content into long-term memory without explicit user intent.
-4. Track third-party components and include required notices in distributions.
-5. Browser-related commits should include `Signed-off-by` lines (DCO).
-
-Browser note: the in-shell browser app uses an embedded page model — some sites block embedding by policy. Browser data and REM memory are separate by default; visiting a page does not automatically write to REM memory.
+The in-shell browser app uses an embedded page model — some sites block embedding by policy. Browser data and REM memory are separate by default; visiting a page does not automatically write to REM memory.
 
 ---
 
-## ✦ License
+## ♡ Projects I Love
 
-MIT — see [LICENSE](LICENSE).
+<!-- Add your favorite open-source projects here. Format:
+     | [Project Name](https://github.com/...) | Short description | -->
 
-NekoCore is open source. Use it, fork it, extend it, build on it.
+| Project | Why I Love It |
+|:--------|:-------------|
+| [PowerInfer](https://github.com/Tiiny-AI/PowerInfer) | Fast LLM inference on consumer GPUs — hot/cold neuron splitting across CPU/GPU. 11x faster than llama.cpp on a single RTX 4090. Also building [Tiiny AI Pocket Lab](https://www.kickstarter.com/projects/tiinyai/tiiny-ai-pocket-lab?ref=5w27u9), a pocket-size local-AI supercomputer. |
+| [OpenClaw](https://github.com/openclaw/openclaw) | Personal AI assistant you run on your own devices. Multi-channel inbox (WhatsApp, Telegram, Slack, Discord, Signal, iMessage, and more), voice wake, live canvas, and a local-first gateway. The lobster way. 🦞 |
 
+<br>
 
+<!-- COMMENTED OUT — screenshot not yet available
+<h3 align="center">OpenClaw Running Inside NekoCore OS</h3>
+<p align="center">
+  <em>Third-party apps can run directly inside the NekoCore desktop shell.</em>
+</p>
+<p align="center">
+  <picture>
+    <img src="project/assets/screenshots/openclaw-in-nekocore.png" width="900" alt="OpenClaw running inside NekoCore OS"/>
+  </picture>
+</p>
+-->
+
+---
+
+<p align="center">
+  <strong>MIT Licensed</strong> — Use it, fork it, extend it, build on it.
+</p>
+
+<p align="center">
+  <a href="https://neko-core.com">Website</a>
+  &nbsp;·&nbsp;
+  <a href="docs/USER-GUIDE.md">User Guide</a>
+  &nbsp;·&nbsp;
+  <a href="docs/NEKOCORE-OS-WHITE-PAPER-v2.md">White Paper</a>
+  &nbsp;·&nbsp;
+  <a href="docs/NEKOCORE-OS-ARCHITECTURE-v1.md">Architecture</a>
+  &nbsp;·&nbsp;
+  <a href="project/MA/README.md">Memory Architect</a>
+</p>
