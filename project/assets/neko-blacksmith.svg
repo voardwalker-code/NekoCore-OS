@@ -1,0 +1,363 @@
+<svg viewBox="0 0 280 230" xmlns="http://www.w3.org/2000/svg" width="280" height="230">
+  <style>
+    @keyframes hammerStrike {
+      0%, 30% { transform: rotate(-55deg); }
+      45% { transform: rotate(15deg); }
+      50% { transform: rotate(-2deg); }
+      55%, 70% { transform: rotate(-55deg); }
+      85% { transform: rotate(15deg); }
+      90% { transform: rotate(-2deg); }
+      95%, 100% { transform: rotate(-55deg); }
+    }
+    @keyframes metalShake {
+      0%, 44%, 52%, 84%, 92%, 100% { transform: translateY(0); }
+      46%, 86% { transform: translateY(1.5px); }
+      48%, 88% { transform: translateY(-1px); }
+      50%, 90% { transform: translateY(0.5px); }
+    }
+    @keyframes sparkBurstA {
+      0%, 43%, 53%, 100% { opacity: 0; }
+      45% { opacity: 0; transform: translate(0,0) scale(0.3); }
+      47% { opacity: 1; transform: translate(-12px,-18px) scale(1); }
+      52% { opacity: 0; transform: translate(-20px,-35px) scale(0.2); }
+    }
+    @keyframes sparkBurstB {
+      0%, 43%, 53%, 100% { opacity: 0; }
+      45% { opacity: 0; transform: translate(0,0) scale(0.3); }
+      47% { opacity: 1; transform: translate(8px,-22px) scale(1.1); }
+      52% { opacity: 0; transform: translate(14px,-40px) scale(0.1); }
+    }
+    @keyframes sparkBurstC {
+      0%, 43%, 53%, 100% { opacity: 0; }
+      45% { opacity: 0; transform: translate(0,0) scale(0.3); }
+      47% { opacity: 1; transform: translate(18px,-10px) scale(1); }
+      52% { opacity: 0; transform: translate(30px,-22px) scale(0.2); }
+    }
+    @keyframes sparkBurstD {
+      0%, 43%, 53%, 100% { opacity: 0; }
+      46% { opacity: 0; transform: translate(0,0) scale(0.2); }
+      48% { opacity: 1; transform: translate(-18px,-8px) scale(1); }
+      52% { opacity: 0; transform: translate(-32px,-18px) scale(0.1); }
+    }
+    @keyframes sparkBurstE {
+      0%, 43%, 53%, 100% { opacity: 0; }
+      46% { opacity: 0; transform: translate(0,0) scale(0.3); }
+      48% { opacity: 0.9; transform: translate(3px,-28px) scale(1); }
+      52% { opacity: 0; transform: translate(5px,-48px) scale(0.1); }
+    }
+    @keyframes sparkBurstA2 {
+      0%, 83%, 93%, 100% { opacity: 0; }
+      85% { opacity: 0; transform: translate(0,0) scale(0.3); }
+      87% { opacity: 1; transform: translate(-14px,-20px) scale(1); }
+      92% { opacity: 0; transform: translate(-24px,-38px) scale(0.2); }
+    }
+    @keyframes sparkBurstB2 {
+      0%, 83%, 93%, 100% { opacity: 0; }
+      85% { opacity: 0; transform: translate(0,0) scale(0.3); }
+      87% { opacity: 1; transform: translate(10px,-25px) scale(1.1); }
+      92% { opacity: 0; transform: translate(16px,-42px) scale(0.1); }
+    }
+    @keyframes sparkBurstC2 {
+      0%, 83%, 93%, 100% { opacity: 0; }
+      85% { opacity: 0; transform: translate(0,0) scale(0.3); }
+      87% { opacity: 1; transform: translate(20px,-12px) scale(1); }
+      92% { opacity: 0; transform: translate(35px,-25px) scale(0.2); }
+    }
+    @keyframes sparkBurstD2 {
+      0%, 83%, 93%, 100% { opacity: 0; }
+      86% { opacity: 0; transform: translate(0,0) scale(0.2); }
+      88% { opacity: 1; transform: translate(-20px,-10px) scale(1); }
+      92% { opacity: 0; transform: translate(-35px,-20px) scale(0.1); }
+    }
+    @keyframes sparkBurstE2 {
+      0%, 83%, 93%, 100% { opacity: 0; }
+      86% { opacity: 0; transform: translate(0,0) scale(0.3); }
+      88% { opacity: 0.9; transform: translate(5px,-30px) scale(1); }
+      92% { opacity: 0; transform: translate(7px,-50px) scale(0.1); }
+    }
+    @keyframes emberRise1 {
+      0% { opacity: 0; transform: translate(0,0); }
+      10% { opacity: 1; }
+      100% { opacity: 0; transform: translate(-25px,-55px) rotate(40deg); }
+    }
+    @keyframes emberRise2 {
+      0% { opacity: 0; transform: translate(0,0); }
+      8% { opacity: 1; }
+      100% { opacity: 0; transform: translate(20px,-60px) rotate(-30deg); }
+    }
+    @keyframes emberRise3 {
+      0% { opacity: 0; transform: translate(0,0); }
+      12% { opacity: 0.9; }
+      100% { opacity: 0; transform: translate(30px,-45px) rotate(20deg); }
+    }
+    @keyframes emberRise4 {
+      0% { opacity: 0; transform: translate(0,0); }
+      6% { opacity: 0.8; }
+      100% { opacity: 0; transform: translate(-15px,-65px) rotate(-50deg); }
+    }
+    @keyframes emberRise5 {
+      0% { opacity: 0; transform: translate(0,0); }
+      10% { opacity: 1; }
+      100% { opacity: 0; transform: translate(8px,-70px) rotate(15deg); }
+    }
+    @keyframes emberRise6 {
+      0% { opacity: 0; transform: translate(0,0); }
+      14% { opacity: 0.7; }
+      100% { opacity: 0; transform: translate(-30px,-40px) rotate(60deg); }
+    }
+    @keyframes emberSide1 {
+      0% { opacity: 0; transform: translate(0,0); }
+      10% { opacity: 1; }
+      100% { opacity: 0; transform: translate(-40px, 5px); }
+    }
+    @keyframes emberSide2 {
+      0% { opacity: 0; transform: translate(0,0); }
+      10% { opacity: 1; }
+      100% { opacity: 0; transform: translate(35px, 8px); }
+    }
+    @keyframes forgeGlow {
+      0%, 100% { opacity: 0.12; }
+      50% { opacity: 0.22; }
+    }
+    @keyframes heatWave {
+      0%, 100% { opacity: 0.15; transform: translateY(0); }
+      50% { opacity: 0.3; transform: translateY(-3px); }
+    }
+    @keyframes metalEdgePulse {
+      0%, 100% { stroke: #ff8a50; stroke-opacity: 0.8; }
+      50% { stroke: #ffab40; stroke-opacity: 1; }
+    }
+    @keyframes catBlink {
+      0%, 94%, 100% { transform: scaleY(1); }
+      96% { transform: scaleY(0.1); }
+    }
+    @keyframes tailWag {
+      0%, 100% { transform: rotate(-10deg); }
+      50% { transform: rotate(10deg); }
+    }
+    @keyframes impactFlash {
+      0%, 43%, 53%, 83%, 93%, 100% { opacity: 0; }
+      46%, 86% { opacity: 0.7; }
+      50%, 90% { opacity: 0; }
+    }
+    .hammer-arm { transform-origin: 165px 82px; animation: hammerStrike 1.6s ease-in-out infinite; }
+    .metal-piece { animation: metalShake 1.6s ease-in-out infinite; }
+    .spark-a { animation: sparkBurstA 1.6s ease-out infinite; }
+    .spark-b { animation: sparkBurstB 1.6s ease-out infinite; }
+    .spark-c { animation: sparkBurstC 1.6s ease-out infinite; }
+    .spark-d { animation: sparkBurstD 1.6s ease-out infinite; }
+    .spark-e { animation: sparkBurstE 1.6s ease-out infinite; }
+    .spark-a2 { animation: sparkBurstA2 1.6s ease-out infinite; }
+    .spark-b2 { animation: sparkBurstB2 1.6s ease-out infinite; }
+    .spark-c2 { animation: sparkBurstC2 1.6s ease-out infinite; }
+    .spark-d2 { animation: sparkBurstD2 1.6s ease-out infinite; }
+    .spark-e2 { animation: sparkBurstE2 1.6s ease-out infinite; }
+    .ember1 { animation: emberRise1 1.4s ease-out 0s infinite; }
+    .ember2 { animation: emberRise2 1.6s ease-out 0.2s infinite; }
+    .ember3 { animation: emberRise3 1.3s ease-out 0.4s infinite; }
+    .ember4 { animation: emberRise4 1.8s ease-out 0.1s infinite; }
+    .ember5 { animation: emberRise5 2.0s ease-out 0.5s infinite; }
+    .ember6 { animation: emberRise6 1.5s ease-out 0.3s infinite; }
+    .ember-side1 { animation: emberSide1 1.2s ease-out 0.15s infinite; }
+    .ember-side2 { animation: emberSide2 1.1s ease-out 0.25s infinite; }
+    .forge-glow { animation: forgeGlow 2s ease-in-out infinite; }
+    .heat-wave { animation: heatWave 1.8s ease-in-out infinite; }
+    .metal-edge { animation: metalEdgePulse 1.2s ease-in-out infinite; }
+    .cat-eyes { transform-origin: 130px 68px; animation: catBlink 4s infinite; }
+    .cat-tail { transform-origin: 100px 108px; animation: tailWag 2.5s ease-in-out infinite; }
+    .impact-flash { animation: impactFlash 1.6s ease-out infinite; }
+  </style>
+
+  <defs>
+    <radialGradient id="anvilShine" cx="40%" cy="30%">
+      <stop offset="0%" stop-color="#4a4a5a"/>
+      <stop offset="100%" stop-color="#2a2a35"/>
+    </radialGradient>
+    <radialGradient id="hotCenter" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ffcc00" stop-opacity="0.9"/>
+      <stop offset="40%" stop-color="#ff5722" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#cc1100" stop-opacity="0.6"/>
+    </radialGradient>
+    <radialGradient id="impactGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.8"/>
+      <stop offset="30%" stop-color="#ffcc00" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#ff5722" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="bigGlow">
+      <feGaussianBlur stdDeviation="6"/>
+    </filter>
+  </defs>
+
+  <!-- ambient forge glow on ground -->
+  <ellipse cx="140" cy="205" rx="110" ry="22" fill="#ff6b2b" class="forge-glow"/>
+
+  <!-- heat shimmer above anvil -->
+  <ellipse cx="135" cy="110" rx="30" ry="15" fill="#ff6b2b" opacity="0.15" class="heat-wave"/>
+  <ellipse cx="130" cy="100" rx="20" ry="10" fill="#ff8c42" opacity="0.1" class="heat-wave" style="animation-delay: 0.5s"/>
+
+  <!-- === ANVIL === -->
+  <rect x="88" y="175" width="65" height="14" rx="3" fill="#1e1e28" stroke="#3a3a48" stroke-width="1.2"/>
+  <rect x="102" y="148" width="38" height="29" rx="2" fill="#2a2a35" stroke="#3a3a48" stroke-width="1"/>
+  <path d="M80,148 L160,148 L155,138 L85,138 Z" fill="url(#anvilShine)" stroke="#4a4a5a" stroke-width="1.2"/>
+  <path d="M160,148 L160,138 L185,143 Z" fill="#3a3a48" stroke="#4a4a5a" stroke-width="0.8"/>
+  <rect x="120" y="139" width="4" height="4" fill="#15151d"/>
+
+  <!-- === RED HOT METAL === -->
+  <g class="metal-piece">
+    <ellipse cx="125" cy="137" rx="30" ry="8" fill="#ff5722" opacity="0.25" filter="url(#bigGlow)"/>
+    <rect x="100" y="130" width="55" height="9" rx="2" fill="url(#hotCenter)"/>
+    <rect x="100" y="130" width="55" height="9" rx="2" fill="none" stroke="#ffab40" stroke-width="1" class="metal-edge"/>
+    <ellipse cx="130" cy="134.5" rx="10" ry="3.5" fill="#ffdd44" opacity="0.6"/>
+    <ellipse cx="130" cy="134.5" rx="5" ry="2" fill="#fff8e1" opacity="0.5"/>
+  </g>
+
+  <!-- === IMPACT FLASH === -->
+  <ellipse cx="130" cy="130" rx="18" ry="12" fill="url(#impactGlow)" class="impact-flash"/>
+
+  <!-- === SPARK EXPLOSIONS (first hit) === -->
+  <g class="spark-a">
+    <circle cx="130" cy="128" r="2.5" fill="#ffcc02"/>
+    <circle cx="124" cy="122" r="2" fill="#ff8c00"/>
+    <circle cx="121" cy="118" r="1.2" fill="#ffdd44"/>
+  </g>
+  <g class="spark-b">
+    <circle cx="135" cy="126" r="2.2" fill="#ffcc02"/>
+    <circle cx="141" cy="120" r="1.8" fill="#ff6b2b"/>
+    <circle cx="139" cy="114" r="1.3" fill="#ffdd44"/>
+  </g>
+  <g class="spark-c">
+    <circle cx="145" cy="130" r="2" fill="#ff8c00"/>
+    <circle cx="152" cy="126" r="1.5" fill="#ffcc02"/>
+    <circle cx="148" cy="122" r="1" fill="#ffffff" opacity="0.8"/>
+  </g>
+  <g class="spark-d">
+    <circle cx="115" cy="130" r="2.2" fill="#ffcc02"/>
+    <circle cx="108" cy="126" r="1.6" fill="#ff6b2b"/>
+    <circle cx="105" cy="122" r="1.2" fill="#ffdd44"/>
+  </g>
+  <g class="spark-e">
+    <circle cx="130" cy="125" r="1.8" fill="#ffffff" opacity="0.9"/>
+    <circle cx="128" cy="118" r="2" fill="#ffcc02"/>
+    <circle cx="132" cy="110" r="1.5" fill="#ff8c00"/>
+  </g>
+
+  <!-- === SPARK EXPLOSIONS (second hit) === -->
+  <g class="spark-a2">
+    <circle cx="130" cy="128" r="2.5" fill="#ffcc02"/>
+    <circle cx="122" cy="120" r="2" fill="#ff8c00"/>
+    <circle cx="118" cy="115" r="1.4" fill="#ffdd44"/>
+  </g>
+  <g class="spark-b2">
+    <circle cx="136" cy="125" r="2.3" fill="#ffcc02"/>
+    <circle cx="143" cy="118" r="1.7" fill="#ff6b2b"/>
+    <circle cx="140" cy="112" r="1.1" fill="#ffdd44"/>
+  </g>
+  <g class="spark-c2">
+    <circle cx="147" cy="129" r="1.8" fill="#ff8c00"/>
+    <circle cx="155" cy="124" r="1.5" fill="#ffcc02"/>
+    <circle cx="150" cy="120" r="1.2" fill="#ffffff" opacity="0.7"/>
+  </g>
+  <g class="spark-d2">
+    <circle cx="113" cy="129" r="2" fill="#ffcc02"/>
+    <circle cx="106" cy="124" r="1.8" fill="#ff6b2b"/>
+    <circle cx="102" cy="120" r="1" fill="#ffdd44"/>
+  </g>
+  <g class="spark-e2">
+    <circle cx="131" cy="124" r="2" fill="#ffffff" opacity="0.8"/>
+    <circle cx="129" cy="116" r="1.8" fill="#ffcc02"/>
+    <circle cx="133" cy="108" r="1.3" fill="#ff8c00"/>
+  </g>
+
+  <!-- === FLOATING EMBERS === -->
+  <circle cx="130" cy="128" r="1.5" fill="#ff6b2b" class="ember1" filter="url(#glow)"/>
+  <circle cx="135" cy="126" r="1.2" fill="#ffcc02" class="ember2" filter="url(#glow)"/>
+  <circle cx="125" cy="130" r="1" fill="#ff8c00" class="ember3" filter="url(#glow)"/>
+  <circle cx="128" cy="125" r="1.4" fill="#ffdd44" class="ember4" filter="url(#glow)"/>
+  <circle cx="132" cy="127" r="0.9" fill="#ffffff" class="ember5" filter="url(#glow)" opacity="0.8"/>
+  <circle cx="127" cy="129" r="1.3" fill="#ff5722" class="ember6" filter="url(#glow)"/>
+  <circle cx="125" cy="133" r="1.2" fill="#ffcc02" class="ember-side1" filter="url(#glow)"/>
+  <circle cx="135" cy="133" r="1" fill="#ff8c00" class="ember-side2" filter="url(#glow)"/>
+
+  <!-- === CAT BODY === -->
+  <g class="cat-tail">
+    <path d="M98,108 Q76,102 72,84 Q69,67 80,62 Q90,58 91,72" fill="none" stroke="#2d7aed" stroke-width="6" stroke-linecap="round"/>
+    <path d="M98,108 Q76,102 72,84 Q69,67 80,62 Q90,58 91,72" fill="none" stroke="#4d9aff" stroke-width="3" stroke-linecap="round" opacity="0.4"/>
+  </g>
+
+  <ellipse cx="130" cy="112" rx="32" ry="27" fill="#2d7aed"/>
+
+  <!-- === LEATHER APRON === -->
+  <path d="M112,100 L148,100 L150,150 L110,150 Z" fill="#5c3a1e" opacity="0.85"/>
+  <path d="M112,100 L148,100 L150,150 L110,150 Z" fill="none" stroke="#7a4f2a" stroke-width="1.2"/>
+  <line x1="118" y1="100" x2="122" y2="85" stroke="#7a4f2a" stroke-width="2.8" stroke-linecap="round"/>
+  <line x1="142" y1="100" x2="138" y2="85" stroke="#7a4f2a" stroke-width="2.8" stroke-linecap="round"/>
+  <rect x="120" y="118" width="20" height="13" rx="2" fill="none" stroke="#7a4f2a" stroke-width="0.8" opacity="0.6"/>
+  <line x1="126" y1="118" x2="125" y2="112" stroke="#8a8a9a" stroke-width="1.5" stroke-linecap="round"/>
+
+  <!-- === HEAD === -->
+  <circle cx="130" cy="68" r="26" fill="#2d7aed"/>
+
+  <polygon points="108,53 100,28 118,47" fill="#2d7aed"/>
+  <polygon points="152,53 160,28 142,47" fill="#2d7aed"/>
+  <polygon points="110,51 103,32 117,47" fill="#1a5fcc"/>
+  <polygon points="150,51 157,32 143,47" fill="#1a5fcc"/>
+
+  <g class="cat-eyes">
+    <ellipse cx="120" cy="66" rx="6" ry="6.5" fill="#0c0c14"/>
+    <ellipse cx="140" cy="66" rx="6" ry="6.5" fill="#0c0c14"/>
+    <ellipse cx="121.5" cy="64" rx="2.5" ry="2.5" fill="#ff8c42"/>
+    <ellipse cx="141.5" cy="64" rx="2.5" ry="2.5" fill="#ff8c42"/>
+    <ellipse cx="118" cy="68" rx="1.3" ry="1.3" fill="#00d4ff" opacity="0.5"/>
+    <ellipse cx="138" cy="68" rx="1.3" ry="1.3" fill="#00d4ff" opacity="0.5"/>
+  </g>
+
+  <line x1="114" y1="57" x2="122" y2="58.5" stroke="#1a5fcc" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="146" y1="57" x2="138" y2="58.5" stroke="#1a5fcc" stroke-width="1.5" stroke-linecap="round"/>
+
+  <ellipse cx="130" cy="76" rx="3" ry="1.8" fill="#1a5fcc"/>
+  <path d="M130,78 Q124,82 121,80" fill="none" stroke="#1a5fcc" stroke-width="1.2"/>
+  <path d="M130,78 Q136,82 139,80" fill="none" stroke="#1a5fcc" stroke-width="1.2"/>
+
+  <line x1="101" y1="72" x2="114" y2="73" stroke="#4d9aff" stroke-width="0.8" opacity="0.5"/>
+  <line x1="101" y1="77" x2="114" y2="76" stroke="#4d9aff" stroke-width="0.8" opacity="0.5"/>
+  <line x1="146" y1="73" x2="159" y2="72" stroke="#4d9aff" stroke-width="0.8" opacity="0.5"/>
+  <line x1="146" y1="76" x2="159" y2="77" stroke="#4d9aff" stroke-width="0.8" opacity="0.5"/>
+
+  <!-- === LEFT PAW WITH TONGS === -->
+  <g>
+    <line x1="95" y1="140" x2="105" y2="134" stroke="#5a5a68" stroke-width="3" stroke-linecap="round"/>
+    <line x1="95" y1="143" x2="105" y2="136" stroke="#5a5a68" stroke-width="3" stroke-linecap="round"/>
+    <path d="M105,134 L110,132 L110,137 L105,136 Z" fill="#4a4a5a"/>
+    <ellipse cx="95" cy="142" rx="11" ry="7" fill="#2d7aed"/>
+    <circle cx="89" cy="138" r="3" fill="#1a5fcc"/>
+    <circle cx="95" cy="136.5" r="3" fill="#1a5fcc"/>
+    <circle cx="101" cy="138" r="3" fill="#1a5fcc"/>
+  </g>
+
+  <!-- === RIGHT ARM + HAMMER === -->
+  <g class="hammer-arm">
+    <line x1="155" y1="98" x2="180" y2="78" stroke="#2d7aed" stroke-width="9" stroke-linecap="round"/>
+    <ellipse cx="182" cy="75" rx="9" ry="7" fill="#2d7aed" transform="rotate(-35, 182, 75)"/>
+    <circle cx="176" cy="71" r="2.8" fill="#1a5fcc"/>
+    <circle cx="182" cy="69" r="2.8" fill="#1a5fcc"/>
+    <circle cx="188" cy="71" r="2.8" fill="#1a5fcc"/>
+    <line x1="180" y1="74" x2="205" y2="56" stroke="#5c3a1e" stroke-width="5" stroke-linecap="round"/>
+    <rect x="198" y="42" width="24" height="16" rx="2.5" fill="#3a3a48" stroke="#5a5a68" stroke-width="1.2" transform="rotate(-35, 210, 50)"/>
+    <rect x="202" y="46" width="14" height="3.5" rx="1" fill="#5a5a68" opacity="0.6" transform="rotate(-35, 209, 48)"/>
+    <line x1="200" y1="44" x2="220" y2="44" stroke="#6a6a78" stroke-width="0.8" transform="rotate(-35, 210, 44)" opacity="0.4"/>
+  </g>
+
+  <!-- === FEET === -->
+  <ellipse cx="118" cy="155" rx="11" ry="5.5" fill="#2d7aed"/>
+  <ellipse cx="145" cy="155" rx="11" ry="5.5" fill="#2d7aed"/>
+
+  <!-- === GROUND === -->
+  <line x1="40" y1="188" x2="240" y2="188" stroke="#1a2744" stroke-width="1.5" opacity="0.4"/>
+</svg>

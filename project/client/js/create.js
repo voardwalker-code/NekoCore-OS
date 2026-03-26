@@ -34,6 +34,26 @@ function isReservedEntityName(name) {
   return RESERVED_ENTITY_NAME_KEYS.has(normalizeEntityNameKey(name));
 }
 
+/**
+ * Poll the entity list to check if an entity was created despite a 504 timeout.
+ * Returns { found, entityId, entity } or { found: false }.
+ */
+async function pollForCreatedEntity(nameHint, maxAttempts = 6, intervalMs = 5000) {
+  const nameKey = normalizeEntityNameKey(nameHint);
+  for (let i = 0; i < maxAttempts; i++) {
+    if (i > 0) await sleep(intervalMs);
+    try {
+      const resp = await fetch('/api/entities');
+      if (!resp.ok) continue;
+      const list = await resp.json();
+      const entities = Array.isArray(list) ? list : (list.entities || []);
+      const match = entities.find(e => normalizeEntityNameKey(e.name) === nameKey);
+      if (match) return { found: true, entityId: match.id, entity: match };
+    } catch (_) { /* retry */ }
+  }
+  return { found: false };
+}
+
 function buildTraitAutocompleteValue(rawValue, suggestion) {
   const current = String(rawValue || '');
   const commaIndex = current.lastIndexOf(',');
@@ -547,6 +567,15 @@ async function createEmptyEntity() {
   });
 
   if (!resp.ok) {
+    if (resp.status === 504) {
+      lg('info', 'Server timed out — checking if entity was created…');
+      const poll = await pollForCreatedEntity(name);
+      if (poll.found) {
+        await applyCreatorOnboarding(poll.entityId);
+        showSuccessScreen(poll.entity, 'Empty entity ready — memories form through conversation.', poll.entityId);
+        return;
+      }
+    }
     const d = await resp.json().catch(() => ({}));
     throw new Error(d.error || 'Server returned ' + resp.status);
   }
@@ -580,6 +609,25 @@ async function createRandomEntity() {
   clearTimeout(timeoutId);
 
   if (!resp.ok) {
+    // 504 = reverse proxy timeout; entity may have been created server-side
+    if (resp.status === 504) {
+      lg('info', 'Server timed out — checking if entity was created…');
+      await sleep(5000);
+      const listResp = await fetch('/api/entities').catch(() => null);
+      if (listResp && listResp.ok) {
+        const list = await listResp.json().catch(() => []);
+        const entities = Array.isArray(list) ? list : (list.entities || []);
+        // Find the most recently created entity (hatch creates with a timestamp)
+        const newest = entities.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''))[0];
+        if (newest && newest.id) {
+          completeAllHatchSteps(5);
+          closeHatchProgress();
+          await applyCreatorOnboarding(newest.id);
+          showSuccessScreen(newest, 'Random entity hatched with life story and core memories!', newest.id);
+          return;
+        }
+      }
+    }
     stopHatchStepTimer();
     const d = await resp.json().catch(() => ({}));
     throw new Error(d.error || 'Server returned ' + resp.status);
@@ -621,6 +669,17 @@ async function createCharacterEntity() {
   clearTimeout(timeoutId);
 
   if (!resp.ok) {
+    if (resp.status === 504) {
+      lg('info', 'Server timed out — checking if entity was created…');
+      const poll = await pollForCreatedEntity(name);
+      if (poll.found) {
+        completeAllHatchSteps(5);
+        closeHatchProgress();
+        await applyCreatorOnboarding(poll.entityId);
+        showSuccessScreen(poll.entity, 'Character ingested!', poll.entityId);
+        return;
+      }
+    }
     stopHatchStepTimer();
     const d = await resp.json().catch(() => ({}));
     throw new Error(d.error || 'Server returned ' + resp.status);
@@ -679,6 +738,17 @@ async function createGuidedEntity() {
   clearTimeout(timeoutId);
 
   if (!resp.ok) {
+    if (resp.status === 504) {
+      lg('info', 'Server timed out — checking if entity was created…');
+      const poll = await pollForCreatedEntity(name);
+      if (poll.found) {
+        completeAllHatchSteps(5);
+        closeHatchProgress();
+        await applyCreatorOnboarding(poll.entityId);
+        showSuccessScreen(poll.entity, 'Guided entity created!', poll.entityId);
+        return;
+      }
+    }
     stopHatchStepTimer();
     const d = await resp.json().catch(() => ({}));
     throw new Error(d.error || 'Server returned ' + resp.status);

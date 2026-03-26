@@ -85,7 +85,6 @@ const SETUP_ASPECT_LABELS = {
 const SETUP_ANTHROPIC_MODELS = [
   { id: 'claude-opus-4-6', l: 'Claude Opus 4.6 (strongest)' },
   { id: 'claude-sonnet-4-6', l: 'Claude Sonnet 4.6 (balanced)' },
-  { id: 'claude-sonnet-4', l: 'Claude Sonnet 4 (strong)' },
   { id: 'claude-haiku-4-5', l: 'Claude Haiku 4.5 (fast/cheap)' }
 ];
 
@@ -595,9 +594,9 @@ function setupApplyPreset(presetKey) {
     // Anthropic has limited models; build aspect-appropriate defaults per preset
     const tiers = {
       best: { main: 'claude-opus-4-6', subconscious: 'claude-sonnet-4-6', dream: 'claude-sonnet-4-6', orchestrator: 'claude-sonnet-4-6', nekocore: 'claude-sonnet-4-6' },
-      fast: { main: 'claude-sonnet-4-6', subconscious: 'claude-haiku-4-5', dream: 'claude-haiku-4-5', orchestrator: 'claude-sonnet-4', nekocore: 'claude-sonnet-4-6' },
+      fast: { main: 'claude-sonnet-4-6', subconscious: 'claude-haiku-4-5', dream: 'claude-haiku-4-5', orchestrator: 'claude-sonnet-4-6', nekocore: 'claude-sonnet-4-6' },
       cheap: { main: 'claude-haiku-4-5', subconscious: 'claude-haiku-4-5', dream: 'claude-haiku-4-5', orchestrator: 'claude-haiku-4-5', nekocore: 'claude-haiku-4-5' },
-      hybrid: { main: 'claude-sonnet-4-6', subconscious: 'claude-haiku-4-5', dream: 'claude-sonnet-4', orchestrator: 'claude-sonnet-4-6', nekocore: 'claude-sonnet-4-6' }
+      hybrid: { main: 'claude-sonnet-4-6', subconscious: 'claude-haiku-4-5', dream: 'claude-sonnet-4-6', orchestrator: 'claude-sonnet-4-6', nekocore: 'claude-sonnet-4-6' }
     };
     stack = tiers[presetKey] || tiers.best;
   }

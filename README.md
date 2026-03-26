@@ -43,11 +43,28 @@
 
 <br>
 
+<p align="center">
+  <img src="project/assets/neko-blacksmith.svg" width="120" alt="Phase 6 — Forge & Polish"/>
+</p>
+<h3 align="center">⚒ Phase 6 — <em>Forge & Polish</em></h3>
+<p align="center">
+  <strong>The raw metal becomes the blade.</strong><br>
+  All new features halted. Every bug gets crushed. Every edge gets filed.
+</p>
+
+<br>
+
 > [!CAUTION]
-> **PRE-ALPHA SOFTWARE — USE AT YOUR OWN RISK**
+> **PRE-ALPHA SOFTWARE — KNOWN BUGS EXIST**
 >
-> NekoCore OS is in **pre-alpha**. All subsystems are **functional but not yet battle-tested**.
+> NekoCore OS is in **pre-alpha**. All subsystems are functional but **bugs and rough edges remain**.
+> We know about them — and we've **halted all new feature work** to fix them.
+>
+> **Phase 6: Forge & Polish** is now active — a dedicated stability pass to crush every known issue,
+> harden error recovery, and polish the entire system for real-world use.
+>
 > APIs, data formats, and behaviour may change without notice between releases.
+> Active bug tracking: [`docs/CURRENT-BUGS.md`](docs/CURRENT-BUGS.md)
 >
 > **Before experimenting:** back up your `entities/` and `memories/` folders.
 >
@@ -530,7 +547,7 @@ pie title Estimated Per-Turn Token Allocation
 
 ## ⟶ Development Roadmap
 
-All **35 phases** complete — from initial bug fixes to predictive memory topology:
+**35 feature phases** complete. **Phase 6: Forge & Polish** is active — all new features halted while we crush every bug and harden every subsystem:
 
 ```mermaid
 timeline
@@ -576,6 +593,8 @@ timeline
         Phase 4.32 : Book-to-Entity Ingestion
         Phase 4.33 : Bug Tracker Export
         Phase 5   : Predictive Memory Topology (2,816 tests)
+    section Forge & Polish
+        Phase 6 : 🔥 Bug Crush · Stability Hardening · Refactor
 ```
 
 ---

@@ -49,10 +49,25 @@ Phase 5 encompasses the cognitive-layer and entity intelligence work built on th
 
 ---
 
-## 📋 PHASE 6 — PhoenixCore (Next)
+## � PHASE 6 — Forge & Polish (Next)
 
-Codename: **PhoenixCore**
-Phase 6 is the next major milestone after AgentEcho. Scope to be defined.
+Codename: **Forge & Polish**
+*The raw metal becomes the blade.*
+
+Phase 6 is a full stability pass — every known bug crushed, every rough edge filed down, every subsystem hardened for real-world use. No new features. No scope expansion. The codebase that exists today gets forged into something you can hand to a stranger and say "run it."
+
+**All new feature work is halted** until this phase exits cleanly.
+
+**Scope:**
+- Systematic bug triage and resolution (CURRENT-BUGS.md + newly discovered)
+- Timeout and error-recovery hardening across all LLM call paths
+- Entity creation reliability (hatch hang, 504 recovery, progress reporting)
+- UI polish and edge-case cleanup across all 31 apps
+- Code refactoring where files exceed size/complexity thresholds
+- Test coverage expansion for untested paths
+- Documentation accuracy pass (docs match code, not the other way around)
+
+**Exit criteria:** QA checklist green across all 61 sections. No known P0/P1 bugs. Every LLM call path has a timeout. Entity creation succeeds reliably on all three providers.
 
 ---
 

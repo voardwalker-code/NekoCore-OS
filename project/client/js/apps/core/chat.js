@@ -1853,6 +1853,13 @@ function flushPendingSystemPrompt() {
 }
 
 async function runStartupResumeRecap(entityName, memData) {
+  // Lock chat input while the startup pipeline runs
+  chatBusy = true;
+  const chatInput = document.getElementById('chatInput');
+  const sendBtn = document.getElementById('chatSendBtn');
+  if (chatInput) { chatInput.disabled = true; chatInput.placeholder = 'Resuming conversation…'; }
+  if (sendBtn) sendBtn.disabled = true;
+
   const summary = String(memData?.summary || '').trim();
   const recentMessages = Array.isArray(memData?.memory?.messages)
     ? memData.memory.messages.filter(m => m && (m.role === 'user' || m.role === 'assistant')).slice(-6)
@@ -1907,5 +1914,9 @@ async function runStartupResumeRecap(entityName, memData) {
   } catch (err) {
     typingContent.textContent = 'You are back. I remember where we left off, and we can continue from there.';
     lg('warn', 'Startup recap fallback: ' + err.message);
+  } finally {
+    chatBusy = false;
+    syncContextChatGuard();
+    if (chatInput) chatInput.focus();
   }
 }
