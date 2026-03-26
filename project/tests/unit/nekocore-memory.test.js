@@ -1,9 +1,23 @@
-const { test } = require('node:test');
+const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
+const os = require('os');
 
 const entityPaths = require('../../server/entityPaths');
+
+let _tmpRoot;
+
+before(() => {
+  _tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'neko-mem-test-'));
+  entityPaths._origEntitiesDir = entityPaths.ENTITIES_DIR;
+  entityPaths.ENTITIES_DIR = _tmpRoot;
+});
+
+after(() => {
+  if (entityPaths._origEntitiesDir) entityPaths.ENTITIES_DIR = entityPaths._origEntitiesDir;
+  try { fs.rmSync(_tmpRoot, { recursive: true, force: true }); } catch (_) {}
+});
 const MemoryStorage = require('../../server/brain/memory/memory-storage');
 const {
   storeNekoConversationSnapshot,

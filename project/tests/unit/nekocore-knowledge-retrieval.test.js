@@ -3,11 +3,12 @@ const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
 const zlib = require('zlib');
+const os = require('os');
 
 const { buildNekoKnowledgeContext } = require('../../server/brain/nekocore/knowledge-retrieval');
 
 function makeTempRoot() {
-  const root = path.join(process.cwd(), '.tmp-nekocore-recall-' + Date.now() + '-' + Math.random().toString(16).slice(2, 8));
+  const root = path.join(os.tmpdir(), '.tmp-nekocore-recall-' + Date.now() + '-' + Math.random().toString(16).slice(2, 8));
   fs.mkdirSync(path.join(root, 'episodic'), { recursive: true });
   fs.mkdirSync(path.join(root, 'semantic'), { recursive: true });
   return root;

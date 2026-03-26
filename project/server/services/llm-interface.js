@@ -17,6 +17,7 @@
  *     });
  */
 
+const { fetch } = require('./http-fetch');
 const { toChatEndpoint, estimateUsageFromText, parseJsonBlock } = require('./llm-runtime-utils');
 const { hasCapability, getCapabilityMode } = require('./provider-capabilities');
 

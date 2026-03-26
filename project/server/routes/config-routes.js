@@ -2,6 +2,8 @@
 // /api/config, /api/entity-config, /api/proxy
 // /api/sleep/config, /api/workspace/*
 
+const { fetch } = require('../services/http-fetch');
+
 function createConfigRoutes(ctx) {
   const { fs, path } = ctx;
   const PROJECT_ROOT = path.join(__dirname, '..', '..');
@@ -428,6 +430,16 @@ function createConfigRoutes(ctx) {
     }
   }
 
+  function toAsciiHeaderValue(value) {
+    if (typeof value !== 'string') return String(value);
+    return value.replace(/[^\x20-\x7E]/g, '');
+  }
+
+  function sanitizeProxyResponseHeaders(upstream, apiHeaders) {
+    const ct = upstream.headers.get('content-type') || 'application/json';
+    return { ...apiHeaders, 'Content-Type': toAsciiHeaderValue(ct) };
+  }
+
   async function postProxy(req, res, apiHeaders, readBody) {
     const ALLOWED_HOSTS = ['openrouter.ai', 'api.anthropic.com'];
     try {
@@ -443,7 +455,7 @@ function createConfigRoutes(ctx) {
         body: raw.body ? (typeof raw.body === 'string' ? raw.body : JSON.stringify(raw.body)) : undefined
       });
       const text = await upstream.text();
-      res.writeHead(upstream.status, { ...apiHeaders, 'Content-Type': upstream.headers.get('content-type') || 'application/json' });
+      res.writeHead(upstream.status, sanitizeProxyResponseHeaders(upstream, apiHeaders));
       res.end(text);
     } catch (e) { res.writeHead(500, apiHeaders); res.end(JSON.stringify({ error: e.message })); }
   }

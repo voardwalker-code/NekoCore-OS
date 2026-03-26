@@ -1,3 +1,5 @@
+const { fetch } = require('./http-fetch');
+
 class LLMService {
   constructor(options = {}) {
     this.somaticAwareness = options.somaticAwareness || null;
