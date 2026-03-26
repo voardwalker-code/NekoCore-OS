@@ -566,10 +566,11 @@ Set `telegramBotToken` and `telegramAllowedUsers` in `Config/ma-config.json`. Th
 ```
 NekoCore-OS/
 ├── README.md                  # Visitor-first overview
-├── WORKLOG.md                 # Active process and phase ledger
-├── BUGS.md                    # Bug queue and status tracking
-├── CHANGELOG.md               # Release notes
 ├── docs/                      # Public documentation
+│   ├── WORKLOG.md             # Active process and phase ledger
+│   ├── BUGS.md                # Bug queue and status tracking
+│   ├── CHANGELOG.md           # Release notes
+│   ├── AGENTS.md              # Agent operating rules
 │   ├── USER-GUIDE.md                   # 24-section user guide
 │   ├── MA-AND-PROJECT-STRUCTURE.md     # MA architecture and layout
 │   ├── NEKOCORE-OS-WHITE-PAPER-v2.md   # Technical white paper

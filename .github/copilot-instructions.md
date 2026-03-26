@@ -4,35 +4,35 @@ These instructions apply to every conversation in this workspace. Follow them wi
 
 ## Response Contract (Mandatory)
 
-1. Every response must end with exactly: `Reference: WORKLOG.md | .github/copilot-instructions.md`
-2. If a request conflicts with `WORKLOG.md`, state the conflict first, then propose the compliant path.
+1. Every response must end with exactly: `Reference: docs/WORKLOG.md | .github/copilot-instructions.md`
+2. If a request conflicts with `docs/WORKLOG.md`, state the conflict first, then propose the compliant path.
 
 ## Priority Order
 
 1. Direct user request
-2. `WORKLOG.md` active mandate, current status, and stop/resume state
-3. Repository instruction files (`.github/copilot-instructions.md`, `AGENTS.md`)
+2. `docs/WORKLOG.md` active mandate, current status, and stop/resume state
+3. Repository instruction files (`.github/copilot-instructions.md`, `docs/AGENTS.md`)
 4. Implementation details and preferences
 
 ## Pre-Edit Checklist (One-Line Confirmation)
 
 Before edits, confirm all three checks are done:
-- Active phase/slice checked in `WORKLOG.md`
-- Cleanup/new-feature gate checked in `WORKLOG.md`
-- Stop/Resume snapshot checked in `WORKLOG.md`
+- Active phase/slice checked in `docs/WORKLOG.md`
+- Cleanup/new-feature gate checked in `docs/WORKLOG.md`
+- Stop/Resume snapshot checked in `docs/WORKLOG.md`
 
 ---
 
-## 1. Always Read WORKLOG.md First
+## 1. Always Read docs/WORKLOG.md First
 
-Before writing any code or making any plan, read `WORKLOG.md` (root of workspace).
+Before writing any code or making any plan, read `docs/WORKLOG.md`.
 
-Use `WORKLOG.md` for:
+Use `docs/WORKLOG.md` for:
 - active mandate and current status
 - stop/resume state
 - implementation ledger and dated history
 
-Do not treat `WORKLOG.md` as the primary home for reusable planning rules or architecture documentation.
+Do not treat `docs/WORKLOG.md` as the primary home for reusable planning rules or architecture documentation.
 
 Check:
 - What is the current phase and slice status?
@@ -46,7 +46,7 @@ If the user's request conflicts with the current WORKLOG state (e.g. they ask fo
 
 ## 2. Follow the Architecture Boundary Policy
 
-These rules are non-negotiable for this repo. `WORKLOG.md` tracks active mandate/gates; this file and the source-of-truth docs define where the rules live.
+These rules are non-negotiable for this repo. `docs/WORKLOG.md` tracks active mandate/gates; this file and the source-of-truth docs define where the rules live.
 
 - `client/**` — no backend orchestration, filesystem logic, or server policy logic
 - `server/**` — no DOM or UI rendering concerns
@@ -74,7 +74,7 @@ Any multi-step work must follow the structure in `Documents/current/PHASE-PLAN-T
 
 | What you need | Where to look |
 |---------------|--------------|
-| What to do next (active work) | `WORKLOG.md` (tracked in repo) |
+| What to do next (active work) | `docs/WORKLOG.md` (tracked in repo) |
 | How planning is structured | `Documents/current/PHASE-PLANNING-SOURCE-OF-TRUTH.md` |
 | Blueprint for new multi-slice plans | `Documents/current/PHASE-PLAN-TEMPLATE.md` |
 | Completed internal plan archive | `Documents/current/completed-phase-plans/INDEX.md` |
@@ -103,10 +103,10 @@ If any of these appear in `git status` as untracked or modified, do NOT stage or
 
 ## 6. After Every Slice
 
-1. Update the checkbox in `WORKLOG.md`
+1. Update the checkbox in `docs/WORKLOG.md`
 2. Add a ledger entry (date, slice ID, outcome, brief note)
 3. Update the Stop/Resume Snapshot
-4. Update `CHANGELOG.md` under `[Unreleased]`
+4. Update `docs/CHANGELOG.md` under `[Unreleased]`
 
 ---
 

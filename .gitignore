@@ -99,6 +99,9 @@ Modular Task Orch.txt
 booter.js
 Start-NekoCore-Server.bat
 
+# Daily investigation logs — local-only, never push
+CHAT-LOOP-DAILY-*.md
+
 # Test artifacts — generated locally, contain machine-specific paths
 test-output.txt
 project/test-output.txt

@@ -5,7 +5,7 @@ Last updated: 2026-03-25
 
 Repository packaging note:
 1. The runnable source tree now lives under `project/`.
-2. Root remains documentation/governance-first (`README.md`, `WORKLOG.md`, `BUGS.md`, `CHANGELOG.md`, `.github/`).
+2. Root is visitor-first (`README.md`, `.github/`). Governance docs live in `docs/` (`WORKLOG.md`, `BUGS.md`, `CHANGELOG.md`, `AGENTS.md`).
 3. Historical file paths below may use the pre-wrapper root-relative layout.
 
 ---
