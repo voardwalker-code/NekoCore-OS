@@ -88,6 +88,26 @@ class Orchestrator {
   }
 
   /**
+   * Extract usable prose from raw conscious output when orchestrator fails.
+   * Strips INTENT/MEMORY/EMOTION/ANGLE labels; returns text after "---" if present.
+   */
+  _extractProseFromConscious(raw) {
+    if (!raw || typeof raw !== 'string') return null;
+    // If there's a "---" separator, the prose is after it
+    const parts = raw.split(/^---+$/m);
+    if (parts.length > 1) {
+      const prose = parts[parts.length - 1].trim();
+      if (prose.length > 10) return prose;
+    }
+    // Strip known label lines
+    const stripped = raw
+      .replace(/^(INTENT|MEMORY|EMOTION|ANGLE|BODY STATE|ACTIVATED MEMORIES|EMOTION SIGNAL|PATTERN ALERT|GUT FEELING|SUBCONSCIOUS NOTE|DREAM THREAD|INTUITIVE FLASH):.*$/gm, '')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
+    return stripped.length > 10 ? stripped : null;
+  }
+
+  /**
    * Main orchestration entry point.
    * Runs the full inner dialog pipeline and returns unified response.
    *
@@ -1007,16 +1027,16 @@ The Conscious reasoning notes above define what to address (INTENT), which memor
           } catch (fbErr) {
             console.error('  ⚠ Orchestrator fallback call also failed:', fbErr.message);
             console.warn('  ⚠ FALLBACK: Using conscious output as response (orchestrator timed out + fallback failed)');
-            content = consciousOutput || '(Orchestrator timed out)';
+            content = this._extractProseFromConscious(consciousOutput) || '(Orchestrator timed out)';
           }
         } else {
           console.warn('  ⚠ FALLBACK: Using conscious output as response (orchestrator timed out, no alternate runtime)');
-          content = consciousOutput || '(Orchestrator timed out)';
+          content = this._extractProseFromConscious(consciousOutput) || '(Orchestrator timed out)';
         }
       } else {
         console.error('  ⚠ Orchestrator LLM call failed:', err.message);
         console.warn('  ⚠ FALLBACK: Using conscious output as response (orchestrator call error)');
-        content = consciousOutput || '(Orchestrator failed — no response available)';
+        content = this._extractProseFromConscious(consciousOutput) || '(Orchestrator failed — no response available)';
       }
     }
 

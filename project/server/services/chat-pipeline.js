@@ -1039,8 +1039,22 @@ function createChatPipeline(deps) {
       safe = safe.replace(/\[TASK_PLAN\][\s\S]*?\[\/TASK_PLAN\]/gi, '').trim();
       safe = safe.replace(/\[TOOL:[^\]]*\]/g, '').trim();
       safe = safe.replace(/\[TOOL:(?:ws_write|ws_append)[\s\S]*?"\]/g, '').trim();
+      // Strip leaked conscious-stage labels (INTENT/MEMORY/EMOTION/ANGLE)
+      // These appear when the orchestrator call fails and raw conscious output is used as fallback
+      const consciousLeakRe = /^(INTENT|MEMORY|EMOTION|ANGLE|BODY STATE|ACTIVATED MEMORIES|EMOTION SIGNAL|PATTERN ALERT|GUT FEELING|SUBCONSCIOUS NOTE|DREAM THREAD|INTUITIVE FLASH):.*$/gm;
+      if (consciousLeakRe.test(safe)) {
+        console.warn('  ⚠ Safety-stripped leaked conscious/subconscious stage labels from final response');
+        // Extract only the text after the last label block (the "---" separator + prose),
+        // or strip all label lines if no prose section exists
+        const afterSeparator = safe.split(/^---+$/m);
+        if (afterSeparator.length > 1) {
+          safe = afterSeparator[afterSeparator.length - 1].trim();
+        } else {
+          safe = safe.replace(consciousLeakRe, '').replace(/\n{3,}/g, '\n\n').trim();
+        }
+      }
       if (safe !== result.finalResponse) {
-        console.warn('  ⚠ Safety-stripped leftover [TOOL:] or [TASK_PLAN] tags from final response');
+        console.warn('  ⚠ Safety-stripped leftover tags from final response');
         result.finalResponse = safe || result.finalResponse;
       }
     }

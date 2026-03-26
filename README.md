@@ -19,6 +19,8 @@
   <a href="docs/USER-GUIDE.md"><img src="https://img.shields.io/badge/📖_user_guide-docs-34d399?style=for-the-badge" alt="User Guide"/></a>
   &nbsp;
   <a href="project/Neko-Core.html"><img src="https://img.shields.io/badge/🏗️_architecture-deck-ec4899?style=for-the-badge" alt="Architecture Deck"/></a>
+  &nbsp;
+  <a href="https://ko-fi.com/nekocoreos"><img src="https://img.shields.io/badge/☕_support-ko--fi-ff5e5b?style=for-the-badge" alt="Support on Ko-fi"/></a>
 </p>
 
 <p align="center">
@@ -885,6 +887,23 @@ The in-shell browser app uses an embedded page model — some sites block embedd
 
 ---
 
+## ☕ Support NekoCore
+
+<p align="center">
+  NekoCore is free, open-source, and built by one developer fueled by curiosity, caffeine, and API tokens.<br>
+  If this project sparks something for you, a small tip helps keep the neurons firing.
+</p>
+
+<p align="center">
+  <a href="https://ko-fi.com/nekocoreos"><img src="https://img.shields.io/badge/☕_Buy_a_Token-ko--fi-ff5e5b?style=for-the-badge" alt="Buy a Token on Ko-fi"/></a>
+</p>
+
+<p align="center">
+  <em>Every token goes toward LLM API calls, infrastructure, and late-night pizza. 🐱</em>
+</p>
+
+---
+
 <p align="center">
   <strong>MIT Licensed</strong> — Use it, fork it, extend it, build on it.
 </p>
@@ -899,4 +918,6 @@ The in-shell browser app uses an embedded page model — some sites block embedd
   <a href="docs/NEKOCORE-OS-ARCHITECTURE-v1.md">Architecture</a>
   &nbsp;·&nbsp;
   <a href="project/MA/README.md">Memory Architect</a>
+  &nbsp;·&nbsp;
+  <a href="https://ko-fi.com/nekocoreos">Support</a>
 </p>
