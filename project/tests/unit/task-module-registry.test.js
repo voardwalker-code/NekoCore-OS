@@ -1,3 +1,20 @@
+// ── Tests · Task Module Registry.Test ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This test file validates behavior and guards against regressions in its
+// target subsystem.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: ./test-compat,
+// ../../server/brain/tasks/task-module-registry,
+// ../../server/brain/tasks/task-types. Keep import and call-site contracts
+// aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 /**
  * Guard Tests for Task Module Registry
  * Ensures the registry can CRUD modules and resolve seed types correctly.

@@ -1,3 +1,18 @@
+// ── Brain · Entity Network Registry ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: fs, path. Keep import and
+// call-site contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 /**
  * Entity Network Registry
  * Manages discovery and configuration of entities on the LAN.
@@ -9,6 +24,10 @@ const fs = require('fs');
 const path = require('path');
 
 class EntityNetworkRegistry {
+  // constructor()
+  // WHAT THIS DOES: constructor is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call constructor(...) where this helper behavior is needed.
   constructor() {
     this.entities = new Map();
     this.configPath = path.join(__dirname, '../../config/entity-network.json');
@@ -19,6 +38,10 @@ class EntityNetworkRegistry {
    * Load entity configuration from JSON file
    * Creates default config if file doesn't exist
    */
+  // load()
+  // WHAT THIS DOES: load reads or finds data and gives it back.
+  // WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+  // HOW TO USE IT: call load(...), then use the returned value in your next step.
   load() {
     try {
       if (fs.existsSync(this.configPath)) {
@@ -48,6 +71,10 @@ class EntityNetworkRegistry {
    * @param {Array<string>} entity.capabilities - List of capabilities (e.g., ['web_search', 'data_analysis'])
    * @returns {boolean} true if registered
    */
+  // registerEntity()
+  // WHAT THIS DOES: registerEntity is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call registerEntity(...) where this helper behavior is needed.
   registerEntity(entity) {
     if (!entity || !entity.id || !entity.host || !entity.port) {
       throw new Error('Entity must have id, host, and port');

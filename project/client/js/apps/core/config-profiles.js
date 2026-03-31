@@ -1,3 +1,18 @@
+// ── Services · Client Config Profiles ───────────────────────────────────────
+//
+// HOW CONFIG PROFILES WORK:
+// This module manages provider profiles, persistence, and recommended model
+// stacks. It loads/saves profiles from `/api/config`, hydrates settings UI,
+// applies preset stacks, and keeps legacy profile shape compatible with the
+// newer multi-aspect configuration format.
+//
+// WHAT USES THIS:
+//   settings/setup/provider UI flows — profile save/load/autosave and preset controls
+//
+// EXPORTS:
+//   global profile and recommendation helpers used across setup/settings modules
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // NekoCore OS — Config Profiles & Model Recommendations
 // Extracted from app.js by P3-S8
@@ -32,7 +47,7 @@ async function loadSavedConfig() {
     lg('warn', 'Config not loaded (ensure server is running): ' + e.message);
   }
 }
-
+/** Resolve main provider config from modern or legacy profile shape. */
 function getMainConfigFromProfile(profile) {
   if (!profile || typeof profile !== 'object') return null;
 
@@ -85,7 +100,7 @@ function getMainConfigFromProfile(profile) {
 
   return null;
 }
-
+/** Fill main provider form fields from resolved config. */
 function hydrateMainProviderInputs(config) {
   if (!config) return;
 
@@ -129,7 +144,7 @@ async function persistConfig() {
     return false;
   }
 }
-
+/** Collect profile values from current provider form fields. */
 function gatherProfile() {
   const profile = {};
   const olUrl = document.getElementById('ollamaUrl-main')?.value?.trim();
@@ -205,7 +220,7 @@ async function refreshSavedConfig() {
     }
   } catch (_) {}
 }
-
+/** Prompt for profile name and save current configuration snapshot. */
 function saveCurrentProfile() {
   const profile = gatherProfile();
   let name = savedConfig.lastActive || 'default';
@@ -226,7 +241,7 @@ function saveCurrentProfile() {
     }
   });
 }
-
+/** Load selected profile into settings UI and reconnect provider. */
 function loadProfile(name) {
   const p = savedConfig.profiles[name];
   if (!p) return;
@@ -267,7 +282,7 @@ function loadProfile(name) {
   renderProfileChips();
   lg('info', 'Loaded profile: ' + name);
 }
-
+/** Delete one saved profile by name. */
 function deleteProfile(name, ev) {
   ev.stopPropagation();
   if (!confirm('Delete profile "' + name + '"?')) return;
@@ -278,7 +293,7 @@ function deleteProfile(name, ev) {
     lg('info', 'Deleted profile: ' + name);
   });
 }
-
+/** Render clickable profile chips with active state and delete controls. */
 function renderProfileChips() {
   const container = document.getElementById('profileChips');
   if (!container) return;
@@ -354,7 +369,7 @@ const OPENROUTER_ROLE_MODELS = {
     ]
   }
 };
-
+/** Return recommended OpenRouter model set for a role/aspect. */
 function getOpenRouterRolePreset(aspect) {
   return OPENROUTER_ROLE_MODELS[aspect] || OPENROUTER_ROLE_MODELS.main;
 }
@@ -432,7 +447,7 @@ const RECOMMENDED_PANEL_COPY = {
     custom: 'Set each Ollama aspect manually below, then connect/save each panel as needed.'
   }
 };
-
+/** Refresh text copy for current recommended-provider panel. */
 function refreshRecommendedPanelCopy() {
   const copy = RECOMMENDED_PANEL_COPY[currentRecommendedPresetProvider] || RECOMMENDED_PANEL_COPY.openrouter;
   ['best', 'fast', 'cheap', 'hybrid', 'custom'].forEach(name => {
@@ -446,7 +461,7 @@ function refreshRecommendedPanelCopy() {
       : 'Applying OpenRouter stacks';
   }
 }
-
+/** Toggle provider tab in the recommended preset panel. */
 function showRecommendedPresetProvider(provider, el) {
   currentRecommendedPresetProvider = (provider === 'ollama') ? 'ollama' : 'openrouter';
   const orBtn = document.getElementById('recommendedProvider-openrouter');
@@ -458,7 +473,7 @@ function showRecommendedPresetProvider(provider, el) {
   const statusEl = document.getElementById('recommendedPresetStatus');
   if (statusEl) statusEl.textContent = '';
 }
-
+/** Switch visible tab inside the recommended setup panel. */
 function showRecommendedSetupTab(tabName, el) {
   currentRecommendedSetupTab = tabName;
   ['best', 'fast', 'cheap', 'hybrid', 'custom'].forEach(name => {
@@ -472,7 +487,7 @@ function showRecommendedSetupTab(tabName, el) {
   if (statusEl) statusEl.textContent = '';
   if (el && !el.classList.contains('on')) el.classList.add('on');
 }
-
+/** Apply one recommended stack into settings input controls. */
 function applyRecommendedPresetInputs(stackKey, provider = 'openrouter') {
   const stack = provider === 'ollama'
     ? OLLAMA_RECOMMENDED_STACKS[stackKey]
@@ -553,6 +568,7 @@ async function applyRecommendedSetupTab() {
     return;
   }
 
+  // key()
   const key = (document.getElementById('apikeyKey-main')?.value || '').trim();
   if (!key) {
     if (statusEl) statusEl.textContent = 'Preset applied to fields. Add OpenRouter key, then click Apply again to save globally.';
@@ -572,7 +588,7 @@ async function applyRecommendedSetupTab() {
     lg('err', 'Preset save failed: ' + e.message);
   }
 }
-
+/** Fill OpenRouter datalist suggestions for a settings panel. */
 function applySettingsOpenRouterSuggestions(panel = 'main') {
   const aspect = panel === 'subconscious' ? 'subconscious' : (panel === 'dreams' ? 'dream' : (panel === 'orchestrator' ? 'orchestrator' : 'main'));
   const preset = getOpenRouterRolePreset(aspect);
@@ -594,7 +610,7 @@ function applySettingsOpenRouterSuggestions(panel = 'main') {
 
   modelInput.placeholder = preset.def + ' (or paste any OpenRouter model id)';
 }
-
+/** Initialize model suggestion datalists across settings panels. */
 function initSettingsModelSuggestions() {
   applySettingsOpenRouterSuggestions('main');
   applySettingsOpenRouterSuggestions('subconscious');

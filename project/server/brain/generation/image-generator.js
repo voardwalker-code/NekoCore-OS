@@ -1,17 +1,44 @@
+// ── Brain · Image Generator ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: fs, path, ../../entityPaths.
+// Keep import and call-site contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 const fs = require('fs');
 const path = require('path');
 const entityPaths = require('../../entityPaths');
 
 class ImageGenerator {
+  // constructor()
+  // WHAT THIS DOES: constructor is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call constructor(...) where this helper behavior is needed.
   constructor(options = {}) {
     this.entityId = options.entityId;
     this.config = options.config || {};
   }
 
+  // _isEnabled()
+  // WHAT THIS DOES: _isEnabled answers a yes/no rule check.
+  // WHY IT EXISTS: guard checks are kept readable and reusable in one place.
+  // HOW TO USE IT: call _isEnabled(...) and branch logic based on true/false.
   _isEnabled() {
     return !!(this.config && this.config.enabled);
   }
 
+  // _buildPrompt()
+  // WHAT THIS DOES: _buildPrompt creates or initializes something needed by the flow.
+  // WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+  // HOW TO USE IT: call _buildPrompt(...) before code that depends on this setup.
   _buildPrompt(memory) {
     const summary = String(memory.semantic || memory.summary || '').trim();
     const narrative = String(memory.narrative || '').trim();
@@ -29,6 +56,12 @@ class ImageGenerator {
   }
 
   async _fetchImage(prompt) {
+    // endpoint()
+    // Purpose: helper wrapper used by this module's main flow.
+    // endpoint()
+    // WHAT THIS DOES: endpoint is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call endpoint(...) where this helper behavior is needed.
     const endpoint = (this.config.endpoint || '').trim();
     const apiKey = (this.config.apiKey || '').trim();
     if (!endpoint) return null;

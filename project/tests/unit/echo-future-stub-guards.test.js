@@ -1,3 +1,19 @@
+// ── Tests · Echo Future Stub Guards.Test ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This test file validates behavior and guards against regressions in its
+// target subsystem.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: node:test,
+// node:assert/strict, fs, path, os. Keep import and call-site contracts
+// aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // Guard Tests — Phase 4.7 E-7: Echo Future Stub + Exit Audit
 // Guards that define and lock the expected behavior of:
@@ -57,6 +73,10 @@ test('rebuildShapeIndexes does not write any files when called (E-7-0)', () => {
 
     // should not have created any files under tmpBase
     const files = [];
+    // walk()
+    // WHAT THIS DOES: walk is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call walk(...) where this helper behavior is needed.
     function walk(dir) {
       if (!fs.existsSync(dir)) return;
       for (const f of fs.readdirSync(dir)) {

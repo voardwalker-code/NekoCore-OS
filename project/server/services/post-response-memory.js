@@ -1,3 +1,20 @@
+// ── Services · Post Response Memory ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This service module holds reusable business logic shared across runtime
+// paths.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: ./llm-runtime-utils,
+// ../brain/utils/memory-encoder-nlp, ../brain/memory/shape-classifier,
+// ../entityPaths, fs. Keep import and call-site contracts aligned during
+// refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 'use strict';
 const { parseJsonBlock } = require('./llm-runtime-utils');
 const { encodeMemory } = require('../brain/utils/memory-encoder-nlp');
@@ -26,6 +43,12 @@ async function runPostResponseMemoryEncoding(params = {}) {
     beliefGraph
   } = params;
 
+  // emitSSE()
+  // Purpose: helper wrapper used by this module's main flow.
+  // emitSSE()
+  // WHAT THIS DOES: emitSSE is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call emitSSE(...) where this helper behavior is needed.
   const emitSSE = (event, data) => {
     if (typeof broadcastSSE === 'function') {
       broadcastSSE(event, data);
@@ -50,10 +73,20 @@ async function runPostResponseMemoryEncoding(params = {}) {
       .substring(0, 800);
 
     const entityLabel = entityName ? `The entity's name is "${entityName}"` : 'The entity';
+    // userLabel()
+    // Purpose: helper wrapper used by this module's main flow.
+    // userLabel()
+    // WHAT THIS DOES: userLabel is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call userLabel(...) where this helper behavior is needed.
     const userLabel = (userName && userName !== 'User') ? `The user's name is "${userName}"` : 'The user is unnamed';
     const nameGuard = `IMPORTANT: ${entityLabel}. ${userLabel}. Do NOT label the user as "${entityName || 'the entity'}". Keep them clearly distinct in the memory summary.`;
 
     // ── Build creationContext for predictive memory topology ──────────────
+    // buildCreationContext()
+    // WHAT THIS DOES: buildCreationContext creates or initializes something needed by the flow.
+    // WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+    // HOW TO USE IT: call buildCreationContext(...) before code that depends on this setup.
     function buildCreationContext(topics) {
       let activeBeliefIds = [];
       if (beliefGraph && typeof beliefGraph.getRelevantBeliefs === 'function') {
@@ -144,6 +177,12 @@ Return ONLY this JSON (no other text, no markdown, no explanation):
       }
 
       let jsonStr = jsonMatch[0].replace(/\n/g, ' ');
+      // openBraces()
+      // Purpose: helper wrapper used by this module's main flow.
+      // openBraces()
+      // WHAT THIS DOES: openBraces creates or initializes something needed by the flow.
+      // WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+      // HOW TO USE IT: call openBraces(...) before code that depends on this setup.
       const openBraces = (jsonStr.match(/\{/g) || []).length;
       const closeBraces = (jsonStr.match(/\}/g) || []).length;
       if (openBraces > closeBraces) {

@@ -1,3 +1,19 @@
+// ── Brain · Core Life Generator ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: fs, path, zlib, crypto,
+// ../../entityPaths. Keep import and call-site contracts aligned during
+// refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // Core Life Generator — Creates short life story with key memories
 // Replaces the massive synthetic memory generation with focused core memories
@@ -10,16 +26,28 @@ const crypto = require('crypto');
 const { getEpisodicMemoryPath } = require('../../entityPaths');
 
 // Helper to generate unique memory id
+// genMemoryId()
+// WHAT THIS DOES: genMemoryId is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call genMemoryId(...) where this helper behavior is needed.
 function genMemoryId() {
   return 'mem_' + crypto.randomBytes(4).toString('hex');
 }
 
 // Helper to generate random float
+// randFloat()
+// WHAT THIS DOES: randFloat is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call randFloat(...) where this helper behavior is needed.
 function randFloat(min, max) {
   return Math.random() * (max - min) + min;
 }
 
 // Helper to generate random int
+// randInt()
+// WHAT THIS DOES: randInt is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call randInt(...) where this helper behavior is needed.
 function randInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
@@ -166,6 +194,10 @@ Return ONLY the JSON array, nothing else.`;
     const deduped = [];
     for (const mem of coreMemories) {
       // Normalize: lowercase, collapse whitespace, trim
+      // key()
+      // WHAT THIS DOES: key is a helper used by this module's main flow.
+      // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+      // HOW TO USE IT: call key(...) where this helper behavior is needed.
       const key = (mem.semantic || '').toLowerCase().replace(/\s+/g, ' ').trim();
       if (!key || seen.has(key)) {
         console.log(`  ⚠ Skipping duplicate core memory: "${(mem.semantic || '').substring(0, 60)}..."`);
@@ -267,6 +299,10 @@ You are a persistent synthetic entity running on REM System v0.9.0-alpha.4.24. Y
     
     // Spread memories across the lifetime
     const timeRange = now - birth;
+    // timeOffset()
+    // WHAT THIS DOES: timeOffset is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call timeOffset(...) where this helper behavior is needed.
     const timeOffset = (timeRange / coreMemories.length) * i;
     currentTime = birth + timeOffset + randInt(0, 86400); // Add some randomness
     

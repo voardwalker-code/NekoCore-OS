@@ -1,3 +1,16 @@
+// ── Routes · Process Manager Routes ──────────────────────────────────────────
+//
+// HOW PROCESS MANAGEMENT WORKS:
+// This module provides start/stop/status endpoints for MA, REM, and NekoCore
+// sidecar servers using detached process launch and health probing.
+//
+// WHAT USES THIS:
+//   server control UI and automation flows that manage sidecar runtimes
+//
+// EXPORTS:
+//   createProcessManagerRoutes() + process management helpers/constants
+// ─────────────────────────────────────────────────────────────────────────────
+
 'use strict';
 // ── Process Manager Routes ──────────────────────────────────────────────────
 // Start / stop / status for the three sub-servers (MA, REM, NekoCore Mind).
@@ -15,31 +28,35 @@ const fs    = require('fs');
 const http  = require('http');
 
 const PROJECT = path.resolve(__dirname, '..', '..');          // project/
+const MA_EXTERNAL = path.resolve(PROJECT, '..', '..', 'MA-Memory-Architect', 'MA');
+const MA_INTERNAL = path.join(PROJECT, 'MA');
+const MA_ROOT = fs.existsSync(path.join(MA_EXTERNAL, 'MA-Server.js')) ? MA_EXTERNAL : MA_INTERNAL;
+const MA_REPO_URL = 'https://github.com/voardwalker-code/MA-Memory-Architect';
 
 const SERVERS = {
   ma: {
     label:      'MA',
-    script:     path.join(PROJECT, 'MA', 'MA-Server.js'),
-    pidFile:    path.join(PROJECT, 'MA', 'ma.pid'),
-    cwd:        path.join(PROJECT, 'MA'),
+    script:     path.join(MA_ROOT, 'MA-Server.js'),
+    pidFile:    path.join(MA_ROOT, 'ma.pid'),
+    cwd:        MA_ROOT,
     port:       3850,
     healthPath: '/api/health',
     env:        { MA_NO_OPEN_BROWSER: '1' }
   },
   rem: {
     label:      'REM System',
-    script:     path.join(PROJECT, 'MA', 'MA-workspace', 'rem-system', 'rem-server.js'),
-    pidFile:    path.join(PROJECT, 'MA', 'MA-workspace', 'rem-system', 'rem.pid'),
-    cwd:        path.join(PROJECT, 'MA', 'MA-workspace', 'rem-system'),
+    script:     path.join(MA_ROOT, 'MA-workspace', 'rem-system', 'rem-server.js'),
+    pidFile:    path.join(MA_ROOT, 'MA-workspace', 'rem-system', 'rem.pid'),
+    cwd:        path.join(MA_ROOT, 'MA-workspace', 'rem-system'),
     port:       3860,
     healthPath: '/api/health',
     env:        {}
   },
   nekocore: {
     label:      'NekoCore Mind',
-    script:     path.join(PROJECT, 'MA', 'MA-workspace', 'nekocore', 'nekocore-server.js'),
-    pidFile:    path.join(PROJECT, 'MA', 'MA-workspace', 'nekocore', 'nekocore.pid'),
-    cwd:        path.join(PROJECT, 'MA', 'MA-workspace', 'nekocore'),
+    script:     path.join(MA_ROOT, 'MA-workspace', 'nekocore', 'nekocore-server.js'),
+    pidFile:    path.join(MA_ROOT, 'MA-workspace', 'nekocore', 'nekocore.pid'),
+    cwd:        path.join(MA_ROOT, 'MA-workspace', 'nekocore'),
     port:       3870,
     healthPath: '/nekocore/health',
     env:        {}
@@ -48,10 +65,10 @@ const SERVERS = {
 
 // ── helpers ─────────────────────────────────────────────────────────────────
 
+/** Return true when process id exists and is signalable. */
 function isRunning(pid) {
   try { process.kill(pid, 0); return true; } catch { return false; }
 }
-
 function readPid(srv) {
   if (!fs.existsSync(srv.pidFile)) return null;
   const pid = parseInt(fs.readFileSync(srv.pidFile, 'utf8'), 10);
@@ -61,7 +78,7 @@ function readPid(srv) {
   }
   return pid;
 }
-
+/** Probe one server health endpoint and return availability payload. */
 function healthCheck(srv) {
   return new Promise(resolve => {
     const req = http.get(`http://localhost:${srv.port}${srv.healthPath}`, res => {
@@ -73,10 +90,16 @@ function healthCheck(srv) {
     req.setTimeout(2000, () => { req.destroy(); resolve({ up: false }); });
   });
 }
-
+/** Start detached server process and persist pid file. */
 function startServer(srv) {
   const pid = readPid(srv);
   if (pid) return { ok: true, already: true, pid };
+  if (!fs.existsSync(srv.script)) {
+    return { ok: false, error: `Script not found: ${srv.script}`, reason: 'ma_not_found', repoUrl: MA_REPO_URL };
+  }
+  if (!fs.existsSync(srv.cwd)) {
+    return { ok: false, error: `Working directory not found: ${srv.cwd}`, reason: 'ma_not_found', repoUrl: MA_REPO_URL };
+  }
 
   const child = spawn(process.execPath, [srv.script], {
     cwd:      srv.cwd,
@@ -88,7 +111,7 @@ function startServer(srv) {
   fs.writeFileSync(srv.pidFile, String(child.pid));
   return { ok: true, already: false, pid: child.pid };
 }
-
+/** Stop running server process and clear pid file. */
 function stopServer(srv) {
   const pid = readPid(srv);
   if (!pid) return { ok: true, wasRunning: false };
@@ -99,8 +122,8 @@ function stopServer(srv) {
 
 // ── route factory ───────────────────────────────────────────────────────────
 
+/** Build process-manager route dispatcher for all managed servers. */
 function createProcessManagerRoutes(/* ctx */) {
-
   function json(res, code, obj, apiHeaders) {
     res.writeHead(code, apiHeaders);
     res.end(JSON.stringify(obj));
@@ -152,9 +175,10 @@ function createProcessManagerRoutes(/* ctx */) {
 }
 
 module.exports = createProcessManagerRoutes;
-module.exports.SERVERS     = SERVERS;
-module.exports.startServer = startServer;
-module.exports.stopServer  = stopServer;
-module.exports.healthCheck = healthCheck;
-module.exports.readPid     = readPid;
-module.exports.isRunning   = isRunning;
+module.exports.SERVERS      = SERVERS;
+module.exports.startServer  = startServer;
+module.exports.stopServer   = stopServer;
+module.exports.healthCheck  = healthCheck;
+module.exports.readPid      = readPid;
+module.exports.isRunning    = isRunning;
+module.exports.MA_REPO_URL  = MA_REPO_URL;

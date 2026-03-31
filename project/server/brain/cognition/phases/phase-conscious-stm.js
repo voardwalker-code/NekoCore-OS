@@ -1,3 +1,18 @@
+// ── Brain · Phase Conscious Stm ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Used by related flows in its subsystem. Keep call contracts stable during
+// readability-only edits.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // Phase: ConsciousStm — Per-Cycle STM Decay and Promotion Check
 // Runs every brain-loop cycle.
 // Decays all STM entries and emits an event if anything is queued for LTM promotion.

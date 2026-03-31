@@ -1,3 +1,18 @@
+// ── Brain · Thought Stream ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: ./thought-types. Keep import
+// and call-site contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // REM System — Thought Stream Debug Console Module
 // Visualizes all thoughts flowing through the cognitive bus.
@@ -6,6 +21,10 @@
 const ThoughtTypes = require('./thought-types');
 
 class ThoughtStream {
+  // constructor()
+  // WHAT THIS DOES: constructor is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call constructor(...) where this helper behavior is needed.
   constructor(options = {}) {
     this.cognitiveBus = options.cognitiveBus;
     this.maxDisplaySize = options.maxDisplaySize || 100;
@@ -18,6 +37,10 @@ class ThoughtStream {
   /**
    * Start listening to the cognitive bus
    */
+  // start()
+  // WHAT THIS DOES: start creates or initializes something needed by the flow.
+  // WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+  // HOW TO USE IT: call start(...) before code that depends on this setup.
   start() {
     if (!this.cognitiveBus) {
       console.warn('  ⚠ Thought stream requires cognitive bus');
@@ -34,6 +57,10 @@ class ThoughtStream {
   /**
    * Process and log a thought
    */
+  // processThought()
+  // WHAT THIS DOES: processThought is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call processThought(...) where this helper behavior is needed.
   processThought(thought) {
     // Filter by type if specified
     if (this.filterTypes && !this.filterTypes.includes(thought.type)) {
@@ -74,6 +101,10 @@ class ThoughtStream {
     const importanceBars = this.drawBars(importance, 5);
 
     // Source
+    // source()
+    // WHAT THIS DOES: source is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call source(...) where this helper behavior is needed.
     const source = (thought.source || 'unknown').padEnd(20);
 
     // Type

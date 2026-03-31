@@ -1,9 +1,23 @@
+// ── Contracts · Cognitive Snapshot Contract ───────────────────────────────────
+//
+// HOW THIS CONTRACT WORKS:
+// This file validates the structure of pre-turn cognitive snapshot objects and
+// formats valid snapshots into a compact prompt-ready text block.
+//
+// WHAT USES THIS:
+//   cognition snapshot assembly and prompt injection flows
+//
+// EXPORTS:
+//   validateSnapshot(), buildSnapshotBlock()
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // Cognitive Snapshot Contract
 // Validates the shape of the pre-turn cognitive state snapshot
 // and formats it for prompt injection.
 // ============================================================
 
+/** Return true for non-array object values. */
 function isObject(value) {
   return !!value && typeof value === 'object' && !Array.isArray(value);
 }

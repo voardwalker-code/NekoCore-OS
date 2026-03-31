@@ -1,3 +1,18 @@
+// ── Client Optional · Physical Ui ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This client module drives browser-side behavior and state updates for UI
+// features.
+//
+// WHAT USES THIS:
+// Used by related flows in its subsystem. Keep call contracts stable during
+// readability-only edits.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // REM System v0.6.0 — Physical Body UI Module (P3-S5)
 // ============================================================
@@ -16,7 +31,10 @@ const SOMATIC_METRIC_LABELS = {
   cycle_time:        { label: 'Cycle Time',          icon: '🔄', desc: 'Brain loop cycle speed' },
   error_rate:        { label: 'Error Rate',          icon: '⚠️', desc: 'System reliability' }
 };
-
+// initPhysicalTab()
+// WHAT THIS DOES: initPhysicalTab creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call initPhysicalTab(...) before code that depends on this setup.
 function initPhysicalTab() {
   if (!physicalTabInitialized) {
     physicalTabInitialized = true;
@@ -26,7 +44,10 @@ function initPhysicalTab() {
   }
   fetchPhysicalState();
 }
-
+// buildPhysicalMetricCards()
+// WHAT THIS DOES: buildPhysicalMetricCards creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call buildPhysicalMetricCards(...) before code that depends on this setup.
 function buildPhysicalMetricCards() {
   const grid = document.getElementById('physicalMetricsGrid');
   if (!grid) return;
@@ -77,7 +98,10 @@ async function fetchNeuroState() {
     lg('err', 'Failed to fetch neurochemistry state: ' + err.message);
   }
 }
-
+// updateNeuroUI()
+// WHAT THIS DOES: updateNeuroUI changes saved state or updates data.
+// WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+// HOW TO USE IT: call updateNeuroUI(...) with the new values you want to persist.
 function updateNeuroUI(data) {
   const chemicals = data.chemicals || data.state || {};
   const vec = data.emotionalVector || {};
@@ -106,7 +130,10 @@ function updateNeuroUI(data) {
     moodEl.textContent = 'Active';
   }
 }
-
+// updatePhysicalUI()
+// WHAT THIS DOES: updatePhysicalUI changes saved state or updates data.
+// WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+// HOW TO USE IT: call updatePhysicalUI(...) with the new values you want to persist.
 function updatePhysicalUI(data) {
   const zoneColors = { good: 'var(--accent-green)', warn: 'var(--wn)', critical: 'var(--dn)' };
   const zoneBg = { good: 'var(--accent-green)', warn: 'var(--wn)', critical: 'var(--dn)' };
@@ -161,7 +188,10 @@ function updatePhysicalUI(data) {
     }
   }
 }
-
+// updateChatPhysical()
+// WHAT THIS DOES: updateChatPhysical changes saved state or updates data.
+// WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+// HOW TO USE IT: call updateChatPhysical(...) with the new values you want to persist.
 function updateChatPhysical(data) {
   const overallStress = data.overallStress || 0;
   const zoneLabel = overallStress < 0.2 ? 'HEALTHY' : overallStress < 0.5 ? 'MILD STRAIN' : overallStress < 0.75 ? 'STRESSED' : 'DISTRESSED';
@@ -191,7 +221,10 @@ function updateChatPhysical(data) {
     container.appendChild(row);
   }
 }
-
+// initChatPhysical()
+// WHAT THIS DOES: initChatPhysical creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call initChatPhysical(...) before code that depends on this setup.
 function initChatPhysical() {
   fetch('/api/somatic').then(r => r.json()).then(data => {
     if (data.ok) updateChatPhysical(data);
@@ -231,7 +264,10 @@ async function toggleSomaticMetric(metric) {
     lg('err', 'Failed to toggle metric: ' + err.message);
   }
 }
-
+// connectPhysicalSSE()
+// WHAT THIS DOES: connectPhysicalSSE is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call connectPhysicalSSE(...) where this helper behavior is needed.
 function connectPhysicalSSE() {
   if (physicalSSE) return;
   try {
@@ -254,7 +290,10 @@ function connectPhysicalSSE() {
     });
   } catch (err) { /* ignore */ }
 }
-
+// updateDeepSleepIntervalLabel()
+// WHAT THIS DOES: updateDeepSleepIntervalLabel changes saved state or updates data.
+// WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+// HOW TO USE IT: call updateDeepSleepIntervalLabel(...) with the new values you want to persist.
 function updateDeepSleepIntervalLabel(val) {
   const el = document.getElementById('deepSleepIntervalValue');
   if (el) el.textContent = val + ' cycles';

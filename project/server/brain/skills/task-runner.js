@@ -1,3 +1,16 @@
+// ── Services · Task Runner Engine ───────────────────────────────────────────
+//
+// HOW TASK RUNNING WORKS:
+// This module parses [TASK_PLAN] blocks, executes steps one-by-one with tool
+// support, tracks progress in `_taskplan.md`, and returns a final summary.
+//
+// WHAT USES THIS:
+//   chat/task execution flows that run multi-step plans
+//
+// EXPORTS:
+//   parsePlan(), stripPlanBlock(), executeTaskPlan(), runTask(), detectNeedsInput()
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // REM System — Task Runner
 //
@@ -26,6 +39,7 @@ const MAX_LLM_CALLS = 20;
  * Detect a [NEEDS_INPUT: question] tag in worker output.
  * Returns the question string or null.
  */
+/** Extract a [NEEDS_INPUT: ...] prompt from model output, if present. */
 function detectNeedsInput(text) {
   if (!text) return null;
   const match = NEEDS_INPUT_REGEX.exec(text);
@@ -36,6 +50,7 @@ function detectNeedsInput(text) {
  * Parse a [TASK_PLAN] block from entity output.
  * Returns { steps: [{description, done}], raw } or null.
  */
+/** Parse a [TASK_PLAN] block into normalized step objects. */
 function parsePlan(text) {
   if (!text) return null;
   const match = PLAN_REGEX.exec(text);
@@ -58,6 +73,7 @@ function parsePlan(text) {
 /**
  * Strip [TASK_PLAN] block from text, leaving the rest.
  */
+/** Remove the [TASK_PLAN] section from a response body. */
 function stripPlanBlock(text) {
   return text.replace(PLAN_REGEX, '').replace(/\n{3,}/g, '\n\n').trim();
 }
@@ -65,6 +81,7 @@ function stripPlanBlock(text) {
 /**
  * Generate the markdown content for _taskplan.md
  */
+/** Build markdown content for the workspace `_taskplan.md` file. */
 function buildPlanMarkdown(plan, userMessage, stepOutputs) {
   let md = `# Active Task Plan\n\n`;
   md += `**Original Request:** ${userMessage}\n\n`;
@@ -90,6 +107,7 @@ function buildPlanMarkdown(plan, userMessage, stepOutputs) {
 /**
  * Write or update _taskplan.md in the workspace.
  */
+/** Write the current task plan snapshot to `_taskplan.md`. */
 function writePlanFile(workspacePath, plan, userMessage, stepOutputs) {
   if (!workspacePath) return;
   const filePath = path.join(workspacePath, PLAN_FILENAME);
@@ -102,6 +120,7 @@ function writePlanFile(workspacePath, plan, userMessage, stepOutputs) {
 /**
  * Delete _taskplan.md from the workspace.
  */
+/** Remove `_taskplan.md` after task execution completes. */
 function deletePlanFile(workspacePath) {
   if (!workspacePath) return;
   const filePath = path.join(workspacePath, PLAN_FILENAME);
@@ -111,6 +130,7 @@ function deletePlanFile(workspacePath) {
 /**
  * Read _taskplan.md from the workspace (for the step prompt).
  */
+/** Read current `_taskplan.md` content for step prompts. */
 function readPlanFile(workspacePath) {
   if (!workspacePath) return null;
   const filePath = path.join(workspacePath, PLAN_FILENAME);
@@ -123,6 +143,7 @@ function readPlanFile(workspacePath) {
 /**
  * Build the prompt for a single step execution.
  */
+/** Build one execution prompt for the current plan step. */
 function buildStepPrompt(plan, stepIndex, stepOutputs, userMessage, planFileContent) {
   const step = plan.steps[stepIndex];
   const total = plan.steps.length;

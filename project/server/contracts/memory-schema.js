@@ -1,3 +1,16 @@
+// ── Contracts · Memory Record Schema ──────────────────────────────────────────
+//
+// HOW THIS CONTRACT WORKS:
+// This file defines the canonical normalized shape for persisted memory records.
+// It converts loose/legacy input into stable v2 memory metadata fields.
+//
+// WHAT USES THIS:
+//   memory persistence and retrieval layers that read/write memory records
+//
+// EXPORTS:
+//   MEMORY_SCHEMA_VERSION, VALID_SHAPES, normalizeMemoryRecord()
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // Memory Schema Contract
 // Shared canonical record shape for persisted memory metadata.
@@ -12,12 +25,12 @@ const MEMORY_SCHEMA_VERSION = 2;
 const VALID_SHAPES = Object.freeze([
   'narrative', 'reflective', 'factual', 'emotional', 'anticipatory', 'unclassified'
 ]);
-
+/** Convert unknown input to a finite number or a fallback value. */
 function toFiniteNumber(value, fallback) {
   const n = Number(value);
   return Number.isFinite(n) ? n : fallback;
 }
-
+/** Keep only trimmed non-empty strings from an input array. */
 function toStringArray(value, fallback = []) {
   if (!Array.isArray(value)) return fallback;
   return value
@@ -25,7 +38,7 @@ function toStringArray(value, fallback = []) {
     .map(v => v.trim())
     .filter(Boolean);
 }
-
+/** Keep only valid memory edge descriptors. */
 function normalizeEdges(value) {
   if (!Array.isArray(value)) return [];
   return value.filter(e =>
@@ -35,7 +48,7 @@ function normalizeEdges(value) {
     typeof e.strength === 'number' && Number.isFinite(e.strength)
   );
 }
-
+/** Normalize one memory record into the canonical schema shape. */
 function normalizeMemoryRecord(input, options = {}) {
   const record = (input && typeof input === 'object') ? input : {};
   const now = new Date().toISOString();

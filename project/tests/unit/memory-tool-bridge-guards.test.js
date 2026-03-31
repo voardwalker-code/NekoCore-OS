@@ -1,3 +1,19 @@
+// ── Tests · Memory Tool Bridge Guards.Test ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This test file validates behavior and guards against regressions in its
+// target subsystem.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: node:test,
+// node:assert/strict, ../../server/services/memory-tool-bridge. Keep import
+// and call-site contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 'use strict';
 const test = require('node:test');
 const assert = require('node:assert/strict');
@@ -278,6 +294,12 @@ test('Memory Tool Bridge — createMemoryToolBridge', async (t) => {
 
   await t.test('passes through for non-Anthropic runtimes', async () => {
     let callArgs = null;
+    // originalCallLLM()
+    // Purpose: helper wrapper used by this module's main flow.
+    // originalCallLLM()
+    // WHAT THIS DOES: originalCallLLM is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call originalCallLLM(...) where this helper behavior is needed.
     const originalCallLLM = async (runtime, messages, options) => {
       callArgs = { runtime, messages, options };
       return { content: 'hello' };
@@ -298,6 +320,12 @@ test('Memory Tool Bridge — createMemoryToolBridge', async (t) => {
 
   await t.test('passes through for Anthropic without memoryTool capability', async () => {
     let callArgs = null;
+    // originalCallLLM()
+    // Purpose: helper wrapper used by this module's main flow.
+    // originalCallLLM()
+    // WHAT THIS DOES: originalCallLLM is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call originalCallLLM(...) where this helper behavior is needed.
     const originalCallLLM = async (runtime, messages, options) => {
       callArgs = { runtime, messages, options };
       return { content: 'hello' };
@@ -314,6 +342,12 @@ test('Memory Tool Bridge — createMemoryToolBridge', async (t) => {
 
   await t.test('injects tools and executeToolCall for Anthropic with memoryTool=true', async () => {
     let callArgs = null;
+    // originalCallLLM()
+    // Purpose: helper wrapper used by this module's main flow.
+    // originalCallLLM()
+    // WHAT THIS DOES: originalCallLLM is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call originalCallLLM(...) where this helper behavior is needed.
     const originalCallLLM = async (runtime, messages, options) => {
       callArgs = { runtime, messages, options };
       return { content: 'hello' };
@@ -332,6 +366,12 @@ test('Memory Tool Bridge — createMemoryToolBridge', async (t) => {
 
   await t.test('injects tools for Anthropic with memoryTool="api"', async () => {
     let callArgs = null;
+    // originalCallLLM()
+    // Purpose: helper wrapper used by this module's main flow.
+    // originalCallLLM()
+    // WHAT THIS DOES: originalCallLLM is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call originalCallLLM(...) where this helper behavior is needed.
     const originalCallLLM = async (runtime, messages, options) => {
       callArgs = { runtime, messages, options };
       return { content: 'result' };
@@ -353,6 +393,12 @@ test('Memory Tool Bridge — createMemoryToolBridge', async (t) => {
       memoryCreate: async () => ({})
     });
     let capturedExecute = null;
+    // originalCallLLM()
+    // Purpose: helper wrapper used by this module's main flow.
+    // originalCallLLM()
+    // WHAT THIS DOES: originalCallLLM is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call originalCallLLM(...) where this helper behavior is needed.
     const originalCallLLM = async (runtime, messages, options) => {
       capturedExecute = options.executeToolCall;
       return { content: 'done' };

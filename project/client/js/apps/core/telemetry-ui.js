@@ -1,3 +1,17 @@
+// ── Services · Client Telemetry UI ───────────────────────────────────────────
+//
+// HOW TELEMETRY UI WORKS:
+// This module gathers runtime metrics (models, token usage, pipeline phase,
+// app resource trends) and renders Task Manager telemetry panels. It also
+// exposes hooks used by SSE/chat modules to push orchestration events.
+//
+// WHAT USES THIS:
+//   task manager panel, chat SSE event handlers, and window manager metrics cards
+//
+// EXPORTS:
+//   runtime telemetry state + reporting/render helpers on `window`
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // NekoCore OS — Telemetry UI
 // Extracted from app.js by P3-S11
@@ -44,12 +58,12 @@ const runtimeTelemetry = {
     lastFeedbackTime: null
   }
 };
-
+/** Format model IDs into short display names. */
 function formatTelemetryModel(model) {
   if (!model) return '—';
   return String(model).split('/').pop();
 }
-
+/** Resolve saved per-aspect configs for telemetry fallbacks. */
 function getSavedTaskManagerConfigs() {
   const profileName = savedConfig?.lastActive;
   const profile = profileName ? savedConfig?.profiles?.[profileName] : null;
@@ -71,26 +85,26 @@ function getSavedTaskManagerConfigs() {
     orchestrator: profile.orchestrator || main
   };
 }
-
+/** Push one telemetry line into bounded event feed. */
 function pushTelemetryEvent(line) {
   runtimeTelemetry.eventFeed.unshift({ ts: Date.now(), line });
   runtimeTelemetry.eventFeed = runtimeTelemetry.eventFeed.slice(0, 30);
 }
-
+/** Normalize percentage-like values to 0-100. */
 function normalizePercent(value) {
   const n = Number(value);
   if (!Number.isFinite(n)) return 0;
   if (n <= 1) return Math.max(0, Math.min(100, n * 100));
   return Math.max(0, Math.min(100, n));
 }
-
+/** Return the tab id of the topmost open window. */
 function getFocusedWindowTab() {
   const openWindows = Array.from(windowManager.windows.values()).filter((meta) => meta.open);
   if (!openWindows.length) return 'chat';
   openWindows.sort((a, b) => (parseInt(b.el.style.zIndex || '1', 10) - parseInt(a.el.style.zIndex || '1', 10)));
   return openWindows[0].tab;
 }
-
+/** Return telemetry bucket for one app tab, creating it if needed. */
 function getOrCreateAppStats(tabName) {
   if (!runtimeTelemetry.appStats[tabName]) {
     runtimeTelemetry.appStats[tabName] = {
@@ -103,18 +117,18 @@ function getOrCreateAppStats(tabName) {
   }
   return runtimeTelemetry.appStats[tabName];
 }
-
+/** Push one rounded sample and keep a bounded history length. */
 function pushSeriesPoint(series, value) {
   series.push(Math.round(value));
   if (series.length > 28) series.shift();
 }
-
+/** Estimate browser heap pressure as a percentage. */
 function estimateHeapPercent() {
   const mem = (typeof performance !== 'undefined' && performance.memory) ? performance.memory : null;
   if (!mem || !mem.totalJSHeapSize) return 0;
   return normalizePercent(mem.usedJSHeapSize / mem.totalJSHeapSize);
 }
-
+/** Refresh synthetic CPU/memory/request series for visible/pinned apps. */
 function updateAppStatsSeries() {
   const activeTab = runtimeTelemetry.activeWindowTab || getFocusedWindowTab();
   const openTabs = Array.from(windowManager.windows.values()).filter((meta) => meta.open).map((meta) => meta.tab);
@@ -140,7 +154,7 @@ function updateAppStatsSeries() {
     pushSeriesPoint(stats.requestMs, Math.max(0, Math.min(120000, Number(reqSample) || 0)));
   });
 }
-
+/** Convert numeric samples to an SVG path command string. */
 function sparklinePath(values, width, height, maxValue) {
   if (!values.length) return '';
   const max = Math.max(1, maxValue || Math.max.apply(null, values));
@@ -151,7 +165,7 @@ function sparklinePath(values, width, height, maxValue) {
     return (idx === 0 ? 'M' : 'L') + x + ' ' + y;
   }).join(' ');
 }
-
+/** Render app telemetry cards and sparkline visualizations. */
 function renderAppMetrics() {
   const host = document.getElementById('tmAppMetricsGrid');
   if (!host) return;
@@ -187,13 +201,13 @@ function renderAppMetrics() {
     '</div>';
   }).join('');
 }
-
+/** Update runtime phase badge and append optional feed detail. */
 function reportPipelinePhase(phase, status, detail) {
   runtimeTelemetry.activePhase = phase || 'Idle';
   runtimeTelemetry.phaseSince = Date.now();
   if (detail) pushTelemetryEvent((status ? status + ': ' : '') + detail);
 }
-
+/** Apply orchestration metrics payload to dashboard state. */
 function reportOrchestrationMetrics(data) {
   const usage = data?.tokenUsage?.total || data?.tokenUsage || null;
   if (usage && Number.isFinite(Number(usage.total_tokens || 0))) {
@@ -209,7 +223,7 @@ function reportOrchestrationMetrics(data) {
   runtimeTelemetry.phaseSince = Date.now();
   pushTelemetryEvent('Orchestration complete' + (runtimeTelemetry.totalDurationMs ? ' in ' + runtimeTelemetry.totalDurationMs + 'ms' : ''));
 }
-
+/** Refresh all task manager telemetry widgets from current state. */
 function updateTaskManagerView() {
   const savedConfigs = getSavedTaskManagerConfigs();
   const providerConfig = activeConfig || savedConfigs.main || null;

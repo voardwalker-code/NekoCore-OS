@@ -1,3 +1,19 @@
+// ── Tests · Task Archive Writer.Test ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This test file validates behavior and guards against regressions in its
+// target subsystem.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: node:test,
+// node:assert/strict, fs, os, path. Keep import and call-site contracts
+// aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
@@ -6,7 +22,10 @@ const path = require('path');
 
 const projects = require('../../server/brain/tasks/task-project-store');
 const writer = require('../../server/brain/tasks/task-archive-writer');
-
+// tmpBase()
+// WHAT THIS DOES: tmpBase is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call tmpBase(...) where this helper behavior is needed.
 function tmpBase() {
   const base = path.join(os.tmpdir(), 'nekocore-task-archive-writer-' + Date.now() + '-' + Math.random().toString(36).slice(2));
   fs.mkdirSync(base, { recursive: true });

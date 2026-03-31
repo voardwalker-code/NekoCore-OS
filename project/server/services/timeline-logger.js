@@ -1,8 +1,27 @@
+// ── Services · Timeline Logger ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This service module holds reusable business logic shared across runtime
+// paths.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: fs, path, events. Keep import
+// and call-site contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 const fs = require('fs');
 const path = require('path');
 const { EventEmitter } = require('events');
 
 class TimelineLogger extends EventEmitter {
+  // constructor()
+  // WHAT THIS DOES: constructor is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call constructor(...) where this helper behavior is needed.
   constructor(options = {}) {
     super();
     this.baseDir = options.baseDir || path.join(process.cwd(), 'memories');
@@ -13,10 +32,18 @@ class TimelineLogger extends EventEmitter {
     this._entityResolver = null;
   }
 
+  // setEntityResolver()
+  // WHAT THIS DOES: setEntityResolver changes saved state or updates data.
+  // WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+  // HOW TO USE IT: call setEntityResolver(...) with the new values you want to persist.
   setEntityResolver(fn) {
     this._entityResolver = typeof fn === 'function' ? fn : null;
   }
 
+  // logEvent()
+  // WHAT THIS DOES: logEvent is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call logEvent(...) where this helper behavior is needed.
   logEvent(type, payload = {}, options = {}) {
     try {
       const now = Date.now();

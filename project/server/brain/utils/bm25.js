@@ -1,3 +1,17 @@
+// ── Brain · Bm25 ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Used by related flows in its subsystem. Keep call contracts stable during
+// readability-only edits.
+//
+// EXPORTS:
+// Exposed API includes: bm25Score, bm25ScoreWithImportance, K1, B, AVG_DL.
+// ─────────────────────────────────────────────────────────────────────────────
+
 'use strict';
 /**
  * server/brain/utils/bm25.js
@@ -39,6 +53,10 @@ const IDF_CONST = Math.log(2);  // uniform IDF ≈ ln(2) ≈ 0.693
  * @param {number}  [opts.avgDL]  - Average document length in topics (default 8)
  * @returns {number}
  */
+// bm25Score()
+// WHAT THIS DOES: bm25Score is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call bm25Score(...) where this helper behavior is needed.
 function bm25Score(queryTopics, docTopics, opts = {}) {
   if (!queryTopics?.length || !docTopics?.length) return 0;
 
@@ -60,6 +78,10 @@ function bm25Score(queryTopics, docTopics, opts = {}) {
     const tf = docFreq[qt] || 0;
     if (tf === 0) continue;
     // BM25 TF component with length normalization
+    // tfNorm()
+    // WHAT THIS DOES: tfNorm is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call tfNorm(...) where this helper behavior is needed.
     const tfNorm = (tf * (k1 + 1)) / (tf + k1 * normFactor);
     score += IDF_CONST * tfNorm;
   }
@@ -88,6 +110,10 @@ function bm25Score(queryTopics, docTopics, opts = {}) {
  * @param {object}   [opts]        - Forwarded to bm25Score
  * @returns {number}
  */
+// bm25ScoreWithImportance()
+// WHAT THIS DOES: bm25ScoreWithImportance is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call bm25ScoreWithImportance(...) where this helper behavior is needed.
 function bm25ScoreWithImportance(queryTopics, docTopics, importance, decay, opts = {}) {
   const base = bm25Score(queryTopics, docTopics, opts);
   if (base === 0) return 0;

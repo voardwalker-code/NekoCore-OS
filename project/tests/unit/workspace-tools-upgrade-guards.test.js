@@ -1,3 +1,19 @@
+// ── Tests · Workspace Tools Upgrade Guards.Test ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This test file validates behavior and guards against regressions in its
+// target subsystem.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: node:test,
+// node:assert/strict, node:fs, node:os, node:path. Keep import and call-site
+// contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 /**
  * Guard tests for workspace-tools upgrade (PLAN-OS-TOOL-UPGRADE-v1 Slice -0).
  * Lock the exported API shape and critical behaviors so the parser upgrade

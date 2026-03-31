@@ -1,7 +1,20 @@
+// ── Services · Entity Memory Compat ──────────────────────────────────────────
+//
+// HOW MEMORY COMPAT WORKS:
+// This module returns directory lists that merge current memory layout with
+// legacy paths so scanning and record lookup remain backward compatible.
+//
+// WHAT USES THIS:
+//   entity memory scanners and record resolvers across migration boundaries
+//
+// EXPORTS:
+//   getEntityMemoryScanDirs(), getEntityMemoryRecordDirs()
+// ─────────────────────────────────────────────────────────────────────────────
+
 'use strict';
 
 const path = require('path');
-
+/** Return all memory directories to scan, including legacy compatibility paths. */
 function getEntityMemoryScanDirs(memoryRoot, options = {}) {
   const includeDreams = options.includeDreams === true;
   const dirs = [
@@ -23,7 +36,7 @@ function getEntityMemoryScanDirs(memoryRoot, options = {}) {
 
   return dirs;
 }
-
+/** Return candidate record directories for one memory id across all layouts. */
 function getEntityMemoryRecordDirs(memoryRoot, memId, options = {}) {
   return getEntityMemoryScanDirs(memoryRoot, options).map(({ dir, fallbackType }) => ({
     dir: path.join(dir, memId),

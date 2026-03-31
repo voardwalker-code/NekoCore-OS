@@ -1,17 +1,45 @@
+// ── Brain · Entity Chat Manager ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: crypto,
+// ./entity-worker-invoker. Keep import and call-site contracts aligned
+// during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 'use strict';
 
 const crypto = require('crypto');
 
 class EntityChatManager {
+  // constructor()
+  // WHAT THIS DOES: constructor is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call constructor(...) where this helper behavior is needed.
   constructor() {
     this._sessions = new Map();
   }
 
+  // _newSessionId()
+  // WHAT THIS DOES: _newSessionId is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call _newSessionId(...) where this helper behavior is needed.
   _newSessionId() {
     if (typeof crypto.randomUUID === 'function') return 'echat_' + crypto.randomUUID();
     return 'echat_' + Date.now() + '_' + Math.random().toString(36).slice(2);
   }
 
+  // createSession()
+  // WHAT THIS DOES: createSession creates or initializes something needed by the flow.
+  // WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+  // HOW TO USE IT: call createSession(...) before code that depends on this setup.
   createSession({ sessionType = 'planning', prompt = '', entityIds = [] } = {}) {
     const id = this._newSessionId();
     const now = Date.now();
@@ -31,10 +59,18 @@ class EntityChatManager {
     return session;
   }
 
+  // getSession()
+  // WHAT THIS DOES: getSession reads or finds data and gives it back.
+  // WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+  // HOW TO USE IT: call getSession(...), then use the returned value in your next step.
   getSession(sessionId) {
     return this._sessions.get(sessionId) || null;
   }
 
+  // addEntity()
+  // WHAT THIS DOES: addEntity is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call addEntity(...) where this helper behavior is needed.
   addEntity(sessionId, entityId) {
     const s = this.getSession(sessionId);
     if (!s || s.status !== 'active') return null;

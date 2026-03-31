@@ -1,3 +1,18 @@
+// ── Services · Boredom Engine ────────────────────────────────────────────────
+//
+// HOW BOREDOM-DRIVEN AUTONOMY WORKS:
+// This engine tracks idle time + neurochemical under-stimulation and decides
+// when the entity should self-start an activity (reflect, create, organize,
+// or reach out). Actions are emitted to the cognitive bus and optional client
+// callback for UI/SSE updates.
+//
+// WHAT USES THIS:
+//   brain loop tick cycle and cognitive bus event stream
+//
+// EXPORTS:
+//   BoredomEngine class
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // REM System — Boredom Engine Module
 // Detects understimulation and drives autonomous self-directed activity.
@@ -24,6 +39,7 @@ const ACTIVITIES = {
 };
 
 class BoredomEngine {
+  /** Initialize boredom thresholds, dependencies, and internal state. */
   constructor(options = {}) {
     this.cognitiveBus = options.cognitiveBus || null;
     this.neurochemistry = options.neurochemistry || null;
@@ -47,6 +63,7 @@ class BoredomEngine {
 
   // ── Lifecycle ──
 
+  /** Start listening to cognitive events and enable boredom ticks. */
   start() {
     if (!this.cognitiveBus) {
       console.warn('  ⚠ Boredom engine requires cognitive bus');

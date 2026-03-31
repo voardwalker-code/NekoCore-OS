@@ -1,3 +1,17 @@
+// ── Services · Client Chat Orchestrator ─────────────────────────────────────
+//
+// HOW CHAT ORCHESTRATION WORKS:
+// This is the main client chat runtime. It handles chat input/output, SSE brain
+// event streaming, thought-process UI, entity-mode toggles, typing simulation,
+// task/tool feedback, and memory-aware request flow orchestration.
+//
+// WHAT USES THIS:
+//   chat tab UI, entity checkout flow, telemetry hooks, task/skill integrations
+//
+// EXPORTS:
+//   global chat helpers and handlers used by other client modules
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // REM System v0.6.0 — Chat Module
 // Handles: Chat UI, messages, context streaming, drag & drop, compress
@@ -6,6 +20,7 @@
 // ── BroadcastChannel for Visualizer page ──
 let vizBroadcast = null;
 try { vizBroadcast = new BroadcastChannel('ma-visualizer'); } catch (_) {}
+/** Broadcast chat exchange payloads to the visualizer channel. */
 function broadcastToVisualizer(data) {
   if (vizBroadcast) { try { vizBroadcast.postMessage(data); } catch (_) {} }
 }
@@ -50,11 +65,10 @@ let showThoughtsInChat = localStorage.getItem('showThoughtsInChat') !== 'false';
 let memoryRecallEnabled = false;
 let memorySaveEnabled = false;
 window._currentEntityMode = window._currentEntityMode || null;
-
+/** Return true when current entity is in single-LLM mode. */
 function isSingleLlmEntityMode() {
   return window._currentEntityMode === 'single-llm';
 }
-
 function updateMemoryToggleButtons() {
   const recallBtn = document.getElementById('memoryRecallBtn');
   const saveBtn = document.getElementById('memorySaveBtn');
@@ -67,7 +81,7 @@ function updateMemoryToggleButtons() {
     saveBtn.classList.toggle('active', memorySaveEnabled);
   }
 }
-
+/** Show or hide memory toggle row based on active entity mode. */
 function updateMemoryToggleVisibility() {
   const row = document.getElementById('memoryToggleRow');
   if (!row) return;
@@ -75,19 +89,19 @@ function updateMemoryToggleVisibility() {
   row.style.display = showRow ? 'flex' : 'none';
   updateMemoryToggleButtons();
 }
-
+/** Toggle memory recall behavior for single-LLM mode. */
 function toggleMemoryRecall() {
   memoryRecallEnabled = !memoryRecallEnabled;
   if (typeof setMemoryRecall === 'function') setMemoryRecall(memoryRecallEnabled);
   updateMemoryToggleButtons();
 }
-
+/** Toggle memory save behavior for single-LLM mode. */
 function toggleMemorySave() {
   memorySaveEnabled = !memorySaveEnabled;
   if (typeof setMemorySave === 'function') setMemorySave(memorySaveEnabled);
   updateMemoryToggleButtons();
 }
-
+/** Apply entity mode and sync memory-toggle state/UI. */
 function setChatEntityMode(entityMode) {
   window._currentEntityMode = entityMode === 'single-llm' ? 'single-llm' : null;
   if (!isSingleLlmEntityMode()) {
@@ -102,7 +116,7 @@ function setChatEntityMode(entityMode) {
 window.toggleMemoryRecall = toggleMemoryRecall;
 window.toggleMemorySave = toggleMemorySave;
 window.setChatEntityMode = setChatEntityMode;
-
+/** Initialize SSE stream for brain/orchestration runtime events. */
 function initBrainSSE() {
   if (brainEventSource) return;
   try {
@@ -347,6 +361,7 @@ function initBrainSSE() {
 // ============================================================
 
 /** Create a thinking dropdown element (collapsed by default) and return it */
+/** Create collapsed thinking dropdown container for one assistant turn. */
 function createThinkingDropdown() {
   const wrapper = document.createElement('div');
   wrapper.className = 'thinking-dropdown';
@@ -368,6 +383,7 @@ function createThinkingDropdown() {
 }
 
 /** Mark thinking as live (animated) or done */
+/** Toggle thinking dropdown between live and complete states. */
 function setThinkingLive(thinkingEl, isLive) {
   if (!thinkingEl) return;
   const label = thinkingEl.querySelector('.thinking-label');
@@ -384,6 +400,7 @@ function setThinkingLive(thinkingEl, isLive) {
 }
 
 /** Append a real-time line to the thinking body */
+/** Append one incremental thinking line to dropdown body. */
 function appendThinkingLine(thinkingEl, category, text) {
   if (!thinkingEl) return;
   const body = thinkingEl.querySelector('.thinking-body');
@@ -397,6 +414,7 @@ function appendThinkingLine(thinkingEl, category, text) {
 }
 
 /** Replace thinking body with final structured inner dialog after orchestration completes */
+/** Replace thinking dropdown body with final structured sections. */
 function fillThinkingFinal(thinkingEl, data) {
   if (!thinkingEl) return;
   const body = thinkingEl.querySelector('.thinking-body');
@@ -453,6 +471,7 @@ function fillThinkingFinal(thinkingEl, data) {
 }
 
 /** Update the brain status indicator in the header */
+/** Update header brain status badge text and active class. */
 function updateBrainIndicator(status, label) {
   const el = document.getElementById('brainStatus');
   const labelEl = document.getElementById('brainLabel');
@@ -469,6 +488,7 @@ function updateBrainIndicator(status, label) {
 // ============================================================
 // THOUGHT PROCESS SIDEBAR PANEL — Shows contributor outputs
 // ============================================================
+/** Expand/collapse the thought process sidebar section. */
 function toggleThoughtProcess() {
   const body = document.getElementById('thoughtProcessBody');
   const arrow = document.getElementById('thoughtProcessArrow');
@@ -478,6 +498,7 @@ function toggleThoughtProcess() {
 }
 
 /** Reset the thought process panel for a new message cycle */
+/** Reset thought panel to initial "pipeline starting" placeholder. */
 function resetThoughtProcess() {
   const el = document.getElementById('thoughtProcessContent');
   if (!el) return;
@@ -485,6 +506,7 @@ function resetThoughtProcess() {
 }
 
 /** Add or update a contributor section in the thought process panel */
+/** Insert/update one thought contributor phase block in sidebar. */
 function setThoughtPhase(phase, label, content, isDone) {
   const panel = document.getElementById('thoughtProcessContent');
   if (!panel) return;
@@ -515,6 +537,7 @@ function setThoughtPhase(phase, label, content, isDone) {
 }
 
 /** Fill the thought process panel with final structured inner dialog */
+/** Render final multi-phase thought output into sidebar panel. */
 function fillThoughtProcessFinal(data) {
   const panel = document.getElementById('thoughtProcessContent');
   if (!panel) return;
@@ -560,7 +583,7 @@ function fillThoughtProcessFinal(data) {
   }
   panel.scrollTop = 0;
 }
-
+/** Update deep sleep countdown badge visibility and text. */
 function updateDeepSleepBadge(cyclesUntil) {
   const badge = document.getElementById('deepSleepBadge');
   if (!badge) return;
@@ -585,6 +608,7 @@ function updateDeepSleepBadge(cyclesUntil) {
 // ============================================================
 // ARCHIVE DETECTION
 // ============================================================
+/** Return true when text appears to be legacy archive content. */
 function isArchiveText(text) {
   if (!text) return false;
   const markers = ['[MEM-PKT]', '[V4-TRANSFORM-SOURCE]', '[SESSION-META]', 'Compressed narrative context', 'Compressed conversation context', 'semantic shorthand only'];
@@ -592,7 +616,7 @@ function isArchiveText(text) {
   if (text.length < 200) return false;
   return false;
 }
-
+/** Return true when pasted text looks like SESSION-META payload. */
 function isSessionMetaText(text) {
   if (!text) return false;
   const t = text.toUpperCase();
@@ -611,6 +635,7 @@ async function loadArchivesIntoChat(archiveTexts) {
   if (archives.length === 0) return;
 
   let lastMeta = '';
+  /** Extract [SESSION-META] block from one archive text payload. */
   function extractMeta(txt) {
     const start = txt.indexOf('[SESSION-META]');
     if (start === -1) return '';
@@ -628,7 +653,7 @@ async function loadArchivesIntoChat(archiveTexts) {
   }
   lg('info', 'Archive meta extracted (archives no longer loaded into chat — memories are retrieved per-turn by subconscious)');
 }
-
+/** Focus and scroll chat view; archives are no longer injected. */
 function openChatView(archive, rawSource) {
   // Legacy — archives no longer loaded into chat.
   // Just scroll to chat view.
@@ -642,12 +667,13 @@ function openChatView(archive, rawSource) {
 // ============================================================
 // DRAG & DROP
 // ============================================================
+/** Handle drag-over state for chat drop zone. */
 function chatDragOver(e) {
   e.preventDefault();
   e.stopPropagation();
   document.getElementById('chatDropOverlay').classList.add('active');
 }
-
+/** Clear drop overlay when drag leaves chat bounds. */
 function chatDragLeave(e) {
   e.preventDefault();
   e.stopPropagation();
@@ -705,6 +731,7 @@ async function chatDrop(e) {
 // ============================================================
 // PASTE DETECTION
 // ============================================================
+/** Watch paste events and auto-save detected session-meta blocks. */
 function setupPasteDetection() {
   const input = document.getElementById('chatInput');
   input.addEventListener('paste', (e) => {
@@ -719,7 +746,7 @@ function setupPasteDetection() {
     }, 50);
   });
 }
-
+/** Remove one matching transient system message from chat history. */
 function removeOneTimeSystemMessage(messageText) {
   if (!messageText) return;
   for (let i = chatHistory.length - 1; i >= 0; i--) {
@@ -730,7 +757,7 @@ function removeOneTimeSystemMessage(messageText) {
     }
   }
 }
-
+/** Convert pending skill actions into compact approval preview text. */
 function formatSkillApprovalPreview(pending) {
   const tools = Array.isArray(pending?.tools) ? pending.tools : [];
   if (!tools.length) return 'Skill wants to run tool actions.';
@@ -775,7 +802,7 @@ async function loadEntityProviderConfig(provider) {
     return null;
   }
 }
-
+/** Normalize chat runtime provider config from mixed source shapes. */
 function normalizeChatRuntimeConfig(rawConfig) {
   if (!rawConfig || typeof rawConfig !== 'object') return null;
 
@@ -799,7 +826,7 @@ function normalizeChatRuntimeConfig(rawConfig) {
 
   return null;
 }
-
+/** Apply recovered provider config and refresh linked UI controls. */
 function applyRecoveredChatConfig(config, sourceLabel) {
   if (!config) return null;
   activeConfig = config;
@@ -846,7 +873,7 @@ async function ensureActiveChatConfig() {
 
   return null;
 }
-
+/** Normalize subconscious config from legacy or current fields. */
 function normalizeSubconsciousConfig(rawConfig) {
   if (!rawConfig) return null;
 
@@ -869,7 +896,7 @@ function normalizeSubconsciousConfig(rawConfig) {
 
   return null;
 }
-
+/** Read subconscious provider config from settings input fields. */
 function getSubconsciousConfigFromInputs() {
   const endpoint = (document.getElementById('subApiEndpoint')?.value || '').trim();
   const key = (document.getElementById('subApiKey')?.value || '').trim();
@@ -929,6 +956,7 @@ async function runSubconsciousTurn(userMessage) {
 // ============================================================
 // CHAT UI
 // ============================================================
+/** Reset chat state, indicators, and message list to initial empty view. */
 function clearChat() {
   chatHistory = [];
   chatArchive = '';
@@ -942,11 +970,10 @@ function clearChat() {
   document.getElementById('chatMessages').innerHTML = '<div class="chat-drop-overlay" id="chatDropOverlay"><span>\u{1F4E6} Drop session-meta file(s) here</span></div><div class="chat-empty"><div class="chat-empty-icon">&#128172;</div><div class="chat-empty-text">Start chatting. Memories are created each turn and retrieved by the subconscious automatically.</div></div>';
   if (typeof updateSubIndicator === 'function') updateSubIndicator();
 }
-
+/** Close chat view by clearing current in-memory chat session state. */
 function closeChatView() {
   clearChat();
 }
-
 function addChatBubble(role, text) {
   // Route system messages to the collapsible log panel
   if (role === 'system') {
@@ -986,6 +1013,7 @@ function addChatBubble(role, text) {
 }
 
 /** Add a system/status message to the log panel instead of the chat */
+/** Append one system/status entry into sidebar log stream. */
 function addSystemToLog(text) {
   const body = document.getElementById('sidebarLogContent');
   if (!body) return;
@@ -1009,14 +1037,17 @@ let _userScrolledUp = false;
 let _scrollRafId = 0;
 // Typing queue: ensures follow-up messages always wait for the current typing animation to finish
 let _typingChain = Promise.resolve();
+/** Queue typing tasks to run sequentially without overlap. */
 function queueTyping(fn) {
   _typingChain = _typingChain.then(fn).catch(() => {});
   return _typingChain;
 }
+/** Track whether user intentionally scrolled away from bottom. */
 function updateUserScrollIntent(container) {
   const dist = container.scrollHeight - container.scrollTop - container.clientHeight;
   _userScrolledUp = dist > 80;
 }
+/** Scroll chat viewport to bottom unless user scroll lock is active. */
 function scrollChatBottom(force) {
   const container = document.getElementById('chatMessages');
   if (!container) return;
@@ -1046,7 +1077,7 @@ function scrollChatBottom(force) {
     });
   });
 })();
-
+/** Show one-time REM status banner for current page session. */
 function showRemStatusBannerOnce() {
   try {
     const key = 'remStatusBannerShown';
@@ -1071,6 +1102,7 @@ function showRemStatusBannerOnce() {
  * How long to pause before posting the next conversational chunk.
  * Simulates a person composing and reviewing a short message.
  */
+/** Estimate initial typing delay based on response length. */
 function naturalTypingDelay(text) {
   return Math.min(240 + (text || '').length * 10, 1200) + Math.floor(Math.random() * 140);
 }
@@ -1084,6 +1116,7 @@ const DEFAULT_VOICE = {
   fillers: { chance: 0.05, phrases: [' um.. '] },
   brb: { chance: 0.035, phrases: ['Hold on brrb. ', 'just a sec... '], returnPhrase: 'Sorry, ' }
 };
+/** Return active entity voice profile or default voice settings. */
 function getVoice() { return (typeof currentEntityVoice !== 'undefined' && currentEntityVoice) || DEFAULT_VOICE; }
 
 const KEYBOARD_NEIGHBORS = {
@@ -1186,15 +1219,14 @@ const WORD_SELF_CORRECTIONS = {
   messaging: ['msging'],
   with: ['w/']
 };
-
+/** Return inclusive random integer in range [min, max]. */
 function randomInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
-
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
-
+/** Return per-character typing delay adjusted by punctuation and voice. */
 function typingCharDelay(ch, voice) {
   const v = voice || getVoice();
   const cps = randomInt(v.typingSpeed.min, v.typingSpeed.max);
@@ -1208,7 +1240,7 @@ function typingCharDelay(ch, voice) {
 
   return Math.max(12, Math.round(delay + randomInt(-8, 14)));
 }
-
+/** Apply case shape of one word onto a replacement word. */
 function applyWordCaseShape(template, replacement) {
   if (!replacement) return template;
   if (template === template.toUpperCase()) return replacement.toUpperCase();
@@ -1217,7 +1249,7 @@ function applyWordCaseShape(template, replacement) {
   }
   return replacement;
 }
-
+/** Optionally substitute keyboard-neighbor character for typo effect. */
 function maybeNeighborTypoChar(ch) {
   const lower = ch.toLowerCase();
   const neighbors = KEYBOARD_NEIGHBORS[lower];
@@ -1225,7 +1257,7 @@ function maybeNeighborTypoChar(ch) {
   const picked = neighbors[randomInt(0, neighbors.length - 1)];
   return ch === lower ? picked : picked.toUpperCase();
 }
-
+/** Swap adjacent letters in a word to simulate human typo. */
 function swapAdjacentChars(word) {
   if (!word || word.length < 4) return word;
   if (/ing$/i.test(word)) return word;
@@ -1236,7 +1268,7 @@ function swapAdjacentChars(word) {
   chars[idx + 1] = tmp;
   return chars.join('');
 }
-
+/** Find first repeated-letter index in word, or -1 if none. */
 function findDoubleLetterIndex(word) {
   if (!word || word.length < 2) return -1;
   for (let i = 0; i < word.length - 1; i++) {
@@ -1244,12 +1276,12 @@ function findDoubleLetterIndex(word) {
   }
   return -1;
 }
-
+/** Remove one character at index and return resulting string. */
 function removeCharAt(str, idx) {
   if (idx < 0 || idx >= str.length) return str;
   return str.slice(0, idx) + str.slice(idx + 1);
 }
-
+/** Pick random option from list that does not equal excluded value. */
 function pickDifferentWord(options, notThis) {
   if (!Array.isArray(options) || options.length === 0) return null;
   const filtered = options.filter(w => w !== notThis);
@@ -1414,17 +1446,16 @@ async function renderAssistantTyping(contentEl, text) {
     out = await typeString(contentEl, out, word + trailing, v);
   }
 }
-
+/** Escape HTML-special characters before injecting text into markup. */
 function escapeHtml(text) {
   const div = document.createElement('div');
   div.textContent = text;
   return div.innerHTML;
 }
-
+/** Return true when chat is currently scoped to an active entity. */
 function hasCheckedOutEntityContext() {
   return !!(typeof currentEntityId !== 'undefined' && currentEntityId);
 }
-
 function syncContextChatGuard() {
   const input = document.getElementById('chatInput');
   const sendBtn = document.getElementById('chatSendBtn');
@@ -1462,7 +1493,7 @@ document.addEventListener('DOMContentLoaded', () => {
     updateMemoryToggleVisibility();
   }, 0);
 });
-
+/** Handle Enter/Shift+Enter and chat input key events. */
 function chatKeyDown(e) {
   if (!syncContextChatGuard()) {
     e.preventDefault();
@@ -1775,6 +1806,7 @@ ${fullText.slice(0, 6000)}`;
 
     const archive = header + sessionMeta + '\n\n' + memPkt + '\n\n[V4-TRANSFORM-SOURCE]\n' + v4Text;
 
+    // savings()
     const savings = (((fullText.length - archive.length) / fullText.length) * 100).toFixed(1);
 
     // Save as Long Term Memory instead of reloadable archive
@@ -1842,7 +1874,7 @@ async function loadSystemPrompt() {
     lg('warn', 'Failed to load system prompt: ' + e.message);
   }
 }
-
+/** Emit queued system prompt once and clear pending prompt state. */
 function flushPendingSystemPrompt() {
   if (!pendingSystemPromptText) return;
   if (!activeConfig) return;

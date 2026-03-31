@@ -1,3 +1,18 @@
+// ── Tests · Cognitive State Integration Guards.Test ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This test file validates behavior and guards against regressions in its
+// target subsystem.
+//
+// WHAT USES THIS:
+// Used by related flows in its subsystem. Keep call contracts stable during
+// readability-only edits.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // Cognitive State Integration — Guard Tests (Slice C0)
 // Verifies structure, API surface, and integration points for cognitive snapshot
 // and cognitive feedback systems. Runs before implementation slices to catch regressions.
@@ -24,6 +39,10 @@ const POST_MEM_FILE    = resolve('server/services/post-response-memory.js');
 
 // ── Helper: read file safely ──────────────────────────────────────────────────
 
+// readSafe()
+// WHAT THIS DOES: readSafe reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call readSafe(...), then use the returned value in your next step.
 function readSafe(filePath) {
   return existsSync(filePath) ? readFileSync(filePath, 'utf8') : '';
 }

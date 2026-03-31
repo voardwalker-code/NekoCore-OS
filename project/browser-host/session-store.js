@@ -1,3 +1,17 @@
+// ── Services · Browser Session Store ────────────────────────────────────────
+//
+// HOW SESSION RESTORE WORKS:
+// This file saves a snapshot of open tabs so the browser can recover after a
+// restart or crash. It writes one JSON payload with tabs, active tab, and save
+// timestamp.
+//
+// WHAT USES THIS:
+//   browser host lifecycle/routes — save and restore open tab sessions
+//
+// EXPORTS:
+//   save(tabs, activeTabId), load(), clear()
+// ─────────────────────────────────────────────────────────────────────────────
+
 'use strict';
 
 /**
@@ -10,8 +24,13 @@
 const fs = require('fs');
 const path = require('path');
 
+// ── Constants ───────────────────────────────────────────────────────────────
+
 const SESSION_FILE = path.join(__dirname, '..', 'server', 'data', 'browser-session.json');
 
+// ── Core Logic ──────────────────────────────────────────────────────────────
+
+/** Save a compact session snapshot to disk (best effort). */
 function save(tabs, activeTabId) {
   const snapshot = {
     tabs: tabs.map(t => ({ tabId: t.tabId, url: t.url, title: t.title, index: t.index })),
@@ -25,6 +44,7 @@ function save(tabs, activeTabId) {
   return snapshot;
 }
 
+/** Load a previously saved session snapshot, or null. */
 function load() {
   try {
     if (fs.existsSync(SESSION_FILE)) {
@@ -34,8 +54,11 @@ function load() {
   return null;
 }
 
+/** Delete the session snapshot file if it exists. */
 function clear() {
   try { if (fs.existsSync(SESSION_FILE)) fs.unlinkSync(SESSION_FILE); } catch { /* ok */ }
 }
+
+// ── Exports ─────────────────────────────────────────────────────────────────
 
 module.exports = { save, load, clear };

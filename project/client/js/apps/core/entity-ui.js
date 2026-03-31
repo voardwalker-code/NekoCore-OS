@@ -1,3 +1,17 @@
+// ── Services · Client Entity UI ──────────────────────────────────────────────
+//
+// HOW ENTITY UI WORKS:
+// This module owns entity-focused client UI: sidebar chips, preview/check-out,
+// active-entity info panel, release/delete actions, and related display state.
+// It bridges entity API routes to DOM updates used by chat/settings panels.
+//
+// WHAT USES THIS:
+//   entity tab, sidebar entity list, and chat entity context controls
+//
+// EXPORTS:
+//   global entity helpers consumed by UI click handlers and companion modules
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // NekoCore OS — Entity UI Module
 // Extracted from app.js — P3-S14
@@ -24,6 +38,7 @@
  * Derive an avatar emoji from entity gender / identity keywords.
  * Returns a single emoji character.
  */
+/** Derive avatar emoji from entity identity keywords and gender fallback. */
 function deriveEntityAvatar(gender, traits, name) {
   // Check traits/name for animal or non-human identity keywords
   const all = ((traits || []).join(' ') + ' ' + (name || '')).toLowerCase();
@@ -61,6 +76,7 @@ function deriveEntityAvatar(gender, traits, name) {
  * Update the global entity display info (name + avatar).
  * Call after loading, switching, or hatching an entity.
  */
+/** Update active entity display name/avatar and sync shell badges. */
 function setEntityDisplay(name, gender, traits) {
   currentEntityName = name || 'Entity';
   currentEntityAvatar = deriveEntityAvatar(gender, traits, name);
@@ -69,10 +85,12 @@ function setEntityDisplay(name, gender, traits) {
 
 // ── Sidebar Entity Chip ────────────────────────────────────
 
+/** Build one clickable entity chip for sidebar lists. */
 function buildEntityChip(entity) {
   const chip = document.createElement('div');
   chip.className = 'entity-chip' + (entity.id === currentEntityId ? ' active' : '');
   const avatar = deriveEntityAvatar(entity.gender, entity.traits || entity.personality_traits, entity.name);
+  // traits()
   const traits = (entity.traits || entity.personality_traits || []).slice(0, 2).join(', ');
   const isOwner = entity.isOwner !== false;
   const isActive = entity.id === currentEntityId;
@@ -130,6 +148,7 @@ function buildEntityChip(entity) {
 
 // ── Entity Browser (no active entity) ─────────────────────
 
+/** Render entity cards in the browser panel. */
 function renderEntityBrowser(entities) {
   const panel = document.getElementById('entityInfoPanel');
   if (!panel) return;
@@ -141,6 +160,7 @@ function renderEntityBrowser(entities) {
 
   const cards = entities.map((entity) => {
     const avatar = deriveEntityAvatar(entity.gender, entity.traits || entity.personality_traits, entity.name);
+    // traits()
     const traits = (entity.traits || entity.personality_traits || []).slice(0, 3).join(', ');
     const memCount = entity.memory_count ?? entity.memoryCount ?? 0;
     const status = entity.id === currentEntityId ? 'Active now' : (entity.isPublic ? 'Shared' : 'Available');
@@ -204,6 +224,7 @@ async function refreshSidebarEntities() {
   let activeEntityState = null;
 
   try {
+    // normalizeEntityId()
     const normalizeEntityId = (value) => String(value || '').replace(/^Entity-/, '').replace(/^entity_+/, '');
 
     // Sync active entity from server so release controls remain accurate
@@ -378,7 +399,7 @@ async function toggleEntityInfoPanel() {
 }
 
 let _eipRelMap = {};
-
+/** Render the entity info/relationship side panel in current mode. */
 function renderEntityInfoPanel(p, mode, previewEntityId) {
   const panel = document.getElementById('entityInfoPanel');
   if (!panel) return;
@@ -426,6 +447,7 @@ function renderEntityInfoPanel(p, mode, previewEntityId) {
       const trust = typeof r.trust === 'number' ? Math.round(r.trust * 100) : null;
       const pct = trust !== null ? trust : 0;
       const color = pct > 70 ? 'var(--accent-green)' : pct > 40 ? 'var(--accent-orange)' : 'var(--accent-red)';
+      // safeUid()
       const safeUid = (r.userId || 'u').replace(/[^a-zA-Z0-9_-]/g, '_');
       _eipRelMap[safeUid] = r;
       html += '<div class="eip-rel-row">';
@@ -509,7 +531,7 @@ function renderEntityInfoPanel(p, mode, previewEntityId) {
   });
   switchMainTab('entity');
 }
-
+/** Expand/collapse one relationship detail row by uid key. */
 function _toggleRelDetail(uid) {
   const r = _eipRelMap[uid];
   if (!r) return;
@@ -525,6 +547,7 @@ function _toggleRelDetail(uid) {
   const rPct = Math.round((r.rapport || 0) * 100);
   const tColor = tPct > 70 ? 'var(--accent-green)' : tPct > 40 ? 'var(--accent-orange)' : 'var(--accent-red)';
   const rColor = rPct > 60 ? 'var(--accent-green)' : rPct > 30 ? 'var(--accent-orange)' : 'var(--accent-red)';
+  // feelEmoji()
   const feelEmoji = (_FEELING_EMOJI && _FEELING_EMOJI[r.feeling]) || '\U0001F636';
 
   let d = '';
@@ -717,8 +740,10 @@ async function selectEntity(entityId) {
 
 // ── Entity Card Display Widget ─────────────────────────────
 
+/** Update top-bar entity display fields for active entity. */
 function updateEntityDisplay(entity) {
   const display = document.getElementById('entityDisplay');
+  // traits()
   const traits = (entity.personality_traits || []).join(', ');
   const intro = entity.introduction || 'No introduction available';
   const avatar = deriveEntityAvatar(entity.gender, entity.personality_traits, entity.name);

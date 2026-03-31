@@ -1,3 +1,17 @@
+// ── Client · Context Menu ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This client module drives browser-side behavior and state updates for UI
+// features.
+//
+// WHAT USES THIS:
+// Used by related flows in its subsystem. Keep call contracts stable during
+// readability-only edits.
+//
+// EXPORTS:
+// Exposed API includes: window-attached API object.
+// ─────────────────────────────────────────────────────────────────────────────
+
 /* ╔══════════════════════════════════════════════════════════════╗
    ║  CONTEXT MENU SYSTEM                                       ║
    ║  Custom right-click menus replacing browser default         ║
@@ -5,16 +19,29 @@
    ║  Depends on: app.js (globals), vfs.js (vfs)                 ║
    ╚══════════════════════════════════════════════════════════════╝ */
 
+// ctxMenu()
+// Purpose: helper wrapper used by this module's main flow.
+// ctxMenu()
+// WHAT THIS DOES: ctxMenu is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call ctxMenu(...) where this helper behavior is needed.
 const ctxMenu = (function() {
   const el = document.getElementById('ctxMenu');
   if (!el) return { show() {}, hide() {} };
 
+  // hide()
+  // WHAT THIS DOES: hide is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call hide(...) where this helper behavior is needed.
   function hide() {
     el.classList.remove('open');
     el.setAttribute('aria-hidden', 'true');
     el.innerHTML = '';
   }
-
+  // show()
+  // WHAT THIS DOES: show builds or updates what the user sees.
+  // WHY IT EXISTS: display logic is separated from data/business logic for clarity.
+  // HOW TO USE IT: call show(...) after state changes that need UI refresh.
   function show(x, y, items) {
     el.innerHTML = '';
     items.forEach(function(item) {
@@ -58,10 +85,13 @@ const ctxMenu = (function() {
   return { show: show, hide: hide };
 })();
 
+// hasDetachedPopout()
+// WHAT THIS DOES: hasDetachedPopout answers a yes/no rule check.
+// WHY IT EXISTS: guard checks are kept readable and reusable in one place.
+// HOW TO USE IT: call hasDetachedPopout(...) and branch logic based on true/false.
 function hasDetachedPopout(tab) {
   return !!(tab && typeof isPopoutOpen === 'function' && isPopoutOpen(tab));
 }
-
 function buildPopoutContextItems(tab) {
   if (!tab) return [];
   const detached = hasDetachedPopout(tab);

@@ -1,3 +1,18 @@
+// ── Tests · Dnd Study Blueprints Guards.Test ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This test file validates behavior and guards against regressions in its
+// target subsystem.
+//
+// WHAT USES THIS:
+// Used by related flows in its subsystem. Keep call contracts stable during
+// readability-only edits.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ── D&D + Study Blueprints — Guard Tests ────────────────────────────────────
 // Locks existing task classification, blueprint/skill file structure, and
 // entity creation contracts before adding D&D + Education/Study blueprints.

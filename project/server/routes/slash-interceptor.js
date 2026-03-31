@@ -1,11 +1,14 @@
-// ── Server-Side Slash Command Interceptor ────────────────────────────────────
-// Detects /command messages before they reach the LLM pipeline.
-// Used by both /api/chat and /api/nekocore/chat so slash commands work
-// from every client: entity chat, NekoCore OS chat, and failsafe console.
+// ── Routes · Slash Interceptor ───────────────────────────────────────────────
 //
-// Returns { handled, response } where:
-//   handled: true  → caller should return `response` to the client
-//   handled: false → message is not a slash command, proceed to LLM
+// HOW SLASH INTERCEPTION WORKS:
+// This module parses slash commands from chat input and dispatches command
+// handlers (/task, /project, /skill, /websearch, /stop, /list, /ma, etc.).
+//
+// WHAT USES THIS:
+//   chat route pre-LLM intercept flow
+//
+// EXPORTS:
+//   intercept(message, entityId, ctx)
 // ─────────────────────────────────────────────────────────────────────────────
 
 'use strict';
@@ -22,7 +25,7 @@ const projectStore = require('../brain/tasks/task-project-store');
 const archiveWriter = require('../brain/tasks/task-archive-writer');
 const workspaceTools = require('../brain/workspace-tools');
 const maBridge = require('../services/ma-bridge');
-
+/** Load entity profile from disk for task execution context. */
 function _loadEntityProfile(entityId) {
   const fs = require('fs');
   const path = require('path');
@@ -35,7 +38,7 @@ function _loadEntityProfile(entityId) {
   } catch (_) {}
   return {};
 }
-
+/** Read persisted task sessions used by list/listactive commands. */
 function _readAllSessionsForHistory() {
   const fs = require('fs');
   const path = require('path');
@@ -105,6 +108,7 @@ async function _dispatchWebSearch(query, entityId, ctx) {
 }
 
 // ── /stop ───────────────────────────────────────────────────────────────────
+/** Cancel a running task session by id. */
 function _cmdStop(sessionId) {
   if (!sessionId) return _ok('Usage: /stop <session-id>');
   const closed = taskSession.closeSession(sessionId, 'cancelled', {});
@@ -113,6 +117,7 @@ function _cmdStop(sessionId) {
 }
 
 // ── /list ───────────────────────────────────────────────────────────────────
+/** List recent task sessions for active entity. */
 function _cmdList(entityId) {
   if (!entityId) return _ok('⚠️ No active entity.');
   const sessions = _readAllSessionsForHistory()
@@ -127,6 +132,7 @@ function _cmdList(entityId) {
 }
 
 // ── /listactive ─────────────────────────────────────────────────────────────
+/** List currently running or pending sessions for active entity. */
 function _cmdListActive(entityId) {
   if (!entityId) return _ok('⚠️ No active entity.');
   const sessions = _readAllSessionsForHistory()
@@ -148,7 +154,7 @@ async function _dispatchMA(args, entityId, ctx) {
   // Ensure MA is running (auto-boot if needed)
   const boot = await maBridge.ensureMARunning();
   if (!boot.ok) {
-    return _ok(`⚠️ Could not reach MA: ${boot.reason}\nTry starting MA manually, or check /api/servers/ma/status.`);
+    return _ok(`⚠️ Could not reach MA: ${boot.reason}\n\nMA (Memory Architect) is a separate project.\nGet it here: ${boot.repoUrl || 'https://github.com/voardwalker-code/MA-Memory-Architect'}`);
   }
 
   const bootNote = boot.wasAlready ? '' : ' (auto-started)';
@@ -156,7 +162,7 @@ async function _dispatchMA(args, entityId, ctx) {
   // Call MA's /api/chat
   const result = await maBridge.callMA(args);
   if (!result.ok) {
-    return _ok(`⚠️ MA call failed: ${result.error}`);
+    return _ok(`⚠️ MA call failed: ${result.error}\n\nMA (Memory Architect) is a separate project.\nGet it here: ${result.repoUrl || 'https://github.com/voardwalker-code/MA-Memory-Architect'}`);
   }
 
   // Format the response
@@ -288,6 +294,7 @@ async function _runTask(userMessage, entityId, ctx, taskType, skill) {
 }
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
+/** Wrap slash-command response in common handled payload format. */
 function _ok(text) {
   return { handled: true, response: { ok: true, response: text, slashCommand: true } };
 }

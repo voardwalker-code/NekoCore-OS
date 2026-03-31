@@ -1,3 +1,18 @@
+// ── Services · Neurochemistry Engine ─────────────────────────────────────────
+//
+// HOW NEUROCHEMISTRY MODELING WORKS:
+// This module simulates a lightweight chemical state (dopamine, cortisol,
+// serotonin, oxytocin), updates levels from cognitive events, computes mood and
+// emotional vectors, and provides reinforcement/pruning signals for memory and
+// belief consolidation flows.
+//
+// WHAT USES THIS:
+//   brain loop, cognitive bus listeners, memory retrieval scoring, deep-sleep consolidation
+//
+// EXPORTS:
+//   Neurochemistry class
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // REM System — Neurochemistry Engine
 //
@@ -89,6 +104,7 @@ class Neurochemistry {
    * @param {Object} [options.beliefGraph]   — BeliefGraph for consolidation
    * @param {string} [options.entityId]      — Entity ID for persistence
    */
+  /** Initialize chemical state, dependencies, and event subscriptions. */
   constructor(options = {}) {
     this.cognitiveBus = options.cognitiveBus || null;
     this.memoryGraph = options.memoryGraph || null;
@@ -121,6 +137,7 @@ class Neurochemistry {
 
   // ── Persistence ────────────────────────────────────────
 
+  /** Persist current chemistry state for this entity. */
   save() {
     if (!this.entityId) return;
     try {
@@ -651,7 +668,7 @@ class Neurochemistry {
     };
   }
 }
-
+/** Clamp numeric value into the provided range. */
 function clamp(v, min = CLAMP_MIN, max = CLAMP_MAX) {
   return Math.max(min, Math.min(max, v));
 }

@@ -1,3 +1,18 @@
+// ── Client Optional · Diary ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This client module drives browser-side behavior and state updates for UI
+// features.
+//
+// WHAT USES THIS:
+// Used by related flows in its subsystem. Keep call contracts stable during
+// readability-only edits.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // REM System — Life Diary & Dream Diary UI
 // Fetches, renders, and displays diary markdown with images.
@@ -9,6 +24,10 @@ let _dreamDiaryLoaded = false;
 /**
  * Simple markdown-to-HTML renderer (handles headers, bold, italic, images, lists, hr).
  */
+// renderDiaryMarkdown()
+// WHAT THIS DOES: renderDiaryMarkdown builds or updates what the user sees.
+// WHY IT EXISTS: display logic is separated from data/business logic for clarity.
+// HOW TO USE IT: call renderDiaryMarkdown(...) after state changes that need UI refresh.
 function renderDiaryMarkdown(md) {
   if (!md || !md.trim()) return '';
   const lines = md.split('\n');
@@ -78,13 +97,19 @@ function renderDiaryMarkdown(md) {
   if (inList) html += '</ul>';
   return html;
 }
-
+// escDiary()
+// WHAT THIS DOES: escDiary is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call escDiary(...) where this helper behavior is needed.
 function escDiary(text) {
   const d = document.createElement('div');
   d.textContent = text;
   return d.innerHTML;
 }
-
+// formatInline()
+// WHAT THIS DOES: formatInline reshapes data from one form into another.
+// WHY IT EXISTS: conversion rules live here so the same transformation is reused.
+// HOW TO USE IT: pass input data into formatInline(...) and use the transformed output.
 function formatInline(text) {
   let s = escDiary(text);
   // Bold **text**

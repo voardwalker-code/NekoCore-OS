@@ -1,3 +1,17 @@
+// ── Client · Create ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This client module drives browser-side behavior and state updates for UI
+// features.
+//
+// WHAT USES THIS:
+// Used by related flows in its subsystem. Keep call contracts stable during
+// readability-only edits.
+//
+// EXPORTS:
+// Exposed API includes: window-attached API object.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // REM System — Standalone Entity Creator
 // Handles all entity creation modes independently of the main app.
@@ -25,11 +39,13 @@ const TRAIT_SUGGESTIONS = [
   'protective', 'reflective', 'reliable', 'resilient', 'resourceful', 'sincere',
   'social', 'steady', 'supportive', 'thoughtful', 'warm', 'witty'
 ];
-
+// normalizeEntityNameKey()
+// WHAT THIS DOES: normalizeEntityNameKey reshapes data from one form into another.
+// WHY IT EXISTS: conversion rules live here so the same transformation is reused.
+// HOW TO USE IT: pass input data into normalizeEntityNameKey(...) and use the transformed output.
 function normalizeEntityNameKey(name) {
   return String(name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
 }
-
 function isReservedEntityName(name) {
   return RESERVED_ENTITY_NAME_KEYS.has(normalizeEntityNameKey(name));
 }
@@ -53,7 +69,10 @@ async function pollForCreatedEntity(nameHint, maxAttempts = 6, intervalMs = 5000
   }
   return { found: false };
 }
-
+// buildTraitAutocompleteValue()
+// WHAT THIS DOES: buildTraitAutocompleteValue creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call buildTraitAutocompleteValue(...) before code that depends on this setup.
 function buildTraitAutocompleteValue(rawValue, suggestion) {
   const current = String(rawValue || '');
   const commaIndex = current.lastIndexOf(',');
@@ -61,7 +80,10 @@ function buildTraitAutocompleteValue(rawValue, suggestion) {
   const spacer = prefix && !/\s$/.test(prefix) ? ' ' : '';
   return prefix + spacer + suggestion;
 }
-
+// refreshTraitSuggestionList()
+// WHAT THIS DOES: refreshTraitSuggestionList is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call refreshTraitSuggestionList(...) where this helper behavior is needed.
 function refreshTraitSuggestionList(rawValue) {
   const listEl = document.getElementById('entityTraitSuggestions');
   if (!listEl) return;
@@ -87,7 +109,10 @@ function refreshTraitSuggestionList(rawValue) {
     listEl.appendChild(opt);
   }
 }
-
+// wireTraitAutocomplete()
+// WHAT THIS DOES: wireTraitAutocomplete is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call wireTraitAutocomplete(...) where this helper behavior is needed.
 function wireTraitAutocomplete(inputId) {
   const input = document.getElementById(inputId);
   if (!input) return;
@@ -95,7 +120,10 @@ function wireTraitAutocomplete(inputId) {
   input.addEventListener('input', () => refreshTraitSuggestionList(input.value));
   input.addEventListener('focus', () => refreshTraitSuggestionList(input.value));
 }
-
+// randomTraitFill()
+// WHAT THIS DOES: randomTraitFill is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call randomTraitFill(...) where this helper behavior is needed.
 function randomTraitFill(inputId, targetCount) {
   const input = document.getElementById(inputId);
   if (!input) return;
@@ -109,7 +137,10 @@ function randomTraitFill(inputId, targetCount) {
   input.value = pool.slice(0, count).join(', ');
   refreshTraitSuggestionList(input.value);
 }
-
+// initTraitAssist()
+// WHAT THIS DOES: initTraitAssist creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call initTraitAssist(...) before code that depends on this setup.
 function initTraitAssist() {
   wireTraitAutocomplete('emptyEntityTraits');
   wireTraitAutocomplete('guidedEntityTraits');
@@ -134,6 +165,10 @@ function initTraitAssist() {
 }
 
 // ── Status helper ────────────────────────────────────────────
+// lg()
+// WHAT THIS DOES: lg is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call lg(...) where this helper behavior is needed.
 function lg(type, msg) {
   const bar = document.getElementById('creatorStatusBar');
   if (!bar) return;
@@ -143,6 +178,10 @@ function lg(type, msg) {
 }
 
 // ── Navigation ───────────────────────────────────────────────
+// creatorContinueToModeSelection()
+// WHAT THIS DOES: creatorContinueToModeSelection is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call creatorContinueToModeSelection(...) where this helper behavior is needed.
 function creatorContinueToModeSelection() {
   const creatorName = document.getElementById('creatorUserName').value.trim();
   if (creatorName && !document.getElementById('creatorOnboardName').value.trim()) {
@@ -152,7 +191,10 @@ function creatorContinueToModeSelection() {
   document.getElementById('entityCreationModeStep').style.display = 'block';
   lg('info', 'Pick a creation mode below.');
 }
-
+// selectEntityMode()
+// WHAT THIS DOES: selectEntityMode is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call selectEntityMode(...) where this helper behavior is needed.
 function selectEntityMode(mode) {
   if (mode === 'novel') {
     // Switch to the Book Ingest app tab
@@ -184,7 +226,10 @@ function selectEntityMode(mode) {
     lg('info', selected.label + ' — fill in the form and hit the button when ready.');
   }
 }
-
+// backToModeSelection()
+// WHAT THIS DOES: backToModeSelection is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call backToModeSelection(...) where this helper behavior is needed.
 function backToModeSelection() {
   entityCreationMode = null;
   ['entityEmptyFormStep', 'entityRandomFormStep', 'entityGuidedFormStep', 'entityCharacterFormStep'].forEach(id => {
@@ -200,18 +245,24 @@ async function launchNovelIngest() {
   lg('info', 'Launching Memory Architect for novel ingestion…');
   try {
     const resp = await fetch('/api/servers/ma/start', { method: 'POST' });
-    if (resp.ok) {
+    const data = await resp.json().catch(() => ({}));
+    if (resp.ok && data.ok !== false && data.reason !== 'ma_not_found') {
       window.open('http://localhost:3850', '_blank');
       lg('info', 'Memory Architect launched. Use its Book Ingestion feature to create an entity from a novel.');
+    } else if (data.reason === 'ma_not_found' || data.repoUrl) {
+      var repo = data.repoUrl || 'https://github.com/voardwalker-code/MA-Memory-Architect';
+      lg('err', 'MA (Memory Architect) is not installed. Get it at: <a href="' + repo + '" target="_blank" style="color:#8b5cf6">' + repo + '</a>');
     } else {
-      const data = await resp.json().catch(() => ({}));
       lg('err', 'Failed to start Memory Architect: ' + (data.error || 'Server returned ' + resp.status));
     }
   } catch (err) {
     lg('err', 'Failed to launch Memory Architect: ' + err.message);
   }
 }
-
+// updateEmptyEntityModeForm()
+// WHAT THIS DOES: updateEmptyEntityModeForm changes saved state or updates data.
+// WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+// HOW TO USE IT: call updateEmptyEntityModeForm(...) with the new values you want to persist.
 function updateEmptyEntityModeForm() {
   const modeEl = document.getElementById('emptyEntityMode');
   const traitsGroup = document.getElementById('emptyEntityTraitsGroup');
@@ -221,7 +272,10 @@ function updateEmptyEntityModeForm() {
 }
 
 window.updateEmptyEntityModeForm = updateEmptyEntityModeForm;
-
+// resetCreatorFlow()
+// WHAT THIS DOES: resetCreatorFlow removes, resets, or shuts down existing state.
+// WHY IT EXISTS: cleanup is explicit so stale state does not leak into new runs.
+// HOW TO USE IT: call resetCreatorFlow(...) when you need a safe teardown/reset path.
 function resetCreatorFlow(options = {}) {
   const skipWelcome = !!options.skipWelcome;
   entityCreationMode = null;
@@ -291,7 +345,10 @@ function resetCreatorFlow(options = {}) {
 
   lg('info', skipWelcome ? 'Pick a creation mode below.' : 'Choose a creation mode to get started.');
 }
-
+// goToMain()
+// WHAT THIS DOES: goToMain is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call goToMain(...) where this helper behavior is needed.
 function goToMain() {
   if (IS_EMBED) {
     syncParentAfterCreate();
@@ -299,7 +356,10 @@ function goToMain() {
   }
   window.location.href = '/index.html';
 }
-
+// syncParentAfterCreate()
+// WHAT THIS DOES: syncParentAfterCreate is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call syncParentAfterCreate(...) where this helper behavior is needed.
 function syncParentAfterCreate() {
   try {
     if (!window.parent || window.parent === window) return;
@@ -312,15 +372,21 @@ function syncParentAfterCreate() {
 }
 
 // ── Progress overlay ─────────────────────────────────────────
+// showHatchProgress()
+// WHAT THIS DOES: showHatchProgress builds or updates what the user sees.
+// WHY IT EXISTS: display logic is separated from data/business logic for clarity.
+// HOW TO USE IT: call showHatchProgress(...) after state changes that need UI refresh.
 function showHatchProgress() {
   document.getElementById('creatorProgressOverlay').classList.add('active');
   document.getElementById('creatorCardFooter').style.display = 'none';
 }
-
+// closeHatchProgress()
+// WHAT THIS DOES: closeHatchProgress removes, resets, or shuts down existing state.
+// WHY IT EXISTS: cleanup is explicit so stale state does not leak into new runs.
+// HOW TO USE IT: call closeHatchProgress(...) when you need a safe teardown/reset path.
 function closeHatchProgress() {
   document.getElementById('creatorProgressOverlay').classList.remove('active');
 }
-
 function updateGuidedBackstoryDepth(value) {
   const level = Math.max(1, Math.min(5, parseInt(value, 10) || 3));
   const labels = {
@@ -337,7 +403,10 @@ function updateGuidedBackstoryDepth(value) {
   if (labelEl) labelEl.textContent = meta.name + ' (level ' + level + ') • target: ' + meta.memories + ' core memories';
   if (tokenEl) tokenEl.textContent = meta.tokens;
 }
-
+// updateRandomBackstoryDepth()
+// WHAT THIS DOES: updateRandomBackstoryDepth changes saved state or updates data.
+// WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+// HOW TO USE IT: call updateRandomBackstoryDepth(...) with the new values you want to persist.
 function updateRandomBackstoryDepth(value) {
   const level = Math.max(1, Math.min(5, parseInt(value, 10) || 3));
   const labelEl = document.getElementById('randomBackstoryDepthLabel');
@@ -351,7 +420,10 @@ function updateRandomBackstoryDepth(value) {
     return;
   }
 }
-
+// updateHatchStep()
+// WHAT THIS DOES: updateHatchStep changes saved state or updates data.
+// WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+// HOW TO USE IT: call updateHatchStep(...) with the new values you want to persist.
 function updateHatchStep(stepIndex, status) {
   const container = document.getElementById('hatchProgressSteps');
   const steps = container.querySelectorAll('.hatch-step');
@@ -365,7 +437,10 @@ function updateHatchStep(stepIndex, status) {
 
 let _hatchStepTimer = null;
 let _hatchStepIndex = 0;
-
+// resetHatchSteps()
+// WHAT THIS DOES: resetHatchSteps removes, resets, or shuts down existing state.
+// WHY IT EXISTS: cleanup is explicit so stale state does not leak into new runs.
+// HOW TO USE IT: call resetHatchSteps(...) when you need a safe teardown/reset path.
 function resetHatchSteps() {
   const container = document.getElementById('hatchProgressSteps');
   const steps = container.querySelectorAll('.hatch-step');
@@ -378,7 +453,10 @@ function resetHatchSteps() {
   const seedStep = document.getElementById('hatchStepSeed');
   if (seedStep) seedStep.style.display = 'none';
 }
-
+// startHatchStepTimer()
+// WHAT THIS DOES: startHatchStepTimer creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call startHatchStepTimer(...) before code that depends on this setup.
 function startHatchStepTimer(totalSteps, intervalMs) {
   stopHatchStepTimer();
   _hatchStepIndex = 0;
@@ -390,17 +468,27 @@ function startHatchStepTimer(totalSteps, intervalMs) {
     updateHatchStep(_hatchStepIndex, 'active');
   }, intervalMs || 4000);
 }
-
+// completeAllHatchSteps()
+// WHAT THIS DOES: completeAllHatchSteps is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call completeAllHatchSteps(...) where this helper behavior is needed.
 function completeAllHatchSteps(totalSteps) {
   stopHatchStepTimer();
   for (let i = 0; i < totalSteps; i++) updateHatchStep(i, 'complete');
 }
-
+// stopHatchStepTimer()
+// WHAT THIS DOES: stopHatchStepTimer removes, resets, or shuts down existing state.
+// WHY IT EXISTS: cleanup is explicit so stale state does not leak into new runs.
+// HOW TO USE IT: call stopHatchStepTimer(...) when you need a safe teardown/reset path.
 function stopHatchStepTimer() {
   if (_hatchStepTimer) { clearInterval(_hatchStepTimer); _hatchStepTimer = null; }
 }
 
 // ── Onboarding payload ───────────────────────────────────────
+// getCreatorOnboardingPayload()
+// WHAT THIS DOES: getCreatorOnboardingPayload reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call getCreatorOnboardingPayload(...), then use the returned value in your next step.
 function getCreatorOnboardingPayload() {
   const preferredName = document.getElementById('creatorOnboardName').value.trim();
   const interests     = document.getElementById('creatorOnboardInterests').value.trim();
@@ -435,6 +523,10 @@ async function applyCreatorOnboarding(entityId) {
 }
 
 // ── Success screen ───────────────────────────────────────────
+// showSuccessScreen()
+// WHAT THIS DOES: showSuccessScreen builds or updates what the user sees.
+// WHY IT EXISTS: display logic is separated from data/business logic for clarity.
+// HOW TO USE IT: call showSuccessScreen(...) after state changes that need UI refresh.
 function showSuccessScreen(entity, note, entityId) {
   // Hide all form steps
   ['creatorWelcomeStep', 'entityCreationModeStep', 'entityEmptyFormStep',
@@ -468,6 +560,10 @@ function showSuccessScreen(entity, note, entityId) {
 }
 
 // ── Document chunker (inline, shared with document-digest) ───
+// chunkDocument()
+// WHAT THIS DOES: chunkDocument is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call chunkDocument(...) where this helper behavior is needed.
 function chunkDocument(text, filename) {
   const MAX_CHUNK_CHARS = 6000;
   const MIN_CHUNK_CHARS = 200;
@@ -803,6 +899,10 @@ async function createGuidedEntity() {
 }
 
 // ── Tiny sleep helper ─────────────────────────────────────────
+// sleep()
+// WHAT THIS DOES: sleep is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call sleep(...) where this helper behavior is needed.
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
 // ── Check for ?mode= param on load ───────────────────────────

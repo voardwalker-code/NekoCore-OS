@@ -1,3 +1,16 @@
+// ── Services · Post Response Cognitive Feedback ──────────────────────────────
+//
+// HOW COGNITIVE FEEDBACK WORKS:
+// This module analyzes each completed turn and applies non-blocking updates to
+// beliefs, goals, curiosity, diary, and mood-related thought events.
+//
+// WHAT USES THIS:
+//   post-response pipeline after memory encoding has completed
+//
+// EXPORTS:
+//   runCognitiveFeedbackLoop()
+// ─────────────────────────────────────────────────────────────────────────────
+
 'use strict';
 
 // ============================================================
@@ -48,9 +61,11 @@ async function runCognitiveFeedbackLoop(params = {}) {
 
   if (!userMessage && !entityResponse) return;
 
+  /** Emit SSE event when broadcaster is available. */
   const emitSSE = (event, data) => {
     if (typeof broadcastSSE === 'function') broadcastSSE(event, data);
   };
+  /** Log timeline event when logger is available. */
   const log = (type, data) => {
     if (typeof logTimeline === 'function') logTimeline(type, data);
   };

@@ -1,3 +1,18 @@
+// ── Brain · Trace Graph ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: fs, path. Keep import and
+// call-site contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // REM System — Trace Graph Module
 // Tracks memory access patterns and creates reasoning chains.
@@ -7,6 +22,10 @@ const fs = require('fs');
 const path = require('path');
 
 class TraceGraph {
+  // constructor()
+  // WHAT THIS DOES: constructor is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call constructor(...) where this helper behavior is needed.
   constructor(options = {}) {
     this.memDir = options.memDir || path.join(__dirname, '../../../memories');
     this.traceDir = path.join(this.memDir, 'traces');
@@ -23,6 +42,10 @@ class TraceGraph {
    * Create a new trace for a reasoning chain
    * user_prompt → mem_A → mem_B → mem_C
    */
+  // createTrace()
+  // WHAT THIS DOES: createTrace creates or initializes something needed by the flow.
+  // WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+  // HOW TO USE IT: call createTrace(...) before code that depends on this setup.
   createTrace(triggerType = 'user_prompt', triggerId = null) {
     const traceId = `trace_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     
@@ -237,6 +260,10 @@ class TraceGraph {
       const graph = this.buildConnectionGraph();
       
       // Get memories accessed after this one
+      // outgoing()
+      // WHAT THIS DOES: outgoing is a helper used by this module's main flow.
+      // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+      // HOW TO USE IT: call outgoing(...) where this helper behavior is needed.
       const outgoing = (graph[memId] || [])
         .sort((a, b) => b.count - a.count)
         .slice(0, limit)

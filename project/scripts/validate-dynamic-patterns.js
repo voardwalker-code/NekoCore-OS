@@ -1,4 +1,18 @@
 #!/usr/bin/env node
+// ── Scripts · Validate Dynamic Patterns ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This script automates maintenance, generation, validation, or local
+// development workflows.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: fs, path. Keep import and
+// call-site contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
 // ============================================================
 // NekoCore OS — Dynamic Pattern Validator
 // Verifies known dynamic risks from docs/system-map-addendum.md
@@ -13,11 +27,13 @@ const path = require('path');
 const ROOT      = path.resolve(__dirname, '..');
 const DOCS_DIR  = path.join(ROOT, '..', 'docs');
 const REPORT_MD = path.join(DOCS_DIR, 'dynamic-validation-report.md');
-
+// readFile()
+// WHAT THIS DOES: readFile reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call readFile(...), then use the returned value in your next step.
 function readFile(fp) {
   try { return fs.readFileSync(fp, 'utf8'); } catch (_) { return null; }
 }
-
 function findFile(startDir, filename) {
   const entries = fs.readdirSync(startDir, { withFileTypes: true });
   for (const e of entries) {
@@ -32,7 +48,10 @@ function findFile(startDir, filename) {
   }
   return null;
 }
-
+// walkDir()
+// WHAT THIS DOES: walkDir is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call walkDir(...) where this helper behavior is needed.
 function walkDir(dir, exts, results = []) {
   if (!fs.existsSync(dir)) return results;
   let entries;
@@ -56,7 +75,10 @@ const results = [];
 let passCount = 0;
 let warnCount = 0;
 let resolvedCount = 0;
-
+// pass()
+// WHAT THIS DOES: pass is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call pass(...) where this helper behavior is needed.
 function pass(label)     { const m = `✅  ${label}`;     results.push(m); console.log(m); passCount++; }
 function warn(label)     { const m = `⚠   ${label}`;     results.push(m); console.log(m); warnCount++; }
 function resolved(label) { const m = `🔵  ${label}`;     results.push(m); console.log(m); resolvedCount++; }
@@ -268,6 +290,12 @@ const nksFileHits    = [];
 for (const fp of allFiles) {
   const c = readFile(fp);
   if (!c) continue;
+  // nksMatches()
+  // Purpose: helper wrapper used by this module's main flow.
+  // nksMatches()
+  // WHAT THIS DOES: nksMatches is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call nksMatches(...) where this helper behavior is needed.
   const nksMatches = (c.match(/nk-s-\d{4}/g) || []).length;
   const siMatches  = (c.match(/sys-inline-\d{4}/g) || []).length;
   if (nksMatches > 0) nksFileHits.push(path.relative(ROOT, fp).replace(/\\/g, '/'));

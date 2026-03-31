@@ -1,3 +1,18 @@
+// ── Brain · Dream Diary ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: fs, path, ../../entityPaths.
+// Keep import and call-site contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // REM System — Dream Diary
 // Entity's dream journal — first-person narrative interpretation
@@ -29,6 +44,10 @@ class DreamDiary {
     entry += `${narrative}\n`;
 
     // Optional: connections to waking memories
+    // if()
+    // WHAT THIS DOES: if is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call if(...) where this helper behavior is needed.
     if (dream.origin_memories && dream.origin_memories.length > 0) {
       entry += `\n**Connected to waking memories:**\n`;
       for (const mem of dream.origin_memories.slice(0, 3)) {

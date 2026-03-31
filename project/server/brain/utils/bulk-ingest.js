@@ -1,3 +1,19 @@
+// ── Brain · Bulk Ingest ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: fs, path, crypto, ./rake,
+// ./archive-index. Keep import and call-site contracts aligned during
+// refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 'use strict';
 // ============================================================
 // bulk-ingest.js — Phase 4.6 S4.5
@@ -37,6 +53,10 @@ const {
  * @param {number} maxLen
  * @returns {string[]}
  */
+// _splitOnSentences()
+// WHAT THIS DOES: _splitOnSentences is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _splitOnSentences(...) where this helper behavior is needed.
 function _splitOnSentences(text, maxLen) {
   const sentences = text.split(/(?<=[.!?])\s+/).filter(s => s.trim());
   const chunks = [];
@@ -84,6 +104,10 @@ function _splitOnSentences(text, maxLen) {
  * @param {number} [chunkSize=600]
  * @returns {string[]}
  */
+// chunkText()
+// WHAT THIS DOES: chunkText is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call chunkText(...) where this helper behavior is needed.
 function chunkText(text, chunkSize = 600) {
   if (!text || !text.trim()) return [];
 
@@ -116,6 +140,10 @@ function chunkText(text, chunkSize = 600) {
  * @param {string} text
  * @returns {string}  16-char hex string
  */
+// chunkHash()
+// WHAT THIS DOES: chunkHash is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call chunkHash(...) where this helper behavior is needed.
 function chunkHash(text) {
   return crypto.createHash('sha256').update(text, 'utf8').digest('hex').slice(0, 16);
 }
@@ -128,6 +156,10 @@ function chunkHash(text) {
  * @param {string} docId
  * @returns {Set<string>}
  */
+// _loadIngestedHashes()
+// WHAT THIS DOES: _loadIngestedHashes reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call _loadIngestedHashes(...), then use the returned value in your next step.
 function _loadIngestedHashes(entityId, docId) {
   const seen = new Set();
   let buckets;
@@ -156,6 +188,10 @@ function _loadIngestedHashes(entityId, docId) {
  * @param {string} docId
  * @returns {{ lastChunk: number, total: number, startedAt: string, updatedAt: string } | null}
  */
+// _readProgress()
+// WHAT THIS DOES: _readProgress reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call _readProgress(...), then use the returned value in your next step.
 function _readProgress(entityId, docId) {
   const markerPath = path.join(getArchiveRoot(entityId), `ingest_progress_${_safeId(docId)}.json`);
   if (!fs.existsSync(markerPath)) return null;
@@ -165,6 +201,10 @@ function _readProgress(entityId, docId) {
 /**
  * Write (or update) the progress marker.
  */
+// _writeProgress()
+// WHAT THIS DOES: _writeProgress changes saved state or updates data.
+// WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+// HOW TO USE IT: call _writeProgress(...) with the new values you want to persist.
 function _writeProgress(entityId, docId, { lastChunk, total, startedAt }) {
   const markerPath = path.join(getArchiveRoot(entityId), `ingest_progress_${_safeId(docId)}.json`);
   fs.writeFileSync(
@@ -177,6 +217,10 @@ function _writeProgress(entityId, docId, { lastChunk, total, startedAt }) {
 /**
  * Delete the progress marker (ingest complete).
  */
+// _clearProgress()
+// WHAT THIS DOES: _clearProgress removes, resets, or shuts down existing state.
+// WHY IT EXISTS: cleanup is explicit so stale state does not leak into new runs.
+// HOW TO USE IT: call _clearProgress(...) when you need a safe teardown/reset path.
 function _clearProgress(entityId, docId) {
   const markerPath = path.join(getArchiveRoot(entityId), `ingest_progress_${_safeId(docId)}.json`);
   try { fs.unlinkSync(markerPath); } catch { /* already gone */ }
@@ -185,6 +229,10 @@ function _clearProgress(entityId, docId) {
 /**
  * Sanitize a docId to a filesystem-safe identifier.
  */
+// _safeId()
+// WHAT THIS DOES: _safeId is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _safeId(...) where this helper behavior is needed.
 function _safeId(docId) {
   return String(docId).replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 64);
 }

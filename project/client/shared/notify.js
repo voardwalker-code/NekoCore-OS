@@ -1,3 +1,17 @@
+// ── Client Shared · Notify ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This client module drives browser-side behavior and state updates for UI
+// features.
+//
+// WHAT USES THIS:
+// Used by related flows in its subsystem. Keep call contracts stable during
+// readability-only edits.
+//
+// EXPORTS:
+// Exposed API includes: window-attached API object.
+// ─────────────────────────────────────────────────────────────────────────────
+
 /**
  * notify — lightweight floating toast notifications.
  *
@@ -12,7 +26,10 @@
  */
 window.notify = (function () {
   let _container = null;
-
+  // _getContainer()
+  // WHAT THIS DOES: _getContainer reads or finds data and gives it back.
+  // WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+  // HOW TO USE IT: call _getContainer(...), then use the returned value in your next step.
   function _getContainer() {
     if (_container && document.body.contains(_container)) return _container;
     _container = document.createElement('div');
@@ -38,7 +55,10 @@ window.notify = (function () {
     info:  { bg: '#1a2c3d', border: '#3b82f6', color: '#93c5fd' },
     warn:  { bg: '#3d2e1a', border: '#f59e0b', color: '#fcd34d' }
   };
-
+  // show()
+  // WHAT THIS DOES: show builds or updates what the user sees.
+  // WHY IT EXISTS: display logic is separated from data/business logic for clarity.
+  // HOW TO USE IT: call show(...) after state changes that need UI refresh.
   function show(msg, type, duration) {
     type = type || 'info';
     duration = (duration == null) ? 3000 : duration;
@@ -84,7 +104,10 @@ window.notify = (function () {
       setTimeout(function () { _dismiss(toast); }, duration);
     }
   }
-
+  // _dismiss()
+  // WHAT THIS DOES: _dismiss is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call _dismiss(...) where this helper behavior is needed.
   function _dismiss(toast) {
     toast.style.opacity = '0';
     setTimeout(function () { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 220);

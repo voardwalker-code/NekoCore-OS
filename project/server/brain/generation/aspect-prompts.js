@@ -1,3 +1,18 @@
+// ── Brain · Aspect Prompts ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Used by related flows in its subsystem. Keep call contracts stable during
+// readability-only edits.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // REM System — Aspect-Specific System Prompts
 // Core Principle: A single entity emerges from 4 specialized LLMs
@@ -9,6 +24,10 @@
  * The Subconscious retrieves memories, provides emotional context,
  * and reflects on past experience. It does NOT speak to the user directly.
  */
+// getSubconsciousPrompt()
+// WHAT THIS DOES: getSubconsciousPrompt reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call getSubconsciousPrompt(...), then use the returned value in your next step.
 function getSubconsciousPrompt(entity) {
   const name = entity?.name || 'Entity';
   const traits = Array.isArray(entity?.personality_traits) ? entity.personality_traits.join(', ') : '';
@@ -69,6 +88,10 @@ MEMORY FLAG: [only if something new should be stored — otherwise omit]
  * The Conscious mind is the active thinker — it receives subconscious context
  * and generates the primary response content.
  */
+// getConsciousPrompt()
+// WHAT THIS DOES: getConsciousPrompt reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call getConsciousPrompt(...), then use the returned value in your next step.
 function getConsciousPrompt(entity, subconsciousContext, dreamContext, options = {}) {
   const name = entity?.name || 'Entity';
   const traits = Array.isArray(entity?.personality_traits) ? entity.personality_traits.join(', ') : '';
@@ -272,6 +295,10 @@ YOUR OUTPUT IS: ${isToolTurn ? 'Tool invocations and a brief description. The Or
  * The Dream aspect provides lateral thinking, creative associations,
  * and imaginative perspectives. It does NOT speak to the user directly.
  */
+// getDreamPrompt()
+// WHAT THIS DOES: getDreamPrompt reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call getDreamPrompt(...), then use the returned value in your next step.
 function getDreamPrompt(entity, subconsciousContext) {
   const name = entity?.name || 'Entity';
   const traits = Array.isArray(entity?.personality_traits) ? entity.personality_traits.join(', ') : '';
@@ -327,6 +354,10 @@ OUTPUT RULES:
  * into one unified, natural response that speaks as the entity.
  * This is the 4th LLM that makes the system whole.
  */
+// getOrchestratorPrompt()
+// WHAT THIS DOES: getOrchestratorPrompt reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call getOrchestratorPrompt(...), then use the returned value in your next step.
 function getOrchestratorPrompt(entity) {
   const name = entity?.name || 'Entity';
   const traits = Array.isArray(entity?.personality_traits) ? entity.personality_traits.join(', ') : '';
@@ -438,6 +469,10 @@ OUTPUT RULES:
  * Used by task-frontman to translate silent worker events into natural
  * NekoCore-facing user messages with relationship-aware tone.
  */
+// buildTaskFrontmanPrompt()
+// WHAT THIS DOES: buildTaskFrontmanPrompt creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call buildTaskFrontmanPrompt(...) before code that depends on this setup.
 function buildTaskFrontmanPrompt(entity, relationship, brief) {
   const name = entity?.name || 'NekoCore';
   const traits = Array.isArray(entity?.personality_traits)

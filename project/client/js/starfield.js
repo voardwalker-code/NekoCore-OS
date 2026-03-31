@@ -1,3 +1,18 @@
+// ── Client · Starfield ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This client module drives browser-side behavior and state updates for UI
+// features.
+//
+// WHAT USES THIS:
+// Used by related flows in its subsystem. Keep call contracts stable during
+// readability-only edits.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 /* ============================================================
    NekoCore Star Field — Stars, Constellations & Comet
    Loaded immediately after the #stars canvas element
@@ -25,12 +40,18 @@
     { pts:[[0.60,0.68],[0.63,0.63],[0.66,0.60],[0.70,0.62],[0.73,0.67],[0.76,0.72],[0.78,0.78],[0.75,0.84],[0.71,0.83]],
       edges:[[0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[6,7],[7,8]] },
   ];
-
+  // resize()
+  // WHAT THIS DOES: resize is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call resize(...) where this helper behavior is needed.
   function resize() {
     W = canvas.width  = window.innerWidth;
     H = canvas.height = window.innerHeight;
   }
-
+  // mkComet()
+  // WHAT THIS DOES: mkComet is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call mkComet(...) where this helper behavior is needed.
   function mkComet() {
     var side = Math.floor(Math.random() * 4);
     var x, y;
@@ -45,7 +66,10 @@
     comet = { x: x, y: y, vx: (tx-x)/d*sp, vy: (ty-y)/d*sp,
               tailLen: 120 + Math.random() * 80, r: 3, alive: true };
   }
-
+  // init()
+  // WHAT THIS DOES: init creates or initializes something needed by the flow.
+  // WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+  // HOW TO USE IT: call init(...) before code that depends on this setup.
   function init() {
     stars = [];
     for (var i = 0; i < 400; i++) {
@@ -75,7 +99,10 @@
     }
     if (!comet) mkComet();
   }
-
+  // draw()
+  // WHAT THIS DOES: draw builds or updates what the user sees.
+  // WHY IT EXISTS: display logic is separated from data/business logic for clarity.
+  // HOW TO USE IT: call draw(...) after state changes that need UI refresh.
   function draw() {
     ctx.clearRect(0, 0, W, H);
     speedMult = Math.max(1.0, speedMult * 0.952);

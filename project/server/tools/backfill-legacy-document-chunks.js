@@ -1,3 +1,19 @@
+// ── Tools · Backfill Legacy Document Chunks ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This module belongs to the NekoCore OS codebase and provides focused
+// subsystem behavior.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: fs, path, zlib,
+// ../entityPaths, ../contracts/memory-schema. Keep import and call-site
+// contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // Phase 13 Utility: Backfill Legacy Document Chunks
 //
@@ -23,7 +39,10 @@ const DOC_PAIRS = [
   ['wh', '^'], ['nc', '!'], ['ll', '='], ['ch', '$'], ['sh', '<'], ['ou', '8'],
   ['ee', '2'], ['ph', 'f']
 ];
-
+// parseArgs()
+// WHAT THIS DOES: parseArgs reshapes data from one form into another.
+// WHY IT EXISTS: conversion rules live here so the same transformation is reused.
+// HOW TO USE IT: pass input data into parseArgs(...) and use the transformed output.
 function parseArgs(argv) {
   const args = { entity: null, apply: false };
   for (let i = 2; i < argv.length; i++) {
@@ -39,7 +58,10 @@ function parseArgs(argv) {
   }
   return args;
 }
-
+// listEntityIds()
+// WHAT THIS DOES: listEntityIds is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call listEntityIds(...) where this helper behavior is needed.
 function listEntityIds(baseEntitiesDir) {
   if (!fs.existsSync(baseEntitiesDir)) return [];
   return fs.readdirSync(baseEntitiesDir)
@@ -53,7 +75,10 @@ function listEntityIds(baseEntitiesDir) {
     })
     .map(name => name.replace(/^entity_/, ''));
 }
-
+// safeReadJson()
+// WHAT THIS DOES: safeReadJson is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call safeReadJson(...) where this helper behavior is needed.
 function safeReadJson(filePath) {
   try {
     return JSON.parse(fs.readFileSync(filePath, 'utf8'));
@@ -61,7 +86,10 @@ function safeReadJson(filePath) {
     return null;
   }
 }
-
+// v4Transform()
+// WHAT THIS DOES: v4Transform is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call v4Transform(...) where this helper behavior is needed.
 function v4Transform(text) {
   let v = String(text || '').toLowerCase().replace(/[^a-z0-9\s]/g, ' ');
   v = v.split(/\s+/).map(w => DOC_COMMON[w] || w).join(' ');
@@ -72,7 +100,10 @@ function v4Transform(text) {
   v = v.replace(/\b[bcdfghjklmnpqrstvwxyz]\b/g, '');
   return v.replace(/\s+/g, '').trim();
 }
-
+// buildCompressedDocumentContext()
+// WHAT THIS DOES: buildCompressedDocumentContext creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call buildCompressedDocumentContext(...) before code that depends on this setup.
 function buildCompressedDocumentContext(params) {
   const { content, filename, chunkIndex, totalChunks, topics } = params;
   const legend = DOC_PAIRS.map(([k, v]) => `${k}=${v}`).join(' ');
@@ -94,12 +125,18 @@ function buildCompressedDocumentContext(params) {
     v4Transform(content)
   ].join('\n');
 }
-
+// looksCompressed()
+// WHAT THIS DOES: looksCompressed is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call looksCompressed(...) where this helper behavior is needed.
 function looksCompressed(text) {
   const raw = String(text || '');
   return raw.includes('[V4-TRANSFORM-SOURCE]') || raw.includes('[MEM-PKT]');
 }
-
+// buildLog()
+// WHAT THIS DOES: buildLog creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call buildLog(...) before code that depends on this setup.
 function buildLog(chunkId, entry, compressedText) {
   return {
     ltm_id: chunkId,
@@ -122,7 +159,10 @@ function buildLog(chunkId, entry, compressedText) {
     }
   };
 }
-
+// inspectEntity()
+// WHAT THIS DOES: inspectEntity is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call inspectEntity(...) where this helper behavior is needed.
 function inspectEntity(entityId, apply) {
   const memoryRoot = entityPaths.getMemoryRoot(entityId);
   const consciousLtmDir = path.join(memoryRoot, 'conscious', 'ltm');
@@ -205,7 +245,10 @@ function inspectEntity(entityId, apply) {
 
   return stats;
 }
-
+// main()
+// WHAT THIS DOES: main is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call main(...) where this helper behavior is needed.
 function main() {
   const args = parseArgs(process.argv);
   const baseEntitiesDir = path.join(__dirname, '../../entities');

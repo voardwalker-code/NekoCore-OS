@@ -1,3 +1,19 @@
+// ── Brain · Dream Memory ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: fs, path, zlib,
+// ../../entityPaths. Keep import and call-site contracts aligned during
+// refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // REM System — Dream Memory Module (Phase 9)
 //
@@ -33,6 +49,10 @@ class DreamMemory {
    * @param {Object} options
    * @param {string} options.entityId — owning entity
    */
+  // constructor()
+  // WHAT THIS DOES: constructor is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call constructor(...) where this helper behavior is needed.
   constructor(options = {}) {
     this.entityId = options.entityId || null;
 
@@ -53,11 +73,19 @@ class DreamMemory {
    * @param {Object} dream — dream object as returned by DreamEngine
    * @returns {number} 0.0–1.0
    */
+  // computeSignificance()
+  // WHAT THIS DOES: computeSignificance is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call computeSignificance(...) where this helper behavior is needed.
   computeSignificance(dream) {
     if (!dream) return 0;
     let score = 0;
 
     // Emotion: non-neutral emotions add weight
+    // emotion()
+    // WHAT THIS DOES: emotion is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call emotion(...) where this helper behavior is needed.
     const emotion = (dream.emotion || 'neutral').toLowerCase();
     if (emotion !== 'neutral' && emotion !== '') score += 0.20;
 
@@ -70,6 +98,10 @@ class DreamMemory {
     // Seeded from real memories (not free_imagination / abstract_vision)
     const genre = dream.genre || '';
     if (genre !== 'free_imagination' && genre !== 'abstract_vision') {
+      // originCount()
+      // WHAT THIS DOES: originCount is a helper used by this module's main flow.
+      // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+      // HOW TO USE IT: call originCount(...) where this helper behavior is needed.
       const originCount = (dream.origin_memories || []).length;
       if (originCount > 0) score += 0.20;
     }

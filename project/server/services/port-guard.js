@@ -1,3 +1,16 @@
+// ── Services · Port Guard ────────────────────────────────────────────────────
+//
+// HOW PORT GUARD WORKS:
+// This module probes port availability, identifies existing listeners, and
+// chooses a safe startup port with optional interactive duplicate handling.
+//
+// WHAT USES THIS:
+//   server bootstrap flow before creating the HTTP listener
+//
+// EXPORTS:
+//   resolvePort(), isPortFree(), identifyInstance(), probe()
+// ─────────────────────────────────────────────────────────────────────────────
+
 'use strict';
 // ── port-guard.js ──────────────────────────────────────────────────────────
 // Smart port management: detects conflicts, identifies running instances,
@@ -22,6 +35,7 @@ const readline = require('readline');
 /**
  * Returns true when nothing is listening on `port`.
  */
+/** Return true when no process is listening on the given port. */
 function isPortFree(port) {
   return new Promise(resolve => {
     const srv = net.createServer();
@@ -34,6 +48,7 @@ function isPortFree(port) {
 /**
  * HTTP GET with a short timeout. Resolves { ok, status, body } or { ok:false }.
  */
+/** Probe one local HTTP endpoint with timeout-safe JSON parsing. */
 function probe(port, path, timeoutMs = 2000) {
   return new Promise(resolve => {
     const req = http.get(`http://127.0.0.1:${port}${path}`, res => {
@@ -91,6 +106,7 @@ async function identifyInstance(port) {
  * Prompt the user on stdin. Returns the trimmed answer.
  * If stdin is not a TTY (piped / background), returns `defaultAnswer`.
  */
+/** Prompt user in TTY mode; return default answer in non-interactive mode. */
 function askUser(question, defaultAnswer = 'n') {
   if (!process.stdin.isTTY) return Promise.resolve(defaultAnswer);
   const rl = readline.createInterface({ input: process.stdin, output: process.stdout });

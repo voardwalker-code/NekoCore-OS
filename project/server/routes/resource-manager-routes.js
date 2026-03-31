@@ -1,10 +1,26 @@
+// ── Routes · Resource Manager Routes ─────────────────────────────────────────
+//
+// HOW RESOURCE ROUTING WORKS:
+// This module serves resource manager APIs for todos, tasks, projects, pulses,
+// blueprints, and active state selection across entities.
+//
+// WHAT USES THIS:
+//   resource manager UI and project/task workflow panels
+//
+// EXPORTS:
+//   createResourceManagerRoutes(ctx)
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ── Resource Manager Routes ─────────────────────────────────
 // REST API for the Resource Manager app.
 // /api/resources/todos, /api/resources/tasks, /api/resources/projects,
 // /api/resources/pulses, /api/resources/blueprints, /api/resources/active
 
 'use strict';
-
+// createResourceManagerRoutes()
+// WHAT THIS DOES: Builds Resource Manager route dispatcher and helper utilities.
+// WHY IT EXISTS: Todos/tasks/projects/pulses/blueprints share one API surface in this module.
+// HOW TO USE IT: Call createResourceManagerRoutes(ctx) during route registration.
 function createResourceManagerRoutes(ctx) {
   const fs = require('fs');
   const path = require('path');
@@ -16,17 +32,25 @@ function createResourceManagerRoutes(ctx) {
   const blueprintLoader = require('../brain/tasks/blueprint-loader');
 
   const MA_PORT = 3850;
+  const MA_REPO_URL = 'https://github.com/voardwalker-code/MA-Memory-Architect';
   const BLUEPRINTS_DIR = blueprintLoader.BLUEPRINTS_DIR;
   const CORE_DIR = path.join(BLUEPRINTS_DIR, 'core');
   const MODULES_DIR = path.join(BLUEPRINTS_DIR, 'modules');
 
   // ── helpers ─────────────────────────────────────────────
 
+  // json()
+  // WHAT THIS DOES: Writes JSON response using shared API headers.
+  // WHY IT EXISTS: Keeps response formatting consistent across handlers.
+  // HOW TO USE IT: Call json(res, statusCode, payload, apiHeaders).
   function json(res, code, obj, apiHeaders) {
     res.writeHead(code, apiHeaders);
     res.end(JSON.stringify(obj));
   }
-
+  // validateEntityId()
+  // WHAT THIS DOES: Validates entity id and confirms entity root exists.
+  // WHY IT EXISTS: Route handlers should reject unknown entities consistently.
+  // HOW TO USE IT: Call validateEntityId(entityId) before entity-scoped operations.
   function validateEntityId(entityId) {
     if (!entityId) return false;
     const id = entityPaths.normalizeEntityId(entityId);
@@ -38,7 +62,10 @@ function createResourceManagerRoutes(ctx) {
       return false;
     }
   }
-
+  // safeBlueprintName()
+  // WHAT THIS DOES: Sanitizes blueprint names and blocks traversal patterns.
+  // WHY IT EXISTS: Blueprint file APIs must be safe against path manipulation.
+  // HOW TO USE IT: Call safeBlueprintName(name) before read/write/delete blueprint paths.
   function safeBlueprintName(name) {
     if (!name || typeof name !== 'string') return null;
     // Block path traversal
@@ -51,6 +78,10 @@ function createResourceManagerRoutes(ctx) {
 
   // ── MA proxy helper ─────────────────────────────────────
 
+  // proxyMA()
+  // WHAT THIS DOES: Proxies requests to MA sidecar API and normalizes response shape.
+  // WHY IT EXISTS: Pulses/chores routes rely on MA while keeping this API contract stable.
+  // HOW TO USE IT: Call proxyMA(method, path, body) for MA-backed endpoint operations.
   function proxyMA(method, maPath, body) {
     return new Promise((resolve) => {
       const opts = {
@@ -72,8 +103,8 @@ function createResourceManagerRoutes(ctx) {
           }
         });
       });
-      req.on('error', (err) => resolve({ ok: false, error: 'MA unreachable: ' + err.message }));
-      req.on('timeout', () => { req.destroy(); resolve({ ok: false, error: 'MA timeout' }); });
+      req.on('error', (err) => resolve({ ok: false, error: 'MA unreachable: ' + err.message, repoUrl: MA_REPO_URL }));
+      req.on('timeout', () => { req.destroy(); resolve({ ok: false, error: 'MA timeout', repoUrl: MA_REPO_URL }); });
       if (body) req.write(JSON.stringify(body));
       req.end();
     });
@@ -81,6 +112,10 @@ function createResourceManagerRoutes(ctx) {
 
   // ── Task scanning ───────────────────────────────────────
 
+  // scanTasks()
+  // WHAT THIS DOES: Scans projects/tasks tree and returns task briefs sorted newest-first.
+  // WHY IT EXISTS: Resource task list needs aggregated task data across project folders.
+  // HOW TO USE IT: Call scanTasks(entityId) to build tasks payload for GET routes.
   function scanTasks(entityId) {
     const id = entityPaths.normalizeEntityId(entityId);
     const projectsRoot = path.join(entityPaths.getMemoryRoot(id), 'projects');
@@ -110,7 +145,10 @@ function createResourceManagerRoutes(ctx) {
     tasks.sort((a, b) => Number(b.createdAt || 0) - Number(a.createdAt || 0));
     return tasks;
   }
-
+  // getTask()
+  // WHAT THIS DOES: Returns one task by id from scanned task list.
+  // WHY IT EXISTS: Task detail route needs a simple resolver over scan results.
+  // HOW TO USE IT: Call getTask(entityId, taskId) in task item route handlers.
   function getTask(entityId, taskId) {
     const all = scanTasks(entityId);
     return all.find(t => t.taskId === taskId) || null;
@@ -118,6 +156,10 @@ function createResourceManagerRoutes(ctx) {
 
   // ── Blueprint reading/writing ───────────────────────────
 
+  // listAllBlueprints()
+  // WHAT THIS DOES: Reads all core/module blueprint markdown files into payload list.
+  // WHY IT EXISTS: Blueprint gallery needs one endpoint returning both categories.
+  // HOW TO USE IT: Call listAllBlueprints() in GET /api/resources/blueprints.
   function listAllBlueprints() {
     const results = [];
 
@@ -143,7 +185,10 @@ function createResourceManagerRoutes(ctx) {
 
     return results;
   }
-
+  // getBlueprint()
+  // WHAT THIS DOES: Reads one blueprint by category/name after safety checks.
+  // WHY IT EXISTS: Centralizes category mapping and existence checks for blueprint reads.
+  // HOW TO USE IT: Call getBlueprint(category, name) in blueprint detail routes.
   function getBlueprint(category, name) {
     const safeName = safeBlueprintName(name);
     if (!safeName) return null;
@@ -292,11 +337,13 @@ function createResourceManagerRoutes(ctx) {
         proxyMA('GET', '/api/pulse/status'),
         proxyMA('GET', '/api/chores/list')
       ]);
+      const maReachable = pulseResult.ok && choreResult.ok;
       json(res, 200, {
         ok: true,
         pulses: pulseResult.ok ? pulseResult.data : null,
         chores: choreResult.ok ? choreResult.data : null,
-        maReachable: pulseResult.ok && choreResult.ok
+        maReachable,
+        repoUrl: maReachable ? undefined : MA_REPO_URL
       }, apiHeaders);
       return true;
     }

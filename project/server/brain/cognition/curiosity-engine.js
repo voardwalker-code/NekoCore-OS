@@ -1,3 +1,18 @@
+// ── Brain · Curiosity Engine ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: ../bus/thought-types. Keep
+// import and call-site contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // REM System — Curiosity Engine Module
 // Generates internal thoughts when idle or detecting patterns.
@@ -6,6 +21,10 @@
 const ThoughtTypes = require('../bus/thought-types');
 
 class CuriosityEngine {
+  // constructor()
+  // WHAT THIS DOES: constructor is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call constructor(...) where this helper behavior is needed.
   constructor(options = {}) {
     this.cognitiveBus = options.cognitiveBus;
     this.memoryGraph = options.memoryGraph;
@@ -21,6 +40,10 @@ class CuriosityEngine {
   /**
    * Start the curiosity engine (subscribe to events)
    */
+  // start()
+  // WHAT THIS DOES: start creates or initializes something needed by the flow.
+  // WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+  // HOW TO USE IT: call start(...) before code that depends on this setup.
   start() {
     if (!this.cognitiveBus) {
       console.warn('  ⚠ Curiosity engine requires cognitive bus');

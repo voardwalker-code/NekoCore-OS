@@ -1,3 +1,17 @@
+// ── Brain · Message Chunker ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Used by related flows in its subsystem. Keep call contracts stable during
+// readability-only edits.
+//
+// EXPORTS:
+// Exposed API includes: splitIntoChunks, chunkDelay.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // Message Chunker
 // Splits a response into natural conversational send-units,
@@ -14,11 +28,19 @@
  * @param {number} [maxChunks=6] - Hard cap on number of chunks
  * @returns {string[]} Array of chunks (always at least 1 element)
  */
+// splitIntoChunks()
+// WHAT THIS DOES: splitIntoChunks is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call splitIntoChunks(...) where this helper behavior is needed.
 function splitIntoChunks(text, maxChunks = 6) {
   const raw = (text || '').trim();
   if (!raw) return [raw];
 
   // Detect code blocks — don't split responses that are primarily code
+  // codeBlockCount()
+  // WHAT THIS DOES: codeBlockCount is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call codeBlockCount(...) where this helper behavior is needed.
   const codeBlockCount = (raw.match(/```/g) || []).length;
   if (codeBlockCount >= 2) return [raw];
 
@@ -65,6 +87,10 @@ function splitIntoChunks(text, maxChunks = 6) {
  * @param {string} chunk
  * @returns {number} Delay in ms
  */
+// chunkDelay()
+// WHAT THIS DOES: chunkDelay is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call chunkDelay(...) where this helper behavior is needed.
 function chunkDelay(chunk) {
   // Base 700ms + ~30ms per character, capped at 3800ms, plus small jitter
   const base = 700 + Math.min(chunk.length * 30, 3100);

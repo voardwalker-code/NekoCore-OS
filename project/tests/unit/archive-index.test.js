@@ -1,3 +1,19 @@
+// ── Tests · Archive Index.Test ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This test file validates behavior and guards against regressions in its
+// target subsystem.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: node:test,
+// node:assert/strict, fs, path, os. Keep import and call-site contracts
+// aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 'use strict';
 /**
  * tests/unit/archive-index.test.js
@@ -48,6 +64,10 @@ after(() => {
 });
 
 // Helper: get a fresh require of archive-index with ENTITIES_DIR overridden
+// getArchiveIndex()
+// WHAT THIS DOES: getArchiveIndex reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call getArchiveIndex(...), then use the returned value in your next step.
 function getArchiveIndex() {
   // Clear require cache so we can re-require with fresh state
   const aiPath = require.resolve('../../server/brain/utils/archive-index');

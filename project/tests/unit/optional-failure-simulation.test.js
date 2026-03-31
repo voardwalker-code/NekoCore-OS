@@ -1,3 +1,19 @@
+// ── Tests · Optional Failure Simulation.Test ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This test file validates behavior and guards against regressions in its
+// target subsystem.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: node:test,
+// node:assert/strict, node:fs, node:path. Keep import and call-site
+// contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 'use strict';
 
 // ============================================================
@@ -27,7 +43,10 @@ const path = require('node:path');
 
 const ROOT = path.resolve(__dirname, '..', '..');
 const JS   = path.join(ROOT, 'client', 'js');
-
+// read()
+// WHAT THIS DOES: read reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call read(...), then use the returned value in your next step.
 function read(rel) { return fs.readFileSync(path.join(JS, rel), 'utf8'); }
 
 const WINDOW_MANAGER = read('window-manager.js');
@@ -37,6 +56,10 @@ const APP            = read('app.js');
 
 // ── Helper ───────────────────────────────────────────────────
 
+// assertGuarded()
+// WHAT THIS DOES: assertGuarded is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call assertGuarded(...) where this helper behavior is needed.
 function assertGuarded(src, funcName, callerLabel) {
   // Any call to funcName in this file must be preceded by typeof funcName === 'function'
   const guardPattern  = `typeof ${funcName} === 'function'`;
@@ -52,6 +75,10 @@ function assertGuarded(src, funcName, callerLabel) {
   // Pass silently if the function name doesn't appear (caller doesn't use it)
 }
 
+// assertNeverCalledUnguarded()
+// WHAT THIS DOES: assertNeverCalledUnguarded is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call assertNeverCalledUnguarded(...) where this helper behavior is needed.
 function assertNeverCalledUnguarded(src, funcName, callerLabel) {
   // For each call-site line, verify it is either:
   //   (a) guarded inline:  if (typeof funcName === 'function') funcName();
@@ -78,7 +105,10 @@ function assertNeverCalledUnguarded(src, funcName, callerLabel) {
     );
   }
 }
-
+// escapeRegex()
+// WHAT THIS DOES: escapeRegex is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call escapeRegex(...) where this helper behavior is needed.
 function escapeRegex(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
 
 // ── Module: diary.js — loadLifeDiary, loadDreamDiary ─────────

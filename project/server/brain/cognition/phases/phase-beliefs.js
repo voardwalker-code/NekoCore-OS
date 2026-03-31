@@ -1,3 +1,18 @@
+// ── Brain · Phase Beliefs ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Used by related flows in its subsystem. Keep call contracts stable during
+// readability-only edits.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // Phase: Belief Extraction
 // Scans recent high-importance memories and extracts belief candidates via LLM.
 // Beliefs are compressed worldview rules derived from patterns across memories.
@@ -65,6 +80,12 @@ Respond with ONLY valid JSON:
       { role: 'user', content: prompt }
     ], { temperature: 0.2, maxTokens: loop._getTokenLimit('beliefExtraction') || 600 });
 
+    // text()
+    // Purpose: helper wrapper used by this module's main flow.
+    // text()
+    // WHAT THIS DOES: text is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call text(...) where this helper behavior is needed.
     const text = (typeof result === 'object' && result.content) ? result.content : result;
     const jsonMatch = (text || '').match(/\{[\s\S]*\}/);
     if (!jsonMatch) { loop._emit('phase', { name: 'belief_extraction', status: 'done' }); return; }

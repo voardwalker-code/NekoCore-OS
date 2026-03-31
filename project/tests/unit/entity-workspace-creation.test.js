@@ -1,3 +1,19 @@
+// ── Tests · Entity Workspace Creation.Test ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This test file validates behavior and guards against regressions in its
+// target subsystem.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: node:test,
+// node:assert/strict, node:fs, node:path. Keep import and call-site
+// contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 'use strict';
 
 const { test } = require('node:test');
@@ -7,7 +23,10 @@ const path = require('node:path');
 
 const ROOT = path.resolve(__dirname, '..', '..');
 const ENTITY_ROUTES = path.join(ROOT, 'server', 'routes', 'entity-routes.js');
-
+// readEntityRoutes()
+// WHAT THIS DOES: readEntityRoutes reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call readEntityRoutes(...), then use the returned value in your next step.
 function readEntityRoutes() {
   return fs.readFileSync(ENTITY_ROUTES, 'utf8');
 }

@@ -1,5 +1,6 @@
-// ============================================================
-// REM System — Conscious Memory
+// ── Brain · Conscious Memory ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
 // Parallel memory pipeline indexed by topic/subject rather than
 // emotion/neurochemistry (which drives the subconscious).
 //
@@ -10,7 +11,13 @@
 //   LTM (Long-Term Memory) — promoted entries written to disk in
 //       ltm/<id>.json format, with cross-links to related subconscious
 //       memories (wired during deep-sleep phase).
-// ============================================================
+//
+// WHAT USES THIS:
+//   Brain loop phases, agent-echo, deep-sleep consolidation
+//
+// EXPORTS:
+//   ConsciousMemory (class)
+// ─────────────────────────────────────────────────────────────────────────────
 
 const fs   = require('fs');
 const path = require('path');
@@ -22,8 +29,6 @@ const STM_DECAY_AMOUNT = 0.15; // subtracted from recall_weight each cycle
 const STM_MAX_AGE      = 20;   // hard eviction after this many cycles without reinforcement
 const STM_MAX_ENTRIES  = 8000; // hot-window ceiling; triggers consolidation pass in deep-sleep phase
 
-// Score how well an entry's topics overlap with a query topic array.
-// Returns a value in [0, 1].
 function topicOverlap(entryTopics, queryTopics) {
   if (!entryTopics?.length || !queryTopics?.length) return 0;
   const setQ = new Set(queryTopics.map(t => t.toLowerCase()));
@@ -38,35 +43,29 @@ function makeId(prefix) {
 class ConsciousMemory {
   /**
    * @param {Object} options
-   * @param {string} [options.entityId] - If provided, all disk paths are entity-scoped.
+   * @param {string} options.entityId
    */
   constructor(options = {}) {
-    this.entityId = options.entityId || null;
-
-    // In-memory STM store: id → STMEntry
     this._stm = new Map();
-
-    // Entries whose recall_weight has reached LTM_THRESHOLD
     this._promotionQueue = [];
-
-    // Set to true when STM reaches STM_MAX_ENTRIES; cleared by deep-sleep after consolidation.
     this._needsConsolidation = false;
 
-    this._stmFile = null;
-    this._ltmDir  = null;
+    const entityId = options.entityId;
+    if (entityId) {
+      const memRoot = entityPaths.getMemoryRoot(entityId);
+      const consciousDir = path.join(memRoot, 'conscious');
+      if (!fs.existsSync(consciousDir)) fs.mkdirSync(consciousDir, { recursive: true });
 
-    if (this.entityId) {
-      const base = entityPaths.getConsciousMemoryPath(this.entityId);
-      this._stmFile = path.join(base, 'stm.json');
-      this._ltmDir  = path.join(base, 'ltm');
-      fs.mkdirSync(this._ltmDir, { recursive: true });
-      this._loadStm();
+      this._stmFile = path.join(consciousDir, 'stm.json');
+      this._ltmDir  = path.join(consciousDir, 'ltm');
+      if (!fs.existsSync(this._ltmDir)) fs.mkdirSync(this._ltmDir, { recursive: true });
+    } else {
+      this._stmFile = null;
+      this._ltmDir  = null;
     }
-  }
 
-  // ──────────────────────────────────────────────────────────────────────
-  // STM API
-  // ──────────────────────────────────────────────────────────────────────
+    this._loadStm();
+  }
 
   /**
    * Add a new observation to STM.

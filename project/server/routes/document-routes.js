@@ -1,6 +1,20 @@
+// ── Routes · Document Routes ─────────────────────────────────────────────────
+//
+// HOW DOCUMENT ROUTING WORKS:
+// This module ingests document chunks into memory systems, deduplicates chunks,
+// mirrors data into LTM storage, and creates trace links for chunk sequences.
+//
+// WHAT USES THIS:
+//   document ingestion workflows and knowledge import tooling
+//
+// EXPORTS:
+//   createDocumentRoutes(ctx)
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ── Document Routes ──────────────────────────────────────────
 // /api/document/ingest — ingest document chunks as conscious LTM
 
+/** Build document route handlers and dispatcher. */
 function createDocumentRoutes(ctx) {
   const { fs, path, crypto } = ctx;
   const zlib = require('zlib');
@@ -247,6 +261,7 @@ function createDocumentRoutes(ctx) {
    * Matches on content hash + filename + chunk position to avoid false positives.
    * @private
    */
+  /** Find existing chunk id matching hash/file/chunk position metadata. */
   function findExistingDocumentChunkId({ contentHash, normalizedContent, filename, chunkIndex, totalChunks }) {
     const ltmDir = ctx.consciousMemory && ctx.consciousMemory._ltmDir;
     if (!ltmDir || !fs.existsSync(ltmDir)) return null;
@@ -289,6 +304,7 @@ function createDocumentRoutes(ctx) {
    * Extract topics from content using simple keyword extraction.
    * @private
    */
+  /** Extract lightweight topic tags from content and filename hints. */
   function extractTopics(content, filename) {
     const topics = ['knowledge', 'document', 'study'];
 
@@ -331,7 +347,7 @@ function createDocumentRoutes(ctx) {
     ['wh', '^'], ['nc', '!'], ['ll', '='], ['ch', '$'], ['sh', '<'], ['ou', '8'],
     ['ee', '2'], ['ph', 'f']
   ];
-
+  /** Apply compact v4-style text transformation for memory packet storage. */
   function v4Transform(text) {
     let v = String(text || '').toLowerCase().replace(/[^a-z0-9\s]/g, ' ');
     v = v.split(/\s+/).map(w => DOC_COMMON[w] || w).join(' ');
@@ -342,7 +358,7 @@ function createDocumentRoutes(ctx) {
     v = v.replace(/\b[bcdfghjklmnpqrstvwxyz]\b/g, '');
     return v.replace(/\s+/g, '').trim();
   }
-
+  /** Build compressed memory packet payload for a document chunk. */
   function buildCompressedDocumentContext({ content, filename, chunkIndex, totalChunks, topics }) {
     const legend = DOC_PAIRS.map(p => p[0] + '=' + p[1]).join(' ');
     const topicLine = Array.isArray(topics) && topics.length ? topics.join(',') : 'document,knowledge';

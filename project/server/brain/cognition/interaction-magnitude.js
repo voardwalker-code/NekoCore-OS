@@ -1,3 +1,18 @@
+// ── Brain · Interaction Magnitude ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Used by related flows in its subsystem. Keep call contracts stable during
+// readability-only edits.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 'use strict';
 
 // ============================================================
@@ -41,6 +56,10 @@ const MOOD_TYPE_TO_THOUGHT = {
  * @returns {{ thoughtType: string, intensity: number, reason: string } | null}
  *   null if the signal is neutral or invalid
  */
+// classifyInteraction()
+// WHAT THIS DOES: classifyInteraction is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call classifyInteraction(...) where this helper behavior is needed.
 function classifyInteraction(moodSignal) {
   if (!moodSignal || moodSignal.type === 'neutral') return null;
 

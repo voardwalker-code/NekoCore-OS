@@ -1,20 +1,40 @@
-(function () {
-  let initialized = false;
+// ── Services · Client Debug Core App ────────────────────────────────────────
+//
+// HOW CORE DEBUG UI WORKS:
+// This module renders debug telemetry in the Debug Core tab. It fetches server
+// timeline records, reads local debug-buffer lines from the browser bridge, and
+// wires refresh/dump/reset/clear actions to the UI buttons.
+//
+// WHAT USES THIS:
+//   Debug Core tab — calls `window.initCoreDebugApp()` during tab startup
+//
+// EXPORTS:
+//   initCoreDebugApp() on `window`
+// ─────────────────────────────────────────────────────────────────────────────
 
+(function () {
+  'use strict';
+
+  let initialized = false;
+  // ── Helpers ───────────────────────────────────────────────────────────────
+
+  /** Return an element by ID. */
   function byId(id) {
     return document.getElementById(id);
   }
 
+  /** Update a status label when present. */
   function setStatus(id, text) {
     const el = byId(id);
     if (el) el.textContent = text;
   }
 
+  /** Format a timeline/debug line with timestamp prefix. */
   function formatLine(prefix, message, ts) {
     const when = ts ? new Date(ts).toLocaleTimeString() : new Date().toLocaleTimeString();
     return '[' + when + '] ' + prefix + ' ' + message;
   }
-
+  /** Render line array into a target panel. */
   function renderLines(targetId, lines) {
     const target = byId(targetId);
     if (!target) return;
@@ -45,7 +65,7 @@
       setStatus('debugCoreStatus', 'Timeline unavailable');
     }
   }
-
+  /** Load local debug buffer rows from bridge API. */
   function loadClientBuffer() {
     const bridge = window.__coreDebugBridge;
     if (!bridge || typeof bridge.getLines !== 'function') {
@@ -61,7 +81,7 @@
     const queueSize = typeof bridge.getQueueSize === 'function' ? bridge.getQueueSize() : 0;
     setStatus('debugCoreBufferStatus', 'Local entries: ' + rows.length + ' | Pending uploads: ' + queueSize);
   }
-
+  /** Bind Debug Core action buttons once. */
   function bindActions() {
     const refreshBtn = byId('debugCoreRefreshBtn');
     const dumpBtn = byId('debugCoreDumpBtn');

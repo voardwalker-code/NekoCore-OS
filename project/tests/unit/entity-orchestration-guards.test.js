@@ -1,3 +1,20 @@
+// ── Tests · Entity Orchestration Guards.Test ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This test file validates behavior and guards against regressions in its
+// target subsystem.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: node:test,
+// node:assert/strict, path, fs,
+// ../../server/brain/tasks/entity-network-registry. Keep import and
+// call-site contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // Entity Orchestration Guard Tests (E-0 through E-6)
 // Locks existing behavior of entity network registry, entity chat
@@ -481,6 +498,12 @@ test('buildEntityWorkerPrompt uses defaults for missing fields', () => {
 test('invokeEntityWorker calls LLM and returns response', async () => {
   const { invokeEntityWorker } = require('../../server/brain/tasks/entity-worker-invoker');
   const mockResponse = 'I recommend a mixed-methods approach combining surveys and interviews.';
+  // callLLM()
+  // Purpose: helper wrapper used by this module's main flow.
+  // callLLM()
+  // WHAT THIS DOES: callLLM is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call callLLM(...) where this helper behavior is needed.
   const callLLM = async (_runtime, messages, _opts) => {
     assert.ok(messages.length >= 1, 'should have at least system message');
     assert.equal(messages[0].role, 'system');
@@ -501,6 +524,12 @@ test('invokeEntityWorker calls LLM and returns response', async () => {
 test('invokeEntityWorker includes chat history in messages', async () => {
   const { invokeEntityWorker } = require('../../server/brain/tasks/entity-worker-invoker');
   let capturedMessages;
+  // callLLM()
+  // Purpose: helper wrapper used by this module's main flow.
+  // callLLM()
+  // WHAT THIS DOES: callLLM is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call callLLM(...) where this helper behavior is needed.
   const callLLM = async (_r, messages) => {
     capturedMessages = messages;
     return 'response';
@@ -525,6 +554,12 @@ test('invokeEntityWorker includes chat history in messages', async () => {
 
 test('invokeEntityWorker handles LLM failure gracefully', async () => {
   const { invokeEntityWorker } = require('../../server/brain/tasks/entity-worker-invoker');
+  // callLLM()
+  // Purpose: helper wrapper used by this module's main flow.
+  // callLLM()
+  // WHAT THIS DOES: callLLM is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call callLLM(...) where this helper behavior is needed.
   const callLLM = async () => { throw new Error('LLM timeout'); };
 
   const result = await invokeEntityWorker('entity_fail', [], {
@@ -562,6 +597,12 @@ test('EntityChatManager invokeEntity calls LLM and stores response', async () =>
     entityIds: ['entity_test_inv']
   });
 
+  // mockLLM()
+  // Purpose: helper wrapper used by this module's main flow.
+  // mockLLM()
+  // WHAT THIS DOES: mockLLM is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call mockLLM(...) where this helper behavior is needed.
   const mockLLM = async () => 'My analysis suggests a qualitative approach.';
   const msg = await manager.invokeEntity(session.id, 'entity_test_inv', {
     callLLM: mockLLM,
@@ -752,6 +793,12 @@ test('runPlanningSession rejects missing callLLM', async () => {
 
 test('runPlanningSession runs 1 round with 2 entities and reaches consensus', async () => {
   let callCount = 0;
+  // mockLLM()
+  // Purpose: helper wrapper used by this module's main flow.
+  // mockLLM()
+  // WHAT THIS DOES: mockLLM is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call mockLLM(...) where this helper behavior is needed.
   const mockLLM = async (_rt, messages) => {
     callCount++;
     const lastMsg = messages[messages.length - 1]?.content || '';
@@ -796,6 +843,12 @@ test('runPlanningSession runs 1 round with 2 entities and reaches consensus', as
 });
 
 test('runPlanningSession respects max rounds cap', async () => {
+  // mockLLM()
+  // Purpose: helper wrapper used by this module's main flow.
+  // mockLLM()
+  // WHAT THIS DOES: mockLLM is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call mockLLM(...) where this helper behavior is needed.
   const mockLLM = async (_rt, messages) => {
     const lastMsg = messages[messages.length - 1]?.content || '';
     if (lastMsg.includes('Produce the final')) {
@@ -827,6 +880,12 @@ test('runPlanningSession respects max rounds cap', async () => {
 
 test('runPlanningSession enforces entity cap (max 4)', async () => {
   const invokedEntities = new Set();
+  // mockLLM()
+  // Purpose: helper wrapper used by this module's main flow.
+  // mockLLM()
+  // WHAT THIS DOES: mockLLM is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call mockLLM(...) where this helper behavior is needed.
   const mockLLM = async () => JSON.stringify({
     consensus: true, summary: 'ok', unresolvedIssues: [],
     finalPlan: 'plan', decisionRationale: 'rationale', issuesFlagged: []
@@ -864,9 +923,21 @@ test('runPlanningSession emits events on task event bus', async () => {
   const events = [];
   const testSessionId = 'task_test_' + Date.now();
 
+  // handler()
+  // Purpose: helper wrapper used by this module's main flow.
+  // handler()
+  // WHAT THIS DOES: handler is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call handler(...) where this helper behavior is needed.
   const handler = (evt) => events.push(evt);
   taskEventBus.subscribe(testSessionId, handler);
 
+  // mockLLM()
+  // Purpose: helper wrapper used by this module's main flow.
+  // mockLLM()
+  // WHAT THIS DOES: mockLLM is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call mockLLM(...) where this helper behavior is needed.
   const mockLLM = async (_rt, messages) => {
     const lastMsg = messages[messages.length - 1]?.content || '';
     if (lastMsg.includes('Produce the final')) {
@@ -933,6 +1004,12 @@ test('_parseSynthesisResponse handles plain text fallback', () => {
 
 test('runPlanningSession handles LLM failures gracefully', async () => {
   let callNum = 0;
+  // mockLLM()
+  // Purpose: helper wrapper used by this module's main flow.
+  // mockLLM()
+  // WHAT THIS DOES: mockLLM is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call mockLLM(...) where this helper behavior is needed.
   const mockLLM = async () => {
     callNum++;
     if (callNum <= 2) return 'entity response'; // entity calls
@@ -957,6 +1034,12 @@ test('runPlanningSession handles LLM failures gracefully', async () => {
 });
 
 test('runPlanningSession closes the chat session when done', async () => {
+  // mockLLM()
+  // Purpose: helper wrapper used by this module's main flow.
+  // mockLLM()
+  // WHAT THIS DOES: mockLLM is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call mockLLM(...) where this helper behavior is needed.
   const mockLLM = async (_rt, messages) => {
     const lastMsg = messages[messages.length - 1]?.content || '';
     if (lastMsg.includes('Produce the final')) {
@@ -1109,6 +1192,10 @@ test('planning archive: getPlanningArtifacts returns null for no-planning archiv
 
 // Cleanup archive test directory
 test('cleanup: remove archive test directory', () => {
+  // deleteRecursive()
+  // WHAT THIS DOES: deleteRecursive removes, resets, or shuts down existing state.
+  // WHY IT EXISTS: cleanup is explicit so stale state does not leak into new runs.
+  // HOW TO USE IT: call deleteRecursive(...) when you need a safe teardown/reset path.
   const deleteRecursive = (dir) => {
     if (!fs.existsSync(dir)) return;
     for (const f of fs.readdirSync(dir)) {

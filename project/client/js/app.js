@@ -1,3 +1,17 @@
+// ── Client · App ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This client module drives browser-side behavior and state updates for UI
+// features.
+//
+// WHAT USES THIS:
+// Used by related flows in its subsystem. Keep call contracts stable during
+// readability-only edits.
+//
+// EXPORTS:
+// Exposed API includes: window-attached API object.
+// ─────────────────────────────────────────────────────────────────────────────
+
 ﻿// ============================================================
 // REM System v0.6.0 — App Bootstrap & Core Utilities
 // ============================================================
@@ -93,7 +107,10 @@ const ICON_SPRITE_COORDS = {
   'wm.close': { col: 6, row: 6 },
   'app.fallback': { col: 5, row: 0 }
 };
-
+// hashIconId()
+// WHAT THIS DOES: hashIconId is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call hashIconId(...) where this helper behavior is needed.
 function hashIconId(iconId) {
   const text = String(iconId || 'icon.default');
   let hash = 0;
@@ -103,12 +120,18 @@ function hashIconId(iconId) {
   }
   return Math.abs(hash);
 }
-
+// getSpriteIndex()
+// WHAT THIS DOES: getSpriteIndex reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call getSpriteIndex(...), then use the returned value in your next step.
 function getSpriteIndex(iconId) {
   const total = ICON_SPRITE_COLUMNS * ICON_SPRITE_ROWS;
   return hashIconId(iconId) % total;
 }
-
+// getSpriteCell()
+// WHAT THIS DOES: getSpriteCell reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call getSpriteCell(...), then use the returned value in your next step.
 function getSpriteCell(iconId) {
   const fixed = ICON_SPRITE_COORDS[iconId];
   if (fixed) return fixed;
@@ -118,7 +141,10 @@ function getSpriteCell(iconId) {
     row: Math.floor(index / ICON_SPRITE_COLUMNS)
   };
 }
-
+// getSpriteIconHtml()
+// WHAT THIS DOES: getSpriteIconHtml reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call getSpriteIconHtml(...), then use the returned value in your next step.
 function getSpriteIconHtml(iconId) {
   const cell = getSpriteCell(iconId);
   const safeId = String(iconId || 'icon.default').replace(/"/g, '&quot;');
@@ -128,12 +154,18 @@ function getSpriteIconHtml(iconId) {
   const sizeY = ICON_SPRITE_ROWS * 100;
   return '<span class="os-runtime-icon-sprite" data-icon-id="' + safeId + '" style="background-image:url(\'' + ICON_SPRITE_SHEET_FILE + '\');background-size:' + sizeX + '% ' + sizeY + '%;background-position:' + posX + '% ' + posY + '%"></span>';
 }
-
+// getRuntimeIconHtml()
+// WHAT THIS DOES: getRuntimeIconHtml reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call getRuntimeIconHtml(...), then use the returned value in your next step.
 function getRuntimeIconHtml(iconId) {
   if (!iconId) return DEFAULT_RUNTIME_ICON_HTML;
   return getSpriteIconHtml(iconId);
 }
-
+// getRuntimeIconHtmlById()
+// WHAT THIS DOES: getRuntimeIconHtmlById reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call getRuntimeIconHtmlById(...), then use the returned value in your next step.
 function getRuntimeIconHtmlById(iconId) {
   return getRuntimeIconHtml(iconId);
 }
@@ -241,7 +273,10 @@ if (window.SystemAppsAdapter && typeof window.SystemAppsAdapter.applyCompat === 
   }
 }
 window.__systemAppsCompatStatus = systemAppsCompatStatus;
-
+// getShellWindowApps()
+// WHAT THIS DOES: getShellWindowApps reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call getShellWindowApps(...), then use the returned value in your next step.
 function getShellWindowApps() {
   if (window.SystemAppsAdapter && typeof window.SystemAppsAdapter.resolveWindowApps === 'function') {
     try {
@@ -309,7 +344,10 @@ const START_MENU_SPECIAL_APPS = [
     action: 'showSetupWizard'
   }
 ];
-
+// applyRuntimeIconOverrides()
+// WHAT THIS DOES: applyRuntimeIconOverrides is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call applyRuntimeIconOverrides(...) where this helper behavior is needed.
 function applyRuntimeIconOverrides() {
   WINDOW_APPS.forEach((app) => {
     app.icon = getRuntimeIconHtml('app.' + app.tab);
@@ -362,6 +400,10 @@ const pinnedDragState = {
 // ============================================================
 // LOGGING
 // ============================================================
+// lg()
+// WHAT THIS DOES: lg is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call lg(...) where this helper behavior is needed.
 function lg(type, msg) {
   const body = document.getElementById('sidebarLogContent');
   if (!body) return;
@@ -371,11 +413,13 @@ function lg(type, msg) {
   body.appendChild(entry);
   body.scrollTop = body.scrollHeight;
 }
-
+// waitMs()
+// WHAT THIS DOES: waitMs is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call waitMs(...) where this helper behavior is needed.
 function waitMs(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
-
 function setBootOverlayState(title, detail, percent) {
   const pct = Math.max(0, Math.min(100, Number(percent) || 0));
   const titleEl = document.getElementById('bootTitle');
@@ -389,17 +433,26 @@ function setBootOverlayState(title, detail, percent) {
   if (percentEl) percentEl.textContent = pct + '%';
   if (barEl) barEl.style.width = pct + '%';
 }
-
+// showBootOverlay()
+// WHAT THIS DOES: showBootOverlay builds or updates what the user sees.
+// WHY IT EXISTS: display logic is separated from data/business logic for clarity.
+// HOW TO USE IT: call showBootOverlay(...) after state changes that need UI refresh.
 function showBootOverlay() {
   const overlay = document.getElementById('bootOverlay');
   if (overlay) overlay.style.display = 'flex';
 }
-
+// hideBootOverlay()
+// WHAT THIS DOES: hideBootOverlay is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call hideBootOverlay(...) where this helper behavior is needed.
 function hideBootOverlay() {
   const overlay = document.getElementById('bootOverlay');
   if (overlay) overlay.style.display = 'none';
 }
-
+// getBootGreetingTitle()
+// WHAT THIS DOES: getBootGreetingTitle reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call getBootGreetingTitle(...), then use the returned value in your next step.
 function getBootGreetingTitle() {
   const hour = new Date().getHours();
   if (hour < 12) return 'Good morning';
@@ -415,6 +468,10 @@ async function runBootStage(title, detail, percent, delayMs = 520) {
 // ============================================================
 // UI HELPERS
 // ============================================================
+// updateProviderUI()
+// WHAT THIS DOES: updateProviderUI changes saved state or updates data.
+// WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+// HOW TO USE IT: call updateProviderUI(...) with the new values you want to persist.
 function updateProviderUI(type, connected, label) {
   const statusEl = document.getElementById(type + 'Status');
   if (statusEl) {
@@ -437,6 +494,10 @@ function updateProviderUI(type, connected, label) {
 
 // ── Theme functions moved to client/js/theme-manager.js (P3-S10) ──
 
+// updateShellClock()
+// WHAT THIS DOES: updateShellClock changes saved state or updates data.
+// WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+// HOW TO USE IT: call updateShellClock(...) with the new values you want to persist.
 function updateShellClock() {
   const clock = document.getElementById('shellClock');
   const date = document.getElementById('shellDate');
@@ -445,13 +506,22 @@ function updateShellClock() {
   if (clock) clock.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   if (date) date.textContent = now.toLocaleDateString([], { month: 'short', day: 'numeric' });
 }
-
+// syncShellStatusWidgets()
+// WHAT THIS DOES: syncShellStatusWidgets is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call syncShellStatusWidgets(...) where this helper behavior is needed.
 function syncShellStatusWidgets() {
   const entitySummary = document.getElementById('shellEntitySummary');
   const providerSummary = document.getElementById('shellProviderSummary');
   const brainSummary = document.getElementById('shellBrainSummary');
   const taskbarStatus = document.getElementById('shellTaskbarStatus');
 
+  // entityText()
+  // Purpose: helper wrapper used by this module's main flow.
+  // entityText()
+  // WHAT THIS DOES: entityText is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call entityText(...) where this helper behavior is needed.
   const entityText = (currentEntityName && currentEntityName.trim())
     || document.getElementById('entityName')?.textContent?.trim()
     || document.getElementById('entityTraits')?.textContent?.trim()
@@ -486,13 +556,20 @@ function syncShellStatusWidgets() {
 
 // ── Browser app code moved to client/js/browser-app.js (NB-3) ──
 
+// switchTab()
+// WHAT THIS DOES: switchTab is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call switchTab(...) where this helper behavior is needed.
 function switchTab(name, el) {
   document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('on'));
   document.querySelectorAll('.auth-tab-content').forEach(t => t.classList.remove('on'));
   el.classList.add('on');
   document.getElementById('tab-' + name).classList.add('on');
 }
-
+// setStep()
+// WHAT THIS DOES: setStep changes saved state or updates data.
+// WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+// HOW TO USE IT: call setStep(...) with the new values you want to persist.
 function setStep(n) {
   for (let i = 1; i <= 4; i++) {
     const el = document.getElementById('s' + i);
@@ -502,7 +579,10 @@ function setStep(n) {
     if (i === n) el.classList.add('on');
   }
 }
-
+// setStatus()
+// WHAT THIS DOES: setStatus changes saved state or updates data.
+// WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+// HOW TO USE IT: call setStatus(...) with the new values you want to persist.
 function setStatus(type, text) {
   const dot = document.getElementById('sDot');
   if (dot) {
@@ -512,7 +592,10 @@ function setStatus(type, text) {
   const statusText = document.getElementById('sTxt');
   if (statusText) statusText.textContent = text;
 }
-
+// toggleAuth()
+// WHAT THIS DOES: toggleAuth is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call toggleAuth(...) where this helper behavior is needed.
 function toggleAuth(forceOpen) {
   const body = document.getElementById('authBody');
   const tgl = document.getElementById('authTgl');
@@ -521,10 +604,13 @@ function toggleAuth(forceOpen) {
   } else { body.classList.remove('open'); tgl.innerHTML = '&#9660; Show'; }
 }
 
+// toggleLog()
+// WHAT THIS DOES: toggleLog is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call toggleLog(...) where this helper behavior is needed.
 function toggleLog() {
   toggleSidebarLog();
 }
-
 function toggleSidebarLog() {
   const body = document.getElementById('sidebarLogBody');
   const arrow = document.getElementById('sidebarLogArrow');
@@ -532,7 +618,10 @@ function toggleSidebarLog() {
   body.classList.toggle('collapsed');
   if (arrow) arrow.textContent = body.classList.contains('collapsed') ? '>' : 'v';
 }
-
+// autoOpenLog()
+// WHAT THIS DOES: autoOpenLog is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call autoOpenLog(...) where this helper behavior is needed.
 function autoOpenLog() {
   const body = document.getElementById('sidebarLogBody');
   const arrow = document.getElementById('sidebarLogArrow');
@@ -546,12 +635,19 @@ function autoOpenLog() {
 
 // Main app boot handler moved to client/js/boot.js (P3-S3)
 
+// copyOut()
+// WHAT THIS DOES: copyOut is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call copyOut(...) where this helper behavior is needed.
 function copyOut() {
   const v = document.getElementById('finalOut').value;
   if (!v) return;
   navigator.clipboard.writeText(v).then(() => lg('ok', 'Copied')).catch(() => { document.getElementById('finalOut').select(); document.execCommand('copy'); lg('ok', 'Copied'); });
 }
-
+// dlOut()
+// WHAT THIS DOES: dlOut is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call dlOut(...) where this helper behavior is needed.
 function dlOut() {
   const v = document.getElementById('finalOut').value;
   if (!v) return;
@@ -561,7 +657,10 @@ function dlOut() {
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
   lg('ok', 'Downloaded');
 }
-
+// resetAll()
+// WHAT THIS DOES: resetAll removes, resets, or shuts down existing state.
+// WHY IT EXISTS: cleanup is explicit so stale state does not leak into new runs.
+// HOW TO USE IT: call resetAll(...) when you need a safe teardown/reset path.
 function resetAll() {
   if (busy || chatBusy) return;
   document.getElementById('rawInput').value = '';
@@ -662,6 +761,10 @@ async function saveSessionMetaToServer(metaText) {
 // NEW TAB SYSTEM & ENTITY MANAGEMENT
 // ============================================================
 
+// switchMainTab()
+// WHAT THIS DOES: switchMainTab is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call switchMainTab(...) where this helper behavior is needed.
 function switchMainTab(tabName, el, options) {
   const opts = options && typeof options === 'object' ? options : {};
   if (!windowManager.initialized) {
@@ -697,19 +800,30 @@ function switchMainTab(tabName, el, options) {
 }
 
 // ── Nav Sidebar ──────────────────────────────────
+// toggleNavSidebar()
+// WHAT THIS DOES: toggleNavSidebar is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call toggleNavSidebar(...) where this helper behavior is needed.
 function toggleNavSidebar() {
   const sidebar = document.getElementById('navSidebar');
   if (!sidebar) return;
   sidebar.classList.toggle('collapsed');
   document.body.classList.toggle('nav-collapsed', sidebar.classList.contains('collapsed'));
 }
-
+// toggleNavGroup()
+// WHAT THIS DOES: toggleNavGroup is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call toggleNavGroup(...) where this helper behavior is needed.
 function toggleNavGroup(groupId) {
   const group = document.getElementById(groupId);
   if (group) group.classList.toggle('open');
 }
 
 // Sync entity list and profile chips into nav sidebar
+// syncNavSidebarEntities()
+// WHAT THIS DOES: syncNavSidebarEntities is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call syncNavSidebarEntities(...) where this helper behavior is needed.
 function syncNavSidebarEntities() {
   const src = document.getElementById('sidebarEntityList');
   const dst = document.getElementById('navEntityList');
@@ -717,6 +831,10 @@ function syncNavSidebarEntities() {
   const shellDst = document.getElementById('shellEntityList');
   if (src && shellDst) shellDst.innerHTML = src.innerHTML;
 }
+// syncNavSidebarProfiles()
+// WHAT THIS DOES: syncNavSidebarProfiles is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call syncNavSidebarProfiles(...) where this helper behavior is needed.
 function syncNavSidebarProfiles() {
   const src = document.getElementById('profileChips');
   const dst = document.getElementById('navProfileChips');
@@ -731,7 +849,10 @@ function syncNavSidebarProfiles() {
 // ── Mini Neural Viz in Chat Sidebar (data-only panel) ──
 let miniVizInitialized = false;
 let miniVizEventSource = null;
-
+// toggleMiniViz()
+// WHAT THIS DOES: toggleMiniViz is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call toggleMiniViz(...) where this helper behavior is needed.
 function toggleMiniViz() {
   const body = document.getElementById('miniVizBody');
   const arrow = document.getElementById('miniVizArrow');
@@ -747,7 +868,10 @@ function toggleMiniViz() {
     setupMiniVizSSE();
   }
 }
-
+// setupMiniVizSSE()
+// WHAT THIS DOES: setupMiniVizSSE is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call setupMiniVizSSE(...) where this helper behavior is needed.
 function setupMiniVizSSE() {
   try {
     miniVizEventSource = new EventSource('/api/brain/events');
@@ -764,11 +888,18 @@ function setupMiniVizSSE() {
 
 // Visualizer UI helpers moved to client/js/visualizer-ui.js (P3-S4)
 
+// toggleAdvancedMenu()
+// WHAT THIS DOES: toggleAdvancedMenu is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call toggleAdvancedMenu(...) where this helper behavior is needed.
 function toggleAdvancedMenu(el) {
   // Legacy — Advanced is now a regular tab in the nav sidebar
   switchMainTab('advanced', el);
 }
-
+// toggleAdvancedSection()
+// WHAT THIS DOES: toggleAdvancedSection is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call toggleAdvancedSection(...) where this helper behavior is needed.
 function toggleAdvancedSection(headerEl) {
   const content = headerEl.nextElementSibling;
   if (content) {
@@ -779,7 +910,10 @@ function toggleAdvancedSection(headerEl) {
     }
   }
 }
-
+// showProviderTab()
+// WHAT THIS DOES: showProviderTab builds or updates what the user sees.
+// WHY IT EXISTS: display logic is separated from data/business logic for clarity.
+// HOW TO USE IT: call showProviderTab(...) after state changes that need UI refresh.
 function showProviderTab(providerName, el) {
   // Hide all provider tabs
   document.querySelectorAll('.provider-tab').forEach(t => t.classList.remove('on'));
@@ -801,6 +935,10 @@ function showProviderTab(providerName, el) {
 }
 
 /** Pre-fill sub/dream/orchestrator endpoint + key from the main config when those fields are empty. */
+// inheritMainConfigToAspect()
+// WHAT THIS DOES: inheritMainConfigToAspect is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call inheritMainConfigToAspect(...) where this helper behavior is needed.
 function inheritMainConfigToAspect(panel) {
   const mainEndpoint = document.getElementById('apikeyEndpoint-main')?.value?.trim() || '';
   const mainKey      = document.getElementById('apikeyKey-main')?.value?.trim() || '';
@@ -828,6 +966,10 @@ function inheritMainConfigToAspect(panel) {
 // runStartupResumeRecap moved to chat.js
 // ============================================================
 
+// resetChatForEntitySwitch()
+// WHAT THIS DOES: resetChatForEntitySwitch removes, resets, or shuts down existing state.
+// WHY IT EXISTS: cleanup is explicit so stale state does not leak into new runs.
+// HOW TO USE IT: call resetChatForEntitySwitch(...) when you need a safe teardown/reset path.
 function resetChatForEntitySwitch(entityName, introText, memoryCount) {
   // Full reset so previous entity context/archives are not reused.
   if (typeof clearChat === 'function') clearChat();
@@ -887,14 +1029,26 @@ function resetChatForEntitySwitch(entityName, introText, memoryCount) {
 // don't throw ReferenceErrors.
 // ============================================================
 
+// showNewEntityDialog()
+// WHAT THIS DOES: showNewEntityDialog builds or updates what the user sees.
+// WHY IT EXISTS: display logic is separated from data/business logic for clarity.
+// HOW TO USE IT: call showNewEntityDialog(...) after state changes that need UI refresh.
 function showNewEntityDialog() {
   switchMainTab('creator');
 }
 // ====================================
+// closeNewEntityDialog()
+// WHAT THIS DOES: closeNewEntityDialog removes, resets, or shuts down existing state.
+// WHY IT EXISTS: cleanup is explicit so stale state does not leak into new runs.
+// HOW TO USE IT: call closeNewEntityDialog(...) when you need a safe teardown/reset path.
 function closeNewEntityDialog() { /* no-op: modal removed */ }
 function selectEntityMode() {}
 function creatorContinueToModeSelection() {}
 function backToModeSelection() {}
+// executeEntityCreation()
+// WHAT THIS DOES: executeEntityCreation is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call executeEntityCreation(...) where this helper behavior is needed.
 function executeEntityCreation() {}
 async function createNewEntity() { showNewEntityDialog(); }
 // ── User name modal moved to client/js/setup-ui.js (P3-S7) ──
@@ -1039,6 +1193,10 @@ async function saveAllLLMConfig() {
 
 // Brain status polling (fallback — SSE handles real-time updates)
 let brainPollHandle = null;
+// startBrainPoll()
+// WHAT THIS DOES: startBrainPoll creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call startBrainPoll(...) before code that depends on this setup.
 function startBrainPoll() {
   if (brainPollHandle) return;
   // Only poll infrequently as SSE provides real-time updates

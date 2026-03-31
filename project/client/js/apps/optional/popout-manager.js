@@ -1,3 +1,17 @@
+// ── Client Optional · Popout Manager ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This client module drives browser-side behavior and state updates for UI
+// features.
+//
+// WHAT USES THIS:
+// Used by related flows in its subsystem. Keep call contracts stable during
+// readability-only edits.
+//
+// EXPORTS:
+// Exposed API includes: window-attached API object.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // NekoCore OS - Popout Manager
 // Managed detached browser windows for optional/core app shells.
@@ -10,15 +24,20 @@
   var POPOUT_STALE_MS = POPOUT_HEARTBEAT_MS * 3;
   var currentPopoutTab = null;
   var heartbeatTimer = 0;
-
+  // now()
+  // WHAT THIS DOES: now is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call now(...) where this helper behavior is needed.
   function now() {
     return Date.now();
   }
-
   function isObject(value) {
     return !!value && typeof value === 'object' && !Array.isArray(value);
   }
-
+  // readRegistry()
+  // WHAT THIS DOES: readRegistry reads or finds data and gives it back.
+  // WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+  // HOW TO USE IT: call readRegistry(...), then use the returned value in your next step.
   function readRegistry() {
     try {
       var raw = localStorage.getItem(POPOUT_REGISTRY_KEY);
@@ -28,7 +47,10 @@
       return {};
     }
   }
-
+  // writeRegistry()
+  // WHAT THIS DOES: writeRegistry changes saved state or updates data.
+  // WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+  // HOW TO USE IT: call writeRegistry(...) with the new values you want to persist.
   function writeRegistry(registry) {
     try {
       localStorage.setItem(POPOUT_REGISTRY_KEY, JSON.stringify(registry));
@@ -36,7 +58,10 @@
       // Ignore storage failures.
     }
   }
-
+  // pruneRegistry()
+  // WHAT THIS DOES: pruneRegistry is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call pruneRegistry(...) where this helper behavior is needed.
   function pruneRegistry(registry) {
     var changed = false;
     var cutoff = now() - POPOUT_STALE_MS;
@@ -55,18 +80,23 @@
     if (changed) writeRegistry(registry);
     return registry;
   }
-
+  // getRegistry()
+  // WHAT THIS DOES: getRegistry reads or finds data and gives it back.
+  // WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+  // HOW TO USE IT: call getRegistry(...), then use the returned value in your next step.
   function getRegistry() {
     return pruneRegistry(readRegistry());
   }
-
   function getPopoutApps() {
     if (typeof WINDOW_APPS === 'undefined' || !Array.isArray(WINDOW_APPS)) return [];
     return WINDOW_APPS.filter(function (app) {
       return app && app.tab && app.tab !== 'popouts';
     });
   }
-
+  // upsertCurrentPopout()
+  // WHAT THIS DOES: upsertCurrentPopout is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call upsertCurrentPopout(...) where this helper behavior is needed.
   function upsertCurrentPopout(tabId) {
     if (!tabId) return;
     var app = typeof getWindowApp === 'function' ? getWindowApp(tabId) : { tab: tabId, label: tabId };
@@ -81,7 +111,10 @@
     };
     writeRegistry(registry);
   }
-
+  // removePopout()
+  // WHAT THIS DOES: removePopout removes, resets, or shuts down existing state.
+  // WHY IT EXISTS: cleanup is explicit so stale state does not leak into new runs.
+  // HOW TO USE IT: call removePopout(...) when you need a safe teardown/reset path.
   function removePopout(tabId) {
     if (!tabId) return;
     var registry = getRegistry();
@@ -89,7 +122,10 @@
     delete registry[tabId];
     writeRegistry(registry);
   }
-
+  // sendCommand()
+  // WHAT THIS DOES: sendCommand is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call sendCommand(...) where this helper behavior is needed.
   function sendCommand(action, tabId) {
     try {
       localStorage.setItem(POPOUT_COMMAND_KEY, JSON.stringify({
@@ -101,28 +137,39 @@
       // Ignore storage failures.
     }
   }
-
+  // requestPopoutClose()
+  // WHAT THIS DOES: requestPopoutClose is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call requestPopoutClose(...) where this helper behavior is needed.
   function requestPopoutClose(tabId) {
     if (!tabId) return;
     sendCommand('close', tabId);
     removePopout(tabId);
     refreshPopoutManagerView(true);
   }
-
+  // isPopoutOpen()
+  // WHAT THIS DOES: isPopoutOpen answers a yes/no rule check.
+  // WHY IT EXISTS: guard checks are kept readable and reusable in one place.
+  // HOW TO USE IT: call isPopoutOpen(...) and branch logic based on true/false.
   function isPopoutOpen(tabId) {
     if (!tabId) return false;
     return !!getRegistry()[tabId];
   }
-
+  // focusDetachedPopout()
+  // WHAT THIS DOES: focusDetachedPopout is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call focusDetachedPopout(...) where this helper behavior is needed.
   function focusDetachedPopout(tabId) {
     if (!tabId) return;
     if (typeof popOutWindow === 'function') popOutWindow(tabId);
   }
-
+  // getPopoutRegistrySnapshot()
+  // WHAT THIS DOES: getPopoutRegistrySnapshot reads or finds data and gives it back.
+  // WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+  // HOW TO USE IT: call getPopoutRegistrySnapshot(...), then use the returned value in your next step.
   function getPopoutRegistrySnapshot() {
     return getRegistry();
   }
-
   function closeAllPopouts() {
     var registry = getRegistry();
     Object.keys(registry).forEach(function (tabId) {
@@ -131,7 +178,10 @@
     writeRegistry({});
     refreshPopoutManagerView(true);
   }
-
+  // formatOpenedAt()
+  // WHAT THIS DOES: formatOpenedAt reshapes data from one form into another.
+  // WHY IT EXISTS: conversion rules live here so the same transformation is reused.
+  // HOW TO USE IT: pass input data into formatOpenedAt(...) and use the transformed output.
   function formatOpenedAt(timestamp) {
     if (!Number.isFinite(Number(timestamp))) return 'Not opened';
     try {
@@ -140,7 +190,10 @@
       return 'Open';
     }
   }
-
+  // renderManagerCards()
+  // WHAT THIS DOES: renderManagerCards builds or updates what the user sees.
+  // WHY IT EXISTS: display logic is separated from data/business logic for clarity.
+  // HOW TO USE IT: call renderManagerCards(...) after state changes that need UI refresh.
   function renderManagerCards(host, registry) {
     host.innerHTML = '';
     getPopoutApps().forEach(function (app) {
@@ -167,7 +220,10 @@
       host.appendChild(card);
     });
   }
-
+  // bindManagerActions()
+  // WHAT THIS DOES: bindManagerActions is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call bindManagerActions(...) where this helper behavior is needed.
   function bindManagerActions(host) {
     if (!host || host.dataset.popoutBound === '1') return;
     host.addEventListener('click', function (event) {
@@ -194,7 +250,10 @@
     });
     host.dataset.popoutBound = '1';
   }
-
+  // refreshPopoutManagerView()
+  // WHAT THIS DOES: refreshPopoutManagerView is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call refreshPopoutManagerView(...) where this helper behavior is needed.
   function refreshPopoutManagerView(forcePrune) {
     var host = document.getElementById('popoutManagerGrid');
     var empty = document.getElementById('popoutManagerEmpty');
@@ -217,7 +276,10 @@
       try { syncDetachedShellStateUI(registry); } catch (_) {}
     }
   }
-
+  // handleStorageEvent()
+  // WHAT THIS DOES: handleStorageEvent handles an event and routes follow-up actions.
+  // WHY IT EXISTS: event flow is easier to debug when listener logic is centralized.
+  // HOW TO USE IT: wire handleStorageEvent to the relevant event source or dispatcher.
   function handleStorageEvent(event) {
     if (event.key === POPOUT_REGISTRY_KEY) {
       refreshPopoutManagerView(false);
@@ -236,7 +298,10 @@
       // Ignore malformed commands.
     }
   }
-
+  // startCurrentPopoutLifecycle()
+  // WHAT THIS DOES: startCurrentPopoutLifecycle creates or initializes something needed by the flow.
+  // WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+  // HOW TO USE IT: call startCurrentPopoutLifecycle(...) before code that depends on this setup.
   function startCurrentPopoutLifecycle() {
     currentPopoutTab = String(new URLSearchParams(window.location.search).get('popout') || '').trim();
     if (!currentPopoutTab) return;

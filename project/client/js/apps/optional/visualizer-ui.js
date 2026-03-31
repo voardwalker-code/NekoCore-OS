@@ -1,7 +1,24 @@
+// ── Client Optional · Visualizer Ui ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This client module drives browser-side behavior and state updates for UI
+// features.
+//
+// WHAT USES THIS:
+// Used by related flows in its subsystem. Keep call contracts stable during
+// readability-only edits.
+//
+// EXPORTS:
+// Exposed API includes: window-attached API object.
+// ─────────────────────────────────────────────────────────────────────────────
+
 /* Visualizer UI helpers extracted from app.js - P3-S4 */
 
 /* eslint-disable no-undef */
-
+// showMemoryDetail()
+// WHAT THIS DOES: showMemoryDetail builds or updates what the user sees.
+// WHY IT EXISTS: display logic is separated from data/business logic for clarity.
+// HOW TO USE IT: call showMemoryDetail(...) after state changes that need UI refresh.
 function showMemoryDetail(memId, panelId) {
   var panel = document.getElementById(panelId);
   if (!panel) return;
@@ -30,7 +47,10 @@ function showMemoryDetail(memId, panelId) {
       panel.innerHTML = '<div class="mini-detail-empty">Failed to load</div>';
     });
 }
-
+// showMiniMemoryDetail()
+// WHAT THIS DOES: showMiniMemoryDetail builds or updates what the user sees.
+// WHY IT EXISTS: display logic is separated from data/business logic for clarity.
+// HOW TO USE IT: call showMiniMemoryDetail(...) after state changes that need UI refresh.
 function showMiniMemoryDetail(memId) {
   showMemoryDetail(memId, 'miniVizDetail');
   var status = document.getElementById('miniVizStatus');
@@ -43,7 +63,10 @@ function showMiniMemoryDetail(memId) {
     NeuralViz.selectNodeById(memId);
   }
 }
-
+// addVizActivityItem()
+// WHAT THIS DOES: addVizActivityItem is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call addVizActivityItem(...) where this helper behavior is needed.
 function addVizActivityItem(memId) {
   var list = document.getElementById('vizContextActivityList');
   if (!list) return;
@@ -64,17 +87,22 @@ function addVizActivityItem(memId) {
   list.insertBefore(item, list.firstChild);
   while (list.children.length > 20) list.removeChild(list.lastChild);
 }
-
+// escapeHtmlInner()
+// WHAT THIS DOES: escapeHtmlInner is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call escapeHtmlInner(...) where this helper behavior is needed.
 function escapeHtmlInner(str) {
   var div = document.createElement('div');
   div.textContent = str;
   return div.innerHTML;
 }
-
+// escapeHtmlAttr()
+// WHAT THIS DOES: escapeHtmlAttr is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call escapeHtmlAttr(...) where this helper behavior is needed.
 function escapeHtmlAttr(str) {
   return String(str).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
-
 function setupVizSearch(inputId) {
   const input = document.getElementById(inputId);
   if (!input) return;
@@ -123,7 +151,10 @@ function setupVizSearch(inputId) {
     }
   });
 }
-
+// vizSearchSelect()
+// WHAT THIS DOES: vizSearchSelect is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call vizSearchSelect(...) where this helper behavior is needed.
 function vizSearchSelect(memId) {
   if (typeof NeuralViz !== 'undefined' && NeuralViz.isInitialized) {
     NeuralViz.selectNodeById(memId);
@@ -137,7 +168,10 @@ function vizSearchSelect(memId) {
     if (el) el.value = '';
   });
 }
-
+// setupMiniVizSearch()
+// WHAT THIS DOES: setupMiniVizSearch is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call setupMiniVizSearch(...) where this helper behavior is needed.
 function setupMiniVizSearch() {
   const input = document.getElementById('miniVizSearchInput');
   if (!input) return;
@@ -152,7 +186,10 @@ function setupMiniVizSearch() {
     }
   });
 }
-
+// setupVizContextSearch()
+// WHAT THIS DOES: setupVizContextSearch is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call setupVizContextSearch(...) where this helper behavior is needed.
 function setupVizContextSearch() {
   var input = document.getElementById('vizContextSearchInput');
   if (!input) return;

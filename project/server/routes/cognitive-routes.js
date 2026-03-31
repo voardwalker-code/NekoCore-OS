@@ -1,3 +1,17 @@
+// ── Routes · Cognitive Routes ────────────────────────────────────────────────
+//
+// HOW COGNITIVE ROUTING WORKS:
+// This module serves cognitive diagnostics and graph endpoints (timeline,
+// thoughts, attention, memory graph, traces, belief graph, curiosity triggers).
+//
+// WHAT USES THIS:
+//   observability dashboards and cognitive debugging tools
+//
+// EXPORTS:
+//   createCognitiveRoutes(ctx)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Build cognitive route handlers and dispatcher for runtime diagnostics APIs. */
 function createCognitiveRoutes(ctx) {
   const { fs, path } = ctx;
   const { getEntityMemoryScanDirs, getEntityMemoryRecordDirs } = require('../services/entity-memory-compat');
@@ -159,6 +173,7 @@ function createCognitiveRoutes(ctx) {
           try { res.flushHeaders(); } catch (_) {}
         }
 
+        /** Write one SSE event frame to the active response stream. */
         const send = (eventName, payload) => {
           try {
             res.write(`event: ${eventName}\n`);
@@ -175,6 +190,7 @@ function createCognitiveRoutes(ctx) {
           }
         }
 
+        /** Return true when timeline record matches stream filters. */
         const shouldInclude = (rec) => {
           if (!rec || typeof rec !== 'object') return false;
           if (entityId && String(rec.entityId || '') !== String(entityId)) return false;
@@ -186,6 +202,7 @@ function createCognitiveRoutes(ctx) {
           return true;
         };
 
+        /** Push matching timeline events to SSE clients. */
         const onTimeline = (rec) => {
           if (shouldInclude(rec)) send('timeline', rec);
         };

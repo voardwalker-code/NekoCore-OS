@@ -1,3 +1,18 @@
+// ── Client · Vfs ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This client module drives browser-side behavior and state updates for UI
+// features.
+//
+// WHAT USES THIS:
+// Used by related flows in its subsystem. Keep call contracts stable during
+// readability-only edits.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 /* ╔══════════════════════════════════════════════════════════════╗
    ║  VIRTUAL FILE SYSTEM (VFS)                                 ║
    ║  localStorage-backed file/folder tree with desktop surface  ║
@@ -5,6 +20,12 @@
    ║  Depends on: app.js (globals: getWindowApp, switchMainTab)  ║
    ╚══════════════════════════════════════════════════════════════╝ */
 
+// vfs()
+// Purpose: helper wrapper used by this module's main flow.
+// vfs()
+// WHAT THIS DOES: vfs is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call vfs(...) where this helper behavior is needed.
 const vfs = (function() {
   const BASE = '/api/vfs';
 
@@ -12,6 +33,10 @@ const vfs = (function() {
   // for context-menu handlers that fire on already-rendered icons.
   let _cache = {};
 
+  // apiPost()
+  // WHAT THIS DOES: apiPost is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call apiPost(...) where this helper behavior is needed.
   function apiPost(endpoint, body) {
     return fetch(BASE + '/' + endpoint, {
       method: 'POST',
@@ -23,6 +48,10 @@ const vfs = (function() {
   // ── Public API ──────────────────────────────────────────────────────────────
 
   // Synchronous stat from local cache (populated by renderDesktop)
+  // stat()
+  // WHAT THIS DOES: stat is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call stat(...) where this helper behavior is needed.
   function stat(virtualPath) {
     return _cache[virtualPath] || null;
   }
@@ -107,6 +136,10 @@ const vfs = (function() {
 
   // ── Desktop rendering ──────────────────────────────────────────────────────
 
+  // fileAccent()
+  // WHAT THIS DOES: fileAccent is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call fileAccent(...) where this helper behavior is needed.
   function fileAccent(entry) {
     if (entry.type === 'shortcut') {
       var app = getWindowApp(entry.launchTab);
@@ -116,7 +149,10 @@ const vfs = (function() {
     if (entry.fileExt === 'note' || entry.fileExt === 'txt') return 'cyan';
     return 'indigo';
   }
-
+  // fileIcon()
+  // WHAT THIS DOES: fileIcon is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call fileIcon(...) where this helper behavior is needed.
   function fileIcon(entry) {
     if (entry.type === 'shortcut') {
       var app = getWindowApp(entry.launchTab);
@@ -129,7 +165,10 @@ const vfs = (function() {
 
   var desktopSelection = null;
   var ICON_W = 96, ICON_H = 112, ICON_GAP = 8, SNAP = 8;
-
+  // snap()
+  // WHAT THIS DOES: snap is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call snap(...) where this helper behavior is needed.
   function snap(v) { return Math.round(v / SNAP) * SNAP; }
 
   // Delete key removes selected desktop file
@@ -141,7 +180,10 @@ const vfs = (function() {
       if (p) { desktopSelection = null; remove(p); }
     }
   });
-
+  // autoPos()
+  // WHAT THIS DOES: autoPos is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call autoPos(...) where this helper behavior is needed.
   function autoPos(index, hostW, hostH) {
     var cols = Math.max(1, Math.floor((hostW - 48) / (ICON_W + ICON_GAP)));
     var col = index % cols;
@@ -224,7 +266,10 @@ const vfs = (function() {
         var dropTarget = null;
 
         el.setPointerCapture(e.pointerId);
-
+        // clamp()
+        // WHAT THIS DOES: clamp is a helper used by this module's main flow.
+        // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+        // HOW TO USE IT: call clamp(...) where this helper behavior is needed.
         function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
 
         function findFolderAt(cx, cy) {
@@ -238,7 +283,10 @@ const vfs = (function() {
           }
           return null;
         }
-
+        // onMove()
+        // WHAT THIS DOES: onMove handles an event and routes follow-up actions.
+        // WHY IT EXISTS: event flow is easier to debug when listener logic is centralized.
+        // HOW TO USE IT: wire onMove to the relevant event source or dispatcher.
         function onMove(ev) {
           var dx = ev.clientX - startCX;
           var dy = ev.clientY - startCY;
@@ -260,7 +308,10 @@ const vfs = (function() {
           dropTarget = folderEl;
           if (dropTarget) dropTarget.classList.add('drop-over');
         }
-
+        // onUp()
+        // WHAT THIS DOES: onUp handles an event and routes follow-up actions.
+        // WHY IT EXISTS: event flow is easier to debug when listener logic is centralized.
+        // HOW TO USE IT: wire onUp to the relevant event source or dispatcher.
         function onUp(ev) {
           el.removeEventListener('pointermove', onMove);
           el.removeEventListener('pointerup',   onUp);
@@ -295,6 +346,10 @@ const vfs = (function() {
 
   // ── Create helpers ──────────────────────────────────────────────────────────
 
+  // createOnDesktop()
+  // WHAT THIS DOES: createOnDesktop creates or initializes something needed by the flow.
+  // WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+  // HOW TO USE IT: call createOnDesktop(...) before code that depends on this setup.
   function createOnDesktop(kind) {
     if (kind === 'folder') {
       createEntry('/desktop', 'New Folder', 'folder');
@@ -304,7 +359,10 @@ const vfs = (function() {
       createEntry('/desktop', 'New Document.doc', 'file', { fileExt: 'doc' });
     }
   }
-
+  // createDesktopShortcut()
+  // WHAT THIS DOES: createDesktopShortcut creates or initializes something needed by the flow.
+  // WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+  // HOW TO USE IT: call createDesktopShortcut(...) before code that depends on this setup.
   function createDesktopShortcut(tabName) {
     var app = getWindowApp(tabName);
     if (!app) return;
@@ -313,6 +371,10 @@ const vfs = (function() {
 
   // ── Inline rename ──────────────────────────────────────────────────────────
 
+  // beginRename()
+  // WHAT THIS DOES: beginRename is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call beginRename(...) where this helper behavior is needed.
   function beginRename(el) {
     var nameEl = el.querySelector('.desktop-file-name');
     if (!nameEl) return;
@@ -325,7 +387,10 @@ const vfs = (function() {
     var sel = window.getSelection();
     sel.removeAllRanges();
     sel.addRange(range);
-
+    // commit()
+    // WHAT THIS DOES: commit is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call commit(...) where this helper behavior is needed.
     function commit() {
       nameEl.removeAttribute('contenteditable');
       var newName = nameEl.textContent.trim();

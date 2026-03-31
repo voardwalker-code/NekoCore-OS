@@ -1,16 +1,36 @@
+// ── Routes · Memory Routes ───────────────────────────────────────────────────
+//
+// HOW MEMORY ROUTING WORKS:
+// This module serves memory CRUD/search/detail endpoints, persona/system prompt
+// helpers, diary reads, memory repair/stats, and reconstruction prewarm flows.
+//
+// WHAT USES THIS:
+//   memory UI panels, visualizer, and memory diagnostics/recovery tools
+//
+// EXPORTS:
+//   createMemoryRoutes(ctx)
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ── Memory Routes ────────────────────────────────────────────
 // /api/memories, /api/system-prompt, /api/session-meta, /api/persona,
 // /api/status, /api/memory-heal, /api/memory-stats,
 // /api/memories/search, /api/memories/reconstruct, /api/memory/detail,
 // /api/visualizer/chat-history
 
+// createMemoryRoutes()
+// WHAT THIS DOES: Builds the memory route dispatcher and supporting helpers.
+// WHY IT EXISTS: Keeps memory APIs, cache helpers, and entity path resolution in one module boundary.
+// HOW TO USE IT: Call createMemoryRoutes(ctx) during server route initialization.
 function createMemoryRoutes(ctx) {
   const { fs, path, zlib } = ctx;
   const { enforceResponseContract } = require('../contracts/response-contracts');
   const { getEntityMemoryScanDirs, getEntityMemoryRecordDirs } = require('../services/entity-memory-compat');
   const reconstructCache = ctx.reconstructionCache instanceof Map ? ctx.reconstructionCache : new Map();
   const reconstructCacheTtlMs = Number.isFinite(ctx.reconstructionCacheTtlMs) ? ctx.reconstructionCacheTtlMs : 15 * 60 * 1000;
-
+  // resolveTargetEntityId()
+  // WHAT THIS DOES: Resolves the effective entity id from request input or active context.
+  // WHY IT EXISTS: Many memory endpoints support optional entityId and need one consistent resolution rule.
+  // HOW TO USE IT: Call resolveTargetEntityId(rawEntityId) before any entity-scoped read/write operation.
   function resolveTargetEntityId(rawEntityId) {
     try {
       const entityPaths = require('../entityPaths');
@@ -19,7 +39,10 @@ function createMemoryRoutes(ctx) {
       return rawEntityId || ctx.currentEntityId || null;
     }
   }
-
+  // resolveTargetEntityMemoryRoot()
+  // WHAT THIS DOES: Resolves memory root directory for a target entity id.
+  // WHY IT EXISTS: Endpoint handlers should not duplicate entity-path lookup and error guards.
+  // HOW TO USE IT: Call resolveTargetEntityMemoryRoot(rawEntityId) before scanning memory tiers.
   function resolveTargetEntityMemoryRoot(rawEntityId) {
     const entityId = resolveTargetEntityId(rawEntityId);
     if (!entityId) return null;
@@ -29,7 +52,10 @@ function createMemoryRoutes(ctx) {
       return null;
     }
   }
-
+  // resolveTargetEntityPath()
+  // WHAT THIS DOES: Resolves entity root directory for a target entity id.
+  // WHY IT EXISTS: Visualizer/chat-history routes need a safe, centralized entity root resolver.
+  // HOW TO USE IT: Call resolveTargetEntityPath(rawEntityId) when accessing entity-level files.
   function resolveTargetEntityPath(rawEntityId) {
     const entityId = resolveTargetEntityId(rawEntityId);
     if (!entityId) return null;
@@ -39,12 +65,18 @@ function createMemoryRoutes(ctx) {
       return null;
     }
   }
-
+  // buildReconstructCacheKey()
+  // WHAT THIS DOES: Builds a stable cache key for memory reconstruction responses.
+  // WHY IT EXISTS: Prevents repeated LLM reconstruction for identical source content.
+  // HOW TO USE IT: Call buildReconstructCacheKey(memoryId, text) before cache get/set operations.
   function buildReconstructCacheKey(memoryId, text) {
     const raw = String(text || '');
     return `${memoryId}|${raw.length}|${raw.slice(0, 120)}`;
   }
-
+  // getCachedReconstruction()
+  // WHAT THIS DOES: Reads cached reconstruction content when TTL is still valid.
+  // WHY IT EXISTS: Expired entries should be cleaned opportunistically and never returned to callers.
+  // HOW TO USE IT: Call getCachedReconstruction(cacheKey) before invoking reconstruction LLM calls.
   function getCachedReconstruction(cacheKey) {
     const now = Date.now();
     const hit = reconstructCache.get(cacheKey);
@@ -55,7 +87,10 @@ function createMemoryRoutes(ctx) {
     }
     return hit.value;
   }
-
+  // setCachedReconstruction()
+  // WHAT THIS DOES: Stores reconstruction text in cache with expiry metadata.
+  // WHY IT EXISTS: Keeps hot reconstruction responses fast while pruning stale entries over time.
+  // HOW TO USE IT: Call setCachedReconstruction(cacheKey, value) after successful reconstruction.
   function setCachedReconstruction(cacheKey, value) {
     const now = Date.now();
     reconstructCache.set(cacheKey, { value, expiresAt: now + reconstructCacheTtlMs });
@@ -90,7 +125,10 @@ function createMemoryRoutes(ctx) {
     if (p === '/api/visualizer/chat-history' && m === 'GET') { getVisualizerChatHistory(req, res, apiHeaders); return true; }
     return false;
   }
-
+  // getStatus()
+  // WHAT THIS DOES: Returns memory/persona/archive status for the active entity.
+  // WHY IT EXISTS: Startup/status UI needs quick readiness signals without deep memory scans.
+  // HOW TO USE IT: Route GET /api/status to getStatus(req, res, apiHeaders).
   function getStatus(req, res, apiHeaders) {
     let personaExists = false;
     let archiveFiles = [];
@@ -110,7 +148,10 @@ function createMemoryRoutes(ctx) {
     res.writeHead(200, apiHeaders);
     res.end(JSON.stringify({ ok: true, firstRun: !personaExists, archiveCount: archiveFiles.length, personaExists, entityStatus }));
   }
-
+  // getMemories()
+  // WHAT THIS DOES: Lists archived memory text files for the active entity.
+  // WHY IT EXISTS: Archive browsing UI needs direct access to saved text memories.
+  // HOW TO USE IT: Route GET /api/memories to getMemories(req, res, apiHeaders).
   function getMemories(req, res, apiHeaders) {
     try {
       let archives = [];
@@ -156,7 +197,10 @@ function createMemoryRoutes(ctx) {
       res.end(JSON.stringify({ error: e.message }));
     }
   }
-
+  // getSystemPrompt()
+  // WHAT THIS DOES: Reads the effective system prompt with entity-first fallback behavior.
+  // WHY IT EXISTS: Entity-specific prompts should override defaults without breaking first-run flows.
+  // HOW TO USE IT: Route GET /api/system-prompt to getSystemPrompt(req, res, apiHeaders).
   function getSystemPrompt(req, res, apiHeaders) {
     try {
       let sysPath = null;
@@ -219,7 +263,10 @@ function createMemoryRoutes(ctx) {
       res.end(JSON.stringify({ error: e.message }));
     }
   }
-
+  // getPersona()
+  // WHAT THIS DOES: Reads persona.json for the active entity when available.
+  // WHY IT EXISTS: Persona panel should gracefully return null when persona has not been created yet.
+  // HOW TO USE IT: Route GET /api/persona to getPersona(req, res, apiHeaders).
   function getPersona(req, res, apiHeaders) {
     try {
       let personaPath = null;
@@ -265,7 +312,10 @@ function createMemoryRoutes(ctx) {
       res.end(JSON.stringify({ error: e.message }));
     }
   }
-
+  // getMemoryHeal()
+  // WHAT THIS DOES: Repairs malformed episodic log.json files and returns repair counts.
+  // WHY IT EXISTS: Legacy/corrupt logs can break tooling; this endpoint offers safe recovery.
+  // HOW TO USE IT: Route POST /api/memory-heal to getMemoryHeal(req, res, apiHeaders, url).
   function getMemoryHeal(req, res, apiHeaders, url) {
     try {
       const entityMemRoot = ctx.getEntityMemoryRootIfActive();
@@ -304,7 +354,10 @@ function createMemoryRoutes(ctx) {
       res.end(JSON.stringify({ error: e.message }));
     }
   }
-
+  // getMemoryStats()
+  // WHAT THIS DOES: Computes memory counts, storage size, and log health metrics.
+  // WHY IT EXISTS: Diagnostics UI needs a quick operational snapshot of memory integrity and size.
+  // HOW TO USE IT: Route GET /api/memory-stats to getMemoryStats(req, res, apiHeaders).
   function getMemoryStats(req, res, apiHeaders) {
     try {
       let totalMemories = 0, storageSize = 0, memoryLogs = 0, healthyLogs = 0, corruptedLogs = 0;
@@ -337,7 +390,10 @@ function createMemoryRoutes(ctx) {
       res.end(JSON.stringify({ error: e.message }));
     }
   }
-
+  // getMemoryImage()
+  // WHAT THIS DOES: Serves a memory image PNG for a specific memory id.
+  // WHY IT EXISTS: Memory visualizer cards need direct image delivery with cache headers.
+  // HOW TO USE IT: Route GET /api/memory/image to getMemoryImage(req, res, url).
   function getMemoryImage(req, res, url) {
     try {
       const memId = url.searchParams.get('id');
@@ -369,7 +425,10 @@ function createMemoryRoutes(ctx) {
       res.end(JSON.stringify({ ok: false, error: e.message }));
     }
   }
-
+  // getLifeDiary()
+  // WHAT THIS DOES: Returns life diary text and recent entries for active entity.
+  // WHY IT EXISTS: Identity surfaces need one endpoint that combines file text and parsed recent entries.
+  // HOW TO USE IT: Route GET /api/diary/life to getLifeDiary(req, res, apiHeaders).
   function getLifeDiary(req, res, apiHeaders) {
     try {
       if (!ctx.currentEntityId) {
@@ -389,7 +448,10 @@ function createMemoryRoutes(ctx) {
       res.end(JSON.stringify({ ok: false, error: e.message }));
     }
   }
-
+  // getDreamDiary()
+  // WHAT THIS DOES: Returns dream diary text and recent entries for active entity.
+  // WHY IT EXISTS: Dream-inspection UI needs consistent shape parallel to life-diary endpoint.
+  // HOW TO USE IT: Route GET /api/diary/dream to getDreamDiary(req, res, apiHeaders).
   function getDreamDiary(req, res, apiHeaders) {
     try {
       if (!ctx.currentEntityId) {
@@ -409,7 +471,10 @@ function createMemoryRoutes(ctx) {
       res.end(JSON.stringify({ ok: false, error: e.message }));
     }
   }
-
+  // getMemoriesSearch()
+  // WHAT THIS DOES: Searches memory logs by keyword/type and returns sorted summaries.
+  // WHY IT EXISTS: Memory browser needs filtering across tiers without loading full content blobs.
+  // HOW TO USE IT: Route GET /api/memories/search to getMemoriesSearch(req, res, apiHeaders, url).
   function getMemoriesSearch(req, res, apiHeaders, url) {
     try {
       const keyword = (url.searchParams.get('q') || '').toLowerCase().trim();
@@ -502,7 +567,10 @@ function createMemoryRoutes(ctx) {
       const memoryImages = new MemoryImages({ entityId: targetEntityId });
       const memoryRoot = resolveTargetEntityMemoryRoot(targetEntityId);
       let compressedContent = null;
-
+      // extractReconstructableText()
+      // WHAT THIS DOES: Extracts best reconstructable text from raw stored memory payload.
+      // WHY IT EXISTS: Stored artifacts vary (plain text, packed markers, JSON envelopes) and need normalization.
+      // HOW TO USE IT: Call extractReconstructableText(rawText) before reconstruction/prompting.
       function extractReconstructableText(rawText) {
         const raw = String(rawText || '').trim();
         if (!raw) return '';
@@ -688,7 +756,10 @@ function createMemoryRoutes(ctx) {
       res.end(JSON.stringify({ ok: false, warmed: false, error: e.message }));
     }
   }
-
+  // getMemoryDetail()
+  // WHAT THIS DOES: Returns detailed memory payload including log/content/relations.
+  // WHY IT EXISTS: Debug and memory-inspector views need one endpoint with cross-linked memory data.
+  // HOW TO USE IT: Route GET /api/memory/detail to getMemoryDetail(req, res, apiHeaders, url).
   function getMemoryDetail(req, res, apiHeaders, url) {
     try {
       const memId = url.searchParams.get('id');
@@ -763,7 +834,10 @@ function createMemoryRoutes(ctx) {
       res.end(JSON.stringify({ ok: false, error: e.message }));
     }
   }
-
+  // getVisualizerChatHistory()
+  // WHAT THIS DOES: Returns persisted visualizer chat history for target entity.
+  // WHY IT EXISTS: Visualizer replay needs stable history retrieval independent of live chat state.
+  // HOW TO USE IT: Route GET /api/visualizer/chat-history to getVisualizerChatHistory(req, res, apiHeaders).
   function getVisualizerChatHistory(req, res, apiHeaders) {
     try {
       const targetEntityPath = resolveTargetEntityPath(req.url && new URL(req.url, 'http://localhost').searchParams.get('entityId'));

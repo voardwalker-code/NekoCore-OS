@@ -1,3 +1,19 @@
+// ── Tests · System Apps Manifest Guards.Test ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This test file validates behavior and guards against regressions in its
+// target subsystem.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: node:test,
+// node:assert/strict, node:fs, node:path. Keep import and call-site
+// contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 'use strict';
 
 const { test } = require('node:test');
@@ -13,7 +29,10 @@ const NON_CORE_MANIFEST_PATH = path.join(ROOT, 'client', 'apps', 'non-core', 'no
 const INDEX_PATH = path.join(ROOT, 'client', 'index.html');
 const CREATE_PATH = path.join(ROOT, 'client', 'create.html');
 const CREATOR_PACKAGE_INDEX_PATH = path.join(ROOT, 'client', 'apps', 'entity-creator', 'index.html');
-
+// readJson()
+// WHAT THIS DOES: readJson reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call readJson(...), then use the returned value in your next step.
 function readJson(filePath) {
   return JSON.parse(fs.readFileSync(filePath, 'utf8').replace(/^\uFEFF/, ''));
 }

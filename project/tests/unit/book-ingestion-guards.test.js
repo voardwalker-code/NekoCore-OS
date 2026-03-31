@@ -1,3 +1,18 @@
+// ── Tests · Book Ingestion Guards.Test ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This test file validates behavior and guards against regressions in its
+// target subsystem.
+//
+// WHAT USES THIS:
+// Used by related flows in its subsystem. Keep call contracts stable during
+// readability-only edits.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ── Book-to-Entity Ingestion — Guard Tests ─────────────────────────────────
 // Locks existing entity creation, memory injection, cognitive processing,
 // and MA task classification contracts before Book-to-Entity implementation.

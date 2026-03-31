@@ -1,3 +1,18 @@
+// ── Brain · Reconsolidation ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: fs, path, ../../entityPaths,
+// crypto. Keep import and call-site contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 'use strict';
 /**
  * server/brain/memory/reconsolidation.js
@@ -26,6 +41,10 @@ const BELIEF_REINFORCEMENT_THRESHOLD = 3;
  * Read a memory's edges from its log.json on disk.
  * @returns {Array<{targetId,relation,strength}>}
  */
+// _diskGetEdges()
+// WHAT THIS DOES: _diskGetEdges is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _diskGetEdges(...) where this helper behavior is needed.
 function _diskGetEdges(entityId, memId) {
   try {
     const ep = require('../../entityPaths');
@@ -42,6 +61,10 @@ function _diskGetEdges(entityId, memId) {
 /**
  * Write updated edges to a memory's log.json.
  */
+// _diskSetEdges()
+// WHAT THIS DOES: _diskSetEdges is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _diskSetEdges(...) where this helper behavior is needed.
 function _diskSetEdges(entityId, memId, edges) {
   try {
     const ep = require('../../entityPaths');
@@ -59,6 +82,10 @@ function _diskSetEdges(entityId, memId, edges) {
 /**
  * Default stub creator — writes an anticipatory memory to disk.
  */
+// _defaultCreateStub()
+// WHAT THIS DOES: _defaultCreateStub is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _defaultCreateStub(...) where this helper behavior is needed.
 function _defaultCreateStub({ entityId, belief, cluster, importance }) {
   try {
     const crypto = require('crypto');
@@ -106,6 +133,10 @@ function _defaultCreateStub({ entityId, belief, cluster, importance }) {
  * Count reinforcements for a belief since a cutoff time.
  * Uses access_count as a proxy when the belief was recently reinforced.
  */
+// _countReinforcements()
+// WHAT THIS DOES: _countReinforcements is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _countReinforcements(...) where this helper behavior is needed.
 function _countReinforcements(belief, sinceCutoff) {
   if (!belief.last_reinforced) return 0;
   const ts = new Date(belief.last_reinforced).getTime();
@@ -121,6 +152,10 @@ function _countReinforcements(belief, sinceCutoff) {
  * @param {object} indexCache — for topic metadata
  * @returns {Array<{members:string[], dominantTopic:string|null, size:number}>}
  */
+// _detectClusters()
+// WHAT THIS DOES: _detectClusters is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _detectClusters(...) where this helper behavior is needed.
 function _detectClusters(edgeMap, indexCache) {
   // Build mutual strong-edge adjacency
   const parent = new Map();
@@ -129,6 +164,10 @@ function _detectClusters(edgeMap, indexCache) {
     if (parent.get(id) !== id) parent.set(id, find(parent.get(id)));
     return parent.get(id);
   }
+  // union()
+  // WHAT THIS DOES: union is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call union(...) where this helper behavior is needed.
   function union(a, b) {
     const ra = find(a), rb = find(b);
     if (ra !== rb) parent.set(ra, rb);
@@ -189,6 +228,10 @@ function _detectClusters(edgeMap, indexCache) {
  * @param {Function} [opts._createStub] — ({entityId, belief, cluster, importance}) => boolean
  * @returns {{ edgesUpdated: number, stubsCreated: number, clustersFound: number, clusters: Array }}
  */
+// reconsolidate()
+// WHAT THIS DOES: reconsolidate is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call reconsolidate(...) where this helper behavior is needed.
 function reconsolidate(entityId, indexCache, beliefGraph, opts = {}) {
   const now = opts.now || Date.now();
   const result = { edgesUpdated: 0, stubsCreated: 0, clustersFound: 0, clusters: [] };

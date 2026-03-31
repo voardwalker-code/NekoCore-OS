@@ -1,3 +1,17 @@
+// ── Services · Client Setup UI ───────────────────────────────────────────────
+//
+// HOW THE SETUP WIZARD WORKS:
+// This module enforces provider configuration and runs the 3-step setup wizard:
+// provider direction, pipeline model assignment, and skills selection. It then
+// saves all aspect configs and opens the post-setup hatch flow.
+//
+// WHAT USES THIS:
+//   first-run startup checks, setup overlays, and settings onboarding controls
+//
+// EXPORTS:
+//   global setup/guard helpers used across app and settings modules
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // NekoCore OS — setup-ui.js
 // Owns: setup enforcement checks, setup wizard flow (3-step)
@@ -15,6 +29,7 @@
 // ============================================================
 // SETUP ENFORCEMENT — Require API configuration before entity ops
 // ============================================================
+/** Return true when an active provider config is complete enough to use. */
 function isApiConfigured() {
   if (!activeConfig || !activeConfig.model || !activeConfig.endpoint) return false;
   if (activeConfig.type === 'openrouter' || activeConfig.type === 'anthropic') {
@@ -22,7 +37,7 @@ function isApiConfigured() {
   }
   return true;
 }
-
+/** Show modal prompting user to complete provider setup. */
 function showSetupRequired() {
   const modal = document.getElementById('setupRequiredModal');
   if (modal) {
@@ -30,7 +45,7 @@ function showSetupRequired() {
     modal.classList.add('open');
   }
 }
-
+/** Hide setup-required modal with close transition. */
 function hideSetupRequired() {
   const modal = document.getElementById('setupRequiredModal');
   if (modal) {
@@ -38,7 +53,7 @@ function hideSetupRequired() {
     setTimeout(() => modal.style.display = 'none', 200);
   }
 }
-
+/** Jump settings UI to setup tab and preselect provider. */
 function goToSetupTab(provider) {
   document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('on'));
   document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('on'));
@@ -50,7 +65,7 @@ function goToSetupTab(provider) {
   }, 100);
   hideSetupRequired();
 }
-
+/** Block entity operations until provider setup is complete. */
 function guardEntityOperation(operationName) {
   if (!isApiConfigured()) {
     lg('err', 'API not configured. Please set up OpenRouter or Ollama first.');
@@ -103,7 +118,7 @@ let setupAspectProviders = {};   // per-aspect provider for hybrid mode
 let setupAspectConfigs = {};
 let setupSkillSelection = new Set();
 let setupReadyAtMs = 0;
-
+/** Populate OpenRouter model suggestions for one setup input. */
 function applyOpenRouterModelSuggestions(fieldId, aspect = 'main') {
   const field = document.getElementById(fieldId);
   if (!field) return;
@@ -143,6 +158,7 @@ function applyOpenRouterModelSuggestions(fieldId, aspect = 'main') {
 // SETUP WIZARD — navigation
 // ============================================================
 
+/** Show setup overlay and initialize first-step UI state. */
 function showSetupWizard() {
   const overlay = document.getElementById('setupOverlay');
   if (overlay) overlay.classList.add('active');
@@ -168,13 +184,13 @@ function showSetupWizard() {
   if (card) card.classList.remove('setup-card-wide');
   lg('info', 'Setup wizard opened');
 }
-
+/** Hide setup overlay and detach setup-only listeners. */
 function hideSetupWizard() {
   const overlay = document.getElementById('setupOverlay');
   if (overlay) overlay.classList.remove('active');
   setupActive = false;
 }
-
+/** Mark setup steps as active/complete based on current index. */
 function updateSetupSteps(step) {
   for (let i = 1; i <= SETUP_TOTAL_STEPS; i++) {
     const el = document.getElementById('setupStep' + i);
@@ -189,7 +205,7 @@ function updateSetupSteps(step) {
   const card = document.getElementById('setupCard');
   if (card) card.classList.toggle('setup-card-wide', step >= SETUP_STEPS.PIPELINE);
 }
-
+/** Move setup workflow back to a previous step. */
 function setupGoBack(toStep) {
   setupStep = toStep;
   updateSetupSteps(toStep);
@@ -200,6 +216,7 @@ function setupGoBack(toStep) {
 // STEP 1: Provider Direction
 // ============================================================
 
+/** Select single-provider or hybrid setup direction. */
 function setupPickDirection(direction) {
   setupDirection = direction;
   setupData.provider = direction === 'hybrid' ? null : direction;
@@ -254,6 +271,7 @@ async function setupTestAndContinue() {
   }
 
   if (setupDirection === 'openrouter') {
+    // key()
     const key = (document.getElementById('setupKeyOpenrouter')?.value || '').trim();
     if (!key) { statusEl.textContent = 'API key is required'; statusEl.style.color = 'var(--dn)'; return; }
     setupPrimaryKeys.openrouter = key;
@@ -279,6 +297,7 @@ async function setupTestAndContinue() {
       return;
     }
   } else if (setupDirection === 'anthropic') {
+    // key()
     const key = (document.getElementById('setupKeyAnthropic')?.value || '').trim();
     if (!key) { statusEl.textContent = 'API key is required'; statusEl.style.color = 'var(--dn)'; return; }
     setupPrimaryKeys.anthropic = key;
@@ -304,6 +323,7 @@ async function setupTestAndContinue() {
       return;
     }
   } else if (setupDirection === 'ollama') {
+    // url()
     const url = (document.getElementById('setupUrlOllama')?.value || 'http://localhost:11434').trim();
     setupPrimaryKeys.ollamaUrl = url;
     statusEl.textContent = 'Testing Ollama connection...';
@@ -328,11 +348,10 @@ async function setupTestAndContinue() {
 // STEP 2: Pipeline Configuration
 // ============================================================
 
-function setupAdvanceToPipeline() {
+/** Advance setup from provider step to pipeline step. */
+async function setupAdvanceToPipeline() {
   setupStep = SETUP_STEPS.PIPELINE;
   updateSetupSteps(SETUP_STEPS.PIPELINE);
-  setupPopulateModelLists();
-  setupApplyPreset('best'); // auto-apply best preset as default
 
   // Show hardware panel for Ollama/hybrid-with-ollama
   const useOllama = setupDirection === 'ollama' || (setupDirection === 'hybrid' && setupPrimaryKeys.ollamaUrl);
@@ -340,45 +359,89 @@ function setupAdvanceToPipeline() {
   if (hwPanel) hwPanel.style.display = useOllama ? 'block' : 'none';
 
   if (useOllama) {
-    // Pre-fetch installed models for datalist population
-    setupFetchInstalledOllamaModels().then(models => {
-      setupInstalledOllamaModels = models;
-      if (models.length > 0) {
-        SETUP_ASPECTS.forEach(aspect => {
-          const prov = setupGetAspectProvider(aspect);
-          if (prov === 'ollama') {
-            const list = document.getElementById('setupModelList-' + aspect);
-            if (list) { list.innerHTML = ''; models.forEach(m => { const o = document.createElement('option'); o.value = m; list.appendChild(o); }); }
-          }
-        });
-      }
-    });
+    const statusEl = document.getElementById('setupStatus');
+    if (statusEl) { statusEl.textContent = 'Fetching installed Ollama models...'; statusEl.style.color = 'var(--wn)'; }
+    setupInstalledOllamaModels = await setupFetchInstalledOllamaModels();
+    if (statusEl) statusEl.textContent = '';
+  }
+
+  setupPopulateModelLists();
+
+  if (useOllama && setupInstalledOllamaModels.length > 0) {
+    setupAutoSelectOllamaModels();
+  } else if (!useOllama) {
+    setupApplyPreset('best');
   }
 
   if (setupDirection === 'hybrid') setupShowHybridProviderPickers();
   document.getElementById('setupStatus').textContent = '';
 }
-
+/** Resolve selected provider for a given aspect. */
 function setupGetAspectProvider(aspect) {
   if (setupDirection === 'hybrid') return setupAspectProviders[aspect] || 'openrouter';
   return setupDirection;
 }
-
+/** Refresh model datalists for all setup aspects. */
 function setupPopulateModelLists() {
   SETUP_ASPECTS.forEach(aspect => {
     const provider = setupGetAspectProvider(aspect);
     setupPopulateModelListForAspect(aspect, provider);
   });
 }
-
+/** Refresh one aspect model list based on active provider. */
 function setupPopulateModelListForAspect(aspect, provider) {
   const fieldId = 'setupAspectModel-' + aspect;
   const listId = 'setupModelList-' + aspect;
   const recEl = document.getElementById('setupRec-' + aspect);
-  const field = document.getElementById(fieldId);
+  let field = document.getElementById(fieldId);
   const list = document.getElementById(listId);
-  if (!field || !list) return;
+  if (!field) return;
 
+  if (provider === 'ollama') {
+    // Swap <input> to <select> so users can only pick installed models
+    if (field.tagName !== 'SELECT') {
+      const select = document.createElement('select');
+      select.id = fieldId;
+      if (field.className) select.className = field.className;
+      field.parentNode.replaceChild(select, field);
+      field = select;
+      if (list) list.style.display = 'none';
+    }
+    field.innerHTML = '';
+
+    if (setupInstalledOllamaModels.length === 0) {
+      const opt = document.createElement('option');
+      opt.value = '';
+      opt.textContent = 'No models found — pull models in Ollama first';
+      field.appendChild(opt);
+      if (recEl) recEl.textContent = '(no models found)';
+    } else {
+      setupInstalledOllamaModels.forEach(m => {
+        const opt = document.createElement('option');
+        opt.value = m;
+        const sizeInfo = setupOllamaModelDetails[m];
+        opt.textContent = m + (sizeInfo ? ' (' + sizeInfo + ')' : '');
+        field.appendChild(opt);
+      });
+      if (recEl) recEl.textContent = '(' + setupInstalledOllamaModels.length + ' model' + (setupInstalledOllamaModels.length === 1 ? '' : 's') + ' installed)';
+    }
+    return;
+  }
+
+  // Non-Ollama: ensure we have an <input> (in case it was swapped to <select>)
+  if (field.tagName === 'SELECT') {
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.id = fieldId;
+    if (field.className) input.className = field.className;
+    input.placeholder = 'Select model...';
+    input.setAttribute('list', listId);
+    field.parentNode.replaceChild(input, field);
+    field = input;
+    if (list) list.style.display = '';
+  }
+
+  if (!list) return;
   list.innerHTML = '';
 
   if (provider === 'openrouter') {
@@ -399,19 +462,6 @@ function setupPopulateModelListForAspect(aspect, provider) {
       list.appendChild(opt);
     });
     if (recEl) recEl.textContent = '(rec: ' + (SETUP_ANTHROPIC_ASPECT_DEFAULTS[aspect] || 'claude-sonnet-4-6') + ')';
-  } else {
-    // Ollama — show installed models if available, otherwise hardcoded recommendations
-    const models = setupInstalledOllamaModels.length > 0
-      ? setupInstalledOllamaModels
-      : ['llama3', 'qwen2.5:7b', 'qwen2.5:3b', 'gemma3:1b', 'mistral'];
-    models.forEach(m => {
-      const opt = document.createElement('option');
-      opt.value = m;
-      list.appendChild(opt);
-    });
-    if (recEl) recEl.textContent = setupInstalledOllamaModels.length > 0
-      ? '(' + setupInstalledOllamaModels.length + ' model' + (setupInstalledOllamaModels.length === 1 ? '' : 's') + ' installed)'
-      : '(type your installed model)';
   }
 }
 
@@ -420,6 +470,7 @@ function setupPopulateModelListForAspect(aspect, provider) {
 // ============================================================
 
 let setupInstalledOllamaModels = []; // populated from /api/tags
+let setupOllamaModelDetails = {};   // model name → size label (e.g. "3.6B Q4_K_M")
 
 const OLLAMA_HW_TIERS = {
   low:    { label: 'Low-end',   models: { main: 'qwen2.5:1.5b', subconscious: 'qwen2.5:0.5b', dream: 'qwen2.5:0.5b', orchestrator: 'qwen2.5:1.5b', nekocore: 'qwen2.5:1.5b' } },
@@ -427,7 +478,7 @@ const OLLAMA_HW_TIERS = {
   high:   { label: 'High-end',  models: { main: 'qwen2.5:7b',   subconscious: 'qwen2.5:3b',   dream: 'qwen2.5:3b',   orchestrator: 'qwen2.5:7b',   nekocore: 'qwen2.5:7b' } },
   ultra:  { label: 'Ultra',     models: { main: 'qwen2.5:14b',  subconscious: 'qwen2.5:7b',   dream: 'qwen2.5:7b',   orchestrator: 'qwen2.5:14b',  nekocore: 'qwen2.5:14b' } }
 };
-
+/** Estimate local hardware tier from setup form values. */
 function setupDetectHardwareTier() {
   const ram = parseInt(document.getElementById('setupHwRam')?.value || '0', 10);
   const gpu = document.getElementById('setupHwGpu')?.value || '';
@@ -453,15 +504,50 @@ async function setupFetchInstalledOllamaModels() {
     if (!resp.ok) return [];
     const data = await resp.json();
     const models = Array.isArray(data.models) ? data.models : [];
-    return models.map(m => String(m.name || m.model || '').toLowerCase());
+    setupOllamaModelDetails = {};
+    return models.map(m => {
+      const name = String(m.name || m.model || '').toLowerCase();
+      const params = m.details?.parameter_size || '';
+      const quant = m.details?.quantization_level || '';
+      if (params || quant) setupOllamaModelDetails[name] = [params, quant].filter(Boolean).join(' ');
+      return name;
+    });
   } catch { return []; }
 }
-
+/** Re-fetch Ollama models and refresh all Ollama aspect dropdowns. */
+async function setupRefreshOllamaModels() {
+  const btn = document.getElementById('setupRefreshOllamaBtn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Refreshing...'; }
+  setupInstalledOllamaModels = await setupFetchInstalledOllamaModels();
+  SETUP_ASPECTS.forEach(aspect => {
+    if (setupGetAspectProvider(aspect) === 'ollama') {
+      setupPopulateModelListForAspect(aspect, 'ollama');
+    }
+  });
+  if (btn) { btn.disabled = false; btn.textContent = 'Refresh Models'; }
+}
+/** Auto-select the best installed model for each Ollama aspect. */
+function setupAutoSelectOllamaModels() {
+  if (setupInstalledOllamaModels.length === 0) return;
+  const best = typeof OLLAMA_RECOMMENDED_STACKS !== 'undefined' ? OLLAMA_RECOMMENDED_STACKS.best : null;
+  SETUP_ASPECTS.forEach(aspect => {
+    if (setupGetAspectProvider(aspect) !== 'ollama') return;
+    const el = document.getElementById('setupAspectModel-' + aspect);
+    if (!el) return;
+    const recommended = best ? (best[aspect] || best.main || '') : '';
+    if (recommended && setupIsModelInstalled(recommended)) {
+      el.value = setupInstalledOllamaModels.find(m => m === recommended.toLowerCase() || m.startsWith(recommended.toLowerCase() + ':')) || setupInstalledOllamaModels[0];
+    } else {
+      el.value = setupInstalledOllamaModels[0];
+    }
+  });
+}
+/** Check whether a model id exists in locally installed models list. */
 function setupIsModelInstalled(modelName) {
   const needle = modelName.toLowerCase();
   return setupInstalledOllamaModels.some(m => m === needle || m.startsWith(needle + ':') || needle.startsWith(m.split(':')[0] + ':'));
 }
-
+/** Apply auto-selected preset based on detected hardware tier. */
 function setupApplyHardwareRecommendation() {
   const tier = setupDetectHardwareTier();
   if (!tier) {
@@ -472,24 +558,31 @@ function setupApplyHardwareRecommendation() {
 
   const hwTier = OLLAMA_HW_TIERS[tier];
   const stack = hwTier.models;
+  const missingModels = [];
 
-  // Apply this tier's models to all aspect fields
   SETUP_ASPECTS.forEach(aspect => {
     const el = document.getElementById('setupAspectModel-' + aspect);
-    if (el) el.value = stack[aspect] || stack.main;
+    if (!el) return;
+    const model = stack[aspect] || stack.main;
+    if (setupIsModelInstalled(model)) {
+      const exact = setupInstalledOllamaModels.find(m => m === model.toLowerCase() || m.startsWith(model.toLowerCase() + ':'));
+      el.value = exact || setupInstalledOllamaModels[0] || '';
+    } else {
+      el.value = setupInstalledOllamaModels[0] || '';
+      if (model) missingModels.push(model);
+    }
   });
 
   const descEl = document.getElementById('setupPresetDesc');
   if (descEl) descEl.textContent = hwTier.label + ' hardware detected — models chosen to fit your system.';
 
-  // Clear preset highlight since this is hardware-based
   ['best', 'fast', 'cheap', 'balanced'].forEach(k => {
     const btn = document.getElementById('setupPreset-' + k);
     if (btn) btn.classList.remove('on');
   });
 
-  // Show model status (installed vs missing)
   setupShowOllamaModelStatus(stack);
+  if (missingModels.length > 0) setupShowRecommendedPullList([...new Set(missingModels)]);
 }
 
 async function setupShowOllamaModelStatus(stack) {
@@ -529,17 +622,15 @@ async function setupShowOllamaModelStatus(stack) {
     listHost.appendChild(row);
   }
 
-  // Populate datalists with installed models for better autocomplete
+  // Refresh all Ollama select dropdowns with latest installed models
   if (setupInstalledOllamaModels.length > 0) {
     SETUP_ASPECTS.forEach(aspect => {
-      const list = document.getElementById('setupModelList-' + aspect);
-      if (!list) return;
-      list.innerHTML = '';
-      setupInstalledOllamaModels.forEach(m => {
-        const opt = document.createElement('option');
-        opt.value = m;
-        list.appendChild(opt);
-      });
+      if (setupGetAspectProvider(aspect) === 'ollama') {
+        const prev = document.getElementById('setupAspectModel-' + aspect)?.value || '';
+        setupPopulateModelListForAspect(aspect, 'ollama');
+        const el = document.getElementById('setupAspectModel-' + aspect);
+        if (el && prev && setupIsModelInstalled(prev)) el.value = prev;
+      }
     });
   }
 }
@@ -565,14 +656,13 @@ async function setupPullOllamaModel(btnEl, modelName) {
     btnEl.style.display = 'none';
     if (statusSpan) { statusSpan.className = 'model-status installed'; statusSpan.innerHTML = '&#10003; Installed'; }
     setupInstalledOllamaModels.push(modelName.toLowerCase());
-    // Re-populate datalists
+    // Re-populate select dropdowns with the newly pulled model
     SETUP_ASPECTS.forEach(aspect => {
-      const list = document.getElementById('setupModelList-' + aspect);
-      if (!list) return;
-      if (![...list.options].some(o => o.value.toLowerCase() === modelName.toLowerCase())) {
-        const opt = document.createElement('option');
-        opt.value = modelName;
-        list.appendChild(opt);
+      if (setupGetAspectProvider(aspect) === 'ollama') {
+        const prev = document.getElementById('setupAspectModel-' + aspect)?.value || '';
+        setupPopulateModelListForAspect(aspect, 'ollama');
+        const el = document.getElementById('setupAspectModel-' + aspect);
+        if (el && prev) el.value = prev;
       }
     });
   } catch (err) {
@@ -581,7 +671,7 @@ async function setupPullOllamaModel(btnEl, modelName) {
     if (statusSpan) statusSpan.textContent = 'Failed: ' + err.message.slice(0, 60);
   }
 }
-
+/** Apply one named setup preset into current aspect controls. */
 function setupApplyPreset(presetKey) {
   const provider = setupDirection === 'hybrid' ? 'openrouter' : setupDirection;
   let stack;
@@ -591,7 +681,6 @@ function setupApplyPreset(presetKey) {
   } else if (provider === 'ollama') {
     stack = (typeof OLLAMA_RECOMMENDED_STACKS !== 'undefined' && OLLAMA_RECOMMENDED_STACKS[presetKey]) || null;
   } else if (provider === 'anthropic') {
-    // Anthropic has limited models; build aspect-appropriate defaults per preset
     const tiers = {
       best: { main: 'claude-opus-4-6', subconscious: 'claude-sonnet-4-6', dream: 'claude-sonnet-4-6', orchestrator: 'claude-sonnet-4-6', nekocore: 'claude-sonnet-4-6' },
       fast: { main: 'claude-sonnet-4-6', subconscious: 'claude-haiku-4-5', dream: 'claude-haiku-4-5', orchestrator: 'claude-sonnet-4-6', nekocore: 'claude-sonnet-4-6' },
@@ -602,12 +691,27 @@ function setupApplyPreset(presetKey) {
   }
 
   if (stack) {
+    const isOllama = provider === 'ollama';
+    const missingModels = [];
     SETUP_ASPECTS.forEach(aspect => {
       const el = document.getElementById('setupAspectModel-' + aspect);
-      // Map nekocore to main's value in the stack since stacks don't have nekocore key
+      if (!el) return;
       const model = stack[aspect] || stack.main || '';
-      if (el) el.value = model;
+      if (isOllama) {
+        if (setupIsModelInstalled(model)) {
+          const exact = setupInstalledOllamaModels.find(m => m === model.toLowerCase() || m.startsWith(model.toLowerCase() + ':'));
+          el.value = exact || setupInstalledOllamaModels[0] || '';
+        } else {
+          el.value = setupInstalledOllamaModels[0] || '';
+          if (model) missingModels.push(model);
+        }
+      } else {
+        el.value = model;
+      }
     });
+    if (isOllama && missingModels.length > 0) {
+      setupShowRecommendedPullList([...new Set(missingModels)]);
+    }
   }
 
   // Highlight active preset button
@@ -624,7 +728,33 @@ function setupApplyPreset(presetKey) {
     descEl.textContent = copy[presetKey] || '';
   }
 }
-
+/** Show panel listing recommended models that need to be pulled. */
+function setupShowRecommendedPullList(missingModels) {
+  let panel = document.getElementById('setupOllamaRecommendedPull');
+  if (!panel) {
+    panel = document.createElement('div');
+    panel.id = 'setupOllamaRecommendedPull';
+    panel.className = 'setup-aspect-card';
+    panel.style.marginBottom = 'var(--space-3)';
+    const hwPanel = document.getElementById('setupHardwarePanel');
+    if (hwPanel) hwPanel.appendChild(panel);
+    else return;
+  }
+  if (missingModels.length === 0) { panel.style.display = 'none'; return; }
+  panel.style.display = 'block';
+  panel.innerHTML = '<div class="setup-aspect-header" style="margin-bottom:var(--space-2)">'
+    + '<span class="setup-aspect-icon">&#128229;</span>'
+    + '<div><div class="setup-aspect-name">Recommended Models to Pull</div>'
+    + '<div class="setup-aspect-desc">These models are recommended for this preset but not installed yet.</div></div></div>';
+  missingModels.forEach(model => {
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.06)';
+    row.innerHTML = '<span style="font-size:13px">' + model + '</span>'
+      + '<button class="btn-pull" onclick="setupPullOllamaModel(this,\'' + model.replace(/'/g, "\\'") + '\')">Pull</button>';
+    panel.appendChild(row);
+  });
+}
+/** Toggle visibility of per-aspect provider selectors in hybrid mode. */
 function setupShowHybridProviderPickers() {
   SETUP_ASPECTS.forEach(aspect => {
     const container = document.querySelector('.setup-aspect-card[data-aspect="' + aspect + '"] .setup-aspect-provider-pick');
@@ -637,7 +767,7 @@ function setupShowHybridProviderPickers() {
       + '</div>';
   });
 }
-
+/** Set provider for one aspect and refresh dependent controls. */
 function setupPickAspectProvider(aspect, provider, btnEl) {
   setupAspectProviders[aspect] = provider;
   // Highlight active button
@@ -650,7 +780,7 @@ function setupPickAspectProvider(aspect, provider, btnEl) {
   const el = document.getElementById('setupAspectModel-' + aspect);
   if (el) el.value = '';
 }
-
+/** Validate pipeline selections and continue to final setup step. */
 function setupAdvanceToFinish() {
   // Validate at least main has a model
   const mainModel = (document.getElementById('setupAspectModel-main')?.value || '').trim();
@@ -668,12 +798,14 @@ function setupAdvanceToFinish() {
   setupRefreshSkillSummary();
   statusEl.textContent = '';
 }
-
+/** Build final setup summary card from current form selections. */
 function setupBuildFinalSummary() {
   const host = document.getElementById('setupFinalSummary');
   if (!host) return;
   let html = '';
   SETUP_ASPECTS.forEach(aspect => {
+    // model()
+    // Purpose: helper wrapper used by this module's main flow.
     const model = (document.getElementById('setupAspectModel-' + aspect)?.value || '').trim();
     const provider = setupGetAspectProvider(aspect);
     const label = SETUP_ASPECT_LABELS[aspect] || aspect;
@@ -687,6 +819,7 @@ function setupBuildFinalSummary() {
 // STEP 3: Skills & Finish
 // ============================================================
 
+/** Render enabled-skill summary for the finish step. */
 function setupRenderSkillSummary(skills) {
   const host = document.getElementById('setupSkillSummary');
   if (!host) return;
@@ -736,6 +869,8 @@ async function setupRefreshSkillSummary() {
 async function setupDisableAllNekoSkills() {
   try {
     const tooling = await setupFetchNekoTooling();
+    // enabled()
+    // Purpose: helper wrapper used by this module's main flow.
     const enabled = (tooling.skills || []).filter((skill) => !!skill.enabled);
     for (const skill of enabled) {
       await fetch('/api/nekocore/tooling/skill-toggle', {
@@ -786,6 +921,7 @@ async function setupEnsureDefaultWorkspace() {
  * Build a config object for an aspect from wizard state.
  * Uses the primary API key from step 1, or per-aspect override if provided.
  */
+/** Build normalized provider config object for one setup aspect. */
 function setupBuildAspectConfig(aspect) {
   const provider = setupGetAspectProvider(aspect);
   const model = (document.getElementById('setupAspectModel-' + aspect)?.value || '').trim();
@@ -930,11 +1066,13 @@ async function setupFinish() {
     lg('err', 'Setup error: ' + err.message);
   }
 }
-
+/** Open hatch flow and continue onboarding after setup submit. */
 function showHatchScreen() {
   openWindow('nekocore');
   const fr = document.getElementById('nekocore-panel-frame');
   if (!fr) return;
+  // dispatch()
+  // Purpose: helper wrapper used by this module's main flow.
   const dispatch = () => {
     try {
       fr.contentWindow && fr.contentWindow.postMessage({ type: 'nk_focus_voice' }, '*');
@@ -953,6 +1091,8 @@ function showHatchScreen() {
 
 async function checkAndPromptUserName() {
   try {
+    // knownAccountName()
+    // Purpose: helper wrapper used by this module's main flow.
     const knownAccountName = (typeof getDisplayName === 'function' && getDisplayName())
       || (typeof getUsername === 'function' && getUsername())
       || '';
@@ -988,7 +1128,7 @@ async function checkAndPromptUserName() {
     return false;
   }
 }
-
+/** Show modal requesting an initial display name. */
 function showUserNameModal() {
   const modal = document.getElementById('userNameModal');
   modal.style.display = 'flex';
@@ -1008,7 +1148,7 @@ function showUserNameModal() {
     };
   }, 300);
 }
-
+/** Close and reset username modal controls. */
 function closeUserNameModal() {
   const modal = document.getElementById('userNameModal');
   modal.classList.remove('open');
@@ -1054,7 +1194,7 @@ async function saveUserName() {
     lg('err', 'Failed to save name: ' + err.message);
   }
 }
-
+/** Skip username capture and continue onboarding. */
 function skipUserName() {
   closeUserNameModal();
   lg('info', 'You can set your name later in settings');

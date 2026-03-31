@@ -1,9 +1,28 @@
+// ── Brain · Chapter Generator ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Used by related flows in its subsystem. Keep call contracts stable during
+// readability-only edits.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // REM System — Chapter Generator
 // Creates synthetic life chapters with themes and emotional arcs.
 // ============================================================
 
 class ChapterGenerator {
+  // constructor()
+  // WHAT THIS DOES: constructor is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call constructor(...) where this helper behavior is needed.
   constructor() {
     // Chapter themes organized by developmental stages
     this.chapterThemes = {
@@ -29,6 +48,10 @@ class ChapterGenerator {
   /**
    * Generate life chapters based on entity identity
    */
+  // generateChapters()
+  // WHAT THIS DOES: generateChapters is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call generateChapters(...) where this helper behavior is needed.
   generateChapters(identity, minChapters = 5, maxChapters = 10) {
     const numChapters = Math.floor(Math.random() * (maxChapters - minChapters + 1)) + minChapters;
     const chapters = [];
@@ -36,6 +59,10 @@ class ChapterGenerator {
     // Select chapter progression based on personality
     const progression = this.selectProgression(identity, numChapters);
 
+    // for()
+    // WHAT THIS DOES: for is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call for(...) where this helper behavior is needed.
     for (let i = 0; i < numChapters; i++) {
       const chapter = this.generateChapter(i, progression[i], identity);
       chapters.push(chapter);

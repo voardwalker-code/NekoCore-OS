@@ -1,10 +1,14 @@
-// ── MA Bridge Service ────────────────────────────────────────────────────────
-// Server-to-server bridge so NekoCore OS entities can call MA's HTTP API
-// for tool execution, model routing, and web search.
+// ── Services · MA Bridge ─────────────────────────────────────────────────────
 //
-//   ensureMARunning()  — boots MA if needed, waits for health
-//   callMA(message)    — POST /api/chat to MA, returns structured result
-//   getMAHealth()      — quick health-check probe
+// HOW THIS BRIDGE WORKS:
+// This module ensures the MA sidecar process is running and provides a thin
+// request/health adapter for server flows that delegate work to MA.
+//
+// WHAT USES THIS:
+//   orchestration flows that need MA startup, chat call, and health checks
+//
+// EXPORTS:
+//   ensureMARunning(), callMA(), getMAHealth()
 // ─────────────────────────────────────────────────────────────────────────────
 
 'use strict';
@@ -14,7 +18,8 @@ const {
   SERVERS,
   startServer,
   healthCheck,
-  readPid
+  readPid,
+  MA_REPO_URL
 } = require('../routes/process-manager-routes');
 
 const MA = SERVERS.ma;
@@ -32,7 +37,7 @@ async function ensureMARunning() {
 
   // Try to start
   const startResult = startServer(MA);
-  if (!startResult.ok) return { ok: false, reason: 'startServer failed' };
+  if (!startResult.ok) return { ok: false, reason: 'startServer failed', repoUrl: MA_REPO_URL };
 
   // Poll until healthy or timeout
   const deadline = Date.now() + BOOT_TIMEOUT_MS;
@@ -42,11 +47,12 @@ async function ensureMARunning() {
     if (h.up) return { ok: true, wasAlready: false, pid: startResult.pid };
   }
 
-  return { ok: false, reason: `MA did not become healthy within ${BOOT_TIMEOUT_MS / 1000}s` };
+  return { ok: false, reason: `MA did not become healthy within ${BOOT_TIMEOUT_MS / 1000}s`, repoUrl: MA_REPO_URL };
 }
 
 // ── callMA ──────────────────────────────────────────────────────────────────
 
+/** Send one chat request to MA service and normalize its response payload. */
 function callMA(message) {
   return new Promise((resolve, reject) => {
     const body = JSON.stringify({ message, history: [] });
@@ -81,12 +87,12 @@ function callMA(message) {
     });
 
     req.on('error', err => {
-      resolve({ ok: false, error: err.message });
+      resolve({ ok: false, error: err.message, repoUrl: MA_REPO_URL });
     });
 
     req.on('timeout', () => {
       req.destroy();
-      resolve({ ok: false, error: `MA did not respond within ${CALL_TIMEOUT_MS / 1000}s` });
+      resolve({ ok: false, error: `MA did not respond within ${CALL_TIMEOUT_MS / 1000}s`, repoUrl: MA_REPO_URL });
     });
 
     req.write(body);
@@ -109,6 +115,7 @@ async function getMAHealth() {
 
 // ── helpers ─────────────────────────────────────────────────────────────────
 
+/** Sleep helper used for MA health polling loop. */
 function _sleep(ms) {
   return new Promise(r => setTimeout(r, ms));
 }

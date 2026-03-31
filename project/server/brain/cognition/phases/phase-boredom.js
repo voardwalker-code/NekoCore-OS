@@ -1,3 +1,18 @@
+// ── Brain · Phase Boredom ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: path, fs. Keep import and
+// call-site contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // Phase: Boredom Check
 // Triggers autonomous self-directed activity when the entity is idle.
 // Runs every cycle if boredom engine is active.
@@ -11,10 +26,22 @@ async function boredomPhase(loop) {
   const activeLLM = loop._callLLM;
   if (!activeLLM) return;
 
+  // boredomRuntime()
+  // Purpose: helper wrapper used by this module's main flow.
+  // boredomRuntime()
+  // WHAT THIS DOES: boredomRuntime is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call boredomRuntime(...) where this helper behavior is needed.
   const boredomRuntime = (loop._aspectConfigs &&
     (loop._aspectConfigs.subconscious || loop._aspectConfigs.main)) || null;
   if (!boredomRuntime) return;
 
+  // boredomCallLLM()
+  // Purpose: helper wrapper used by this module's main flow.
+  // boredomCallLLM()
+  // WHAT THIS DOES: boredomCallLLM is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call boredomCallLLM(...) where this helper behavior is needed.
   const boredomCallLLM = async (prompt) => activeLLM(boredomRuntime, [
     { role: 'system', content: 'You are an autonomous digital entity deciding what to do when bored. Be creative, authentic, and personality-driven. Keep responses concise.' },
     { role: 'user', content: prompt }

@@ -1,9 +1,27 @@
+// ── Brain · Task Frontman ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: ./task-event-bus,
+// ./task-session, ../generation/aspect-prompts. Keep import and call-site
+// contracts aligned during refactors.
+//
+// EXPORTS:
+// Exposed API includes: createTaskFrontman.
+// ─────────────────────────────────────────────────────────────────────────────
+
 'use strict';
 
 const taskEventBus = require('./task-event-bus');
 const taskSession = require('./task-session');
 const { buildTaskFrontmanPrompt } = require('../generation/aspect-prompts');
-
+// createTaskFrontman()
+// WHAT THIS DOES: createTaskFrontman creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call createTaskFrontman(...) before code that depends on this setup.
 function createTaskFrontman(deps = {}) {
   const {
     callLLMWithRuntime,
@@ -90,7 +108,10 @@ function createTaskFrontman(deps = {}) {
       stopSession(entityId, sessionId);
     }
   }
-
+  // startSession()
+  // WHAT THIS DOES: startSession creates or initializes something needed by the flow.
+  // WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+  // HOW TO USE IT: call startSession(...) before code that depends on this setup.
   function startSession(meta) {
     const sessionMeta = {
       ...meta,
@@ -99,6 +120,12 @@ function createTaskFrontman(deps = {}) {
     };
     activeByEntity.set(meta.entityId, sessionMeta);
 
+    // handler()
+    // Purpose: helper wrapper used by this module's main flow.
+    // handler()
+    // WHAT THIS DOES: handler is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call handler(...) where this helper behavior is needed.
     const handler = (event) => {
       Promise.resolve(handleTaskEvent(sessionMeta, event)).catch(() => {});
     };
@@ -107,7 +134,10 @@ function createTaskFrontman(deps = {}) {
     taskEventBus.subscribe(meta.sessionId, handler);
     return sessionMeta;
   }
-
+  // stopSession()
+  // WHAT THIS DOES: stopSession removes, resets, or shuts down existing state.
+  // WHY IT EXISTS: cleanup is explicit so stale state does not leak into new runs.
+  // HOW TO USE IT: call stopSession(...) when you need a safe teardown/reset path.
   function stopSession(entityId, sessionId) {
     const active = activeByEntity.get(entityId);
     if (active && active.sessionId === sessionId) {
@@ -162,7 +192,10 @@ function createTaskFrontman(deps = {}) {
     const msg = await synthesize(sessionMeta.entity, sessionMeta.relationshipSignal, 'Got it. I injected your guidance and adjusted course.');
     return { handled: true, response: msg, action: 'steer' };
   }
-
+  // getActiveSession()
+  // WHAT THIS DOES: getActiveSession reads or finds data and gives it back.
+  // WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+  // HOW TO USE IT: call getActiveSession(...), then use the returned value in your next step.
   function getActiveSession(entityId) {
     return activeByEntity.get(entityId) || null;
   }

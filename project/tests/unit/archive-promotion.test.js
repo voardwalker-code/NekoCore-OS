@@ -1,3 +1,19 @@
+// ── Tests · Archive Promotion.Test ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This test file validates behavior and guards against regressions in its
+// target subsystem.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: node:test,
+// node:assert/strict, fs, path, os. Keep import and call-site contracts
+// aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 'use strict';
 /**
  * tests/unit/archive-promotion.test.js
@@ -87,6 +103,10 @@ test('promotion: daysDiff returns 0 for invalid date string', () => {
 
 // ── 3 & 4. runPromotionPass — integration ─────────────────────────────────────
 
+// makeTestEpisodic()
+// WHAT THIS DOES: makeTestEpisodic creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call makeTestEpisodic(...) before code that depends on this setup.
 function makeTestEpisodic(entityId, memId, decayValue, ageDays = 91, accessCount = 0) {
   const ep       = require('../../server/entityPaths');
   const memdir   = path.join(ep.ENTITIES_DIR, `entity_${entityId}`, 'memories', 'episodic', memId);
@@ -110,7 +130,10 @@ function makeTestEpisodic(entityId, memId, decayValue, ageDays = 91, accessCount
 
   return { created, log };
 }
-
+// makeStubIndexCache()
+// WHAT THIS DOES: makeStubIndexCache creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call makeStubIndexCache(...) before code that depends on this setup.
 function makeStubIndexCache(entityId) {
   // Minimal stub of MemoryIndexCache
   const ep = require('../../server/entityPaths');

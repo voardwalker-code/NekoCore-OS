@@ -1,3 +1,19 @@
+// ── Tests · Installer Cli.Test ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This test file validates behavior and guards against regressions in its
+// target subsystem.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: node:test,
+// node:assert/strict, node:fs, node:os, node:path. Keep import and call-site
+// contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 'use strict';
 
 const { test } = require('node:test');
@@ -8,7 +24,10 @@ const path = require('node:path');
 
 const { runInstallPlan, runUninstallPlan } = require('../../server/tools/installer-cli');
 const { OPEN_MARKER, CLOSE_MARKER } = require('../../server/tools/installer-marker-engine');
-
+// tmpDir()
+// WHAT THIS DOES: tmpDir is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call tmpDir(...) where this helper behavior is needed.
 function tmpDir() {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'nk-installer-cli-'));
   return {
@@ -16,20 +35,29 @@ function tmpDir() {
     cleanup: () => fs.rmSync(dir, { recursive: true, force: true })
   };
 }
-
+// writeContract()
+// WHAT THIS DOES: writeContract changes saved state or updates data.
+// WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+// HOW TO USE IT: call writeContract(...) with the new values you want to persist.
 function writeContract(root, contractObj, name = 'contract.json') {
   const p = path.join(root, name);
   fs.writeFileSync(p, JSON.stringify(contractObj, null, 2), 'utf8');
   return p;
 }
-
+// writeFile()
+// WHAT THIS DOES: writeFile changes saved state or updates data.
+// WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+// HOW TO USE IT: call writeFile(...) with the new values you want to persist.
 function writeFile(root, rel, content) {
   const abs = path.join(root, rel);
   fs.mkdirSync(path.dirname(abs), { recursive: true });
   fs.writeFileSync(abs, content, 'utf8');
   return abs;
 }
-
+// markerRegion()
+// WHAT THIS DOES: markerRegion is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call markerRegion(...) where this helper behavior is needed.
 function markerRegion() {
   return [OPEN_MARKER, '', CLOSE_MARKER].join('\n');
 }

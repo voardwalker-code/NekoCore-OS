@@ -1,3 +1,18 @@
+// ── Tools · Migrate Memory Agents ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This module belongs to the NekoCore OS codebase and provides focused
+// subsystem behavior.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: fs, path, ../entityPaths,
+// ../contracts/memory-schema, ../brain/memory/shape-classifier. Keep import
+// and call-site contracts aligned during refactors.
+//
+// EXPORTS:
+// Exposed API includes: main, migrateEntity, scanMemories, buildMiniIndex.
+// ─────────────────────────────────────────────────────────────────────────────
+
 'use strict';
 /**
  * server/tools/migrate-memory-agents.js
@@ -27,6 +42,10 @@ const { normalizeTopics } = require('../brain/utils/topic-utils');
 
 // ── Arg parsing ─────────────────────────────────────────────
 
+// parseArgs()
+// WHAT THIS DOES: parseArgs reshapes data from one form into another.
+// WHY IT EXISTS: conversion rules live here so the same transformation is reused.
+// HOW TO USE IT: pass input data into parseArgs(...) and use the transformed output.
 function parseArgs(argv) {
   const args = { entity: null, apply: false, dryRun: false };
   for (let i = 2; i < argv.length; i++) {
@@ -47,6 +66,10 @@ function parseArgs(argv) {
 
 // ── Helpers ─────────────────────────────────────────────────
 
+// listEntityIds()
+// WHAT THIS DOES: listEntityIds is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call listEntityIds(...) where this helper behavior is needed.
 function listEntityIds(baseDir) {
   if (!fs.existsSync(baseDir)) return [];
   return fs.readdirSync(baseDir)
@@ -56,11 +79,13 @@ function listEntityIds(baseDir) {
     })
     .map(name => name.replace(/^entity_/, ''));
 }
-
+// safeReadJson()
+// WHAT THIS DOES: safeReadJson is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call safeReadJson(...) where this helper behavior is needed.
 function safeReadJson(filePath) {
   try { return JSON.parse(fs.readFileSync(filePath, 'utf8')); } catch { return null; }
 }
-
 function safeReadText(filePath) {
   try { return fs.readFileSync(filePath, 'utf8'); } catch { return ''; }
 }
@@ -68,6 +93,10 @@ function safeReadText(filePath) {
 /**
  * Scan an entity's episodic + semantic directories, return all memory entries.
  */
+// scanMemories()
+// WHAT THIS DOES: scanMemories is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call scanMemories(...) where this helper behavior is needed.
 function scanMemories(entityId) {
   const entries = [];
   const dirs = [
@@ -94,6 +123,10 @@ function scanMemories(entityId) {
  * Build a minimal in-memory index from scanned memories for edge seeding.
  * Returns an object that duck-types enough of MemoryIndexCache for seedEdges().
  */
+// buildMiniIndex()
+// WHAT THIS DOES: buildMiniIndex creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call buildMiniIndex(...) before code that depends on this setup.
 function buildMiniIndex(memoryMetas) {
   const memoryIndex = {};
   const recency = [];
@@ -115,6 +148,10 @@ function buildMiniIndex(memoryMetas) {
 /**
  * Migrate a single entity's memories.
  */
+// migrateEntity()
+// WHAT THIS DOES: migrateEntity is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call migrateEntity(...) where this helper behavior is needed.
 function migrateEntity(entityId, apply) {
   const stats = {
     scanned: 0,
@@ -201,6 +238,10 @@ function migrateEntity(entityId, apply) {
 
 // ── Main ────────────────────────────────────────────────────
 
+// main()
+// WHAT THIS DOES: main is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call main(...) where this helper behavior is needed.
 function main(argv) {
   const args = parseArgs(argv || process.argv);
   const mode = args.apply ? 'APPLY' : 'DRY-RUN';

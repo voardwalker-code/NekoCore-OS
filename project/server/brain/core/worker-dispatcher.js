@@ -1,3 +1,18 @@
+// ── Brain · Worker Dispatcher ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include:
+// ../../contracts/worker-output-contract, ./orchestration-policy. Keep
+// import and call-site contracts aligned during refactors.
+//
+// EXPORTS:
+// Exposed API includes: invokeWorker.
+// ─────────────────────────────────────────────────────────────────────────────
+
 'use strict';
 /**
  * server/brain/core/worker-dispatcher.js
@@ -31,6 +46,10 @@ const SUBSYSTEM_SYSTEM_PROMPT =
 // Helpers
 // ---------------------------------------------------------------------------
 
+// buildWorkerMessage()
+// WHAT THIS DOES: buildWorkerMessage creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call buildWorkerMessage(...) before code that depends on this setup.
 function buildWorkerMessage(input) {
   const parts = [
     `Aspect role: ${String(input.role || 'contributor')}`,
@@ -41,7 +60,10 @@ function buildWorkerMessage(input) {
   }
   return parts.join('\n');
 }
-
+// tryParseJSON()
+// WHAT THIS DOES: tryParseJSON is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call tryParseJSON(...) where this helper behavior is needed.
 function tryParseJSON(text) {
   const s = String(text || '').trim();
   // Strip optional markdown code fence
@@ -57,7 +79,10 @@ function tryParseJSON(text) {
     return null;
   }
 }
-
+// emitBus()
+// WHAT THIS DOES: emitBus is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call emitBus(...) where this helper behavior is needed.
 function emitBus(bus, eventType, payload) {
   if (!bus || typeof bus.emit !== 'function') return;
   try {
@@ -124,6 +149,10 @@ async function invokeWorker(workerBinding, input, callLLM, opts = {}) {
   }
 
   // Extract text
+  // text()
+  // WHAT THIS DOES: text is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call text(...) where this helper behavior is needed.
   const text = (rawResult && typeof rawResult === 'object' && rawResult.content !== undefined)
     ? rawResult.content
     : rawResult;

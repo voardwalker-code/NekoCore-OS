@@ -1,3 +1,17 @@
+// ── Brain · Context Consolidator ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: fs, path. Keep import and
+// call-site contracts aligned during refactors.
+//
+// EXPORTS:
+// Exposed API includes: buildConsolidatedContext, loadConsolidatedContext.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // REM System — Context Consolidator
 //
@@ -19,6 +33,10 @@ const path = require('path');
  * @param {Object} entityPaths - The entityPaths module
  * @returns {{ ok: boolean, path: string, sections: number }}
  */
+// buildConsolidatedContext()
+// WHAT THIS DOES: buildConsolidatedContext creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call buildConsolidatedContext(...) before code that depends on this setup.
 function buildConsolidatedContext(entityId, entityPaths) {
   if (!entityId || !entityPaths) return { ok: false, error: 'missing params' };
 
@@ -244,6 +262,10 @@ function buildConsolidatedContext(entityId, entityPaths) {
  * Load the consolidated context for an entity.
  * Returns the text content or null.
  */
+// loadConsolidatedContext()
+// WHAT THIS DOES: loadConsolidatedContext reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call loadConsolidatedContext(...), then use the returned value in your next step.
 function loadConsolidatedContext(entityId, entityPaths) {
   if (!entityId || !entityPaths) return null;
   const memRoot = entityPaths.getMemoryRoot(entityId);

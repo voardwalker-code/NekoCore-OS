@@ -1,3 +1,17 @@
+// ── Services · Client System Apps Adapter ───────────────────────────────────
+//
+// HOW THE SYSTEM APPS ADAPTER WORKS:
+// This file is a compatibility bridge. It reads `system-apps.json` and maps
+// that data into the legacy `WINDOW_APPS` shape so existing shell code keeps
+// working while app metadata is managed in one modern manifest.
+//
+// WHAT USES THIS:
+//   client shell/app launcher code — applies manifest metadata to legacy app objects
+//
+// EXPORTS:
+//   SystemAppsAdapter API on `window` (and CommonJS when available)
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // NekoCore OS - System Apps Compatibility Adapter
 // B-2 compatibility layer: reads system-apps.json and overlays
@@ -8,9 +22,14 @@
 (function (global) {
   'use strict';
 
+  // ── Constants / State ─────────────────────────────────────────────────────
+
   var MANIFEST_PATH = 'js/apps/system-apps.json';
   var cachedManifest = null;
 
+  // ── Helpers ───────────────────────────────────────────────────────────────
+
+  /** Parse JSON safely, stripping UTF-8 BOM when present. */
   function safeParseJson(raw) {
     if (typeof raw !== 'string') return null;
     try {
@@ -19,7 +38,7 @@
       return null;
     }
   }
-
+  /** Synchronously load manifest text from disk/server path. */
   function syncGetText(path) {
     try {
       if (typeof XMLHttpRequest === 'undefined') return null;
@@ -34,13 +53,13 @@
     }
     return null;
   }
-
+  /** Validate the basic manifest structure expected by this adapter. */
   function normalizeManifest(rawManifest) {
     if (!rawManifest || typeof rawManifest !== 'object') return null;
     if (!Array.isArray(rawManifest.apps)) return null;
     return rawManifest;
   }
-
+  /** Build a map of app entries by manifest app ID. */
   function buildAppMap(manifest) {
     var byId = new Map();
     manifest.apps.forEach(function (entry) {
@@ -51,7 +70,7 @@
     });
     return byId;
   }
-
+  /** Decide whether manifest icon should override legacy icon. */
   function shouldUseSystemIcon(iconValue) {
     var icon = String(iconValue || '').trim();
     if (!icon) return false;
@@ -59,7 +78,9 @@
     if (/^WINDOW_APPS:/.test(icon)) return false;
     return true;
   }
+  // ── Core Logic ────────────────────────────────────────────────────────────
 
+  /** Apply manifest metadata onto existing legacy app entries. */
   function applyCompatToLegacy(windowApps, categoryByTab, manifest) {
     if (!Array.isArray(windowApps)) return { ok: false, reason: 'window-apps-missing' };
     var normalized = normalizeManifest(manifest);
@@ -110,7 +131,7 @@
       path: MANIFEST_PATH
     };
   }
-
+  /** Load and cache manifest synchronously. */
   function loadManifestSync() {
     if (cachedManifest) return cachedManifest;
     var raw = syncGetText(MANIFEST_PATH);
@@ -119,7 +140,7 @@
     cachedManifest = normalizeManifest(parsed);
     return cachedManifest;
   }
-
+  /** Convert one manifest app entry to legacy window shape. */
   function toLegacyWindowShape(entry, legacyMap) {
     var id = String(entry && entry.id || '').trim();
     if (!id) return null;
@@ -133,7 +154,7 @@
       h: entry && entry.defaultWindow && Number.isFinite(Number(entry.defaultWindow.height)) ? Number(entry.defaultWindow.height) : (legacy && Number(legacy.h)) || 640
     };
   }
-
+  /** Resolve final window app list, preferring manifest when available. */
   function resolveWindowApps(windowApps, options) {
     if (!Array.isArray(windowApps)) return [];
     var opts = options && typeof options === 'object' ? options : {};
@@ -158,7 +179,7 @@
     if (!resolved.length) return windowApps;
     return resolved;
   }
-
+  /** Entry point to apply manifest compatibility updates. */
   function applyCompat(options) {
     var opts = options && typeof options === 'object' ? options : {};
     var manifest = opts.manifest || loadManifestSync();

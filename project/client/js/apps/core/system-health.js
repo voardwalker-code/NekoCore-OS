@@ -1,3 +1,17 @@
+// ── Services · Client System Health ─────────────────────────────────────────
+//
+// HOW SYSTEM HEALTH ACTIONS WORK:
+// This module powers maintenance buttons in the settings UI. It calls server
+// endpoints for memory self-heal, stats, trace rebuild, and backup/restore,
+// then writes human-readable status updates to the page and chat log.
+//
+// WHAT USES THIS:
+//   Settings/System Health tab buttons — invoke these functions via onclick handlers
+//
+// EXPORTS:
+//   global functions in browser scope (button-driven side-effect module)
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // NekoCore OS — System Health & Maintenance Module
 // Extracted from app.js — P3-S15
@@ -10,6 +24,7 @@
 //   chat.js — addChatBubble
 // ============================================================
 
+/** Trigger memory log repair workflow and update status UI. */
 async function repairMemoryLogs() {
   const btn = event.target;
   btn.disabled = true;
@@ -39,6 +54,7 @@ async function repairMemoryLogs() {
   }
 }
 
+/** Show current memory statistics in chat log panel. */
 async function showMemoryStats() {
   try {
     const resp = await fetch('/api/memory-stats');
@@ -56,6 +72,7 @@ async function showMemoryStats() {
   }
 }
 
+/** Rebuild semantic trace graph through server endpoint. */
 async function rebuildTraceGraph() {
   const btn = event.target;
   btn.disabled = true;
@@ -180,7 +197,7 @@ async function runSystemRestore(buttonEl) {
     }
   }
 }
-
+/** Format byte count using B/KB/MB/GB units. */
 function formatBytes(bytes) {
   if (bytes === 0) return '0 B';
   const k = 1024;

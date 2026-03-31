@@ -1,3 +1,19 @@
+// ── Tests · Nekocore Visualizer Memory Regression.Test ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This test file validates behavior and guards against regressions in its
+// target subsystem.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: node:test,
+// node:assert/strict, node:fs, node:path, node:zlib. Keep import and
+// call-site contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 'use strict';
 
 const { test, before, after } = require('node:test');
@@ -23,11 +39,13 @@ after(() => {
 });
 const createMemoryRoutes = require('../../server/routes/memory-routes');
 const createCognitiveRoutes = require('../../server/routes/cognitive-routes');
-
+// makeEntityId()
+// WHAT THIS DOES: makeEntityId creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call makeEntityId(...) before code that depends on this setup.
 function makeEntityId(prefix) {
   return `${prefix}_${Date.now()}_${Math.random().toString(16).slice(2, 8)}`;
 }
-
 function createTestEntity(entityId) {
   const root = entityPaths.getEntityRoot(entityId);
   fs.mkdirSync(path.join(root, 'index'), { recursive: true });
@@ -38,11 +56,13 @@ function createTestEntity(entityId) {
   fs.writeFileSync(path.join(root, 'entity.json'), JSON.stringify({ id: entityId, name: entityId }, null, 2), 'utf8');
   return root;
 }
-
+// removeTestEntity()
+// WHAT THIS DOES: removeTestEntity removes, resets, or shuts down existing state.
+// WHY IT EXISTS: cleanup is explicit so stale state does not leak into new runs.
+// HOW TO USE IT: call removeTestEntity(...) when you need a safe teardown/reset path.
 function removeTestEntity(entityId) {
   fs.rmSync(entityPaths.getEntityRoot(entityId), { recursive: true, force: true });
 }
-
 function createLegacyMemory2Record(entityId, memId) {
   const memoryDir = path.join(entityPaths.getMemoryRoot(entityId), 'Memory2', memId);
   fs.mkdirSync(memoryDir, { recursive: true });
@@ -61,7 +81,10 @@ function createLegacyMemory2Record(entityId, memId) {
     zlib.gzipSync(JSON.stringify({ text: 'Legacy Memory2 payload for visualizer regression coverage.' }))
   );
 }
-
+// createArchiveDocRecord()
+// WHAT THIS DOES: createArchiveDocRecord creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call createArchiveDocRecord(...) before code that depends on this setup.
 function createArchiveDocRecord(entityId, memId) {
   const memoryDir = path.join(entityPaths.getMemoryRoot(entityId), 'archive', 'docs', memId);
   fs.mkdirSync(memoryDir, { recursive: true });
@@ -81,7 +104,10 @@ function createArchiveDocRecord(entityId, memId) {
     zlib.gzipSync(JSON.stringify({ text: 'Archived system document payload for NekoCore visualizer coverage.' }))
   );
 }
-
+// createJsonResponseCapture()
+// WHAT THIS DOES: createJsonResponseCapture creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call createJsonResponseCapture(...) before code that depends on this setup.
 function createJsonResponseCapture() {
   return {
     statusCode: null,
@@ -109,7 +135,10 @@ async function dispatchJson(dispatch, pathname, entityId, query = '') {
   assert.equal(res.statusCode, 200, `expected 200 response for ${pathname} on ${entityId}`);
   return JSON.parse(res.body);
 }
-
+// createMemoryRoutesContext()
+// WHAT THIS DOES: createMemoryRoutesContext creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call createMemoryRoutesContext(...) before code that depends on this setup.
 function createMemoryRoutesContext(entityId) {
   return {
     fs,
@@ -123,7 +152,10 @@ function createMemoryRoutesContext(entityId) {
     MEM_DIR: path.join(__dirname, '..', '..', 'memories')
   };
 }
-
+// createCognitiveRoutesContext()
+// WHAT THIS DOES: createCognitiveRoutesContext creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call createCognitiveRoutesContext(...) before code that depends on this setup.
 function createCognitiveRoutesContext(entityId) {
   return {
     fs,

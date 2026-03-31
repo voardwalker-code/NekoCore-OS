@@ -1,3 +1,22 @@
+// ── Brain · Orchestration Policy ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Used by related flows in its subsystem. Keep call contracts stable during
+// readability-only edits.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
+// buildTurnPolicy()
+// WHAT THIS DOES: buildTurnPolicy creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call buildTurnPolicy(...) before code that depends on this setup.
 function buildTurnPolicy(turnSignals = {}, tokenUsageSoFar = {}, config = {}) {
   const maxPromptTokens = Number.isFinite(config.maxPromptTokens) ? config.maxPromptTokens : 14000;
   const maxTotalTokens = Number.isFinite(config.maxTotalTokens) ? config.maxTotalTokens : 18000;
@@ -14,7 +33,10 @@ function buildTurnPolicy(turnSignals = {}, tokenUsageSoFar = {}, config = {}) {
       : ['high_stakes', 'safety', 'critical']
   };
 }
-
+// shouldEscalateO2()
+// WHAT THIS DOES: shouldEscalateO2 answers a yes/no rule check.
+// WHY IT EXISTS: guard checks are kept readable and reusable in one place.
+// HOW TO USE IT: call shouldEscalateO2(...) and branch logic based on true/false.
 function shouldEscalateO2(inputs = {}) {
   const turnSignals = inputs.turnSignals || {};
   const policy = inputs.policy || {};
@@ -41,12 +63,18 @@ function shouldEscalateO2(inputs = {}) {
 
   return { escalate: false, reason: 'none' };
 }
-
+// chooseO2Runtime()
+// WHAT THIS DOES: chooseO2Runtime is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call chooseO2Runtime(...) where this helper behavior is needed.
 function chooseO2Runtime(defaultRuntime, strongRuntime, decision) {
   if (decision && decision.escalate && strongRuntime) return strongRuntime;
   return defaultRuntime;
 }
-
+// enforceBudgetGuard()
+// WHAT THIS DOES: enforceBudgetGuard is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call enforceBudgetGuard(...) where this helper behavior is needed.
 function enforceBudgetGuard(currentUsage = {}, budgetPolicy = {}) {
   const prompt = Number(currentUsage.prompt_tokens || 0);
   const total = Number(currentUsage.total_tokens || 0);

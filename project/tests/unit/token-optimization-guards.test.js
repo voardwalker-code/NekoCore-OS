@@ -1,3 +1,21 @@
+// ── Tests · Token Optimization Guards.Test ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This test file validates behavior and guards against regressions in its
+// target subsystem.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include:
+// ../../server/brain/utils/rake, ../../server/brain/utils/bm25,
+// ../../server/brain/utils/yake,
+// ../../server/brain/utils/memory-encoder-nlp. Keep import and call-site
+// contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // Token Optimization — Guard Tests (Slice T1-0)
 // Locks current behavior of memory encoding, reranker, and stubs
 // for YAKE extractor + NLP encoder that will be created in T1-1/T1-2.
@@ -22,6 +40,10 @@ const PIPELINE_FILE     = resolve('server/services/chat-pipeline.js');
 
 // ── Helper ────────────────────────────────────────────────────────────────────
 
+// readSafe()
+// WHAT THIS DOES: readSafe reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call readSafe(...), then use the returned value in your next step.
 function readSafe(filePath) {
   return existsSync(filePath) ? readFileSync(filePath, 'utf8') : '';
 }
@@ -540,6 +562,10 @@ const ORCHESTRATOR_SRC = readSafe(ORCHESTRATOR_FILE);
 describe('Subconscious context pruning (T3-0)', () => {
   test('memory summaries capped at 150 chars (not 280)', () => {
     // All .slice(0, 280) should have been replaced with .slice(0, 150)
+    // matches280()
+    // WHAT THIS DOES: matches280 is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call matches280(...) where this helper behavior is needed.
     const matches280 = (MEM_RETRIEVAL_SRC.match(/\.slice\(0,\s*280\)/g) || []).length;
     assert.equal(matches280, 0, 'no .slice(0, 280) should remain for summaries');
     const matches150 = (MEM_RETRIEVAL_SRC.match(/\.slice\(0,\s*150\)/g) || []).length;

@@ -1,3 +1,18 @@
+// ── Client · Sleep ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This client module drives browser-side behavior and state updates for UI
+// features.
+//
+// WHAT USES THIS:
+// Used by related flows in its subsystem. Keep call contracts stable during
+// readability-only edits.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // REM System v0.6.0 — Sleep & Subconscious Module
 // Handles: Subconscious agent auto-archiving, sleep cycle
@@ -7,12 +22,19 @@
 // ============================================================
 // SUBCONSCIOUS AGENT
 // ============================================================
+// toggleSubconscious()
+// WHAT THIS DOES: toggleSubconscious is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call toggleSubconscious(...) where this helper behavior is needed.
 function toggleSubconscious() {
   subEnabled = !subEnabled;
   document.getElementById('subToggle').classList.toggle('on', subEnabled);
   lg('info', 'Subconscious agent ' + (subEnabled ? 'enabled' : 'disabled'));
 }
-
+// toggleThoughtsInChat()
+// WHAT THIS DOES: toggleThoughtsInChat is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call toggleThoughtsInChat(...) where this helper behavior is needed.
 function toggleThoughtsInChat() {
   showThoughtsInChat = !showThoughtsInChat;
   localStorage.setItem('showThoughtsInChat', showThoughtsInChat ? 'true' : 'false');
@@ -20,21 +42,30 @@ function toggleThoughtsInChat() {
   lg('info', 'Thoughts in chat ' + (showThoughtsInChat ? 'enabled' : 'disabled'));
 }
 
+// updateThresholdDisplay()
+// WHAT THIS DOES: updateThresholdDisplay changes saved state or updates data.
+// WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+// HOW TO USE IT: call updateThresholdDisplay(...) with the new values you want to persist.
 function updateThresholdDisplay() {
   document.getElementById('subThresholdVal').textContent = document.getElementById('subThreshold').value + 'K';
 }
-
 function getSubThreshold() {
   return parseInt(document.getElementById('subThreshold').value) * 1000;
 }
-
+// getChatCharCount()
+// WHAT THIS DOES: getChatCharCount reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call getChatCharCount(...), then use the returned value in your next step.
 function getChatCharCount() {
   return chatHistory.filter(m => m.role !== 'system').reduce((sum, m) => {
     const content = typeof m.content === 'string' ? m.content : '';
     return sum + content.length;
   }, 0);
 }
-
+// updateSubIndicator()
+// WHAT THIS DOES: updateSubIndicator changes saved state or updates data.
+// WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+// HOW TO USE IT: call updateSubIndicator(...) with the new values you want to persist.
 function updateSubIndicator() {
   const threshold = getSubThreshold();
   const current = getChatCharCount();
@@ -67,6 +98,10 @@ async function subconsciousCheck() {
 // ============================================================
 // SLEEP SYSTEM
 // ============================================================
+// setSleepUI()
+// WHAT THIS DOES: setSleepUI changes saved state or updates data.
+// WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+// HOW TO USE IT: call setSleepUI(...) with the new values you want to persist.
 function setSleepUI(phase, status, pct) {
   document.getElementById('sleepPhase').textContent = phase;
   document.getElementById('sleepStatus').textContent = status;
@@ -85,7 +120,10 @@ async function loadEntityProviderConfigClient(provider) {
     return null;
   }
 }
-
+// normalizeDreamRuntimeConfig()
+// WHAT THIS DOES: normalizeDreamRuntimeConfig reshapes data from one form into another.
+// WHY IT EXISTS: conversion rules live here so the same transformation is reused.
+// HOW TO USE IT: pass input data into normalizeDreamRuntimeConfig(...) and use the transformed output.
 function normalizeDreamRuntimeConfig(rawConfig) {
   if (!rawConfig) return null;
   if (rawConfig.endpoint && rawConfig.key && rawConfig.model) {
@@ -105,15 +143,30 @@ function normalizeDreamRuntimeConfig(rawConfig) {
   }
   return null;
 }
-
+// getDreamRuntimeConfigFromInputs()
+// WHAT THIS DOES: getDreamRuntimeConfigFromInputs reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call getDreamRuntimeConfigFromInputs(...), then use the returned value in your next step.
 function getDreamRuntimeConfigFromInputs() {
   const endpoint = (document.getElementById('dreamApiEndpoint')?.value || '').trim();
   const key = (document.getElementById('dreamApiKey')?.value || '').trim();
+  // model()
+  // Purpose: helper wrapper used by this module's main flow.
+  // model()
+  // WHAT THIS DOES: model is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call model(...) where this helper behavior is needed.
   const model = (document.getElementById('dreamModel')?.value || '').trim();
   if (endpoint && key && model) {
     return { type: 'openrouter', endpoint, apiKey: key, model };
   }
 
+  // ollamaUrl()
+  // Purpose: helper wrapper used by this module's main flow.
+  // ollamaUrl()
+  // WHAT THIS DOES: ollamaUrl is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call ollamaUrl(...) where this helper behavior is needed.
   const ollamaUrl = (document.getElementById('ollamaUrl-dreams')?.value || '').trim();
   const ollamaModel = (document.getElementById('ollamaModel-dreams')?.value || '').trim();
   if (ollamaUrl && ollamaModel) {
@@ -363,6 +416,12 @@ ${archiveSummaries.slice(0, 12000)}`;
     typingContent.innerHTML = '<span class="typing"></span><span class="typing" style="animation-delay:.2s;margin-left:4px"></span><span class="typing" style="animation-delay:.4s;margin-left:4px"></span>';
 
     const wakeResult = await callChatLLM();
+    // wakeText()
+    // Purpose: helper wrapper used by this module's main flow.
+    // wakeText()
+    // WHAT THIS DOES: wakeText is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call wakeText(...) where this helper behavior is needed.
     const wakeText = (typeof wakeResult === 'string') ? wakeResult : (wakeResult.response || String(wakeResult));
     typingContent.textContent = wakeText;
     chatHistory.push({ role: 'assistant', content: wakeText });

@@ -1,4 +1,18 @@
 #!/usr/bin/env node
+// ── Scripts · Health Scan ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This script automates maintenance, generation, validation, or local
+// development workflows.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: fs, path, vm,
+// ./relative-path. Keep import and call-site contracts aligned during
+// refactors.
+//
+// EXPORTS:
+// Exposed API includes: CORE_REGISTRY, runScan.
+// ─────────────────────────────────────────────────────────────────────────────
 // ============================================================
 // NekoCore OS — System Health Scanner
 //
@@ -414,11 +428,13 @@ const CORE_REGISTRY = {
 
 const issues = [];
 const fileStats = [];
-
+// addIssue()
+// WHAT THIS DOES: addIssue is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call addIssue(...) where this helper behavior is needed.
 function addIssue(severity, filePath, message, detail) {
   issues.push({ severity, file: filePath, message, detail: detail || '' });
 }
-
 function checkFileExists(relPath, description) {
   const abs = path.join(PROJECT_ROOT, relPath);
   const stat = { file: relPath, description, exists: false, size: 0, issues: [] };
@@ -451,7 +467,10 @@ function checkFileExists(relPath, description) {
   fileStats.push(stat);
   return stat;
 }
-
+// checkJsSyntax()
+// WHAT THIS DOES: checkJsSyntax answers a yes/no rule check.
+// WHY IT EXISTS: guard checks are kept readable and reusable in one place.
+// HOW TO USE IT: call checkJsSyntax(...) and branch logic based on true/false.
 function checkJsSyntax(relPath) {
   const abs = path.join(PROJECT_ROOT, relPath);
   if (!fs.existsSync(abs)) return;
@@ -471,7 +490,10 @@ function checkJsSyntax(relPath) {
     addIssue('ERROR', relPath, `JS syntax error at line ${lineNum}`, e.message);
   }
 }
-
+// checkJsRequires()
+// WHAT THIS DOES: checkJsRequires answers a yes/no rule check.
+// WHY IT EXISTS: guard checks are kept readable and reusable in one place.
+// HOW TO USE IT: call checkJsRequires(...) and branch logic based on true/false.
 function checkJsRequires(relPath) {
   const abs = path.join(PROJECT_ROOT, relPath);
   if (!fs.existsSync(abs)) return;
@@ -504,7 +526,10 @@ function checkJsRequires(relPath) {
     }
   }
 }
-
+// checkJsonSyntax()
+// WHAT THIS DOES: checkJsonSyntax answers a yes/no rule check.
+// WHY IT EXISTS: guard checks are kept readable and reusable in one place.
+// HOW TO USE IT: call checkJsonSyntax(...) and branch logic based on true/false.
 function checkJsonSyntax(relPath) {
   const abs = path.join(PROJECT_ROOT, relPath);
   if (!fs.existsSync(abs)) return;
@@ -528,7 +553,10 @@ function checkJsonSyntax(relPath) {
     addIssue('ERROR', relPath, 'JSON parse error', e.message);
   }
 }
-
+// checkHtmlStructure()
+// WHAT THIS DOES: checkHtmlStructure answers a yes/no rule check.
+// WHY IT EXISTS: guard checks are kept readable and reusable in one place.
+// HOW TO USE IT: call checkHtmlStructure(...) and branch logic based on true/false.
 function checkHtmlStructure(relPath) {
   const abs = path.join(PROJECT_ROOT, relPath);
   if (!fs.existsSync(abs)) return;
@@ -541,19 +569,32 @@ function checkHtmlStructure(relPath) {
   if (content.length === 0) return;
 
   // Check for unclosed script/style tags
+  // scriptOpens()
+  // WHAT THIS DOES: scriptOpens is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call scriptOpens(...) where this helper behavior is needed.
   const scriptOpens = (content.match(/<script\b/gi) || []).length;
   const scriptCloses = (content.match(/<\/script>/gi) || []).length;
   if (scriptOpens !== scriptCloses) {
     addIssue('WARNING', relPath, `Mismatched <script> tags: ${scriptOpens} opens, ${scriptCloses} closes`);
   }
 
+  // styleOpens()
+  // Purpose: helper wrapper used by this module's main flow.
+  // styleOpens()
+  // WHAT THIS DOES: styleOpens is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call styleOpens(...) where this helper behavior is needed.
   const styleOpens = (content.match(/<style\b/gi) || []).length;
   const styleCloses = (content.match(/<\/style>/gi) || []).length;
   if (styleOpens !== styleCloses) {
     addIssue('WARNING', relPath, `Mismatched <style> tags: ${styleOpens} opens, ${styleCloses} closes`);
   }
 }
-
+// checkCssBraces()
+// WHAT THIS DOES: checkCssBraces answers a yes/no rule check.
+// WHY IT EXISTS: guard checks are kept readable and reusable in one place.
+// HOW TO USE IT: call checkCssBraces(...) and branch logic based on true/false.
 function checkCssBraces(relPath) {
   const abs = path.join(PROJECT_ROOT, relPath);
   if (!fs.existsSync(abs)) return;
@@ -570,6 +611,12 @@ function checkCssBraces(relPath) {
     .replace(/\/\*[\s\S]*?\*\//g, '')
     .replace(/\/\/.*/g, '');
 
+  // opens()
+  // Purpose: helper wrapper used by this module's main flow.
+  // opens()
+  // WHAT THIS DOES: opens is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call opens(...) where this helper behavior is needed.
   const opens = (stripped.match(/{/g) || []).length;
   const closes = (stripped.match(/}/g) || []).length;
   if (opens !== closes) {
@@ -579,6 +626,10 @@ function checkCssBraces(relPath) {
 
 // ========================= MAIN SCAN =========================
 
+// runScan()
+// WHAT THIS DOES: runScan is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call runScan(...) where this helper behavior is needed.
 function runScan() {
   const startTime = Date.now();
   console.log('NekoCore OS — System Health Scanner');

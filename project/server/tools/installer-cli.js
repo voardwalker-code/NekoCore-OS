@@ -1,10 +1,28 @@
 #!/usr/bin/env node
+// ── Tools · Installer Cli ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This module belongs to the NekoCore OS codebase and provides focused
+// subsystem behavior.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: node:fs, node:path,
+// ./installer-marker-engine. Keep import and call-site contracts aligned
+// during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
 'use strict';
 
 const fs = require('node:fs');
 const path = require('node:path');
 const { applyMarkerEntries, removeMarkerEntries } = require('./installer-marker-engine');
-
+// parseArgs()
+// WHAT THIS DOES: parseArgs reshapes data from one form into another.
+// WHY IT EXISTS: conversion rules live here so the same transformation is reused.
+// HOW TO USE IT: pass input data into parseArgs(...) and use the transformed output.
 function parseArgs(argv) {
   const args = Array.isArray(argv) ? argv.slice() : [];
   const command = args[0] || null;
@@ -41,12 +59,18 @@ function parseArgs(argv) {
 
   return flags;
 }
-
+// _readJson()
+// WHAT THIS DOES: _readJson reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call _readJson(...), then use the returned value in your next step.
 function _readJson(filePath) {
   const raw = fs.readFileSync(filePath, 'utf8');
   return JSON.parse(raw);
 }
-
+// _groupInsertActions()
+// WHAT THIS DOES: _groupInsertActions is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _groupInsertActions(...) where this helper behavior is needed.
 function _groupInsertActions(contract) {
   const actions = Array.isArray(contract.installActions) ? contract.installActions : [];
   const grouped = new Map();
@@ -84,7 +108,10 @@ function _groupInsertActions(contract) {
 
   return { grouped, createFiles };
 }
-
+// _readCreatePayload()
+// WHAT THIS DOES: _readCreatePayload reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call _readCreatePayload(...), then use the returned value in your next step.
 function _readCreatePayload(rootDir, action) {
   if (typeof action.payload === 'string') return action.payload;
   const templateRel = String(action.templatePath || '').trim();
@@ -97,7 +124,10 @@ function _readCreatePayload(rootDir, action) {
   }
   return fs.readFileSync(templateAbs, 'utf8');
 }
-
+// _stageCreateFiles()
+// WHAT THIS DOES: _stageCreateFiles is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _stageCreateFiles(...) where this helper behavior is needed.
 function _stageCreateFiles(rootDir, createActions) {
   const writes = [];
   const logs = [];
@@ -119,7 +149,10 @@ function _stageCreateFiles(rootDir, createActions) {
   }
   return { writes, logs };
 }
-
+// _stageDeleteFiles()
+// WHAT THIS DOES: _stageDeleteFiles is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _stageDeleteFiles(...) where this helper behavior is needed.
 function _stageDeleteFiles(rootDir, deleteActions) {
   const deletes = [];
   const logs = [];
@@ -137,7 +170,10 @@ function _stageDeleteFiles(rootDir, deleteActions) {
   }
   return { deletes, logs };
 }
-
+// _applyWritesAndDeletes()
+// WHAT THIS DOES: _applyWritesAndDeletes is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _applyWritesAndDeletes(...) where this helper behavior is needed.
 function _applyWritesAndDeletes(stagedWrites, stagedDeletes) {
   for (const item of stagedWrites) {
     if (item.mkdir) fs.mkdirSync(path.dirname(item.absPath), { recursive: true });
@@ -147,7 +183,10 @@ function _applyWritesAndDeletes(stagedWrites, stagedDeletes) {
     fs.rmSync(item.absPath, { force: true });
   }
 }
-
+// _groupRemoveActions()
+// WHAT THIS DOES: _groupRemoveActions is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _groupRemoveActions(...) where this helper behavior is needed.
 function _groupRemoveActions(contract) {
   const actions = Array.isArray(contract.uninstallActions) ? contract.uninstallActions : [];
   const grouped = new Map();
@@ -180,7 +219,10 @@ function _groupRemoveActions(contract) {
 
   return { grouped, deleteFiles };
 }
-
+// _runPlanByGroupedActions()
+// WHAT THIS DOES: _runPlanByGroupedActions is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _runPlanByGroupedActions(...) where this helper behavior is needed.
 function _runPlanByGroupedActions(input, grouped, applyFn, mode) {
   const rootDir = path.resolve(input.rootDir || process.cwd());
   const dryRun = !!input.dryRun;
@@ -227,7 +269,10 @@ function _runPlanByGroupedActions(input, grouped, applyFn, mode) {
     logs
   };
 }
-
+// runInstallPlan()
+// WHAT THIS DOES: runInstallPlan is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call runInstallPlan(...) where this helper behavior is needed.
 function runInstallPlan(input) {
   const contractPath = path.resolve(input.contractPath || '');
 
@@ -284,7 +329,10 @@ function runInstallPlan(input) {
     logs
   };
 }
-
+// runUninstallPlan()
+// WHAT THIS DOES: runUninstallPlan is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call runUninstallPlan(...) where this helper behavior is needed.
 function runUninstallPlan(input) {
   const contractPath = path.resolve(input.contractPath || '');
 
@@ -339,7 +387,10 @@ function runUninstallPlan(input) {
     logs
   };
 }
-
+// runCli()
+// WHAT THIS DOES: runCli is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call runCli(...) where this helper behavior is needed.
 function runCli(argv) {
   const args = parseArgs(argv);
   if (args.command !== 'install' && args.command !== 'uninstall') {

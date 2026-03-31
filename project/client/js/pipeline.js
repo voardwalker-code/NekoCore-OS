@@ -1,3 +1,18 @@
+// ── Client · Pipeline ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This client module drives browser-side behavior and state updates for UI
+// features.
+//
+// WHAT USES THIS:
+// Used by related flows in its subsystem. Keep call contracts stable during
+// readability-only edits.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // REM System v0.6.0 — Pipeline & LLM Module
 // Handles: Proxy fetch, LLM calls (OpenRouter + Ollama), V4 compression
@@ -8,6 +23,10 @@
 // ============================================================
 let _memoryRecall = false;
 let _memorySave   = false;
+// setMemoryRecall()
+// WHAT THIS DOES: setMemoryRecall changes saved state or updates data.
+// WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+// HOW TO USE IT: call setMemoryRecall(...) with the new values you want to persist.
 function setMemoryRecall(v) { _memoryRecall = !!v; }
 function setMemorySave(v)   { _memorySave   = !!v; }
 
@@ -17,6 +36,12 @@ function setMemorySave(v)   { _memorySave   = !!v; }
 async function proxyFetch(targetUrl, options = {}) {
   let proxyBody = undefined;
   if (options.body) {
+    // ct()
+    // Purpose: helper wrapper used by this module's main flow.
+    // ct()
+    // WHAT THIS DOES: ct is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call ct(...) where this helper behavior is needed.
     const ct = (options.headers && (options.headers['Content-Type'] || options.headers['content-type'])) || '';
     if (ct.includes('x-www-form-urlencoded')) {
       proxyBody = options.body;
@@ -39,19 +64,28 @@ async function proxyFetch(targetUrl, options = {}) {
   });
   return resp;
 }
-
+// smartFetch()
+// WHAT THIS DOES: smartFetch is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call smartFetch(...) where this helper behavior is needed.
 function smartFetch(endpoint, options) {
   const isLocal = endpoint.includes('localhost') || endpoint.includes('127.0.0.1');
   return isLocal ? fetch(endpoint, options) : proxyFetch(endpoint, options);
 }
-
+// toChatCompletionsEndpoint()
+// WHAT THIS DOES: toChatCompletionsEndpoint is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call toChatCompletionsEndpoint(...) where this helper behavior is needed.
 function toChatCompletionsEndpoint(endpoint) {
   const base = (endpoint || '').trim();
   if (!base) return '';
   if (base.endsWith('/v1/chat/completions') || base.endsWith('/chat/completions')) return base;
   return base.replace(/\/$/, '') + '/v1/chat/completions';
 }
-
+// normalizeRuntimeConfig()
+// WHAT THIS DOES: normalizeRuntimeConfig reshapes data from one form into another.
+// WHY IT EXISTS: conversion rules live here so the same transformation is reused.
+// HOW TO USE IT: pass input data into normalizeRuntimeConfig(...) and use the transformed output.
 function normalizeRuntimeConfig(config) {
   if (!config || !config.type) return null;
   const type = config.type === 'apikey' ? 'openrouter' : config.type;
@@ -148,7 +182,10 @@ async function callLLM(userPrompt) {
       throw new Error('Unknown provider type: ' + type);
   }
 }
-
+// callOpenRouter()
+// WHAT THIS DOES: callOpenRouter is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call callOpenRouter(...) where this helper behavior is needed.
 function callOpenRouter(prompt) {
   const { endpoint, apiKey, model } = activeConfig;
   const ep = endpoint || OPENROUTER_PRESET.ep;
@@ -197,6 +234,10 @@ async function callOpenAICompat(endpoint, token, model, prompt) {
 // ============================================================
 let _chatAbortController = null;
 
+// abortActiveChatCall()
+// WHAT THIS DOES: abortActiveChatCall is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call abortActiveChatCall(...) where this helper behavior is needed.
 function abortActiveChatCall() {
   if (_chatAbortController) {
     _chatAbortController.abort();
@@ -211,6 +252,12 @@ async function callChatLLM() {
   if (!activeConfig) throw new Error('No provider configured');
 
   const messages = chatHistory.filter(m => m.content);
+  // currentUserIndex()
+  // Purpose: helper wrapper used by this module's main flow.
+  // currentUserIndex()
+  // WHAT THIS DOES: currentUserIndex is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call currentUserIndex(...) where this helper behavior is needed.
   const currentUserIndex = (() => {
     for (let i = messages.length - 1; i >= 0; i -= 1) {
       if (messages[i] && messages[i].role === 'user') return i;
@@ -290,7 +337,10 @@ async function callChatLLM() {
     _chatAbortController = null;
   }
 }
-
+// callOpenRouterChat()
+// WHAT THIS DOES: callOpenRouterChat is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call callOpenRouterChat(...) where this helper behavior is needed.
 function callOpenRouterChat(messages) {
   const { endpoint, apiKey, model } = activeConfig;
   const ep = endpoint || OPENROUTER_PRESET.ep;
@@ -324,7 +374,10 @@ async function callOpenAIChat(endpoint, token, model, messages) {
 // ============================================================
 const COMMON = {"is":"S","to":"T","of":"O","in":"N","it":"I","you":"U","was":"W","as":"A","be":"B","he":"H","his":"Z","she":"E","at":"X","by":"Y","but":"K","not":"J","can":"C","my":"M","with":"V","they":"Q","from":"P","this":"D","that":"L"};
 const PAIRS = [['the','@'],['ing','~'],['and','&'],['ion','7'],['ent','3'],['for','4'],['all','6'],['ght','9'],['th','0'],['st','#'],['nd','d'],['tr','%'],['wh','^'],['nc','!'],['ll','='],['ch','$'],['sh','<'],['ou','8'],['ee','2'],['ph','f']];
-
+// v4Transform()
+// WHAT THIS DOES: v4Transform is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call v4Transform(...) where this helper behavior is needed.
 function v4Transform(text) {
   let v = text.toLowerCase().replace(/[^a-z0-9\s]/g, '');
   v = v.split(/\s+/).map(w => COMMON[w] || w).join(' ');
@@ -333,7 +386,10 @@ function v4Transform(text) {
   v = v.replace(/\b[bcdfghjklmnpqrstvwxyz]\b/g, '');
   return v.replace(/\s+/g, '').trim();
 }
-
+// buildPrompt()
+// WHAT THIS DOES: buildPrompt creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call buildPrompt(...) before code that depends on this setup.
 function buildPrompt(raw) {
   return `Convert this narrative into an ultra-compact semantic memory packet using EXACTLY this format. Every character counts — be maximally terse.
 
@@ -396,6 +452,12 @@ async function runPipeline() {
     const finalResult = header + memPkt + '\n\n[V4-TRANSFORM-SOURCE]\n' + v4Text;
     document.getElementById('finalOut').value = finalResult;
 
+    // savings()
+    // Purpose: helper wrapper used by this module's main flow.
+    // savings()
+    // WHAT THIS DOES: savings is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call savings(...) where this helper behavior is needed.
     const savings = (((raw.length - finalResult.length) / raw.length) * 100).toFixed(1);
     document.getElementById('sOut').textContent = finalResult.length.toLocaleString();
     document.getElementById('sSav').textContent = savings > 0 ? savings + '%' : 'expanded';

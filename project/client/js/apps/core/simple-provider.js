@@ -1,3 +1,17 @@
+// ── Services · Client Simple Provider UI ────────────────────────────────────
+//
+// HOW SIMPLE PROVIDER SETUP WORKS:
+// This module drives the lightweight provider setup panel. It lets users pick
+// OpenRouter/Anthropic/Ollama, apply presets, validate required fields, and
+// save per-aspect provider configs through `/api/entity-config`.
+//
+// WHAT USES THIS:
+//   Settings provider panel — buttons and selects call these helpers
+//
+// EXPORTS:
+//   global setup/helper functions in browser scope
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // NekoCore OS — Simple Provider UI
 // Extracted from app.js by P3-S9
@@ -13,7 +27,7 @@
 
 let simpleActiveProvider = 'openrouter';
 const SIMPLE_PROVIDER_REDACTED_KEY = '••••••••';
-
+/** Return stored OpenRouter config from active profile/legacy fallbacks. */
 function _getSimpleStoredOpenRouterConfig() {
   const profile = savedConfig?.profiles?.[savedConfig?.lastActive] || null;
   const mainCfg = profile?.main;
@@ -33,13 +47,13 @@ function _getSimpleStoredOpenRouterConfig() {
   }
   return null;
 }
-
+/** Check whether an OpenRouter key already exists in saved config. */
 function _simpleHasStoredOpenRouterKey() {
   const stored = _getSimpleStoredOpenRouterConfig();
   const key = String(stored?.apiKey || stored?.key || '').trim();
   return !!key;
 }
-
+/** Initialize simple provider UI controls and hydrate saved values. */
 function initSimpleProviderUI() {
   // Populate OpenRouter model suggestions in the simple UI datalist
   const list = document.getElementById('simpleOrModelList');
@@ -112,7 +126,7 @@ function initSimpleProviderUI() {
 
   _initCapabilityToggles();
 }
-
+/** Switch visible provider panel. */
 function simplePickProvider(provider) {
   simpleActiveProvider = provider;
   const orBtn = document.getElementById('simpleProviderBtn-openrouter');
@@ -128,7 +142,7 @@ function simplePickProvider(provider) {
   if (antPanel) antPanel.style.display = provider === 'anthropic' ? '' : 'none';
   if (olPanel) olPanel.style.display = provider === 'ollama' ? '' : 'none';
 }
-
+/** Apply recommended model stack to simple provider fields. */
 function simpleApplyPreset(stackKey) {
   const stack = RECOMMENDED_MODEL_STACKS[stackKey];
   if (!stack) return;
@@ -343,7 +357,7 @@ async function simpleSaveConfig() {
     lg('err', 'Config save failed: ' + e.message);
   }
 }
-
+/** Update provider panel status text by suffix key. */
 function simpleShowStatus(suffix, text, color) {
   const el = document.getElementById('simple' + suffix.charAt(0).toUpperCase() + suffix.slice(1));
   if (el) {
@@ -356,6 +370,7 @@ function simpleShowStatus(suffix, text, color) {
 // CAPABILITY TOGGLES (Anthropic-specific)
 // ============================================================
 
+/** Initialize Anthropic capability toggle interactions. */
 function _initCapabilityToggles() {
   const thinkingCb = document.getElementById('capExtendedThinking');
   const budgetRow = document.getElementById('capThinkingBudgetRow');
@@ -365,7 +380,7 @@ function _initCapabilityToggles() {
     });
   }
 }
-
+/** Read Anthropic capability toggles into payload object. */
 function _readCapabilityToggles() {
   const extCache = document.getElementById('capExtendedCache');
   const compact = document.getElementById('capCompaction');
@@ -384,7 +399,7 @@ function _readCapabilityToggles() {
     thinkingBudget: budget ? parseInt(budget.value, 10) || 4096 : 4096
   };
 }
-
+/** Hydrate Anthropic capability toggles from saved values. */
 function _hydrateCapabilityToggles(caps) {
   if (!caps || typeof caps !== 'object') return;
   const extCache = document.getElementById('capExtendedCache');

@@ -1,3 +1,18 @@
+// ── Client Optional · Document Digest ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This client module drives browser-side behavior and state updates for UI
+// features.
+//
+// WHAT USES THIS:
+// Used by related flows in its subsystem. Keep call contracts stable during
+// readability-only edits.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // REM System — Document Digest
 // Ingests large documents into entity conscious memory
@@ -15,6 +30,10 @@ let digestState = {
 /**
  * Notification adapter for shared notify API.
  */
+// showDigestNotice()
+// WHAT THIS DOES: showDigestNotice builds or updates what the user sees.
+// WHY IT EXISTS: display logic is separated from data/business logic for clarity.
+// HOW TO USE IT: call showDigestNotice(...) after state changes that need UI refresh.
 function showDigestNotice(message, type) {
   const notifyApi = window.notify;
   if (!notifyApi || typeof notifyApi.show !== 'function') {
@@ -36,6 +55,10 @@ function showDigestNotice(message, type) {
 /**
  * Initialize document digest UI
  */
+// initDocumentDigest()
+// WHAT THIS DOES: initDocumentDigest creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call initDocumentDigest(...) before code that depends on this setup.
 function initDocumentDigest() {
   const dropZone = document.getElementById('documentDropZone');
   const fileInput = document.getElementById('documentFileInput');
@@ -130,6 +153,10 @@ async function handleDocumentFile(file) {
 /**
  * Read file as text
  */
+// readFileAsText()
+// WHAT THIS DOES: readFileAsText reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call readFileAsText(...), then use the returned value in your next step.
 function readFileAsText(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -143,6 +170,10 @@ function readFileAsText(file) {
  * Chunk document into bite-sized pieces
  * Uses paragraph boundaries and max token estimate
  */
+// chunkDocument()
+// WHAT THIS DOES: chunkDocument is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call chunkDocument(...) where this helper behavior is needed.
 function chunkDocument(text, filename) {
   const MAX_CHUNK_TOKENS = 1500; // Rough estimate: 1 token ≈ 4 chars
   const MAX_CHUNK_CHARS = MAX_CHUNK_TOKENS * 4;
@@ -289,6 +320,10 @@ async function ingestChunk(chunk, previousChunkId) {
 /**
  * Update progress UI
  */
+// updateDigestProgress()
+// WHAT THIS DOES: updateDigestProgress changes saved state or updates data.
+// WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+// HOW TO USE IT: call updateDigestProgress(...) with the new values you want to persist.
 function updateDigestProgress(current, total) {
   const progressEl = document.getElementById('documentDigestProgress');
   const progressBar = document.getElementById('documentDigestProgressBar');
@@ -305,6 +340,10 @@ function updateDigestProgress(current, total) {
 /**
  * Clear progress UI
  */
+// clearDigestProgress()
+// WHAT THIS DOES: clearDigestProgress removes, resets, or shuts down existing state.
+// WHY IT EXISTS: cleanup is explicit so stale state does not leak into new runs.
+// HOW TO USE IT: call clearDigestProgress(...) when you need a safe teardown/reset path.
 function clearDigestProgress() {
   const progressEl = document.getElementById('documentDigestProgress');
   if (progressEl) {

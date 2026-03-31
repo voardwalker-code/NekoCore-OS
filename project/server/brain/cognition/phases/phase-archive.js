@@ -1,3 +1,18 @@
+// ── Brain · Phase Archive ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: fs, path, zlib,
+// ../../utils/textrank, ../../utils/archive-index. Keep import and call-site
+// contracts aligned during refactors.
+//
+// EXPORTS:
+// Exposed API includes: runPromotionPass, isPromotionCandidate, daysDiff.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // Phase: Archive Processing
 // Converts unprocessed archived conversations into permanent memories.
 // Runs every brain loop cycle.
@@ -23,12 +38,19 @@ const TEXTRANK_THRESHOLD_CHARS   = 400;    // apply TextRank above this content 
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
+// daysDiff()
+// WHAT THIS DOES: daysDiff is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call daysDiff(...) where this helper behavior is needed.
 function daysDiff(isoString) {
   const created = new Date(isoString);
   if (isNaN(created.getTime())) return 0;
   return (Date.now() - created.getTime()) / (1000 * 60 * 60 * 24);
 }
-
+// isPromotionCandidate()
+// WHAT THIS DOES: isPromotionCandidate answers a yes/no rule check.
+// WHY IT EXISTS: guard checks are kept readable and reusable in one place.
+// HOW TO USE IT: call isPromotionCandidate(...) and branch logic based on true/false.
 function isPromotionCandidate(meta) {
   const decay       = Number(meta.decay ?? 1.0);
   const accessCount = Number(meta.access_count ?? 0);
@@ -43,6 +65,10 @@ function isPromotionCandidate(meta) {
  * @param {string} srcDir    path to mem_xxx/ in episodic/
  * @param {string} destDir   path to mem_xxx/ in archive/episodic/
  */
+// consolidateMemory()
+// WHAT THIS DOES: consolidateMemory is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call consolidateMemory(...) where this helper behavior is needed.
 function consolidateMemory(srcDir, destDir) {
   // Copy the whole directory first (all files)
   fs.mkdirSync(destDir, { recursive: true });
@@ -73,6 +99,10 @@ function consolidateMemory(srcDir, destDir) {
  * @param {MemoryIndexCache} indexCache  — live indexCache instance with removeMemory()
  * @returns {number}  number of memories promoted
  */
+// runPromotionPass()
+// WHAT THIS DOES: runPromotionPass is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call runPromotionPass(...) where this helper behavior is needed.
 function runPromotionPass(entityId, indexCache) {
   if (!entityId || !indexCache) return 0;
 

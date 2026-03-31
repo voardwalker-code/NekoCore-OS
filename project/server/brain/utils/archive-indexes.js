@@ -1,3 +1,19 @@
+// ── Brain · Archive Indexes ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: fs, path, ../../entityPaths,
+// ../memory/shape-classifier. Keep import and call-site contracts aligned
+// during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 'use strict';
 // ============================================================
 // server/brain/utils/archive-indexes.js
@@ -31,17 +47,23 @@ const { getArchiveIndexDir } = require('../../entityPaths');
  * When baseDir is provided the directory structure mirrors the normal layout but
  * rooted at baseDir instead of the live entities dir.
  */
+// _indexDir()
+// WHAT THIS DOES: _indexDir is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _indexDir(...) where this helper behavior is needed.
 function _indexDir(entityId, axis, opts = {}) {
   if (opts.baseDir) {
     return path.join(opts.baseDir, `entity_${entityId}`, 'memories', 'archive', 'indexes', axis);
   }
   return path.join(getArchiveIndexDir(entityId), axis);
 }
-
+// _indexFile()
+// WHAT THIS DOES: _indexFile is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _indexFile(...) where this helper behavior is needed.
 function _indexFile(entityId, axis, key, opts) {
   return path.join(_indexDir(entityId, axis, opts), `${key}.idx.json`);
 }
-
 function _ensureDir(dirPath) {
   fs.mkdirSync(dirPath, { recursive: true });
 }
@@ -59,6 +81,10 @@ function _ensureDir(dirPath) {
  * @param {string}   [opts.baseDir]  Override entities root (for tests).
  * @returns {string[]} Array of memIds.
  */
+// readIndex()
+// WHAT THIS DOES: readIndex reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call readIndex(...), then use the returned value in your next step.
 function readIndex(entityId, axis, key, opts = {}) {
   const filePath = _indexFile(entityId, axis, key, opts);
   if (!fs.existsSync(filePath)) return [];
@@ -81,6 +107,10 @@ function readIndex(entityId, axis, key, opts = {}) {
  * @param {string[]} entries   Array of memIds.
  * @param {Object}   [opts]
  */
+// writeIndex()
+// WHAT THIS DOES: writeIndex changes saved state or updates data.
+// WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+// HOW TO USE IT: call writeIndex(...) with the new values you want to persist.
 function writeIndex(entityId, axis, key, entries, opts = {}) {
   const dir = _indexDir(entityId, axis, opts);
   _ensureDir(dir);
@@ -97,6 +127,10 @@ function writeIndex(entityId, axis, key, entries, opts = {}) {
  * @param {Object}   [opts]
  * @returns {string[]} Array of key strings (e.g. ['2025-03', '2025-04']).
  */
+// listIndexes()
+// WHAT THIS DOES: listIndexes is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call listIndexes(...) where this helper behavior is needed.
 function listIndexes(entityId, axis, opts = {}) {
   const dir = _indexDir(entityId, axis, opts);
   if (!fs.existsSync(dir)) return [];
@@ -119,6 +153,10 @@ function listIndexes(entityId, axis, opts = {}) {
  * @param {Object}   [opts]
  * @returns {Set<string>}
  */
+// intersectIndexes()
+// WHAT THIS DOES: intersectIndexes is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call intersectIndexes(...) where this helper behavior is needed.
 function intersectIndexes(entityId, filters, opts = {}) {
   if (!filters || filters.length === 0) return new Set();
 
@@ -145,6 +183,10 @@ function intersectIndexes(entityId, filters, opts = {}) {
  * @param {Set<string>} narrowSet  Pre-computed Set of allowed memIds.
  * @returns {Object[]}
  */
+// narrowByIndex()
+// WHAT THIS DOES: narrowByIndex is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call narrowByIndex(...) where this helper behavior is needed.
 function narrowByIndex(entries, narrowSet) {
   if (!entries || entries.length === 0) return [];
   if (!narrowSet || narrowSet.size === 0) return [];
@@ -163,6 +205,10 @@ function narrowByIndex(entries, narrowSet) {
  * @param {string} [opts.baseDir]
  * @returns {{ memId: string, topics?: string[], created?: string }[]}
  */
+// _readBucketEntries()
+// WHAT THIS DOES: _readBucketEntries reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call _readBucketEntries(...), then use the returned value in your next step.
 function _readBucketEntries(entityId, filename, opts = {}) {
   let bucketPath;
   if (opts.baseDir) {
@@ -191,6 +237,10 @@ function _readBucketEntries(entityId, filename, opts = {}) {
  * @param {Object} [opts]
  * @returns {string[]}
  */
+// _listBucketFilenames()
+// WHAT THIS DOES: _listBucketFilenames is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _listBucketFilenames(...) where this helper behavior is needed.
 function _listBucketFilenames(entityId, opts = {}) {
   let routerPath;
   if (opts.baseDir) {
@@ -219,6 +269,10 @@ function _listBucketFilenames(entityId, opts = {}) {
  * @param {string} [opts.baseDir]  Override entities root (for tests).
  * @returns {number} Count of unique memIds indexed.
  */
+// rebuildTemporalIndexes()
+// WHAT THIS DOES: rebuildTemporalIndexes is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call rebuildTemporalIndexes(...) where this helper behavior is needed.
 function rebuildTemporalIndexes(entityId, opts = {}) {
   const bucketFiles = _listBucketFilenames(entityId, opts);
   if (!bucketFiles.length) return 0;
@@ -265,6 +319,10 @@ function rebuildTemporalIndexes(entityId, opts = {}) {
  * @param {string} [opts.baseDir]  Override entities root (for tests).
  * @returns {number} Count of subject index files written.
  */
+// rebuildSubjectIndexes()
+// WHAT THIS DOES: rebuildSubjectIndexes is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call rebuildSubjectIndexes(...) where this helper behavior is needed.
 function rebuildSubjectIndexes(entityId, opts = {}) {
   const bucketFiles = _listBucketFilenames(entityId, opts);
   if (!bucketFiles.length) return 0;
@@ -277,6 +335,12 @@ function rebuildSubjectIndexes(entityId, opts = {}) {
   for (const filename of bucketFiles) {
     const entries = _readBucketEntries(entityId, filename, opts);
     for (const entry of entries) {
+      // topics()
+      // Purpose: helper wrapper used by this module's main flow.
+      // topics()
+      // WHAT THIS DOES: topics is a helper used by this module's main flow.
+      // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+      // HOW TO USE IT: call topics(...) where this helper behavior is needed.
       const topics = (entry.topics || []).filter(t => t && typeof t === 'string');
       if (!topics.length) continue;
 
@@ -302,12 +366,20 @@ function rebuildSubjectIndexes(entityId, opts = {}) {
 
   // ── Union-Find cluster builder ────────────────────────────────────────────
   const parent = new Map();
+  // find()
+  // WHAT THIS DOES: find reads or finds data and gives it back.
+  // WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+  // HOW TO USE IT: call find(...), then use the returned value in your next step.
   function find(x) {
     if (!parent.has(x)) return x;
     const root = find(parent.get(x));
     parent.set(x, root); // path compression
     return root;
   }
+  // union()
+  // WHAT THIS DOES: union is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call union(...) where this helper behavior is needed.
   function union(x, y) {
     const rx = find(x), ry = find(y);
     if (rx !== ry) parent.set(ry, rx);
@@ -372,6 +444,10 @@ function rebuildSubjectIndexes(entityId, opts = {}) {
  * @param {string} [opts.baseDir]  Override entities root (for tests).
  * @returns {number} Count of unique memIds indexed.
  */
+// rebuildShapeIndexes()
+// WHAT THIS DOES: rebuildShapeIndexes is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call rebuildShapeIndexes(...) where this helper behavior is needed.
 function rebuildShapeIndexes(entityId, opts = {}) {
   const { classifyShape } = require('../memory/shape-classifier');
   const bucketFiles = _listBucketFilenames(entityId, opts);

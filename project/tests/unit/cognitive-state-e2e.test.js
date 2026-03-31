@@ -1,3 +1,23 @@
+// ── Tests · Cognitive State E2e.Test ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This test file validates behavior and guards against regressions in its
+// target subsystem.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include:
+// ../../server/contracts/cognitive-snapshot-contract,
+// ../../server/brain/cognition/cognitive-snapshot,
+// ../../server/contracts/cognitive-feedback-contract,
+// ../../server/brain/cognition/cognitive-feedback,
+// ../../server/brain/cognition/interaction-magnitude. Keep import and
+// call-site contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // Cognitive State Integration — End-to-End Integration Test (Slice C13)
 // Simulates a full conversation turn cycle through the cognitive state pipeline:
 //  1. Assemble cognitive snapshot (pre-turn)

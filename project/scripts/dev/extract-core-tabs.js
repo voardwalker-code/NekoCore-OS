@@ -1,3 +1,18 @@
+// ── Scripts · Extract Core Tabs ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This script automates maintenance, generation, validation, or local
+// development workflows.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: fs, path. Keep import and
+// call-site contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 'use strict';
 /**
  * extract-core-tabs.js
@@ -21,6 +36,10 @@ fs.mkdirSync(OVER_DIR, { recursive: true });
 let html = fs.readFileSync(INDEX_PATH, 'utf8');
 
 // ---- div-depth scanner (skips HTML comments and <script>…</script> blocks) ----
+// findBlockEnd()
+// WHAT THIS DOES: findBlockEnd reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call findBlockEnd(...), then use the returned value in your next step.
 function findBlockEnd(src, openTagStart) {
   let depth = 0;
   let i = openTagStart;
@@ -55,7 +74,10 @@ function findBlockEnd(src, openTagStart) {
   }
   return -1;
 }
-
+// findTagStart()
+// WHAT THIS DOES: findTagStart reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call findTagStart(...), then use the returned value in your next step.
 function findTagStart(src, id, fromIdx) {
   fromIdx = fromIdx || 0;
   // match <div … id="X" …>
@@ -65,7 +87,10 @@ function findTagStart(src, id, fromIdx) {
   if (!m) throw new Error('Could not find <div id="' + id + '">');
   return m.index;
 }
-
+// extractBlock()
+// WHAT THIS DOES: extractBlock is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call extractBlock(...) where this helper behavior is needed.
 function extractBlock(src, id) {
   const start = findTagStart(src, id, 0);
   const end   = findBlockEnd(src, start);

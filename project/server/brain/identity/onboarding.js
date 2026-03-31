@@ -1,3 +1,19 @@
+// ── Brain · Onboarding ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: fs, path, ../../entityPaths,
+// ./life-diary. Keep import and call-site contracts aligned during
+// refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // REM System — Onboarding Interview
 // First-time structured conversation to learn about the user.
@@ -48,6 +64,10 @@ class Onboarding {
 
       // Replace {name} placeholder if available
       let text = question.question;
+      // if()
+      // WHAT THIS DOES: if is a helper used by this module's main flow.
+      // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+      // HOW TO USE IT: call if(...) where this helper behavior is needed.
       if (state.answers && state.answers.name) {
         text = text.replace('{name}', state.answers.name);
       }

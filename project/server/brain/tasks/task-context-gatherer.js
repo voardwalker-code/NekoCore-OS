@@ -1,3 +1,19 @@
+// ── Brain · Task Context Gatherer ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: ./task-context-strategies,
+// ./task-module-registry. Keep import and call-site contracts aligned during
+// refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 /**
  * Task Context Gatherer
  * Retrieves relevant context snippets for a task based on its type.
@@ -117,6 +133,10 @@ async function gatherContextBatch(taskTypes, userMessage, entity, options = {}) 
  * @param {string} taskType - The task type
  * @returns {string} Strategy name
  */
+// getStrategyName()
+// WHAT THIS DOES: getStrategyName reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call getStrategyName(...), then use the returned value in your next step.
 function getStrategyName(taskType) {
   return getStrategyForTaskType(taskType, taskModuleRegistry);
 }
@@ -125,6 +145,10 @@ function getStrategyName(taskType) {
  * Get all available strategies
  * @returns {string[]} Array of strategy names
  */
+// getAvailableStrategies()
+// WHAT THIS DOES: getAvailableStrategies reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call getAvailableStrategies(...), then use the returned value in your next step.
 function getAvailableStrategies() {
   return Object.keys(STRATEGIES);
 }

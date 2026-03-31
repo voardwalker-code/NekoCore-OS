@@ -1,7 +1,17 @@
-// ── NekoCore System Entity Bootstrap ────────────────────────────────────────
-// Idempotent startup routine that ensures the NekoCore system entity exists.
-// Called once during server startup after EntityManager is initialised.
-// ────────────────────────────────────────────────────────────────────────────
+// ── Brain · Bootstrap ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: fs, path, ./persona-profile,
+// ./model-intelligence. Keep import and call-site contracts aligned during
+// refactors.
+//
+// EXPORTS:
+// Exposed API includes: ensureSystemEntity, SYSTEM_ENTITY_ID.
+// ─────────────────────────────────────────────────────────────────────────────
 
 'use strict';
 
@@ -19,6 +29,10 @@ const SYSTEM_ENTITY_ID = 'nekocore';
  *   Production callers omit this argument.
  * @returns {boolean}  true = created fresh, false = already existed (no-op).
  */
+// ensureSystemEntity()
+// WHAT THIS DOES: ensureSystemEntity is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call ensureSystemEntity(...) where this helper behavior is needed.
 function ensureSystemEntity(overrideEntitiesDir, overrideWorkspaceDesktopDir) {
   // Resolve entities dir: use override (tests) or derive from this file's location
   // server/brain/nekocore/bootstrap.js → ../../../entities
@@ -31,11 +45,13 @@ function ensureSystemEntity(overrideEntitiesDir, overrideWorkspaceDesktopDir) {
 
   const entityDir  = path.join(entitiesDir, `entity_${SYSTEM_ENTITY_ID}`);
   const entityFile = path.join(entityDir, 'entity.json');
-
+  // getSystemWorkspacePath()
+  // WHAT THIS DOES: getSystemWorkspacePath reads or finds data and gives it back.
+  // WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+  // HOW TO USE IT: call getSystemWorkspacePath(...), then use the returned value in your next step.
   function getSystemWorkspacePath() {
     return workspaceRoot || '';
   }
-
   function patchSystemWorkspaceOnExistingEntity() {
     if (!fs.existsSync(entityFile)) return false;
     try {

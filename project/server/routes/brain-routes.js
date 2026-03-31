@@ -1,3 +1,16 @@
+// ── Routes · Brain Routes ────────────────────────────────────────────────────
+//
+// HOW BRAIN ROUTING WORKS:
+// This module dispatches brain runtime APIs for status, memory ingest/LTM,
+// dreams, subconscious context, somatic/neurochemistry, and pixel-art assets.
+//
+// WHAT USES THIS:
+//   chat runtime, diagnostics UI, dream tooling, and brain control surfaces
+//
+// EXPORTS:
+//   createBrainRoutes(ctx)
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ── Brain Routes ─────────────────────────────────────────────
 // /api/brain/status, /api/brain/ingest, /api/brain/ltm,
 // /api/brain/bootstrap, /api/brain/dream-cycle, /api/brain/llm-proxy,
@@ -6,7 +19,7 @@
 // /api/neurochemistry, /api/somatic, /api/somatic/toggle
 
 const DreamVisualizer = require('../brain/dream-visualizer');
-
+/** Build dispatcher for brain-related route endpoints. */
 function createBrainRoutes(ctx) {
   const { fs, path, zlib, crypto } = ctx;
 
@@ -295,7 +308,7 @@ function createBrainRoutes(ctx) {
       res.end(JSON.stringify({ ok: false, error: e.message }));
     }
   }
-
+  /** Return recent dream entries and optional dream-pattern analysis. */
   function getBrainDreams(req, res, apiHeaders) {
     try {
       const dreams = [];
@@ -320,13 +333,13 @@ function createBrainRoutes(ctx) {
       res.end(JSON.stringify({ error: e.message }));
     }
   }
-
+  /** Return pixel-art dependency installation status. */
   function getPixelArtDeps(req, res, apiHeaders) {
     const installed = DreamVisualizer.depsInstalled();
     res.writeHead(200, apiHeaders);
     res.end(JSON.stringify({ ok: true, installed }));
   }
-
+  /** List recent pixel-art cycles and available files/metadata. */
   function getPixelArtList(req, res, apiHeaders) {
     try {
       const cycles = [];
@@ -351,7 +364,7 @@ function createBrainRoutes(ctx) {
       res.end(JSON.stringify({ error: e.message }));
     }
   }
-
+  /** Serve one pixel-art file after strict path sanitization checks. */
   function servePixelArtFile(req, res, apiHeaders, url) {
     try {
       const parts = url.pathname.replace('/api/brain/pixel-art/', '').split('/');
@@ -511,13 +524,13 @@ function createBrainRoutes(ctx) {
       res.end(JSON.stringify({ ok: false, error: e.message }));
     }
   }
-
+  /** Return neurochemistry stats for current entity runtime. */
   function getNeurochemistry(req, res, apiHeaders) {
     if (!ctx.neurochemistry) { res.writeHead(200, apiHeaders); res.end(JSON.stringify({ ok: false, error: 'Neurochemistry not initialized' })); return; }
     res.writeHead(200, apiHeaders);
     res.end(JSON.stringify({ ok: true, ...ctx.neurochemistry.getStats() }));
   }
-
+  /** Return somatic-awareness stats for current entity runtime. */
   function getSomatic(req, res, apiHeaders) {
     if (!ctx.somaticAwareness) { res.writeHead(200, apiHeaders); res.end(JSON.stringify({ ok: false, error: 'Somatic awareness not initialized' })); return; }
     res.writeHead(200, apiHeaders);
@@ -539,7 +552,7 @@ function createBrainRoutes(ctx) {
       res.end(JSON.stringify({ ok: false, error: e.message }));
     }
   }
-
+  /** Return current configured deep-sleep interval cycle value. */
   function getDeepSleepInterval(req, res, apiHeaders) {
     const b = ctx.brainLoop;
     const interval = b ? (b.deepSleepInterval || 150) : 150;

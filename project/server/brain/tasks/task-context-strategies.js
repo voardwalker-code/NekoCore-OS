@@ -1,3 +1,18 @@
+// ── Brain · Task Context Strategies ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: fs, path. Keep import and
+// call-site contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 /**
  * Task Context Retrieval Strategies
  * Maps each task type to its source-of-truth retrieval strategy
@@ -234,6 +249,10 @@ const STRATEGIES = {
  * @param {Object} moduleRegistry - Task module registry
  * @returns {string} Strategy name (archive, workspace_files, web_seed, or custom)
  */
+// getStrategyForTaskType()
+// WHAT THIS DOES: getStrategyForTaskType reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call getStrategyForTaskType(...), then use the returned value in your next step.
 function getStrategyForTaskType(taskType, moduleRegistry) {
   if (!moduleRegistry || !moduleRegistry.getModule) {
     return 'archive'; // Fallback default

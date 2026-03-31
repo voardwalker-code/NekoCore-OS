@@ -1,3 +1,19 @@
+// ── Tests · Llm Interface Guards.Test ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This test file validates behavior and guards against regressions in its
+// target subsystem.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: node:test,
+// node:assert/strict, node:http, ../../server/services/llm-interface. Keep
+// import and call-site contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 'use strict';
 const test = require('node:test');
 const assert = require('node:assert/strict');
@@ -9,7 +25,10 @@ let mockServer = null;
 let mockPort = 0;
 let lastRequest = null;
 let mockResponse = {};
-
+// startMockServer()
+// WHAT THIS DOES: startMockServer creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call startMockServer(...) before code that depends on this setup.
 function startMockServer() {
   return new Promise((resolve, reject) => {
     mockServer = http.createServer((req, res) => {
@@ -33,7 +52,10 @@ function startMockServer() {
     mockServer.on('error', reject);
   });
 }
-
+// stopMockServer()
+// WHAT THIS DOES: stopMockServer removes, resets, or shuts down existing state.
+// WHY IT EXISTS: cleanup is explicit so stale state does not leak into new runs.
+// HOW TO USE IT: call stopMockServer(...) when you need a safe teardown/reset path.
 function stopMockServer() {
   return new Promise(resolve => {
     if (!mockServer) return resolve();
@@ -43,7 +65,10 @@ function stopMockServer() {
     });
   });
 }
-
+// resetMock()
+// WHAT THIS DOES: resetMock removes, resets, or shuts down existing state.
+// WHY IT EXISTS: cleanup is explicit so stale state does not leak into new runs.
+// HOW TO USE IT: call resetMock(...) when you need a safe teardown/reset path.
 function resetMock() {
   lastRequest = null;
   mockResponse = {};
@@ -52,6 +77,10 @@ function resetMock() {
 // ── Helpers ──────────────────────────────────────────────────────────────────
 const { callLLMWithRuntime } = createLLMInterface();
 
+// openrouterRuntime()
+// WHAT THIS DOES: openrouterRuntime is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call openrouterRuntime(...) where this helper behavior is needed.
 const openrouterRuntime = () => ({
   type: 'openrouter',
   endpoint: `http://127.0.0.1:${mockPort}/v1/chat/completions`,
@@ -59,6 +88,12 @@ const openrouterRuntime = () => ({
   model: 'openai/gpt-4o'
 });
 
+// anthropicRuntime()
+// Purpose: helper wrapper used by this module's main flow.
+// anthropicRuntime()
+// WHAT THIS DOES: anthropicRuntime is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call anthropicRuntime(...) where this helper behavior is needed.
 const anthropicRuntime = () => ({
   type: 'anthropic',
   endpoint: `http://127.0.0.1:${mockPort}/v1/messages`,
@@ -66,6 +101,12 @@ const anthropicRuntime = () => ({
   model: 'claude-sonnet-4-6'
 });
 
+// ollamaRuntime()
+// Purpose: helper wrapper used by this module's main flow.
+// ollamaRuntime()
+// WHAT THIS DOES: ollamaRuntime is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call ollamaRuntime(...) where this helper behavior is needed.
 const ollamaRuntime = () => ({
   type: 'ollama',
   endpoint: `http://127.0.0.1:${mockPort}`,

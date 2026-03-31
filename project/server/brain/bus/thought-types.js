@@ -1,3 +1,18 @@
+// ── Brain · Thought Types ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Used by related flows in its subsystem. Keep call contracts stable during
+// readability-only edits.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // REM System — Thought Types Module
 // Constants for all event types on the Cognitive Bus
@@ -120,6 +135,10 @@ const ThoughtTypes = {
 /**
  * Helper to validate if a string is a valid thought type
  */
+// isValidThoughtType()
+// WHAT THIS DOES: isValidThoughtType answers a yes/no rule check.
+// WHY IT EXISTS: guard checks are kept readable and reusable in one place.
+// HOW TO USE IT: call isValidThoughtType(...) and branch logic based on true/false.
 function isValidThoughtType(type) {
   return Object.values(ThoughtTypes).includes(type);
 }
@@ -127,6 +146,10 @@ function isValidThoughtType(type) {
 /**
  * Get all thought types as an array
  */
+// getAllThoughtTypes()
+// WHAT THIS DOES: getAllThoughtTypes reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call getAllThoughtTypes(...), then use the returned value in your next step.
 function getAllThoughtTypes() {
   return Object.values(ThoughtTypes);
 }

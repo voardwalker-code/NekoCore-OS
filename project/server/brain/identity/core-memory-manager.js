@@ -1,9 +1,28 @@
+// ── Brain · Core Memory Manager ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Used by related flows in its subsystem. Keep call contracts stable during
+// readability-only edits.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // REM System — Core Memory Manager
 // Identifies and manages core memories that define identity.
 // ============================================================
 
 class CoreMemoryManager {
+  // constructor()
+  // WHAT THIS DOES: constructor is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call constructor(...) where this helper behavior is needed.
   constructor(memoryStorage) {
     this.memoryStorage = memoryStorage;
     this.coreMemoryThreshold = 0.7; // Importance threshold for core memories
@@ -16,6 +35,10 @@ class CoreMemoryManager {
   async identifyCoreMemories(memories) {
     const coreMemories = [];
 
+    // for()
+    // WHAT THIS DOES: for is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call for(...) where this helper behavior is needed.
     for (const memory of memories) {
       if (this.isCoreMemory(memory)) {
         const coreMemory = await this.markAsCoreMemory(memory);
@@ -24,6 +47,10 @@ class CoreMemoryManager {
     }
 
     // Limit core memories if too many
+    // if()
+    // WHAT THIS DOES: if is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call if(...) where this helper behavior is needed.
     if (coreMemories.length > this.maxCoreMemories) {
       coreMemories.sort((a, b) => b.importance - a.importance);
       coreMemories.splice(this.maxCoreMemories);
@@ -35,6 +62,10 @@ class CoreMemoryManager {
   /**
    * Determine if a memory qualifies as core
    */
+  // isCoreMemory()
+  // WHAT THIS DOES: isCoreMemory answers a yes/no rule check.
+  // WHY IT EXISTS: guard checks are kept readable and reusable in one place.
+  // HOW TO USE IT: call isCoreMemory(...) and branch logic based on true/false.
   isCoreMemory(memory) {
     // High importance memories are core
     if (memory.importance >= this.coreMemoryThreshold) {
@@ -42,6 +73,10 @@ class CoreMemoryManager {
     }
 
     // Memories with strong emotional impact
+    // if()
+    // WHAT THIS DOES: if is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call if(...) where this helper behavior is needed.
     if (memory.emotions && memory.emotions.length >= 3) {
       return true;
     }

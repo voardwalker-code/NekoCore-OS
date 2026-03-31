@@ -1,3 +1,19 @@
+// ── Services · Nekocore Pipeline ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This service module holds reusable business logic shared across runtime
+// paths.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: path, fs, ../entityPaths,
+// ../brain/orchestrator, ../brain/skill-manager. Keep import and call-site
+// contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // NekoCore OS — NekoCore Chat Pipeline Service
 // Extracted from server.js P2-S6-b.
@@ -40,6 +56,10 @@ const NEKOCORE_ID = 'nekocore';
  * @param {Function} deps.broadcastSSE
  * @param {Function} deps.logTimeline
  */
+// createNekoCoreChat()
+// WHAT THIS DOES: createNekoCoreChat creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call createNekoCoreChat(...) before code that depends on this setup.
 function createNekoCoreChat(deps) {
   const {
     callLLMWithRuntime,
@@ -135,6 +155,10 @@ function createNekoCoreChat(deps) {
       .map(e => ({ id: e.id, name: e.name, traits: (e.personality_traits || []).slice(0, 3) }));
 
     // Build memory callbacks — NekoCore-scoped
+    // memorySearchFn()
+    // WHAT THIS DOES: memorySearchFn is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call memorySearchFn(...) where this helper behavior is needed.
     const memorySearchFn = async (query) => {
       if (!query) return { ok: false, error: 'No search query provided' };
       try {
@@ -149,6 +173,12 @@ function createNekoCoreChat(deps) {
         return { ok: false, error: 'Memory search failed: ' + e.message };
       }
     };
+    // memoryCreateFn()
+    // Purpose: helper wrapper used by this module's main flow.
+    // memoryCreateFn()
+    // WHAT THIS DOES: memoryCreateFn is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call memoryCreateFn(...) where this helper behavior is needed.
     const memoryCreateFn = async (params) => {
       const { semantic, importance, emotion, topics } = params;
       if (!semantic) return { ok: false, error: 'No semantic content provided' };
@@ -167,6 +197,12 @@ function createNekoCoreChat(deps) {
         return { ok: false, error: 'Memory creation failed: ' + e.message };
       }
     };
+    // skillCreateFn()
+    // Purpose: helper wrapper used by this module's main flow.
+    // skillCreateFn()
+    // WHAT THIS DOES: skillCreateFn is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call skillCreateFn(...) where this helper behavior is needed.
     const skillCreateFn = async (params) => {
       const { name, description, instructions } = params;
       if (!name) return { ok: false, error: 'No skill name provided' };
@@ -178,10 +214,22 @@ function createNekoCoreChat(deps) {
         return { ok: false, error: 'Skill proposal failed: ' + e.message };
       }
     };
+    // skillListFn()
+    // Purpose: helper wrapper used by this module's main flow.
+    // skillListFn()
+    // WHAT THIS DOES: skillListFn is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call skillListFn(...) where this helper behavior is needed.
     const skillListFn = async () => {
       try { return { ok: true, skills: nekoCoreSkillManager.list() }; }
       catch (e) { return { ok: false, error: 'Skill listing failed: ' + e.message }; }
     };
+    // skillEditFn()
+    // Purpose: helper wrapper used by this module's main flow.
+    // skillEditFn()
+    // WHAT THIS DOES: skillEditFn is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call skillEditFn(...) where this helper behavior is needed.
     const skillEditFn = async (params) => {
       const { name, description, instructions } = params;
       if (!name) return { ok: false, error: 'No skill name provided' };
@@ -192,6 +240,12 @@ function createNekoCoreChat(deps) {
         return { ok: false, error: 'Skill edit failed: ' + e.message };
       }
     };
+    // archiveSearchFn()
+    // Purpose: helper wrapper used by this module's main flow.
+    // archiveSearchFn()
+    // WHAT THIS DOES: archiveSearchFn is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call archiveSearchFn(...) where this helper behavior is needed.
     const archiveSearchFn = async (query, yearRangeRaw, limitRaw) => {
       if (!query) return { ok: false, error: 'No query provided' };
       try {

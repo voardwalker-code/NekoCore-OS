@@ -1,3 +1,18 @@
+// ── Brain · Cognitive Pulse ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Used by related flows in its subsystem. Keep call contracts stable during
+// readability-only edits.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // REM System — Cognitive Pulse Engine
 //
@@ -23,6 +38,10 @@ class CognitivePulse {
    * @param {number} [options.tickInterval=200]   — ms between hops
    * @param {number} [options.resetEveryN=25]     — hop count before jump to fresh node (~5 s)
    */
+  // constructor()
+  // WHAT THIS DOES: constructor is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call constructor(...) where this helper behavior is needed.
   constructor(options = {}) {
     this.memoryGraph    = options.memoryGraph   || null;
     this.dreamSeedPool  = options.dreamSeedPool || null;
@@ -47,6 +66,10 @@ class CognitivePulse {
 
   // ── Lifecycle ──────────────────────────────────────────────
 
+  // start()
+  // WHAT THIS DOES: start creates or initializes something needed by the flow.
+  // WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+  // HOW TO USE IT: call start(...) before code that depends on this setup.
   start() {
     if (this._running) return;
     this._running = true;
@@ -54,6 +77,10 @@ class CognitivePulse {
     console.log(`  ✓ Cognitive pulse started (${this.tickInterval}ms, reset every ${this.resetEveryN} hops)`);
   }
 
+  // stop()
+  // WHAT THIS DOES: stop removes, resets, or shuts down existing state.
+  // WHY IT EXISTS: cleanup is explicit so stale state does not leak into new runs.
+  // HOW TO USE IT: call stop(...) when you need a safe teardown/reset path.
   stop() {
     if (!this._running) return;
     this._running = false;
@@ -320,6 +347,12 @@ class CognitivePulse {
   _tick() {
     if (!this.memoryGraph || this.memoryGraph.nodes.size === 0) return;
 
+    // hopCount()
+    // Purpose: helper wrapper used by this module's main flow.
+    // hopCount()
+    // WHAT THIS DOES: hopCount is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call hopCount(...) where this helper behavior is needed.
     const hopCount = (this.currentPulseNode?.hopCount ?? -1) + 1;
 
     // First hop or scheduled reset — jump to a fresh random node
@@ -378,6 +411,12 @@ class CognitivePulse {
    * Build a pulse node from a memory graph node.
    */
   _buildPulseNode(graphNode, hopCount, path, meta = {}) {
+    // title()
+    // Purpose: helper wrapper used by this module's main flow.
+    // title()
+    // WHAT THIS DOES: title is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call title(...) where this helper behavior is needed.
     const title = (graphNode.topics && graphNode.topics.length > 0)
       ? graphNode.topics[0]
       : (graphNode.memory_id || 'unknown');
@@ -529,14 +568,20 @@ class CognitivePulse {
     return clamp01(avgStrength * 0.50 + freq * 0.20 + reinforced * 0.15 + retrieval * 0.15);
   }
 }
-
+// clamp01()
+// WHAT THIS DOES: clamp01 is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call clamp01(...) where this helper behavior is needed.
 function clamp01(v) {
   if (Number.isNaN(v)) return 0;
   if (v < 0) return 0;
   if (v > 1) return 1;
   return v;
 }
-
+// rollingAverage()
+// WHAT THIS DOES: rollingAverage is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call rollingAverage(...) where this helper behavior is needed.
 function rollingAverage(prev, next, count) {
   if (count <= 1) return next;
   return prev + ((next - prev) / count);

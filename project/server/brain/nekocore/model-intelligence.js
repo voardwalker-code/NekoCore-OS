@@ -1,14 +1,17 @@
-// ── NekoCore Model Intelligence ──────────────────────────────────────────────
-// NekoCore's memory-backed knowledge of brain loop roles and model capabilities.
+// ── Brain · Model Intelligence ────────────────────────────────────────────────────
 //
-// Instead of baking model data into her prompt, NekoCore stores it as structured
-// memory files she can reference and rewrite over time (REM System MA approach).
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
 //
-// Memory files in NekoCore's memories/ directory:
-//   role-knowledge.json    — brain loop role definitions and requirements
-//   model-registry.json    — known model catalog with cost/speed/capabilities
-//   model-performance.json — per-entity/role/model performance tracking
-// ────────────────────────────────────────────────────────────────────────────
+// WHAT USES THIS:
+// Primary dependencies in this module include: fs, path. Keep import and
+// call-site contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
 
 'use strict';
 
@@ -138,12 +141,19 @@ const PERFORMANCE_FILE = 'model-performance.json';
 
 // ── Low-level I/O helpers ─────────────────────────────────────────────────────
 
+// _atomicWriteJson()
+// WHAT THIS DOES: _atomicWriteJson is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _atomicWriteJson(...) where this helper behavior is needed.
 function _atomicWriteJson(filePath, value) {
   const tmp = filePath + '.tmp-' + process.pid + '-' + Date.now();
   fs.writeFileSync(tmp, JSON.stringify(value, null, 2), 'utf8');
   fs.renameSync(tmp, filePath);
 }
-
+// _readJson()
+// WHAT THIS DOES: _readJson reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call _readJson(...), then use the returned value in your next step.
 function _readJson(filePath, fallback = null) {
   try {
     if (!fs.existsSync(filePath)) return fallback;
@@ -158,6 +168,10 @@ function _readJson(filePath, fallback = null) {
  * @param {string} memDir - NekoCore's memories/ directory path
  * @returns {boolean} true = created, false = already existed
  */
+// seedRoleKnowledge()
+// WHAT THIS DOES: seedRoleKnowledge is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call seedRoleKnowledge(...) where this helper behavior is needed.
 function seedRoleKnowledge(memDir) {
   const dest = path.join(memDir, ROLE_FILE);
   if (fs.existsSync(dest)) return false;
@@ -172,6 +186,10 @@ function seedRoleKnowledge(memDir) {
  * @param {object} [extraModels] - Additional model entries to merge
  * @returns {boolean} always true
  */
+// seedModelRegistry()
+// WHAT THIS DOES: seedModelRegistry is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call seedModelRegistry(...) where this helper behavior is needed.
 function seedModelRegistry(memDir, extraModels = {}) {
   const dest = path.join(memDir, REGISTRY_FILE);
   _atomicWriteJson(dest, {
@@ -201,10 +219,20 @@ function seedModelRegistry(memDir, extraModels = {}) {
  * @param {string} [options.taskType]    - 'code' | 'creative' | 'general' | ...
  * @returns {{ modelId: string, score: number, reason: string } | null}
  */
+// selectModel()
+// WHAT THIS DOES: selectModel is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call selectModel(...) where this helper behavior is needed.
 function selectModel(role, { registry = null, performance = null, entityId = null, taskType = null } = {}) {
   const roleDef = ROLE_DEFINITIONS[role];
   if (!roleDef) return null;
 
+  // models()
+  // Purpose: helper wrapper used by this module's main flow.
+  // models()
+  // WHAT THIS DOES: models is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call models(...) where this helper behavior is needed.
   const models        = (registry && registry.models) ? registry.models : KNOWN_MODELS;
   const reqs          = roleDef.requirements;
   const prioritySpeed = roleDef.priorities.includes('speed');
@@ -233,6 +261,10 @@ function selectModel(role, { registry = null, performance = null, entityId = nul
     }
 
     // Weighted capability match against role's stated requirements
+    // capScore()
+    // WHAT THIS DOES: capScore is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call capScore(...) where this helper behavior is needed.
     const capScore = (
       (caps.reasoning  || 0) * reqs.reasoning  +
       (caps.creativity || 0) * reqs.creativity  +
@@ -258,6 +290,10 @@ function selectModel(role, { registry = null, performance = null, entityId = nul
     // unreliable for tasks that require exact token sequences: skill invocations,
     // structured JSON output, code, and final persona synthesis.
     const DIFFUSION_SENSITIVE = new Set(['code', 'structured-output', 'synthesis', 'skills']);
+    // diffusionPenalty()
+    // WHAT THIS DOES: diffusionPenalty is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call diffusionPenalty(...) where this helper behavior is needed.
     const diffusionPenalty = (model.diffusionModel && taskType && DIFFUSION_SENSITIVE.has(taskType))
       ? 0.35
       : 1.0;
@@ -266,6 +302,10 @@ function selectModel(role, { registry = null, performance = null, entityId = nul
     // Wider range (0.25–2.0) so accumulated experience meaningfully shifts rankings.
     let perfMultiplier = 1.0;
     if (performance && entityId) {
+      // rec()
+      // WHAT THIS DOES: rec is a helper used by this module's main flow.
+      // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+      // HOW TO USE IT: call rec(...) where this helper behavior is needed.
       const rec = (performance.records || {})[`${role}|${entityId}|${modelId}`];
       if (rec && rec.sampleCount >= 3) {
         perfMultiplier = 0.25 + rec.qualityScore * 1.75; // 0.25–2.00
@@ -302,6 +342,10 @@ function selectModel(role, { registry = null, performance = null, entityId = nul
  *   @param {number} [data.latencyMs]   - response latency in ms
  *   @param {number} [data.tokensTotal] - total tokens consumed
  */
+// recordPerformance()
+// WHAT THIS DOES: recordPerformance is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call recordPerformance(...) where this helper behavior is needed.
 function recordPerformance(memDir, {
   role, modelId, entityId,
   quality = 0.75, taskType = null, latencyMs = null, tokensTotal = null
@@ -351,11 +395,19 @@ function recordPerformance(memDir, {
 // ── Registry + performance readers ───────────────────────────────────────────
 
 /** Read model-registry.json from NekoCore's memory dir (falls back to KNOWN_MODELS). */
+// getRegistry()
+// WHAT THIS DOES: getRegistry reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call getRegistry(...), then use the returned value in your next step.
 function getRegistry(memDir) {
   return _readJson(path.join(memDir, REGISTRY_FILE), { models: { ...KNOWN_MODELS } });
 }
 
 /** Read model-performance.json from NekoCore's memory dir (empty if absent). */
+// getPerformance()
+// WHAT THIS DOES: getPerformance reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call getPerformance(...), then use the returned value in your next step.
 function getPerformance(memDir) {
   return _readJson(path.join(memDir, PERFORMANCE_FILE), { records: {} });
 }

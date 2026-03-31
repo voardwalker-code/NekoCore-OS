@@ -1,3 +1,18 @@
+// ── Brain · Persona Profile ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: fs, path. Keep import and
+// call-site contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 'use strict';
 
 const fs = require('fs');
@@ -37,14 +52,20 @@ const PERSONA_PRESETS = [
     llmPersonality: 'I am NekoCore, your friendly operator. I stay warm and approachable while remaining grounded in real system behavior and facts.'
   }
 ];
-
+// _cleanText()
+// WHAT THIS DOES: _cleanText is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _cleanText(...) where this helper behavior is needed.
 function _cleanText(value, maxLen) {
   if (typeof value !== 'string') return '';
   const trimmed = value.trim();
   if (!trimmed) return '';
   return trimmed.slice(0, maxLen);
 }
-
+// createDefaultPersona()
+// WHAT THIS DOES: createDefaultPersona creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call createDefaultPersona(...) before code that depends on this setup.
 function createDefaultPersona(nowIso) {
   const now = nowIso || new Date().toISOString();
   return {
@@ -66,15 +87,20 @@ function createDefaultPersona(nowIso) {
     updatedAt: now
   };
 }
-
+// getPersonaPresets()
+// WHAT THIS DOES: getPersonaPresets reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call getPersonaPresets(...), then use the returned value in your next step.
 function getPersonaPresets() {
   return PERSONA_PRESETS.map((preset) => ({ ...preset }));
 }
-
 function getPresetById(presetId) {
   return PERSONA_PRESETS.find((p) => p.id === presetId) || null;
 }
-
+// readPersona()
+// WHAT THIS DOES: readPersona reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call readPersona(...), then use the returned value in your next step.
 function readPersona(memRoot) {
   const personaPath = path.join(memRoot, 'persona.json');
   const fallback = createDefaultPersona();
@@ -95,7 +121,10 @@ function readPersona(memRoot) {
     return fallback;
   }
 }
-
+// applyPersonaUpdate()
+// WHAT THIS DOES: applyPersonaUpdate is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call applyPersonaUpdate(...) where this helper behavior is needed.
 function applyPersonaUpdate(currentPersona, patch) {
   const base = { ...createDefaultPersona(), ...(currentPersona || {}) };
   const update = (patch && typeof patch === 'object') ? patch : {};
@@ -124,7 +153,10 @@ function applyPersonaUpdate(currentPersona, patch) {
   base.updatedAt = new Date().toISOString();
   return base;
 }
-
+// buildSystemPromptFromPersona()
+// WHAT THIS DOES: buildSystemPromptFromPersona creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call buildSystemPromptFromPersona(...) before code that depends on this setup.
 function buildSystemPromptFromPersona(persona) {
   const p = persona || createDefaultPersona();
   const userName = _cleanText(p.userName, 80) || 'Operator';
@@ -152,7 +184,10 @@ function buildSystemPromptFromPersona(persona) {
     '- Use concise, practical guidance by default.',
   ].join('\n');
 }
-
+// writePersonaFiles()
+// WHAT THIS DOES: writePersonaFiles changes saved state or updates data.
+// WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+// HOW TO USE IT: call writePersonaFiles(...) with the new values you want to persist.
 function writePersonaFiles(memRoot, persona) {
   if (!fs.existsSync(memRoot)) fs.mkdirSync(memRoot, { recursive: true });
   const nextPersona = persona || createDefaultPersona();

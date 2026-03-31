@@ -1,159 +1,16 @@
-#!/usr/bin/env node
-// One-shot transformation script — applies all P2-S1/S2/S3/S6 changes to server.js.
-// Run once from project/ directory: node scripts/dev/transform-server.js
-// Writes the result in-place and emits a diff summary.
-'use strict';
-
-const fs = require('fs');
-const path = require('path');
-
-const FILE = path.join(__dirname, '..', '..', 'server', 'server.js');
-// Normalize line endings (Windows CRLF → LF) so all string comparisons work uniformly
-let src = fs.readFileSync(FILE, 'utf8').replace(/\r\n/g, '\n');
-const original = src;
-
-function patch(description, oldStr, newStr) {
-  if (!src.includes(oldStr)) {
-    console.error(`  ✗ MISSING: ${description}`);
-    console.error(`    Pattern not found: "${oldStr.slice(0, 80).replace(/\n/g, '\\n')}..."`);
-    return;
-  }
-  src = src.replace(oldStr, newStr);
-  console.log(`  ✓ ${description}`);
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// REQUIRES / TOP-OF-FILE
-// ─────────────────────────────────────────────────────────────────────────────
-
-// P2-S1: replace LEGACY_CONFIG_FILE + DEFAULT_GLOBAL_CONFIG with configService require
-patch(
-  'P2-S1: add configService require; remove LEGACY_CONFIG_FILE, DEFAULT_GLOBAL_CONFIG',
-  `const LEGACY_CONFIG_FILE = path.join(__dirname, '..', 'ma-config.json');
-const DEFAULT_GLOBAL_CONFIG = {
-  configVersion: 1,
-  lastActive: 'default-multi-llm',
-  profiles: {
-    'default-multi-llm': {}
-  }
-};`,
-  `const configService = require('./services/config-service');`
-);
-
-// P2-S3: add startup-preflight require after createMemoryRetrieval require
-patch(
-  'P2-S3: add startup-preflight require',
-  `const { createMemoryRetrieval } = require('./services/memory-retrieval');`,
-  `const { createMemoryRetrieval } = require('./services/memory-retrieval');
-const { createRunStartupPreflight } = require('./services/startup-preflight');`
-);
-
-// P2-S2: add EntityRuntime require after startup-preflight
-patch(
-  'P2-S2: add EntityRuntime require',
-  `const { createRunStartupPreflight } = require('./services/startup-preflight');`,
-  `const { createRunStartupPreflight } = require('./services/startup-preflight');
-const EntityRuntime = require('./services/entity-runtime');`
-);
-
-// P2-S6: add pipeline + boot requires
-patch(
-  'P2-S6: add chat-pipeline, nekocore-pipeline, boot requires',
-  `const EntityRuntime = require('./services/entity-runtime');`,
-  `const EntityRuntime = require('./services/entity-runtime');
-const createChatPipeline = require('./services/chat-pipeline');
-const createNekoCoreChat  = require('./services/nekocore-pipeline');
-const { boot }            = require('./services/boot');`
-);
-
-// ─────────────────────────────────────────────────────────────────────────────
-// P2-S1: REMOVE INLINE CONFIG FUNCTIONS
-// ─────────────────────────────────────────────────────────────────────────────
-
-patch(
-  'P2-S1: remove makeDefaultGlobalConfig function',
-  `function makeDefaultGlobalConfig() {
-  return JSON.parse(JSON.stringify(DEFAULT_GLOBAL_CONFIG));
-}
-
-`,
-  ``
-);
-
-patch(
-  'P2-S1: remove normalizeGlobalConfigShape function',
-  `function normalizeGlobalConfigShape(raw) {
-  const cfg = (raw && typeof raw === 'object' && !Array.isArray(raw)) ? raw : {};
-  if (!cfg.profiles || typeof cfg.profiles !== 'object' || Array.isArray(cfg.profiles)) {
-    cfg.profiles = {};
-  }
-  if (!cfg.lastActive || typeof cfg.lastActive !== 'string') {
-    cfg.lastActive = 'default-multi-llm';
-  }
-  if (!cfg.profiles[cfg.lastActive]) {
-    cfg.profiles[cfg.lastActive] = {};
-  }
-  if (!Number.isFinite(cfg.configVersion)) {
-    cfg.configVersion = 1;
-  }
-  return cfg;
-}
-
-`,
-  ``
-);
-
-patch(
-  'P2-S1: remove ensureGlobalConfigFile function',
-  `function ensureGlobalConfigFile() {
-  ensureGlobalConfigDir();
-  if (fs.existsSync(CONFIG_FILE)) return;
-  const defaults = makeDefaultGlobalConfig();
-  fs.writeFileSync(CONFIG_FILE, JSON.stringify(defaults, null, 2), 'utf8');
-  console.log(\`  ✓ Created default config file: \${CONFIG_FILE}\`);
-}
-
-`,
-  ``
-);
-
-patch(
-  'P2-S1: remove ensureGlobalConfigDir function',
-  `function ensureGlobalConfigDir() {
-  try {
-    if (!fs.existsSync(CONFIG_DIR)) {
-      fs.mkdirSync(CONFIG_DIR, { recursive: true });
-      console.log(\`  ✓ Created config directory: \${CONFIG_DIR}\`);
-    }
-  } catch (e) {
-    console.error('  ⚠ Could not create config directory:', e.message);
-  }
-}
-
-`,
-  ``
-);
-
-patch(
-  'P2-S1: remove migrateLegacyGlobalConfigIfNeeded function',
-  `function migrateLegacyGlobalConfigIfNeeded() {
-  try {
-    if (fs.existsSync(CONFIG_FILE)) return;
-    if (!fs.existsSync(LEGACY_CONFIG_FILE)) return;
-    ensureGlobalConfigDir();
-    fs.copyFileSync(LEGACY_CONFIG_FILE, CONFIG_FILE);
-    console.log(\`  ✓ Migrated legacy config to \${CONFIG_FILE}\`);
-  } catch (e) {
-    console.error('  ⚠ Could not migrate legacy global config:', e.message);
-  }
-}
-
-`,
-  ``
-);
-
-// ─────────────────────────────────────────────────────────────────────────────
-// P2-S3: REMOVE INLINE STARTUP-PREFLIGHT FUNCTIONS
+// ── Scripts · Transform Server ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This script automates maintenance, generation, validation, or local
+// development workflows.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: ./entityPaths. Keep import
+// and call-site contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
 // ─────────────────────────────────────────────────────────────────────────────
 
 patch(
@@ -268,6 +125,10 @@ patch(
 );
 
 // ensureEntityRuntimeState is a large function — match start-to-next-function-boundary
+// ensureEntityRuntimeStateBlock()
+// WHAT THIS DOES: ensureEntityRuntimeStateBlock is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call ensureEntityRuntimeStateBlock(...) where this helper behavior is needed.
 const ensureEntityRuntimeStateBlock = (() => {
   const start = `function ensureEntityRuntimeState(entityId, entity) {`;
   const end = `\nfunction runStartupPreflight() {`;
@@ -285,6 +146,10 @@ if (ensureEntityRuntimeStateBlock) {
 }
 
 // runStartupPreflight is a large function — match start to closing brace before entity section
+// runStartupPreflightBlock()
+// WHAT THIS DOES: runStartupPreflightBlock is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call runStartupPreflightBlock(...) where this helper behavior is needed.
 const runStartupPreflightBlock = (() => {
   const start = `function runStartupPreflight() {`;
   const anchor = `\n// Entity-aware memory modules`;
@@ -308,6 +173,10 @@ if (runStartupPreflightBlock) {
 patch(
   'P2-S1: update loadConfig to delegate to configService',
   `// Helper: load global config
+// loadConfig()
+// WHAT THIS DOES: loadConfig reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call loadConfig(...), then use the returned value in your next step.
 function loadConfig() {
   try {
     ensureGlobalConfigDir();
@@ -341,6 +210,10 @@ function loadConfig() {
   }
 }`,
   `// Helper: load global config — delegates to config-service singleton
+// loadConfig()
+// WHAT THIS DOES: loadConfig reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call loadConfig(...), then use the returned value in your next step.
 function loadConfig() {
   return configService.load();
 }`
@@ -349,6 +222,10 @@ function loadConfig() {
 patch(
   'P2-S1: update saveConfig to delegate to configService',
   `// Helper: save global config
+// saveConfig()
+// WHAT THIS DOES: saveConfig changes saved state or updates data.
+// WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+// HOW TO USE IT: call saveConfig(...) with the new values you want to persist.
 function saveConfig(data) {
   try {
     ensureGlobalConfigDir();
@@ -359,6 +236,10 @@ function saveConfig(data) {
   }
 }`,
   `// Helper: save global config — delegates to config-service singleton
+// saveConfig()
+// WHAT THIS DOES: saveConfig changes saved state or updates data.
+// WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+// HOW TO USE IT: call saveConfig(...) with the new values you want to persist.
 function saveConfig(data) {
   configService.save(data);
 }`
@@ -392,6 +273,10 @@ const runStartupPreflight = createRunStartupPreflight({
 
 // Find the exact TOKEN_LIMIT_DEFAULTS block (starts at "// ── Cached default maxTokens")
 // and ends after getTokenLimit function.
+// tokenLimitsBlock()
+// WHAT THIS DOES: tokenLimitsBlock is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call tokenLimitsBlock(...) where this helper behavior is needed.
 const tokenLimitsBlock = (() => {
   const start = `// ── Cached default maxTokens (read from config, updated on save) ──`;
   const end = `function getTokenLimit(key) {\n  return _tokenLimits[key] || (TOKEN_LIMIT_DEFAULTS[key] && TOKEN_LIMIT_DEFAULTS[key].value) || 1000;\n}`;
@@ -406,10 +291,18 @@ if (tokenLimitsBlock) {
 const TOKEN_LIMIT_DEFAULTS = configService.getTokenLimitDefaults();
 let _defaultMaxTokens = configService.defaultMaxTokens;
 let _tokenLimits = {};
+// refreshMaxTokensCache()
+// WHAT THIS DOES: refreshMaxTokensCache is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call refreshMaxTokensCache(...) where this helper behavior is needed.
 function refreshMaxTokensCache() {
   configService.refreshMaxTokensCache();
   _defaultMaxTokens = configService.defaultMaxTokens;
 }
+// refreshTokenLimitsCache()
+// WHAT THIS DOES: refreshTokenLimitsCache is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call refreshTokenLimitsCache(...) where this helper behavior is needed.
 function refreshTokenLimitsCache() {
   configService.refreshTokenLimitsCache();
   for (const k of Object.keys(TOKEN_LIMIT_DEFAULTS)) {
@@ -417,7 +310,10 @@ function refreshTokenLimitsCache() {
   }
 }
 refreshTokenLimitsCache();
-
+// getTokenLimit()
+// WHAT THIS DOES: getTokenLimit reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call getTokenLimit(...), then use the returned value in your next step.
 function getTokenLimit(key) {
   return configService.getTokenLimit(key);
 }`);
@@ -457,6 +353,10 @@ const modelRouter = new ModelRouter();`
 // ─────────────────────────────────────────────────────────────────────────────
 
 // setActiveEntity is large — find the full inline block and replace it
+// setActiveEntityBlock()
+// WHAT THIS DOES: setActiveEntityBlock changes saved state or updates data.
+// WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+// HOW TO USE IT: call setActiveEntityBlock(...) with the new values you want to persist.
 const setActiveEntityBlock = (() => {
   const start = `function setActiveEntity(entityId) {`;
   const end   = `  console.log(\`  ✓ Switched to entity: \${entityId}\`);\n}`;
@@ -667,6 +567,10 @@ patch(
 // end of processNekoCoreChatMessage. Anchor: start at "const pendingSkillToolApprovals"
 // and end just before "const ALLOWED_HOSTS".
 
+// pipelineFunctionsBlock()
+// WHAT THIS DOES: pipelineFunctionsBlock is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call pipelineFunctionsBlock(...) where this helper behavior is needed.
 const pipelineFunctionsBlock = (() => {
   const start = `\nconst pendingSkillToolApprovals = new Map();`;
   const end   = `\n\nconst ALLOWED_HOSTS = [`;

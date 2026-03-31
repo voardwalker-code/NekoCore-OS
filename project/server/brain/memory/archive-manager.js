@@ -1,3 +1,18 @@
+// ── Brain · Archive Manager ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: fs, path. Keep import and
+// call-site contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // REM System — Archive Manager Module
 // Manages conversation archives, storage, and retrieval.
@@ -7,6 +22,10 @@ const fs = require('fs');
 const path = require('path');
 
 class ArchiveManager {
+  // constructor()
+  // WHAT THIS DOES: constructor is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call constructor(...) where this helper behavior is needed.
   constructor(options = {}) {
     this.memDir = options.memDir || path.join(__dirname, '../../../memories');
     this.archiveDir = path.join(this.memDir, 'archives');
@@ -21,6 +40,10 @@ class ArchiveManager {
   /**
    * Redirect to a new memory directory (e.g. per-entity).
    */
+  // setMemDir()
+  // WHAT THIS DOES: setMemDir changes saved state or updates data.
+  // WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+  // HOW TO USE IT: call setMemDir(...) with the new values you want to persist.
   setMemDir(memDir) {
     this.memDir = memDir;
     this.archiveDir = path.join(this.memDir, 'archives');
@@ -32,6 +55,10 @@ class ArchiveManager {
   /**
    * Create and save a new archive from chat messages
    */
+  // saveArchive()
+  // WHAT THIS DOES: saveArchive changes saved state or updates data.
+  // WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+  // HOW TO USE IT: call saveArchive(...) with the new values you want to persist.
   saveArchive(conversationData) {
     try {
       const archiveName = `archive_${Date.now()}.json`;
@@ -228,6 +255,12 @@ class ArchiveManager {
         let csv = 'timestamp,role,content\n';
         if (archive.messages) {
           archive.messages.forEach(msg => {
+            // content()
+            // Purpose: helper wrapper used by this module's main flow.
+            // content()
+            // WHAT THIS DOES: content is a helper used by this module's main flow.
+            // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+            // HOW TO USE IT: call content(...) where this helper behavior is needed.
             const content = (msg.content || '').replace(/"/g, '""');
             csv += `"${msg.timestamp}","${msg.role}","${content}"\n`;
           });

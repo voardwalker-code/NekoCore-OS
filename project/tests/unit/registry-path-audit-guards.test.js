@@ -1,3 +1,19 @@
+// ── Tests · Registry Path Audit Guards.Test ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This test file validates behavior and guards against regressions in its
+// target subsystem.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: node:test,
+// node:assert/strict, node:fs, node:path. Keep import and call-site
+// contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 'use strict';
 
 // ============================================================
@@ -42,6 +58,10 @@ test('all core JS modules have sourcePath under js/apps/core/', () => {
   const coreApps = manifest.apps.filter(
     a => a.class === 'core' && !IFRAME_SOURCE_TABS.has(a.tabId)
   );
+  // for()
+  // WHAT THIS DOES: for is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call for(...) where this helper behavior is needed.
   for (const app of coreApps) {
     assert.ok(
       app.sourcePath.startsWith('js/apps/core/'),
@@ -51,6 +71,10 @@ test('all core JS modules have sourcePath under js/apps/core/', () => {
 });
 
 test('iframe-hosted core tabs (creator, nekocore) use .html sourcePaths', () => {
+  // for()
+  // WHAT THIS DOES: for is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call for(...) where this helper behavior is needed.
   for (const tabId of IFRAME_SOURCE_TABS) {
     const entry = manifest.apps.find(a => a.tabId === tabId);
     assert.ok(entry, `manifest must contain tabId "${tabId}"`);
@@ -67,6 +91,10 @@ test('all optional JS modules have sourcePath under js/apps/optional/ (workspace
   const optionalApps = manifest.apps.filter(
     a => a.class === 'optional' && a.tabId !== VFS_FLAT_EXCEPTION
   );
+  // for()
+  // WHAT THIS DOES: for is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call for(...) where this helper behavior is needed.
   for (const app of optionalApps) {
     assert.ok(
       app.sourcePath.startsWith('js/apps/optional/'),
@@ -91,6 +119,10 @@ test('every non-iframe non-workspace manifest JS sourcePath appears as <script s
   const jsSources = manifest.apps.filter(
     a => !IFRAME_SOURCE_TABS.has(a.tabId) && a.sourcePath.endsWith('.js') && a.tabId !== VFS_FLAT_EXCEPTION
   );
+  // for()
+  // WHAT THIS DOES: for is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call for(...) where this helper behavior is needed.
   for (const app of jsSources) {
     assert.ok(
       SCRIPT_SRCS.some(s => s.includes(app.sourcePath)),
@@ -148,6 +180,10 @@ test('all core JS module paths exist on disk under js/apps/core/', () => {
   const coreApps = manifest.apps.filter(
     a => a.class === 'core' && !IFRAME_SOURCE_TABS.has(a.tabId)
   );
+  // for()
+  // WHAT THIS DOES: for is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call for(...) where this helper behavior is needed.
   for (const app of coreApps) {
     const absPath = path.join(ROOT, 'client', app.sourcePath);
     assert.ok(
@@ -161,6 +197,10 @@ test('all optional JS module paths exist on disk (workspace vfs.js excepted)', (
   const optionalApps = manifest.apps.filter(
     a => a.class === 'optional' && a.tabId !== VFS_FLAT_EXCEPTION
   );
+  // for()
+  // WHAT THIS DOES: for is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call for(...) where this helper behavior is needed.
   for (const app of optionalApps) {
     const absPath = path.join(ROOT, 'client', app.sourcePath);
     assert.ok(
@@ -175,6 +215,10 @@ test('all optional JS module paths exist on disk (workspace vfs.js excepted)', (
 test('index.html script list has no duplicate src entries', () => {
   const localScripts = SCRIPT_SRCS.filter(s => !s.startsWith('http'));
   const seen = new Set();
+  // for()
+  // WHAT THIS DOES: for is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call for(...) where this helper behavior is needed.
   for (const src of localScripts) {
     assert.ok(!seen.has(src), `Duplicate script src "${src}" found in index.html`);
     seen.add(src);

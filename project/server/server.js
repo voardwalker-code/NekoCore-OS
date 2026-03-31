@@ -1,3 +1,17 @@
+// ── Services · HTTP Server Orchestrator ─────────────────────────────────────
+//
+// HOW THIS SERVER WORKS:
+// This is the main Node.js server entrypoint. It wires service factories,
+// entity runtime lifecycles, static asset serving, and API routes into one
+// HTTP process.
+//
+// WHAT USES THIS:
+//   local runtime startup (`node server.js`) and all server API/UI traffic
+//
+// EXPORTS:
+//   none (process entrypoint with side effects)
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // REM System — Server
 // Enhanced modular version with brain system integration.
@@ -153,7 +167,7 @@ timelineLogger.setEntityResolver(() => {
     return { entityId: currentEntityId, rootDir: null };
   }
 });
-
+/** Write a timeline event, optionally forcing a specific entity scope. */
 function logTimeline(type, payload = {}, options = {}) {
   if (Object.prototype.hasOwnProperty.call(options, 'entityId')) {
     timelineLogger.logEvent(type, payload, { entityId: options.entityId });
@@ -161,7 +175,7 @@ function logTimeline(type, payload = {}, options = {}) {
   }
   timelineLogger.logEvent(type, payload);
 }
-
+/** Activate one entity and update all shared runtime pointers. */
 function setActiveEntity(entityId) {
   const entityDir = require('./entityPaths').getEntityRoot(entityId);
   currentEntityId = entityId;
@@ -169,7 +183,7 @@ function setActiveEntity(entityId) {
   currentEntityPath = entityDir;
   entityRuntime.activate(entityId);
 }
-
+/** Clear active entity state and deactivate entity-scoped runtime modules. */
 function clearActiveEntity() {
   if (currentEntityId) {
     logTimeline('entity.cleared', { entityId: currentEntityId });
@@ -183,7 +197,7 @@ function clearActiveEntity() {
     }
   } catch (_) {}
 }
-
+/** Return active entity memory root path, or null when inactive/unavailable. */
 function getEntityMemoryRootIfActive() {
   if (!currentEntityId) return null;
   try {
@@ -199,6 +213,7 @@ let lastAspectConfigs = null; // Cache most recent aspect configs for brain loop
 
 // SSE clients for real-time brain event streaming
 const sseClients = new Set();
+/** Broadcast one SSE event payload to all connected clients. */
 function broadcastSSE(event, data) {
   const msg = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
   for (const client of sseClients) {
@@ -365,6 +380,7 @@ const MIME_TYPES = {
 
 // Ensure root memories/ exists for system-level defaults (template prompt, system logs).
 // This directory is NOT for entity-specific data — that goes in entities/entity_<id>/memories/.
+/** Ensure system memory directory and default prompt file exist. */
 function ensureMemoryDir() {
   try {
     if (!fs.existsSync(MEM_DIR)) {
@@ -531,6 +547,7 @@ const runStartupPreflight = createRunStartupPreflight({
 // (OAuth state removed — only OpenRouter + Ollama supported)
 
 // Helper: read request body
+/** Read a full HTTP request body into a UTF-8 string. */
 function readBody(req) {
   return new Promise((resolve, reject) => {
     let data = '';
@@ -542,11 +559,13 @@ function readBody(req) {
 
 
 // Helper: load global config — delegates to config-service singleton
+/** Load global config through the shared config service. */
 function loadConfig() {
   return configService.load();
 }
 
 // Helper: save global config — delegates to config-service singleton
+/** Persist global config through the shared config service. */
 function saveConfig(data) {
   configService.save(data);
 }
@@ -563,10 +582,12 @@ const {
 const TOKEN_LIMIT_DEFAULTS = configService.getTokenLimitDefaults();
 let _defaultMaxTokens = configService.defaultMaxTokens;
 let _tokenLimits = {};
+/** Refresh cached default max token value from config service. */
 function refreshMaxTokensCache() {
   configService.refreshMaxTokensCache();
   _defaultMaxTokens = configService.defaultMaxTokens;
 }
+/** Refresh per-channel token limit cache from config service. */
 function refreshTokenLimitsCache() {
   configService.refreshTokenLimitsCache();
   for (const k of Object.keys(TOKEN_LIMIT_DEFAULTS)) {
@@ -574,7 +595,7 @@ function refreshTokenLimitsCache() {
   }
 }
 refreshTokenLimitsCache();
-
+/** Return configured token limit for one routing key. */
 function getTokenLimit(key) {
   return configService.getTokenLimit(key);
 }

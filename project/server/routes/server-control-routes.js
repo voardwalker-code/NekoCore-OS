@@ -1,3 +1,16 @@
+// ── Routes · Server Control Routes ───────────────────────────────────────────
+//
+// HOW SERVER CONTROL WORKS:
+// This module exposes status and boot endpoints for NekoCore and MA, including
+// detached process start and lightweight health probing.
+//
+// WHAT USES THIS:
+//   admin/control UI flows that inspect or restart local server processes
+//
+// EXPORTS:
+//   createServerControlRoutes(ctx)
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ── Server Control Routes ─────────────────────────────────────
 // GET  /api/server/status       — health status of NekoCore + MA
 // POST /api/server/boot/neko    — restart NekoCore OS server
@@ -9,10 +22,12 @@ const { spawn } = require('child_process');
 const path  = require('path');
 const fs    = require('fs');
 const http  = require('http');
-
+/** Build route dispatcher for server health and boot control endpoints. */
 function createServerControlRoutes(ctx) {
   const PROJECT_ROOT       = path.resolve(__dirname, '..', '..');
-  const MA_DIR             = path.join(PROJECT_ROOT, 'MA');
+  const MA_EXTERNAL_DIR    = path.resolve(PROJECT_ROOT, '..', '..', 'MA-Memory-Architect', 'MA');
+  const MA_INTERNAL_DIR    = path.join(PROJECT_ROOT, 'MA');
+  const MA_DIR             = fs.existsSync(path.join(MA_EXTERNAL_DIR, 'MA-Server.js')) ? MA_EXTERNAL_DIR : MA_INTERNAL_DIR;
   const MA_SERVER_SCRIPT   = path.join(MA_DIR, 'MA-Server.js');
   const MA_PID_FILE        = path.join(MA_DIR, 'ma.pid');
   const MA_PORT            = 3850;
@@ -35,6 +50,7 @@ function createServerControlRoutes(ctx) {
 
   // ── helpers ────────────────────────────────────────────────
 
+  /** Probe one server health endpoint and return running status. */
   function checkHealth(port, healthPath, timeout) {
     timeout = timeout || 3000;
     return new Promise(function (resolve) {
@@ -47,7 +63,7 @@ function createServerControlRoutes(ctx) {
       req.setTimeout(timeout, function () { req.destroy(); resolve({ running: false }); });
     });
   }
-
+  /** Spawn detached node process and return child pid. */
   function spawnDetached(script, cwd, extraEnv) {
     var child = spawn(process.execPath, [script], {
       cwd: cwd,
@@ -74,7 +90,7 @@ function createServerControlRoutes(ctx) {
     var status = await checkHealth(MA_PORT, MA_HEALTH);
     if (status.running) return { started: false, reason: 'already_running' };
 
-    if (!fs.existsSync(MA_SERVER_SCRIPT)) return { started: false, reason: 'ma_not_found' };
+    if (!fs.existsSync(MA_SERVER_SCRIPT)) return { started: false, reason: 'ma_not_found', repoUrl: 'https://github.com/voardwalker-code/MA-Memory-Architect' };
 
     // Clean stale PID
     try { if (fs.existsSync(MA_PID_FILE)) fs.unlinkSync(MA_PID_FILE); } catch (_) {}
@@ -83,7 +99,7 @@ function createServerControlRoutes(ctx) {
     try { fs.writeFileSync(MA_PID_FILE, String(pid)); } catch (_) {}
     return { started: true, pid: pid };
   }
-
+  /** Start new NekoCore process and schedule current process exit. */
   function restartNeko() {
     var pid = spawnDetached(NEKO_SERVER_SCRIPT, path.dirname(NEKO_SERVER_SCRIPT));
     try { fs.writeFileSync(NEKO_PID_FILE, String(pid)); } catch (_) {}

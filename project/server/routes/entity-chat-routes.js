@@ -1,3 +1,16 @@
+// ── Routes · Entity Chat Routes ──────────────────────────────────────────────
+//
+// HOW ENTITY CHAT ROUTING WORKS:
+// This module manages multi-entity chat session lifecycle APIs (create, route
+// messages, add/remove entities, fetch session, close session).
+//
+// WHAT USES THIS:
+//   entity-network and multi-agent chat coordination surfaces
+//
+// EXPORTS:
+//   createEntityChatRoutes(ctx)
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ── Entity Chat Routes ──────────────────────────────────────
 // POST /api/entity/chat/create
 // POST /api/entity/chat/message
@@ -6,6 +19,7 @@
 // GET  /api/entity/chat/:sessionId
 // POST /api/entity/chat/:sessionId/close
 
+/** Build entity chat route dispatcher and session handlers. */
 function createEntityChatRoutes(ctx) {
   const manager = require('../brain/tasks/entity-chat-manager');
 
@@ -85,7 +99,7 @@ function createEntityChatRoutes(ctx) {
       res.end(JSON.stringify({ ok: false, error: e.message }));
     }
   }
-
+  /** Add one entity to an existing chat session. */
   function addEntity(res, apiHeaders, sessionId, entityId) {
     const session = manager.addEntity(sessionId, entityId);
     if (!session) {
@@ -96,7 +110,7 @@ function createEntityChatRoutes(ctx) {
     res.writeHead(200, apiHeaders);
     res.end(JSON.stringify({ ok: true, sessionId, entityIds: session.entityIds }));
   }
-
+  /** Remove one entity from an existing chat session. */
   function removeEntity(res, apiHeaders, sessionId, entityId) {
     const session = manager.removeEntity(sessionId, entityId);
     if (!session) {
@@ -107,7 +121,7 @@ function createEntityChatRoutes(ctx) {
     res.writeHead(200, apiHeaders);
     res.end(JSON.stringify({ ok: true, sessionId, entityIds: session.entityIds }));
   }
-
+  /** Return one entity chat session payload by id. */
   function getSession(res, apiHeaders, sessionId) {
     const session = manager.getSession(sessionId);
     if (!session) {

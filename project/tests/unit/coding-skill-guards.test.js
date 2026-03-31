@@ -1,3 +1,19 @@
+// ── Tests · Coding Skill Guards.Test ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This test file validates behavior and guards against regressions in its
+// target subsystem.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: node:test,
+// node:assert/strict, path, fs, os. Keep import and call-site contracts
+// aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // Coding Skill Guard Tests
 // Validates: coding skill SKILL.md, ws_mkdir tool, code module
@@ -169,11 +185,13 @@ describe('Code module — task-types.js', () => {
 
 describe('ws_mkdir — workspace tool execution', () => {
   const { executeToolCalls } = require('../../server/brain/skills/workspace-tools');
-
+  // makeTempWorkspace()
+  // WHAT THIS DOES: makeTempWorkspace creates or initializes something needed by the flow.
+  // WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+  // HOW TO USE IT: call makeTempWorkspace(...) before code that depends on this setup.
   function makeTempWorkspace() {
     return fs.mkdtempSync(path.join(os.tmpdir(), 'nekocore-ws-mkdir-'));
   }
-
   function cleanup(dir) {
     try { fs.rmSync(dir, { recursive: true, force: true }); } catch { /* ignore */ }
   }
@@ -310,11 +328,13 @@ describe('Code blueprint — enhanced content', () => {
 
 describe('Code scaffolding — mkdir + write integration', () => {
   const { executeToolCalls } = require('../../server/brain/skills/workspace-tools');
-
+  // makeTempWorkspace()
+  // WHAT THIS DOES: makeTempWorkspace creates or initializes something needed by the flow.
+  // WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+  // HOW TO USE IT: call makeTempWorkspace(...) before code that depends on this setup.
   function makeTempWorkspace() {
     return fs.mkdtempSync(path.join(os.tmpdir(), 'nekocore-scaffold-'));
   }
-
   function cleanup(dir) {
     try { fs.rmSync(dir, { recursive: true, force: true }); } catch { /* ignore */ }
   }

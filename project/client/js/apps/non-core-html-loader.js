@@ -1,10 +1,31 @@
+// ── Services · Client Non-Core HTML Loader ──────────────────────────────────
+//
+// HOW NON-CORE HTML LOADING WORKS:
+// This file mounts optional and custom app HTML using a manifest. It validates
+// tab IDs and paths, injects HTML into known slots, re-runs script tags, and
+// toggles nav button visibility based on app enablement.
+//
+// WHAT USES THIS:
+//   client boot flow — waits on `window.__nonCoreHtmlReady` before startup
+//
+// EXPORTS:
+//   side-effect module — sets `window.__nonCoreHtmlReady`
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // NekoCore OS - Non-core app HTML loader
 // Loads optional tab HTML from manifest-backed modular files.
 // ============================================================
 
 (function () {
+  'use strict';
+
+  // ── Constants ─────────────────────────────────────────────────────────────
+
+  // Manifest source for optional and custom app entries.
   var MANIFEST_PATH = 'apps/non-core/non-core-apps.manifest.json';
+
+  // Built-in fallback list used when manifest is missing or malformed.
   var DEFAULT_NON_CORE = [
     { tabId: 'workspace', enabled: true, path: 'apps/non-core/core/tab-workspace.html', label: 'Workspace', icon: '📁', navTarget: '#navOptionalAppsHost' },
     { tabId: 'skills', enabled: true, path: 'apps/non-core/core/tab-skills.html', label: 'Skills', icon: '🧩', navTarget: '#navOptionalAppsHost' },
@@ -19,25 +40,35 @@
     { tabId: 'browser', enabled: true, path: 'apps/non-core/core/tab-browser.html', label: 'Browser', icon: '🌐', navTarget: '#navOptionalAppsHost' }
   ];
 
+  // Fast lookup map for fallback metadata by tabId.
   var DEFAULT_NON_CORE_BY_TAB = DEFAULT_NON_CORE.reduce(function (acc, item) {
     acc[item.tabId] = item;
     return acc;
   }, {});
 
+  // ── Guards ────────────────────────────────────────────────────────────────
+
+  /** Validate tab IDs to avoid selector/DOM injection edge cases. */
   function isSafeTabId(tabId) {
     return /^[a-z0-9_-]+$/i.test(String(tabId || '').trim());
   }
 
+  /** Limit loads to local non-core HTML files only. */
   function isSafeHtmlPath(path) {
     var p = String(path || '').trim();
     return !!p && p.startsWith('apps/non-core/') && p.endsWith('.html') && p.indexOf('..') === -1;
   }
 
+  /** Allow only simple #id nav targets. */
   function isSafeNavTarget(selector) {
     var s = String(selector || '').trim();
     return /^#[a-z0-9_-]+$/i.test(s);
   }
 
+  // ── Helpers ───────────────────────────────────────────────────────────────
+
+  // Synchronous fetch because this loader initializes before shell boot.
+  /** Synchronously fetch text content from a local path. */
   function syncGetText(path) {
     try {
       var xhr = new XMLHttpRequest();
@@ -52,6 +83,7 @@
     return null;
   }
 
+  /** Show or hide all nav buttons that target a tab ID. */
   function setNavVisibility(tabId, visible) {
     if (!tabId) return;
     var selector = '[data-tab="' + tabId + '"]';
@@ -62,6 +94,7 @@
     });
   }
 
+  /** Escape text for safe insertion into HTML strings. */
   function escapeHtml(text) {
     return String(text || '')
       .replace(/&/g, '&amp;')
@@ -71,6 +104,7 @@
       .replace(/'/g, '&#39;');
   }
 
+  /** Resolve nav host node with fallback strategy. */
   function getNavTarget(selector, fallbackSelector) {
     if (isSafeNavTarget(selector)) {
       var exact = document.querySelector(selector);
@@ -83,6 +117,7 @@
     return document.querySelector('.nav') || null;
   }
 
+  /** Ensure there is a nav button for a mounted optional/custom tab. */
   function ensureNavButton(entry, isCustomApp) {
     var tabId = String(entry.tabId || '').trim();
     if (!isSafeTabId(tabId)) return;
@@ -114,10 +149,10 @@
     navTarget.appendChild(button);
   }
 
+  /** Re-run script tags from mounted HTML so behavior initializes. */
   function runMountedScripts(root, htmlSource) {
     var scripts = [];
     var seen = Object.create(null);
-
     function collectScript(scriptNode) {
       if (!scriptNode) return;
       var key = scriptNode.src ? ('src:' + scriptNode.src) : ('inline:' + (scriptNode.textContent || ''));
@@ -166,10 +201,12 @@
     });
   }
 
+  /** Find the mounted tab root after HTML injection. */
   function getMountedTabRoot(tabId) {
     return document.getElementById('tab-' + tabId);
   }
 
+  /** Mount tab HTML with fallback insertion points. */
   function mountTabHtml(tabId, html) {
     var slot = document.getElementById('optional-tab-slot-' + tabId);
     if (slot) {
@@ -208,12 +245,14 @@
     return false;
   }
 
+  /** Build placeholder HTML for disabled or invalid optional apps. */
   function createDisabledTabHtml(tabId, reason) {
     return '<div class="tab-content" id="tab-' + tabId + '">' +
       '<div class="placeholder-sm text-xs-c" style="padding:var(--space-4)">' + reason + '</div>' +
       '</div>';
   }
 
+  /** Read and parse manifest with safe fallbacks. */
   function resolveManifest() {
     var raw = syncGetText(MANIFEST_PATH);
     if (!raw) return { nonCoreApps: DEFAULT_NON_CORE, customApps: [] };
@@ -227,6 +266,7 @@
     }
   }
 
+  /** Normalize one manifest entry into a stable internal shape. */
   function normalizeEntry(entry, fallback, defaultNavTarget) {
     var tabId = String(entry && entry.tabId || fallback && fallback.tabId || '').trim();
     var path = String(entry && entry.path || fallback && fallback.path || '').trim();
@@ -245,6 +285,7 @@
     };
   }
 
+  /** Mount non-tab custom HTML blocks into custom host areas. */
   function mountCustomHtmlEntries(entries) {
     entries.forEach(function (entry) {
       if (!entry || entry.enabled === false) return;
@@ -265,15 +306,16 @@
     });
   }
 
+  // ── Core Flow ─────────────────────────────────────────────────────────────
+
+  /** Orchestrate optional/custom HTML loading and nav visibility. */
   function loadNonCoreAppHtml() {
     var manifest = resolveManifest();
-//Open Next json entry id
-//JsonEntryId: "hello-loader-001"
-    manifest.nonCoreApps.push({ tabId: 'helloworld', enabled: true, path: 'apps/non-core/core/tab-hello-world.html', label: 'Hello World', icon: '🏓', navTarget: '#navOptionalAppsHost' });
-//Close "
-//Open Next json entry id
 
-//Close "
+    // Installer anchor: hello-world app registration.
+    // JsonEntryId: "hello-loader-001"
+    manifest.nonCoreApps.push({ tabId: 'helloworld', enabled: true, path: 'apps/non-core/core/tab-hello-world.html', label: 'Hello World', icon: '🏓', navTarget: '#navOptionalAppsHost' });
+
     var enabledTabs = new Set();
     var managedTabs = new Set(Object.keys(DEFAULT_NON_CORE_BY_TAB));
 
@@ -348,5 +390,6 @@
     return true;
   }
 
+  // Boot contract: expose readiness promise for boot.js to await.
   window.__nonCoreHtmlReady = Promise.resolve(loadNonCoreAppHtml());
 })();

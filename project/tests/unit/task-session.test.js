@@ -1,3 +1,19 @@
+// ── Tests · Task Session.Test ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This test file validates behavior and guards against regressions in its
+// target subsystem.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: node:test,
+// node:assert/strict, fs, os, path. Keep import and call-site contracts
+// aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
@@ -5,7 +21,10 @@ const os = require('os');
 const path = require('path');
 
 const session = require('../../server/brain/tasks/task-session');
-
+// tempFile()
+// WHAT THIS DOES: tempFile is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call tempFile(...) where this helper behavior is needed.
 function tempFile() {
   const dir = path.join(os.tmpdir(), 'nekocore-task-session-' + Date.now() + '-' + Math.random().toString(36).slice(2));
   fs.mkdirSync(dir, { recursive: true });

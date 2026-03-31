@@ -1,3 +1,18 @@
+// ── Brain · Shape Classifier ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include:
+// ../../contracts/memory-schema. Keep import and call-site contracts aligned
+// during refactors.
+//
+// EXPORTS:
+// Exposed API includes: classifyShape, SHAPE_LABELS.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // Shape Classifier — Heuristic memory shape labeling (Phase 5)
 //
@@ -50,6 +65,10 @@ const REFLECTIVE_MARKERS = [
  * @param {string}  [params.type]       — memory type (episodic, semantic_knowledge, etc.)
  * @returns {string} One of SHAPE_LABELS
  */
+// classifyShape()
+// WHAT THIS DOES: classifyShape is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call classifyShape(...) where this helper behavior is needed.
 function classifyShape({ semantic = '', emotion = '', topics = [], importance = 0.5, type = 'episodic' } = {}) {
   const lowerSemantic = (typeof semantic === 'string' ? semantic : '').toLowerCase();
   const lowerEmotion  = (typeof emotion === 'string' ? emotion : '').toLowerCase().trim();

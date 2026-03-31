@@ -1,3 +1,19 @@
+// ── Tests · Archive Indexes Guards.Test ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This test file validates behavior and guards against regressions in its
+// target subsystem.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: node:test,
+// node:assert/strict, fs, path, os. Keep import and call-site contracts
+// aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // Guard Tests — Phase 4.7 E-1: Index Infrastructure
 // Guards that define and lock the expected behavior of:
@@ -78,6 +94,10 @@ test('archive-indexes exports narrowByIndex as a function', () => {
 
 // ── readIndex / writeIndex round-trip ────────────────────────────────────────
 
+// tmpEntityId()
+// WHAT THIS DOES: tmpEntityId is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call tmpEntityId(...) where this helper behavior is needed.
 function tmpEntityId() {
   return `test_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
 }

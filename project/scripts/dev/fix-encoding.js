@@ -1,4 +1,18 @@
 #!/usr/bin/env node
+// ── Scripts · Fix Encoding ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This script automates maintenance, generation, validation, or local
+// development workflows.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: fs, path. Keep import and
+// call-site contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
 // fix-encoding.js
 // Fixes UTF-8 Mojibake in server JS files:
 //   Files were originally saved as UTF-8, then re-read as Windows-1252,
@@ -52,6 +66,10 @@ const W1252_TO_BYTE = new Map([
  * Translate a single Unicode code point back to its Windows-1252 byte value.
  * Returns undefined if the character cannot be represented in Windows-1252.
  */
+// charToByte()
+// WHAT THIS DOES: charToByte is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call charToByte(...) where this helper behavior is needed.
 function charToByte(cp) {
   if (cp <= 0xFF) return cp;           // Latin-1 range maps 1-to-1
   return W1252_TO_BYTE.get(cp);        // CP1252 extension, or undefined
@@ -68,6 +86,10 @@ function charToByte(cp) {
  * Surrogate pairs and codepoints > 0xFF that are not in the W1252 table
  * are unmappable → fall straight through unchanged (emoji preserved).
  */
+// fixMojibake()
+// WHAT THIS DOES: fixMojibake is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call fixMojibake(...) where this helper behavior is needed.
 function fixMojibake(text) {
   let out = '';
   let i   = 0;
@@ -134,7 +156,10 @@ function fixMojibake(text) {
 const args    = process.argv.slice(2);
 const dryRun  = args.includes('--dry');
 const targets = args.filter(a => a !== '--dry');
-
+// collectFiles()
+// WHAT THIS DOES: collectFiles is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call collectFiles(...) where this helper behavior is needed.
 function collectFiles(dir) {
   const files = [];
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {

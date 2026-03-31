@@ -1,3 +1,18 @@
+// ── Module · Telegram ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This module belongs to the NekoCore OS codebase and provides focused
+// subsystem behavior.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: https, crypto. Keep import
+// and call-site contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // REM System — Telegram Integration
 // 
@@ -37,6 +52,10 @@ class TelegramBot {
    * @param {Function} [opts.onWebContent] - async (text) => webContextString or null
    * @param {Function} [opts.onWebSearch] - async (query) => searchResultsString
    */
+  // constructor()
+  // WHAT THIS DOES: constructor is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call constructor(...) where this helper behavior is needed.
   constructor(opts = {}) {
     this.botToken = opts.botToken;
     this.allowedChatIds = opts.allowedChatIds || null;
@@ -56,6 +75,10 @@ class TelegramBot {
   }
 
   // ── Telegram Bot API call (pure https) ──────────────────────
+  // _apiCall()
+  // WHAT THIS DOES: _apiCall is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call _apiCall(...) where this helper behavior is needed.
   _apiCall(method, body = null) {
     return new Promise((resolve, reject) => {
       const options = {
@@ -66,6 +89,10 @@ class TelegramBot {
       };
 
       let postData = null;
+      // if()
+      // WHAT THIS DOES: if is a helper used by this module's main flow.
+      // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+      // HOW TO USE IT: call if(...) where this helper behavior is needed.
       if (body) {
         postData = JSON.stringify(body);
         options.headers['Content-Type'] = 'application/json';

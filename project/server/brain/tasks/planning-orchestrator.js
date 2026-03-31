@@ -1,3 +1,20 @@
+// ── Brain · Planning Orchestrator ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: ./entity-chat-manager,
+// ./entity-worker-invoker, ./task-event-bus,
+// ../../contracts/planning-session-contract, ./blueprint-loader. Keep import
+// and call-site contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // Planning Orchestrator
 // Runs multi-entity deliberation sessions: entities discuss across
@@ -192,6 +209,10 @@ async function _moderateRound(sessionId, roundIndex, responses, prompt, callLLM,
 /**
  * Parse the moderation LLM response — extract JSON or fall back gracefully.
  */
+// _parseModerationResponse()
+// WHAT THIS DOES: _parseModerationResponse reshapes data from one form into another.
+// WHY IT EXISTS: conversion rules live here so the same transformation is reused.
+// HOW TO USE IT: pass input data into _parseModerationResponse(...) and use the transformed output.
 function _parseModerationResponse(raw) {
   const text = String(raw || '');
   // Try to extract JSON from the response
@@ -224,6 +245,12 @@ function _parseModerationResponse(raw) {
  */
 async function _synthesizePlan(sessionId, prompt, callLLM, runtime) {
   const session = entityChatManager.getSession(sessionId);
+  // history()
+  // Purpose: helper wrapper used by this module's main flow.
+  // history()
+  // WHAT THIS DOES: history is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call history(...) where this helper behavior is needed.
   const history = (session ? session.messages : [])
     .map(m => `[${m.from}]: ${m.content}`)
     .join('\n\n');
@@ -263,6 +290,10 @@ async function _synthesizePlan(sessionId, prompt, callLLM, runtime) {
 /**
  * Parse the synthesis LLM response — extract JSON or fall back gracefully.
  */
+// _parseSynthesisResponse()
+// WHAT THIS DOES: _parseSynthesisResponse reshapes data from one form into another.
+// WHY IT EXISTS: conversion rules live here so the same transformation is reused.
+// HOW TO USE IT: pass input data into _parseSynthesisResponse(...) and use the transformed output.
 function _parseSynthesisResponse(raw) {
   const text = String(raw || '');
   const jsonMatch = text.match(/\{[\s\S]*"finalPlan"[\s\S]*\}/);

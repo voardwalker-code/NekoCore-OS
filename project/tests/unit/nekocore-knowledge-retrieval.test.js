@@ -1,3 +1,19 @@
+// ── Tests · Nekocore Knowledge Retrieval.Test ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This test file validates behavior and guards against regressions in its
+// target subsystem.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: node:test,
+// node:assert/strict, fs, path, zlib. Keep import and call-site contracts
+// aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
@@ -6,14 +22,20 @@ const zlib = require('zlib');
 const os = require('os');
 
 const { buildNekoKnowledgeContext } = require('../../server/brain/nekocore/knowledge-retrieval');
-
+// makeTempRoot()
+// WHAT THIS DOES: makeTempRoot creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call makeTempRoot(...) before code that depends on this setup.
 function makeTempRoot() {
   const root = path.join(os.tmpdir(), '.tmp-nekocore-recall-' + Date.now() + '-' + Math.random().toString(16).slice(2, 8));
   fs.mkdirSync(path.join(root, 'episodic'), { recursive: true });
   fs.mkdirSync(path.join(root, 'semantic'), { recursive: true });
   return root;
 }
-
+// writeConversationMemory()
+// WHAT THIS DOES: writeConversationMemory changes saved state or updates data.
+// WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+// HOW TO USE IT: call writeConversationMemory(...) with the new values you want to persist.
 function writeConversationMemory(memRoot, id, created, userMessage, response) {
   const folder = path.join(memRoot, 'episodic', id);
   fs.mkdirSync(folder, { recursive: true });

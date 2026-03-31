@@ -1,3 +1,18 @@
+// ── Brain · Memory Graph ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: ../bus/thought-types. Keep
+// import and call-site contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // REM System — Memory Graph Module
 // Implements associative memory with spreading activation.
@@ -6,6 +21,10 @@
 const ThoughtTypes = require('../bus/thought-types');
 
 class MemoryGraph {
+  // constructor()
+  // WHAT THIS DOES: constructor is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call constructor(...) where this helper behavior is needed.
   constructor(options = {}) {
     this.nodes = new Map(); // memory_id -> node
     this.cognitiveBus = options.cognitiveBus;
@@ -18,6 +37,10 @@ class MemoryGraph {
   /**
    * Add a memory node to the graph
    */
+  // addMemoryNode()
+  // WHAT THIS DOES: addMemoryNode is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call addMemoryNode(...) where this helper behavior is needed.
   addMemoryNode(memory) {
     const node = {
       memory_id: memory.id || memory.memory_id,
@@ -40,10 +63,18 @@ class MemoryGraph {
   /**
    * Create an associative link between two memories
    */
+  // linkMemories()
+  // WHAT THIS DOES: linkMemories is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call linkMemories(...) where this helper behavior is needed.
   linkMemories(memoryIdA, memoryIdB, strength = 0.5) {
     const nodeA = this.nodes.get(memoryIdA);
     const nodeB = this.nodes.get(memoryIdB);
 
+    // if()
+    // WHAT THIS DOES: if is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call if(...) where this helper behavior is needed.
     if (!nodeA || !nodeB) {
       return false;
     }

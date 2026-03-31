@@ -1,3 +1,17 @@
+// ── Brain · Yake ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Used by related flows in its subsystem. Keep call contracts stable during
+// readability-only edits.
+//
+// EXPORTS:
+// Exposed API includes: extractKeywords.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // YAKE — Yet Another Keyword Extractor (Pure JS)
 // Statistical keyword extraction using surface features:
@@ -31,6 +45,10 @@ const WORD_SPLIT = /[\s,;:()\[\]{}"'\/\\]+/;
  * Tokenize text into normalized words, preserving original positions.
  * Returns array of { word, lower, position, sentenceIndex }
  */
+// tokenize()
+// WHAT THIS DOES: tokenize is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call tokenize(...) where this helper behavior is needed.
 function tokenize(text) {
   const sentences = text.split(SENTENCE_SPLIT).filter(s => s.trim().length > 0);
   const tokens = [];
@@ -48,6 +66,10 @@ function tokenize(text) {
 /**
  * Compute candidate word features.
  */
+// computeWordFeatures()
+// WHAT THIS DOES: computeWordFeatures is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call computeWordFeatures(...) where this helper behavior is needed.
 function computeWordFeatures(tokens) {
   const totalTokens = tokens.length;
   if (totalTokens === 0) return new Map();
@@ -93,6 +115,10 @@ function computeWordFeatures(tokens) {
     const wDiff = 1 / (1 + posRange / (totalTokens || 1));
 
     // Combined score — lower = better keyword
+    // score()
+    // WHAT THIS DOES: score is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call score(...) where this helper behavior is needed.
     const score = (wPos * wRel) / (wCase + (wFreq / (wRel + wDiff / 3 + 1)));
 
     features.set(word, { score, count: s.totalCount, positions: s.positions });
@@ -104,6 +130,10 @@ function computeWordFeatures(tokens) {
 /**
  * Score bigrams by combining component word scores.
  */
+// scoreBigrams()
+// WHAT THIS DOES: scoreBigrams is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call scoreBigrams(...) where this helper behavior is needed.
 function scoreBigrams(tokens, wordFeatures) {
   const bigrams = new Map();
   const filtered = tokens.filter(t => !STOPWORDS.has(t.lower) && t.lower.length >= 2);
@@ -132,6 +162,10 @@ function scoreBigrams(tokens, wordFeatures) {
  * Deduplicate overlapping keywords — if a bigram contains a unigram,
  * keep whichever scores better.
  */
+// dedup()
+// WHAT THIS DOES: dedup is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call dedup(...) where this helper behavior is needed.
 function dedup(candidates) {
   const sorted = candidates.sort((a, b) => a.score - b.score);
   const kept = [];
@@ -154,6 +188,10 @@ function dedup(candidates) {
  * @param {number} [maxKeywords=10] — maximum keywords to return
  * @returns {string[]} — ranked keywords (best first)
  */
+// extractKeywords()
+// WHAT THIS DOES: extractKeywords is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call extractKeywords(...) where this helper behavior is needed.
 function extractKeywords(text, maxKeywords = 10) {
   if (!text || typeof text !== 'string') return [];
 

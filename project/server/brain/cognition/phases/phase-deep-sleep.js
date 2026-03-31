@@ -1,3 +1,18 @@
+// ── Brain · Phase Deep Sleep ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Used by related flows in its subsystem. Keep call contracts stable during
+// readability-only edits.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // Phase: DeepSleep — Belief Graph Emergence
 // Scans semantic memories for recurring patterns and forms belief graph nodes.
 // Also decays the belief graph and cross-links related beliefs.

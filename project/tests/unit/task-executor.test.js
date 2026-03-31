@@ -1,3 +1,21 @@
+// ── Tests · Task Executor.Test ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This test file validates behavior and guards against regressions in its
+// target subsystem.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: node:test, assert,
+// ../../server/brain/tasks/task-executor,
+// ../../server/brain/tasks/task-event-bus,
+// ../../server/brain/skills/task-runner. Keep import and call-site contracts
+// aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 /**
  * Task Executor Guard Tests
  * Validates milestone events, stall/resume, entity bridge, tool filter,
@@ -23,6 +41,10 @@ const taskEventBus = require('../../server/brain/tasks/task-event-bus');
  * Collect all events for a session from the bus (using wildcard listener).
  * Returns an array; add to it by registering before the task runs.
  */
+// collectEvents()
+// WHAT THIS DOES: collectEvents is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call collectEvents(...) where this helper behavior is needed.
 function collectEvents(sessionId) {
   const events = [];
   const handler = (event) => events.push(event);
@@ -33,6 +55,10 @@ function collectEvents(sessionId) {
 /**
  * Build a mock callLLM that returns responses sequentially.
  */
+// mockCallLLM()
+// WHAT THIS DOES: mockCallLLM is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call mockCallLLM(...) where this helper behavior is needed.
 function mockCallLLM(responses) {
   let idx = 0;
   return async (_runtime, _messages, _opts) => {
@@ -46,6 +72,10 @@ function mockCallLLM(responses) {
  * Build a minimal mock runTask for testing the executor independently.
  * Accepts an array of steps to simulate.
  */
+// mockRunTask()
+// WHAT THIS DOES: mockRunTask is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call mockRunTask(...) where this helper behavior is needed.
 function mockRunTask(steps, finalResponse = 'Task complete') {
   return async (config) => {
     const stepOutputs = [];
@@ -121,6 +151,12 @@ describe('Task Event Bus', () => {
   it('should unsubscribe handlers', () => {
     const sessionId = 'test-unsub-' + Date.now();
     let callCount = 0;
+    // handler()
+    // Purpose: helper wrapper used by this module's main flow.
+    // handler()
+    // WHAT THIS DOES: handler is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call handler(...) where this helper behavior is needed.
     const handler = () => { callCount++; };
     taskEventBus.subscribe(sessionId, handler);
     taskEventBus.emit(sessionId, { type: 'x' });
@@ -305,6 +341,10 @@ describe('executeTask — milestone events', () => {
     ]);
 
     // Capture events via wildcard
+    // wildcardHandler()
+    // WHAT THIS DOES: wildcardHandler is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call wildcardHandler(...) where this helper behavior is needed.
     const wildcardHandler = ({ sessionId, ...event }) => {
       if (event.type === 'milestone') sessionEvents.push(event);
     };
@@ -332,6 +372,12 @@ describe('executeTask — milestone events', () => {
     let milestoneEvent = null;
 
     const mockRun = mockRunTask([{ description: 'Test step', output: 'Test output' }]);
+    // wildcardHandler()
+    // Purpose: helper wrapper used by this module's main flow.
+    // wildcardHandler()
+    // WHAT THIS DOES: wildcardHandler is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call wildcardHandler(...) where this helper behavior is needed.
     const wildcardHandler = ({ sessionId, ...event }) => {
       if (event.type === 'milestone') milestoneEvent = event;
     };
@@ -366,6 +412,12 @@ describe('executeTask — task_complete event', () => {
     let completeEvent = null;
     const mockRun = mockRunTask([{ description: 'Do it', output: 'Done' }], 'Final answer');
 
+    // wildcardHandler()
+    // Purpose: helper wrapper used by this module's main flow.
+    // wildcardHandler()
+    // WHAT THIS DOES: wildcardHandler is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call wildcardHandler(...) where this helper behavior is needed.
     const wildcardHandler = ({ sessionId, ...event }) => {
       if (event.type === 'task_complete') completeEvent = event;
     };
@@ -417,10 +469,22 @@ describe('executeTask — task_complete event', () => {
 describe('executeTask — task_error event', () => {
   it('should emit task_error and rethrow on failure', async () => {
     let errorEvent = null;
+    // failingRun()
+    // Purpose: helper wrapper used by this module's main flow.
+    // failingRun()
+    // WHAT THIS DOES: failingRun is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call failingRun(...) where this helper behavior is needed.
     const failingRun = async () => {
       throw new Error('Simulated task failure');
     };
 
+    // wildcardHandler()
+    // Purpose: helper wrapper used by this module's main flow.
+    // wildcardHandler()
+    // WHAT THIS DOES: wildcardHandler is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call wildcardHandler(...) where this helper behavior is needed.
     const wildcardHandler = ({ sessionId, ...event }) => {
       if (event.type === 'task_error') errorEvent = event;
     };
@@ -498,6 +562,12 @@ describe('executeTask — needs_input and resumeWithInput', () => {
       { description: 'Final step', output: 'Done with topic' }
     ], 'Final output');
 
+    // wildcardHandler()
+    // Purpose: helper wrapper used by this module's main flow.
+    // wildcardHandler()
+    // WHAT THIS DOES: wildcardHandler is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call wildcardHandler(...) where this helper behavior is needed.
     const wildcardHandler = ({ sessionId, ...event }) => {
       if (event.type === 'needs_input') {
         needsInputEvent = event;
@@ -547,6 +617,12 @@ describe('executeTask — entity bridge', () => {
     let completeEvent = null;
     const mockRun = mockRunTask([{ description: 'Step', output: 'Out' }], 'Done');
 
+    // wildcardHandler()
+    // Purpose: helper wrapper used by this module's main flow.
+    // wildcardHandler()
+    // WHAT THIS DOES: wildcardHandler is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call wildcardHandler(...) where this helper behavior is needed.
     const wildcardHandler = ({ sessionId, ...event }) => {
       if (event.type === 'task_complete') completeEvent = event;
     };

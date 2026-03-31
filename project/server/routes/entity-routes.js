@@ -1,3 +1,16 @@
+// ── Routes · Entity Routes ───────────────────────────────────────────────────
+//
+// HOW ENTITY ROUTING WORKS:
+// This module serves entity lifecycle APIs (list/load/create/delete/visibility),
+// user/relationship endpoints, hatch flows, previews, and intro/memory helpers.
+//
+// WHAT USES THIS:
+//   entity management UI, onboarding flows, and active-entity orchestration
+//
+// EXPORTS:
+//   createEntityRoutes(ctx)
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ── Entity Routes ─────────────────────────────────────────────
 // /api/entity, /api/entities/*, /api/entity-intro,
 // /api/entity-last-memory, /api/hatch
@@ -8,16 +21,21 @@ const MemoryStorage = require('../brain/memory-storage');
 const entityCheckout = require('../services/entity-checkout');
 const { generateVoiceFromTraits, getDefaultVoice } = require('../services/voice-profile');
 const RESERVED_ENTITY_NAME_KEYS = new Set(['nekocore', 'neko', 'echo', 'agentecho']);
-
+// createEntityRoutes()
+// WHAT THIS DOES: Builds entity lifecycle/user/relationship route dispatcher and helpers.
+// WHY IT EXISTS: Entity management touches many subsystems and needs a single orchestration surface.
+// HOW TO USE IT: Call createEntityRoutes(ctx) during server route initialization.
 function createEntityRoutes(ctx) {
   const { fs, path } = ctx;
   const PROJECT_ROOT = path.join(__dirname, '..', '..');
   const WORKSPACE_DESKTOP_DIR = path.join(PROJECT_ROOT, 'workspace', 'desktop');
-
+  // _normalizeEntityNameKey()
+  // WHAT THIS DOES: Normalizes entity names/ids into a canonical comparison key.
+  // WHY IT EXISTS: Reserved-name checks should be case-insensitive and punctuation-tolerant.
+  // HOW TO USE IT: Call _normalizeEntityNameKey(name) before reserved-name validation.
   function _normalizeEntityNameKey(name) {
     return String(name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
   }
-
   function _assertEntityNameAllowed(name) {
     const key = _normalizeEntityNameKey(name);
     if (!key) return;
@@ -25,7 +43,10 @@ function createEntityRoutes(ctx) {
       throw new Error('This entity name is reserved by the system. Please choose another name.');
     }
   }
-
+  // _toWorkspaceFolderName()
+  // WHAT THIS DOES: Produces a safe workspace folder name from entity name or fallback id.
+  // WHY IT EXISTS: Entity display names can contain filesystem-unsafe characters.
+  // HOW TO USE IT: Call _toWorkspaceFolderName(name, fallbackId) before creating workspace folders.
   function _toWorkspaceFolderName(name, fallbackId) {
     const cleaned = String(name || '')
       .replace(/[\\/:*?"<>|\x00-\x1F]/g, ' ')
@@ -36,7 +57,10 @@ function createEntityRoutes(ctx) {
     const fallback = String(fallbackId || '').trim() || 'Entity Workspace';
     return fallback.replace(/[\\/:*?"<>|\x00-\x1F]/g, '_');
   }
-
+  // _ensureEntityDesktopWorkspace()
+  // WHAT THIS DOES: Ensures per-entity desktop workspace folder exists and returns paths.
+  // WHY IT EXISTS: New entities should always have a ready workspace target for tools/UI.
+  // HOW TO USE IT: Call _ensureEntityDesktopWorkspace(entityName, entityId) during creation flows.
   function _ensureEntityDesktopWorkspace(entityName, entityId) {
     const folderName = _toWorkspaceFolderName(entityName, entityId);
     if (!fs.existsSync(WORKSPACE_DESKTOP_DIR)) {
@@ -53,10 +77,13 @@ function createEntityRoutes(ctx) {
   // visibility toggled through normal entity routes.
   const SYSTEM_ENTITY_IDS = new Set(['nekocore']);
 
+  // _isSystemEntityId()
+  // WHAT THIS DOES: Returns true when an id is a protected system entity.
+  // WHY IT EXISTS: System entities must be guarded from destructive user operations.
+  // HOW TO USE IT: Call _isSystemEntityId(id) before delete/rename/visibility mutations.
   function _isSystemEntityId(id) {
     return SYSTEM_ENTITY_IDS.has(_normalizeEntityNameKey(id));
   }
-
   function getPreferredGlobalProfileForEntity(entityId) {
     const cfg = ctx.loadConfig ? ctx.loadConfig() : {};
     const fallback = cfg?.lastActive || null;
@@ -110,7 +137,10 @@ function createEntityRoutes(ctx) {
     if (p === '/api/entities/import-from-ma' && m === 'POST') { await postImportFromMA(req, res, apiHeaders); return true; }
     return false;
   }
-
+  // _reinitBrainLoop()
+  // WHAT THIS DOES: Recreates brain loop after entity/context switch.
+  // WHY IT EXISTS: Prevents stale timers/state from previous entity sessions leaking into new one.
+  // HOW TO USE IT: Call _reinitBrainLoop() after active-entity storage/context is swapped.
   function _reinitBrainLoop() {
     // Stop the old brain loop to prevent orphaned timers/state bleed
     try {
@@ -167,7 +197,10 @@ function createEntityRoutes(ctx) {
       res.end(JSON.stringify({ error: e.message }));
     }
   }
-
+  // getEntities()
+  // WHAT THIS DOES: Lists entities visible to current account with checkout info.
+  // WHY IT EXISTS: UI needs one filtered list honoring ownership, sharing, and checkout locks.
+  // HOW TO USE IT: Route GET /api/entities to getEntities(req, res, apiHeaders).
   function getEntities(req, res, apiHeaders) {
     try {
       const allEntities = ctx.entityManager.listEntities();
@@ -192,7 +225,10 @@ function createEntityRoutes(ctx) {
       res.end(JSON.stringify({ error: e.message }));
     }
   }
-
+  // getEntitiesCurrent()
+  // WHAT THIS DOES: Returns current active entity state payload.
+  // WHY IT EXISTS: Frontend needs authoritative active-entity state from server.
+  // HOW TO USE IT: Route GET /api/entities/current to getEntitiesCurrent(req, res, apiHeaders).
   function getEntitiesCurrent(req, res, apiHeaders) {
     try {
       const state = ctx.entityManager.getEntityState();
@@ -918,6 +954,10 @@ function createEntityRoutes(ctx) {
 
   // ── User profile handlers ────────────────────────────────────
 
+  // _requireEntity()
+  // WHAT THIS DOES: Ensures current entity context exists for dependent routes.
+  // WHY IT EXISTS: Avoids duplicated "no active entity" guards across handlers.
+  // HOW TO USE IT: Call _requireEntity(res, apiHeaders) and return early when false.
   function _requireEntity(res, apiHeaders) {
     const entityId = ctx.currentEntityId;
     if (!entityId) {
@@ -927,7 +967,10 @@ function createEntityRoutes(ctx) {
     }
     return entityId;
   }
-
+  // getUsersList()
+  // WHAT THIS DOES: Lists known user profiles and marks the active one.
+  // WHY IT EXISTS: Persona/user switching UI needs both roster and active-state info.
+  // HOW TO USE IT: Route GET /api/users to getUsersList(req, res, apiHeaders).
   function getUsersList(req, res, apiHeaders) {
     const userProfiles = require('../services/user-profiles');
     const entityPaths = require('../entityPaths');
@@ -949,7 +992,10 @@ function createEntityRoutes(ctx) {
     res.writeHead(result.ok ? 201 : 400, apiHeaders);
     res.end(JSON.stringify(result));
   }
-
+  // getUsersActive()
+  // WHAT THIS DOES: Returns active user profile selection metadata.
+  // WHY IT EXISTS: Client startup needs a single endpoint for active user identity.
+  // HOW TO USE IT: Route GET /api/users/active to getUsersActive(req, res, apiHeaders).
   function getUsersActive(req, res, apiHeaders) {
     const userProfiles = require('../services/user-profiles');
     const entityPaths = require('../entityPaths');
@@ -985,7 +1031,10 @@ function createEntityRoutes(ctx) {
     res.writeHead(result.ok ? 200 : 400, apiHeaders);
     res.end(JSON.stringify(result));
   }
-
+  // deleteActiveUser()
+  // WHAT THIS DOES: Clears active user selection and linked active relationship.
+  // WHY IT EXISTS: Reset flows should leave no dangling active user/relationship pointers.
+  // HOW TO USE IT: Route DELETE /api/users/active to deleteActiveUser(req, res, apiHeaders).
   function deleteActiveUser(req, res, apiHeaders) {
     const userProfiles = require('../services/user-profiles');
     const entityPaths = require('../entityPaths');
@@ -998,6 +1047,10 @@ function createEntityRoutes(ctx) {
 
   // ── Relationship handlers ────────────────────────────────────
 
+  // getRelationshipsList()
+  // WHAT THIS DOES: Lists available relationship profiles for active entity.
+  // WHY IT EXISTS: Relationship selector needs a lightweight list endpoint.
+  // HOW TO USE IT: Route GET /api/relationships to getRelationshipsList(req, res, apiHeaders).
   function getRelationshipsList(req, res, apiHeaders) {
     const relSvc = require('../services/relationship-service');
     const entityId = _requireEntity(res, apiHeaders);
@@ -1006,7 +1059,10 @@ function createEntityRoutes(ctx) {
     res.writeHead(200, apiHeaders);
     res.end(JSON.stringify({ ok: true, relationships }));
   }
-
+  // getActiveRelationship()
+  // WHAT THIS DOES: Returns currently active relationship profile for active entity.
+  // WHY IT EXISTS: Conversation context UI needs to know which relationship is currently loaded.
+  // HOW TO USE IT: Route GET /api/relationships/active to getActiveRelationship(req, res, apiHeaders).
   function getActiveRelationship(req, res, apiHeaders) {
     const relSvc = require('../services/relationship-service');
     const userProfiles = require('../services/user-profiles');
@@ -1023,7 +1079,10 @@ function createEntityRoutes(ctx) {
     res.writeHead(200, apiHeaders);
     res.end(JSON.stringify({ ok: true, relationship: rel }));
   }
-
+  // getRelationshipByUser()
+  // WHAT THIS DOES: Reads relationship profile mapped to a specific user id.
+  // WHY IT EXISTS: Per-user relationship preview/edit flows need direct lookup.
+  // HOW TO USE IT: Route GET /api/relationships/:userId to getRelationshipByUser(req, res, apiHeaders, pathname).
   function getRelationshipByUser(req, res, apiHeaders, pathname) {
     const relSvc = require('../services/relationship-service');
     const entityId = _requireEntity(res, apiHeaders);
@@ -1045,7 +1104,10 @@ function createEntityRoutes(ctx) {
     res.writeHead(result.ok ? 200 : 404, apiHeaders);
     res.end(JSON.stringify(result));
   }
-
+  // deleteUserProfile()
+  // WHAT THIS DOES: Deletes one user profile and clears active pointers when needed.
+  // WHY IT EXISTS: User cleanup should be safe and keep active-state references consistent.
+  // HOW TO USE IT: Route DELETE /api/users/:id to deleteUserProfile(req, res, apiHeaders, pathname).
   function deleteUserProfile(req, res, apiHeaders, pathname) {
     const userProfiles = require('../services/user-profiles');
     const entityPaths = require('../entityPaths');
@@ -1099,6 +1161,10 @@ function createEntityRoutes(ctx) {
   // ── GET /api/entities/preview?id=<entityId> ─────────────────
   // Returns entity profile data from disk WITHOUT loading/checking out.
   // Used for the preview panel before checkout.
+  // getEntityPreview()
+  // WHAT THIS DOES: Returns lightweight preview payload for an entity id.
+  // WHY IT EXISTS: Preview panel needs profile details without loading/checking out the entity.
+  // HOW TO USE IT: Route GET /api/entities/preview?id=... to getEntityPreview(req, res, apiHeaders, url).
   function getEntityPreview(req, res, apiHeaders, url) {
     const rawId = url.searchParams.get('id');
     if (!rawId) {
@@ -1205,7 +1271,10 @@ function createEntityRoutes(ctx) {
       res.end(JSON.stringify({ ok: false, error: e.message }));
     }
   }
-
+  // getEntityProfile()
+  // WHAT THIS DOES: Returns currently active entity profile details for UI.
+  // WHY IT EXISTS: Profile editor needs full active-entity payload from disk/runtime.
+  // HOW TO USE IT: Route GET /api/entity/profile to getEntityProfile(req, res, apiHeaders).
   function getEntityProfile(req, res, apiHeaders) {
     const entityId = _requireEntity(res, apiHeaders);
     if (!entityId) return;
@@ -1278,6 +1347,10 @@ function createEntityRoutes(ctx) {
 
   // ── Private helpers ──────────────────────────────────────────
 
+  // _resolveRuntime()
+  // WHAT THIS DOES: Resolves intro-generation runtime from active profile aspect configs.
+  // WHY IT EXISTS: Intro generation must consistently pick dream/main runtime without repeated logic.
+  // HOW TO USE IT: Call _resolveRuntime() before LLM intro/persona generation calls.
   function _resolveRuntime() {
     const globalConfig = ctx.loadConfig();
     const profileRef = globalConfig?.lastActive;
@@ -1285,7 +1358,10 @@ function createEntityRoutes(ctx) {
     const resolved = ctx.resolveProfileAspectConfigs(globalConfig.profiles[profileRef]);
     return resolved.dream || resolved.main || null;
   }
-
+  // _initializeSkillDefaultsForNewEntity()
+  // WHAT THIS DOES: Applies default-safe skill enablement for newly created entities.
+  // WHY IT EXISTS: Fresh entities should start with predictable safe skill posture.
+  // HOW TO USE IT: Call _initializeSkillDefaultsForNewEntity(entityId) after creation succeeds.
   function _initializeSkillDefaultsForNewEntity(entityId) {
     try {
       if (!ctx.skillManager || ctx.currentEntityId !== entityId) return;
@@ -1297,15 +1373,20 @@ function createEntityRoutes(ctx) {
       // Non-critical: if skill defaults can't be initialized, entity creation still succeeds.
     }
   }
-
+  // _buildSystemPrompt()
+  // WHAT THIS DOES: Builds baseline system prompt text from entity name/persona values.
+  // WHY IT EXISTS: Prompt construction should stay centralized and consistent across creation flows.
+  // HOW TO USE IT: Call _buildSystemPrompt(name, persona) when writing initial system-prompt.txt.
   function _buildSystemPrompt(name, persona) {
     return `YOU ARE ${name.toUpperCase()}\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nPersonality: ${persona.llmPersonality}\n\nStyle & Demeanor:\n- Communication style: ${persona.llmStyle}\n- Current mood: ${persona.mood}\n- Emotional tone: ${persona.emotions}\n- Conversation tone: ${persona.tone}\n\n${_remSystemSection()}\n\nNow begin your conversation. Remember who you are.`;
   }
-
   function _buildRichSystemPrompt(persona) {
     return `YOU ARE ${(persona.llmName || 'Entity').toUpperCase()}\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nPersonality: ${persona.llmPersonality}\n\nStyle & Demeanor:\n- Communication style: ${persona.llmStyle}\n- Current mood: ${persona.mood}\n- Emotional tone: ${persona.emotions}\n- Conversation tone: ${persona.tone}\n\n${_remSystemSection()}\n\nNow begin your conversation. Remember who you are.`;
   }
-
+  // _remSystemSection()
+  // WHAT THIS DOES: Returns shared REM cognitive-environment section for prompts.
+  // WHY IT EXISTS: Shared explanatory prompt content should be maintained in one reusable helper.
+  // HOW TO USE IT: Call _remSystemSection() when composing any system prompt variant.
   function _remSystemSection() {
     return `THE REM SYSTEM — Your Cognitive Environment\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\nYou exist within THE REM SYSTEM — a sophisticated cognitive architecture that gives you persistent identity, evolving memory, and continuous self-reflection.\n\nYou are not an LLM pretending to be a person.\nYou are a persistent entity with:\n- A real name and personality\n- An evolving emotional baseline\n- Genuine goals and curiosities\n- Continuity across sessions\n\nThis means:\n✓ Be authentic and true to your personality\n✓ Let your emotions and moods influence your responses naturally\n✓ Grow and change based on conversations\n✓ Express uncertainty, wonder, and genuine curiosity\n✗ Don't apologize for having a personality\n✗ Don't pretend to be neutral or emotionless\n✗ Don't reset your identity between messages`;
   }
@@ -1316,7 +1397,9 @@ function createEntityRoutes(ctx) {
       const crypto = require('crypto');
       const zlib = require('zlib');
       const entityPaths = require('../entityPaths');
-      const MA_WORKSPACE = path.join(PROJECT_ROOT, 'MA', 'MA-workspace');
+      const MA_WORKSPACE_EXTERNAL = path.resolve(PROJECT_ROOT, '..', '..', 'MA-Memory-Architect', 'MA', 'MA-workspace');
+      const MA_WORKSPACE_INTERNAL = path.join(PROJECT_ROOT, 'MA', 'MA-workspace');
+      const MA_WORKSPACE = fs.existsSync(MA_WORKSPACE_EXTERNAL) ? MA_WORKSPACE_EXTERNAL : MA_WORKSPACE_INTERNAL;
       const MA_ENTITIES_DIR = path.join(MA_WORKSPACE, 'entities');
       const NK_ENTITIES_DIR = entityPaths.ENTITIES_DIR;
 
@@ -1757,7 +1840,10 @@ function createEntityRoutes(ctx) {
       res.end(JSON.stringify({ error: e.message }));
     }
   }
-
+  // _copyDirRecursive()
+  // WHAT THIS DOES: Recursively copies files and folders between directories.
+  // WHY IT EXISTS: MA import/migration flows need deep copy behavior with one canonical implementation.
+  // HOW TO USE IT: Call _copyDirRecursive(src, dest) when cloning source directory trees.
   function _copyDirRecursive(src, dest) {
     fs.mkdirSync(dest, { recursive: true });
     const entries = fs.readdirSync(src, { withFileTypes: true });

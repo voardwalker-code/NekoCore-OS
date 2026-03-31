@@ -1,3 +1,18 @@
+// ── Brain · Dream Link Writer ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: ../bus/thought-types. Keep
+// import and call-site contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // REM System — Dream Link Writer  [JS_OFFLOAD]
 //
@@ -56,6 +71,10 @@ async function writeDreamSourceLinks(dreamId, sourceIds, metadata = {}, memStora
  * @param {Object} bus     - CognitiveBus instance (or null)
  * @param {Object} payload - { dreamId, sourceIds, genre, timestamp }
  */
+// emitDreamLinkEvents()
+// WHAT THIS DOES: emitDreamLinkEvents is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call emitDreamLinkEvents(...) where this helper behavior is needed.
 function emitDreamLinkEvents(bus, payload = {}) {
   if (!bus || typeof bus.emitThought !== 'function') return;
 

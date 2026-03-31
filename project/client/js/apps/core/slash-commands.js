@@ -1,13 +1,22 @@
+// ── Services · Client Slash Commands ────────────────────────────────────────
+//
+// HOW SLASH COMMANDS WORK:
+// This module provides command parsing and a picker for chat input commands
+// like `/task`, `/project`, and `/websearch`. It renders suggestions, handles
+// keyboard navigation, and dispatches matched commands to task APIs.
+//
+// WHAT USES THIS:
+//   chat.js input flow — calls `window.SlashCommands.handleKey()` and dispatches commands
+//
+// EXPORTS:
+//   window.SlashCommands { update, handleKey, dispatch, ... }
 // ─────────────────────────────────────────────────────────────────────────────
-// NekoCore OS — Slash Command System
-// Intercepts "/" commands from the chat input before they reach the LLM.
-// Provides a Minecraft-style narrowing autocomplete picker and handlers for:
-//   /task, /project, /skill, /websearch, /stop, /list, /listactive
-// ─────────────────────────────────────────────────────────────────────────────
+
 (function () {
   'use strict';
 
   // ── Tiny HTML escape (for API-sourced strings inserted into DOM) ──────────────
+  /** Escape string content for safe HTML insertion. */
   function _escHtml(s) {
     return String(s)
       .replace(/&/g, '&amp;')
@@ -34,12 +43,14 @@
   let _visibleCmds = [];
 
   // ── DOM helpers ───────────────────────────────────────────────────────────────
+  /** Get slash-picker root element. */
   function _picker()     { return document.getElementById('slashPicker');      }
   function _input()      { return document.getElementById('chatInput');        }
   function _wizard()     { return document.getElementById('taskWizard');       }
   function _wizardMode() { return document.getElementById('taskWizardIsProject'); }
 
   // ── Picker: render ────────────────────────────────────────────────────────────
+  /** Render visible slash command suggestions. */
   function _renderPicker(matches) {
     const el = _picker();
     if (!el) return;
@@ -61,7 +72,7 @@
     el.removeAttribute('aria-hidden');
     el.style.display = 'block';
   }
-
+  /** Set highlighted picker row index. */
   function _setActive(idx) {
     const el = _picker();
     if (!el) return;
@@ -72,6 +83,7 @@
   }
 
   // ── Picker: hide ─────────────────────────────────────────────────────────────
+  /** Hide picker and reset local picker state. */
   function hide() {
     const el = _picker();
     if (!el) return;
@@ -82,6 +94,7 @@
   }
 
   // ── Picker: fill input with selected command ──────────────────────────────────
+  /** Fill input with selected command template. */
   function _select(idx) {
     const c = _visibleCmds[idx];
     if (!c) return;
@@ -96,6 +109,7 @@
   }
 
   // ── Public: update picker based on current textarea value ────────────────────
+  /** Recompute picker visibility from chat input value. */
   function update(val) {
     if (!val || val[0] !== '/') { hide(); return; }
     const typed = val.slice(1).toLowerCase();
@@ -107,6 +121,7 @@
 
   // ── Public: key handling called from chat.js chatKeyDown ─────────────────────
   // Returns true if the event was consumed (stops propagation to chat.js logic).
+  /** Handle picker keyboard navigation keys. */
   function handleKey(e) {
     const el = _picker();
     if (!el || el.style.display === 'none') return false;
@@ -144,6 +159,7 @@
 
   // ── Public: dispatch a slash command from sendChatMessage ─────────────────────
   // Returns true if handled (chat.js should NOT proceed to LLM call).
+  /** Parse and dispatch one slash command string. */
   function dispatch(text) {
     if (!text || text[0] !== '/') return false;
     const parts = text.slice(1).trim().split(/\s+/);
@@ -165,6 +181,7 @@
   }
 
   // ── Command: /task ────────────────────────────────────────────────────────────
+  /** Open task wizard in task mode. */
   function _cmdTask(description) {
     const wiz = _wizard();
     if (!wiz) return;
@@ -181,6 +198,7 @@
   }
 
   // ── Command: /project ─────────────────────────────────────────────────────────
+  /** Open task wizard in project mode. */
   function _cmdProject(description) {
     const wiz = _wizard();
     if (!wiz) return;
@@ -195,7 +213,7 @@
     wiz.style.display = 'flex';
     setTimeout(() => document.getElementById('taskWizardDesc')?.focus(), 50);
   }
-
+  /** Update wizard title/hint based on task vs project mode. */
   function _updateWizardTitle(isProject) {
     const el = document.getElementById('taskWizardTitle');
     if (el) el.textContent = isProject ? '🚀 New Project' : '⚡ New Task';
@@ -206,6 +224,7 @@
   }
 
   // ── Command: /skill ───────────────────────────────────────────────────────────
+  /** Dispatch direct skill task command. */
   function _cmdSkill(args) {
     const parts = args.split(/\s+/);
     const skillName = parts[0];
@@ -226,6 +245,7 @@
   }
 
   // ── Command: /websearch ───────────────────────────────────────────────────────
+  /** Dispatch web research task command. */
   function _cmdWebSearch(query) {
     if (!query) { _sysMsg('Usage: /websearch <query>'); return; }
     const entityId = _entityId();
@@ -242,6 +262,7 @@
   }
 
   // ── Command: /stop ────────────────────────────────────────────────────────────
+  /** Stop active task or cancel a specific session. */
   function _cmdStop(sessionId) {
     if (sessionId) {
       _post(`/api/task/cancel/${encodeURIComponent(sessionId)}`, {})
@@ -256,6 +277,7 @@
   }
 
   // ── Command: /list ────────────────────────────────────────────────────────────
+  /** Open task history panel. */
   function _cmdList() {
     if (typeof window.openTaskHistory === 'function') {
       window.openTaskHistory();
@@ -265,6 +287,7 @@
   }
 
   // ── Command: /listactive ──────────────────────────────────────────────────────
+  /** Show currently active/pending tasks in chat. */
   function _cmdListActive() {
     const entityId = _entityId();
     if (!entityId) { _sysMsg('⚠️ Load an entity first.'); return; }
@@ -283,6 +306,7 @@
   }
 
   // ── Task wizard: load skill options from API ───────────────────────────────────
+  /** Populate task-wizard skill dropdown once from API. */
   function _loadSkillOptions() {
     const sel = document.getElementById('taskWizardSkill');
     if (!sel || sel.dataset.loaded === '1') return;
@@ -300,6 +324,7 @@
   }
 
   // ── Task wizard: schedule field visibility ────────────────────────────────────
+  /** Toggle schedule controls for selected schedule type. */
   function _updateScheduleFields() {
     const sel = document.querySelector('input[name="twSchedule"]:checked')?.value || 'once';
     const iRow = document.getElementById('twIntervalRow');
@@ -309,6 +334,7 @@
   }
 
   // ── Task wizard: submit ───────────────────────────────────────────────────────
+  /** Validate and submit task wizard payload. */
   function _submitTaskWizard() {
     const desc = (document.getElementById('taskWizardDesc')?.value || '').trim();
     if (!desc) {
@@ -367,6 +393,7 @@
   }
 
   // ── Task wizard: close + reset ────────────────────────────────────────────────
+  /** Close and reset task wizard UI fields. */
   function closeTaskWizard() {
     const wiz = _wizard();
     if (wiz) wiz.style.display = 'none';
@@ -388,17 +415,18 @@
 
   // ── Utilities ─────────────────────────────────────────────────────────────────
 
+  /** Return active entity ID from chat context guard. */
   function _entityId() {
     return typeof window.getActiveEntityId === 'function'
       ? window.getActiveEntityId()
       : null;
   }
-
+  /** GET helper using RemAPI when available. */
   function _get(path) {
     if (window.RemAPI?.get) return window.RemAPI.get(path);
     return fetch(path).then(r => r.json());
   }
-
+  /** POST helper using RemAPI when available. */
   function _post(path, body) {
     if (window.RemAPI?.post) return window.RemAPI.post(path, body);
     return fetch(path, {
@@ -409,6 +437,7 @@
   }
 
   // Inject a styled system message into #chatMessages (no LLM, no chat history)
+  /** Append a local status line to chat without LLM roundtrip. */
   function _sysMsg(text) {
     const msgs = document.getElementById('chatMessages');
     if (!msgs) { console.log('[slash]', text); return; }

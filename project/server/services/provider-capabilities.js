@@ -1,3 +1,18 @@
+// ── Services · Provider Capabilities ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This service module holds reusable business logic shared across runtime
+// paths.
+//
+// WHAT USES THIS:
+// Used by related flows in its subsystem. Keep call contracts stable during
+// readability-only edits.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 'use strict';
 /**
  * server/services/provider-capabilities.js
@@ -49,6 +64,10 @@ const PROVIDER_CAPABILITIES = Object.freeze({
  * @param {string} providerType - 'anthropic' | 'openrouter' | 'ollama'
  * @returns {Readonly<object>}
  */
+// getCapabilities()
+// WHAT THIS DOES: getCapabilities reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call getCapabilities(...), then use the returned value in your next step.
 function getCapabilities(providerType) {
   const type = String(providerType || '').toLowerCase().trim();
   return PROVIDER_CAPABILITIES[type] || Object.freeze({
@@ -71,6 +90,10 @@ function getCapabilities(providerType) {
  * @param {string} capName - Capability name (e.g. 'extendedCache')
  * @returns {boolean}
  */
+// hasCapability()
+// WHAT THIS DOES: hasCapability answers a yes/no rule check.
+// WHY IT EXISTS: guard checks are kept readable and reusable in one place.
+// HOW TO USE IT: call hasCapability(...) and branch logic based on true/false.
 function hasCapability(runtime, capName) {
   if (!runtime || !capName) return false;
   // Check resolved capabilities from config merge (Slice 2 will add these)
@@ -88,6 +111,10 @@ function hasCapability(runtime, capName) {
  * @param {string} capName - Capability name
  * @returns {*} The capability value, or false if not supported
  */
+// getCapabilityMode()
+// WHAT THIS DOES: getCapabilityMode reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call getCapabilityMode(...), then use the returned value in your next step.
 function getCapabilityMode(runtime, capName) {
   if (!runtime || !capName) return false;
   if (runtime.capabilities && runtime.capabilities[capName] !== undefined) {
@@ -104,6 +131,10 @@ function getCapabilityMode(runtime, capName) {
  * @param {object} [userOverrides] - Optional user capability overrides
  * @returns {Readonly<object>}
  */
+// resolveCapabilities()
+// WHAT THIS DOES: resolveCapabilities is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call resolveCapabilities(...) where this helper behavior is needed.
 function resolveCapabilities(providerType, userOverrides) {
   const defaults = getCapabilities(providerType);
   if (!userOverrides || typeof userOverrides !== 'object') {

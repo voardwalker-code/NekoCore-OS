@@ -1,3 +1,19 @@
+// ── Tests · Cmd Run Guards.Test ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This test file validates behavior and guards against regressions in its
+// target subsystem.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: node:test,
+// node:assert/strict, path, fs, ../../server/integrations/cmd-executor. Keep
+// import and call-site contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // cmd_run Tool + Rust/Python Skill Guard Tests
 // Validates: command executor security, tool wiring, skill
@@ -291,6 +307,12 @@ describe('workspace-tools — cmd_run dispatch', () => {
 
   it('executeToolCalls invokes cmdRun handler when provided', async () => {
     let calledWith = null;
+    // mockCmdRun()
+    // Purpose: helper wrapper used by this module's main flow.
+    // mockCmdRun()
+    // WHAT THIS DOES: mockCmdRun is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call mockCmdRun(...) where this helper behavior is needed.
     const mockCmdRun = async (cmd, wsPath, opts) => {
       calledWith = { cmd, wsPath, opts };
       return { ok: true, exitCode: 0, stdout: 'mock output', stderr: '', timedOut: false };

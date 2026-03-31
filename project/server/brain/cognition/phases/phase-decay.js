@@ -1,3 +1,19 @@
+// ── Brain · Phase Decay ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: ../../bus/thought-types,
+// ../../memory/activation-network. Keep import and call-site contracts
+// aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // Phase: Memory Decay + Belief Decay
 // Applies daily memory decay and companion belief decay.
 // Runs once per day (checked every cycle via timestamp).

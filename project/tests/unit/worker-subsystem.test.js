@@ -1,3 +1,20 @@
+// ── Tests · Worker Subsystem.Test ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This test file validates behavior and guards against regressions in its
+// target subsystem.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: node:test,
+// node:assert/strict, node:path, node:fs,
+// ../../server/contracts/worker-output-contract. Keep import and call-site
+// contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 'use strict';
 /**
  * tests/unit/worker-subsystem.test.js
@@ -242,6 +259,12 @@ describe('invokeWorker — valid response path', () => {
       mode: 'subsystem',
       runtime: { model: 'mock-model' }
     };
+    // mockLLM()
+    // Purpose: helper wrapper used by this module's main flow.
+    // mockLLM()
+    // WHAT THIS DOES: mockLLM is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call mockLLM(...) where this helper behavior is needed.
     const mockLLM = async () =>
       JSON.stringify({ summary: 'Creative connection found.', signals: { type: 'association' }, confidence: 0.9 });
 
@@ -253,6 +276,12 @@ describe('invokeWorker — valid response path', () => {
 
   test('returns normalised value when LLM wraps JSON in markdown code fence', async () => {
     const binding = { entityId: 'w', mode: 'subsystem', runtime: { model: 'm' } };
+    // mockLLM()
+    // Purpose: helper wrapper used by this module's main flow.
+    // mockLLM()
+    // WHAT THIS DOES: mockLLM is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call mockLLM(...) where this helper behavior is needed.
     const mockLLM = async () =>
       '```json\n{"summary":"ok","signals":{},"confidence":0.7}\n```';
 
@@ -277,6 +306,12 @@ describe('invokeWorker — fallback paths', () => {
 
   test('returns null when LLM rejects with an error', async () => {
     const binding = { entityId: 'w', mode: 'subsystem', runtime: { model: 'm' } };
+    // mockLLM()
+    // Purpose: helper wrapper used by this module's main flow.
+    // mockLLM()
+    // WHAT THIS DOES: mockLLM is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call mockLLM(...) where this helper behavior is needed.
     const mockLLM = async () => { throw new Error('network error'); };
     const result = await invokeWorker(binding, { role: 'dream', userMessage: 'hi' }, mockLLM);
     assert.equal(result, null);
@@ -284,6 +319,12 @@ describe('invokeWorker — fallback paths', () => {
 
   test('returns null when LLM response is not parseable JSON', async () => {
     const binding = { entityId: 'w', mode: 'subsystem', runtime: { model: 'm' } };
+    // mockLLM()
+    // Purpose: helper wrapper used by this module's main flow.
+    // mockLLM()
+    // WHAT THIS DOES: mockLLM is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call mockLLM(...) where this helper behavior is needed.
     const mockLLM = async () => 'This is just plain text with no JSON.';
     const result = await invokeWorker(binding, { role: 'conscious', userMessage: 'hi' }, mockLLM);
     assert.equal(result, null);
@@ -292,6 +333,10 @@ describe('invokeWorker — fallback paths', () => {
   test('returns null when worker output fails contract validation', async () => {
     const binding = { entityId: 'w', mode: 'subsystem', runtime: { model: 'm' } };
     // missing summary
+    // mockLLM()
+    // WHAT THIS DOES: mockLLM is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call mockLLM(...) where this helper behavior is needed.
     const mockLLM = async () => JSON.stringify({ signals: {}, confidence: 0.5 });
     const result = await invokeWorker(binding, { role: 'subconscious', userMessage: 'hi' }, mockLLM);
     assert.equal(result, null);
@@ -299,6 +344,12 @@ describe('invokeWorker — fallback paths', () => {
 
   test('returns null on timeout', async () => {
     const binding = { entityId: 'w', mode: 'subsystem', runtime: { model: 'm' } };
+    // mockLLM()
+    // Purpose: helper wrapper used by this module's main flow.
+    // mockLLM()
+    // WHAT THIS DOES: mockLLM is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call mockLLM(...) where this helper behavior is needed.
     const mockLLM = async () => new Promise(() => {}); // hangs forever
     const result = await invokeWorker(
       binding,
@@ -315,6 +366,12 @@ describe('invokeWorker — bus events', () => {
     const binding = { entityId: 'ev-worker', mode: 'subsystem', runtime: { model: 'm' } };
     const events = [];
     const bus = { emit: (e, p) => events.push({ e, p }) };
+    // mockLLM()
+    // Purpose: helper wrapper used by this module's main flow.
+    // mockLLM()
+    // WHAT THIS DOES: mockLLM is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call mockLLM(...) where this helper behavior is needed.
     const mockLLM = async () =>
       JSON.stringify({ summary: 'hi', signals: {}, confidence: 0.5 });
 
@@ -328,6 +385,12 @@ describe('invokeWorker — bus events', () => {
     const binding = { entityId: 'ev-worker', mode: 'subsystem', runtime: { model: 'm' } };
     const events = [];
     const bus = { emit: (e, p) => events.push({ e, p }) };
+    // mockLLM()
+    // Purpose: helper wrapper used by this module's main flow.
+    // mockLLM()
+    // WHAT THIS DOES: mockLLM is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call mockLLM(...) where this helper behavior is needed.
     const mockLLM = async () =>
       JSON.stringify({ summary: 'great', signals: {}, confidence: 0.9 });
 
@@ -341,6 +404,12 @@ describe('invokeWorker — bus events', () => {
     const binding = { entityId: 'ev-worker', mode: 'subsystem', runtime: { model: 'm' } };
     const events = [];
     const bus = { emit: (e, p) => events.push({ e, p }) };
+    // mockLLM()
+    // Purpose: helper wrapper used by this module's main flow.
+    // mockLLM()
+    // WHAT THIS DOES: mockLLM is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call mockLLM(...) where this helper behavior is needed.
     const mockLLM = async () => { throw new Error('oops'); };
 
     await invokeWorker(binding, { role: 'subconscious', userMessage: 'hi' }, mockLLM, { bus });

@@ -1,7 +1,25 @@
+// ── Client · Desktop ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This client module drives browser-side behavior and state updates for UI
+// features.
+//
+// WHAT USES THIS:
+// Used by related flows in its subsystem. Keep call contracts stable during
+// readability-only edits.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 /* Desktop shell extracted from app.js - P3-S2 */
 
 /* eslint-disable no-undef */
-
+// closeStartMenu()
+// WHAT THIS DOES: closeStartMenu removes, resets, or shuts down existing state.
+// WHY IT EXISTS: cleanup is explicit so stale state does not leak into new runs.
+// HOW TO USE IT: call closeStartMenu(...) when you need a safe teardown/reset path.
 function closeStartMenu() {
   const menu = document.getElementById('osStartMenu');
   const scrim = document.getElementById('osStartScrim');
@@ -14,7 +32,10 @@ function closeStartMenu() {
   if (button) button.setAttribute('aria-expanded', 'false');
   closeStartPowerMenu();
 }
-
+// updateStartUserChip()
+// WHAT THIS DOES: updateStartUserChip changes saved state or updates data.
+// WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+// HOW TO USE IT: call updateStartUserChip(...) with the new values you want to persist.
 function updateStartUserChip() {
   const nameEl = document.getElementById('osStartUserName');
   if (!nameEl) return;
@@ -31,7 +52,10 @@ function updateStartUserChip() {
   const fallbackName = fallback ? String(fallback.textContent || '').trim() : '';
   nameEl.textContent = fallbackName || 'NekoCore User';
 }
-
+// closeStartPowerMenu()
+// WHAT THIS DOES: closeStartPowerMenu removes, resets, or shuts down existing state.
+// WHY IT EXISTS: cleanup is explicit so stale state does not leak into new runs.
+// HOW TO USE IT: call closeStartPowerMenu(...) when you need a safe teardown/reset path.
 function closeStartPowerMenu() {
   const powerMenu = document.getElementById('osStartPowerMenu');
   const powerButton = document.getElementById('osStartPowerButton');
@@ -41,7 +65,10 @@ function closeStartPowerMenu() {
   }
   if (powerButton) powerButton.setAttribute('aria-expanded', 'false');
 }
-
+// toggleStartPowerMenu()
+// WHAT THIS DOES: toggleStartPowerMenu is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call toggleStartPowerMenu(...) where this helper behavior is needed.
 function toggleStartPowerMenu(forceOpen) {
   const powerMenu = document.getElementById('osStartPowerMenu');
   const powerButton = document.getElementById('osStartPowerButton');
@@ -55,6 +82,10 @@ function toggleStartPowerMenu(forceOpen) {
 
 // ── Server control (power menu) ──────────────────────────────
 
+// refreshServerStatus()
+// WHAT THIS DOES: refreshServerStatus is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call refreshServerStatus(...) where this helper behavior is needed.
 function refreshServerStatus() {
   fetch('/api/server/status').then(function (r) { return r.json(); }).then(function (d) {
     _applyStatusDot('pwrNekoDot', 'pwrNekoText', d.neko);
@@ -64,7 +95,10 @@ function refreshServerStatus() {
     _applyStatusDot('pwrMADot',   'pwrMAText',   { running: false });
   });
 }
-
+// _applyStatusDot()
+// WHAT THIS DOES: _applyStatusDot is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _applyStatusDot(...) where this helper behavior is needed.
 function _applyStatusDot(dotId, textId, info) {
   var dot  = document.getElementById(dotId);
   var text = document.getElementById(textId);
@@ -77,7 +111,10 @@ function _applyStatusDot(dotId, textId, info) {
     text.textContent = 'Offline';
   }
 }
-
+// bootServer()
+// WHAT THIS DOES: bootServer is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call bootServer(...) where this helper behavior is needed.
 function bootServer(target) {
   var endpoint = '/api/server/boot/' + target;
   var label = target === 'neko' ? 'NekoCore OS' : target === 'ma' ? 'MA' : 'Both Servers';
@@ -95,8 +132,10 @@ function bootServer(target) {
       // MA boot — just refresh status
       if (d.started === false && d.reason === 'already_running') {
         if (typeof notify !== 'undefined') notify.info('MA server is already running.');
-      } else if (d.started === false && d.reason === 'ma_not_found') {
-        if (typeof notify !== 'undefined') notify.error('MA server files not found.');
+      } else if (d.started === false && (d.reason === 'ma_not_found' || d.repoUrl)) {
+        var repo = d.repoUrl || 'https://github.com/voardwalker-code/MA-Memory-Architect';
+        if (typeof notify !== 'undefined') notify.error('MA (Memory Architect) is not installed. Get it at: ' + repo);
+        _showMARepoLink(repo);
       } else {
         if (typeof notify !== 'undefined') notify.ok('MA server started.');
       }
@@ -108,11 +147,30 @@ function bootServer(target) {
   closeStartMenu();
 }
 
+function _showMARepoLink(url) {
+  var el = document.getElementById('maRepoLinkBanner');
+  if (el) { el.style.display = 'block'; return; }
+  var banner = document.createElement('div');
+  banner.id = 'maRepoLinkBanner';
+  banner.style.cssText = 'position:fixed;bottom:60px;left:50%;transform:translateX(-50%);background:#1a1726;border:1px solid #8b5cf6;border-radius:8px;padding:12px 20px;z-index:99999;text-align:center;font-size:14px;color:#e8e4f0;box-shadow:0 4px 20px rgba(0,0,0,.5);';
+  banner.innerHTML = '<div style="margin-bottom:6px;"><strong>MA (Memory Architect)</strong> is not installed.</div>' +
+    '<a href="' + url + '" target="_blank" rel="noopener" style="color:#8b5cf6;text-decoration:underline;">Get MA from GitHub →</a>' +
+    '<button onclick="this.parentNode.remove()" style="margin-left:16px;background:none;border:none;color:#888;cursor:pointer;font-size:16px;" title="Dismiss">✕</button>';
+  document.body.appendChild(banner);
+}
+
+// restartShellUI()
+// WHAT THIS DOES: restartShellUI is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call restartShellUI(...) where this helper behavior is needed.
 function restartShellUI() {
   closeStartMenu();
   window.location.reload();
 }
-
+// toggleStartMenu()
+// WHAT THIS DOES: toggleStartMenu is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call toggleStartMenu(...) where this helper behavior is needed.
 function toggleStartMenu(forceOpen) {
   const menu = document.getElementById('osStartMenu');
   const scrim = document.getElementById('osStartScrim');
@@ -132,24 +190,36 @@ function toggleStartMenu(forceOpen) {
     buildLauncherMenu();
   }
 }
-
+// openStartCategoryApps()
+// WHAT THIS DOES: openStartCategoryApps creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call openStartCategoryApps(...) before code that depends on this setup.
 function openStartCategoryApps(categoryId) {
   if (!categoryId) return;
   selectedStartCategoryId = categoryId;
   startCategoryViewMode = 'apps';
   buildLauncherMenu();
 }
-
+// showStartCategories()
+// WHAT THIS DOES: showStartCategories builds or updates what the user sees.
+// WHY IT EXISTS: display logic is separated from data/business logic for clarity.
+// HOW TO USE IT: call showStartCategories(...) after state changes that need UI refresh.
 function showStartCategories() {
   startCategoryViewMode = 'categories';
   buildLauncherMenu();
 }
-
+// showAllStartApps()
+// WHAT THIS DOES: showAllStartApps builds or updates what the user sees.
+// WHY IT EXISTS: display logic is separated from data/business logic for clarity.
+// HOW TO USE IT: call showAllStartApps(...) after state changes that need UI refresh.
 function showAllStartApps() {
   startCategoryViewMode = 'all';
   buildLauncherMenu();
 }
-
+// getDefaultTaskbarLayout()
+// WHAT THIS DOES: getDefaultTaskbarLayout reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call getDefaultTaskbarLayout(...), then use the returned value in your next step.
 function getDefaultTaskbarLayout() {
   const viewportWidth = Math.max(780, window.innerWidth || 1280);
   return {
@@ -159,7 +229,10 @@ function getDefaultTaskbarLayout() {
     iconScale: 1
   };
 }
-
+// normalizeTaskbarLayout()
+// WHAT THIS DOES: normalizeTaskbarLayout reshapes data from one form into another.
+// WHY IT EXISTS: conversion rules live here so the same transformation is reused.
+// HOW TO USE IT: pass input data into normalizeTaskbarLayout(...) and use the transformed output.
 function normalizeTaskbarLayout(layout) {
   const next = layout && typeof layout === 'object' ? layout : {};
   const defaults = getDefaultTaskbarLayout();
@@ -171,7 +244,10 @@ function normalizeTaskbarLayout(layout) {
   const iconScale = Math.max(0.75, Math.min(1.35, Number(next.iconScale) || 1));
   return { align, width: Math.round(width), height: Math.round(height), iconScale: Math.round(iconScale * 100) / 100 };
 }
-
+// applyTaskbarLayout()
+// WHAT THIS DOES: applyTaskbarLayout is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call applyTaskbarLayout(...) where this helper behavior is needed.
 function applyTaskbarLayout() {
   const taskbar = document.querySelector('.os-taskbar');
   const editor = document.getElementById('osTaskbarEditor');
@@ -190,7 +266,10 @@ function applyTaskbarLayout() {
   updateTaskbarOverflow();
   scheduleLayoutResizeSignal({ source: 'taskbar-layout' });
 }
-
+// saveTaskbarLayout()
+// WHAT THIS DOES: saveTaskbarLayout changes saved state or updates data.
+// WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+// HOW TO USE IT: call saveTaskbarLayout(...) with the new values you want to persist.
 function saveTaskbarLayout(showLog) {
   try {
     localStorage.setItem(TASKBAR_LAYOUT_STORAGE_KEY, JSON.stringify(normalizeTaskbarLayout(taskbarLayout)));
@@ -199,7 +278,10 @@ function saveTaskbarLayout(showLog) {
     if (showLog) lg('warn', 'Could not save taskbar layout: ' + err.message);
   }
 }
-
+// loadTaskbarLayout()
+// WHAT THIS DOES: loadTaskbarLayout reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call loadTaskbarLayout(...), then use the returned value in your next step.
 function loadTaskbarLayout() {
   try {
     const raw = localStorage.getItem(TASKBAR_LAYOUT_STORAGE_KEY);
@@ -209,13 +291,19 @@ function loadTaskbarLayout() {
   }
   applyTaskbarLayout();
 }
-
+// setTaskbarAlign()
+// WHAT THIS DOES: setTaskbarAlign changes saved state or updates data.
+// WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+// HOW TO USE IT: call setTaskbarAlign(...) with the new values you want to persist.
 function setTaskbarAlign(align, persist) {
   taskbarLayout.align = align;
   applyTaskbarLayout();
   if (persist !== false) saveTaskbarLayout(false);
 }
-
+// adjustTaskbarScale()
+// WHAT THIS DOES: adjustTaskbarScale is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call adjustTaskbarScale(...) where this helper behavior is needed.
 function adjustTaskbarScale(delta, silent) {
   const next = normalizeTaskbarLayout({
     align: taskbarLayout.align,
@@ -230,7 +318,10 @@ function adjustTaskbarScale(delta, silent) {
   saveTaskbarLayout(false);
   if (!silent) lg('ok', `Taskbar size ${taskbarLayout.width}x${taskbarLayout.height}`);
 }
-
+// adjustTaskbarIconScale()
+// WHAT THIS DOES: adjustTaskbarIconScale is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call adjustTaskbarIconScale(...) where this helper behavior is needed.
 function adjustTaskbarIconScale(delta, silent) {
   const next = normalizeTaskbarLayout({
     align: taskbarLayout.align,
@@ -243,13 +334,19 @@ function adjustTaskbarIconScale(delta, silent) {
   saveTaskbarLayout(false);
   if (!silent) lg('ok', `Taskbar icon size ${Math.round(taskbarLayout.iconScale * 100)}%`);
 }
-
+// startTaskbarEditMode()
+// WHAT THIS DOES: startTaskbarEditMode creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call startTaskbarEditMode(...) before code that depends on this setup.
 function startTaskbarEditMode() {
   taskbarEditMode = true;
   applyTaskbarLayout();
   lg('ok', 'Taskbar edit mode: drag the dock to move it, drag the top or side handles to resize it, or use A-/A+ for coarse size changes.');
 }
-
+// stopTaskbarEditMode()
+// WHAT THIS DOES: stopTaskbarEditMode removes, resets, or shuts down existing state.
+// WHY IT EXISTS: cleanup is explicit so stale state does not leak into new runs.
+// HOW TO USE IT: call stopTaskbarEditMode(...) when you need a safe teardown/reset path.
 function stopTaskbarEditMode() {
   taskbarEditMode = false;
   taskbarDragPointerId = null;
@@ -257,7 +354,10 @@ function stopTaskbarEditMode() {
   applyTaskbarLayout();
   saveTaskbarLayout(true);
 }
-
+// resetTaskbarLayout()
+// WHAT THIS DOES: resetTaskbarLayout removes, resets, or shuts down existing state.
+// WHY IT EXISTS: cleanup is explicit so stale state does not leak into new runs.
+// HOW TO USE IT: call resetTaskbarLayout(...) when you need a safe teardown/reset path.
 function resetTaskbarLayout() {
   taskbarLayout = getDefaultTaskbarLayout();
   taskbarEditMode = false;
@@ -265,7 +365,10 @@ function resetTaskbarLayout() {
   applyTaskbarLayout();
   saveTaskbarLayout(true);
 }
-
+// bindTaskbarEditor()
+// WHAT THIS DOES: bindTaskbarEditor is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call bindTaskbarEditor(...) where this helper behavior is needed.
 function bindTaskbarEditor() {
   const inner = document.querySelector('.os-taskbar-inner');
   if (!inner || inner.dataset.taskbarEditorBound === '1') return;
@@ -277,9 +380,21 @@ function bindTaskbarEditor() {
   const doneBtn = document.getElementById('taskbarEditDoneBtn');
 
   if (editor && editor.dataset.bound !== '1') {
+    // onIconDown()
+    // Purpose: helper wrapper used by this module's main flow.
+    // onIconDown()
+    // WHAT THIS DOES: onIconDown handles an event and routes follow-up actions.
+    // WHY IT EXISTS: event flow is easier to debug when listener logic is centralized.
+    // HOW TO USE IT: wire onIconDown to the relevant event source or dispatcher.
     const onIconDown = () => adjustTaskbarIconScale(-0.05);
     const onIconUp = () => adjustTaskbarIconScale(0.05);
     const onSizeDown = () => adjustTaskbarScale(-0.05);
+    // onSizeUp()
+    // Purpose: helper wrapper used by this module's main flow.
+    // onSizeUp()
+    // WHAT THIS DOES: onSizeUp handles an event and routes follow-up actions.
+    // WHY IT EXISTS: event flow is easier to debug when listener logic is centralized.
+    // HOW TO USE IT: wire onSizeUp to the relevant event source or dispatcher.
     const onSizeUp = () => adjustTaskbarScale(0.05);
     const onDone = (event) => {
       event.preventDefault();
@@ -294,6 +409,12 @@ function bindTaskbarEditor() {
     editor.dataset.bound = '1';
   }
 
+  // finishPointerAction()
+  // Purpose: helper wrapper used by this module's main flow.
+  // finishPointerAction()
+  // WHAT THIS DOES: finishPointerAction is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call finishPointerAction(...) where this helper behavior is needed.
   const finishPointerAction = (event) => {
     if (taskbarResizeState && taskbarResizeState.pointerId === event.pointerId) {
       taskbarResizeState = null;
@@ -360,7 +481,10 @@ function bindTaskbarEditor() {
 
   inner.dataset.taskbarEditorBound = '1';
 }
-
+// initDesktopShell()
+// WHAT THIS DOES: initDesktopShell creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call initDesktopShell(...) before code that depends on this setup.
 function initDesktopShell() {
   if (desktopShellInitialized) return;
   desktopShellInitialized = true;
@@ -439,7 +563,10 @@ function initDesktopShell() {
     }
   });
 }
-
+// reportWebUiPresence()
+// WHAT THIS DOES: reportWebUiPresence is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call reportWebUiPresence(...) where this helper behavior is needed.
 function reportWebUiPresence(isOpen, options = {}) {
   const payload = JSON.stringify({
     isOpen: !!isOpen,
@@ -459,7 +586,10 @@ function reportWebUiPresence(isOpen, options = {}) {
     keepalive: !!options.keepalive
   }).catch(() => {});
 }
-
+// startWebUiPresenceHeartbeat()
+// WHAT THIS DOES: startWebUiPresenceHeartbeat creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call startWebUiPresenceHeartbeat(...) before code that depends on this setup.
 function startWebUiPresenceHeartbeat() {
   if (webUiPresenceStarted) return;
   webUiPresenceStarted = true;
@@ -471,13 +601,19 @@ function startWebUiPresenceHeartbeat() {
     if (!document.hidden) reportWebUiPresence(true);
   });
 }
-
+// getWindowApp()
+// WHAT THIS DOES: getWindowApp reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call getWindowApp(...), then use the returned value in your next step.
 function getWindowApp(tabName) {
   const sourceApps = typeof getShellWindowApps === 'function' ? getShellWindowApps() : WINDOW_APPS;
   return sourceApps.find((app) => app.tab === tabName)
     || { tab: tabName, label: tabName, icon: '<img src="/shared-assets/AppTrayIcon.png" alt="" aria-hidden="true" class="os-runtime-icon-img">', w: 900, h: 640 };
 }
-
+// loadPinnedApps()
+// WHAT THIS DOES: loadPinnedApps reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call loadPinnedApps(...), then use the returned value in your next step.
 function loadPinnedApps() {
   let hasStoredPins = false;
   try {
@@ -498,17 +634,22 @@ function loadPinnedApps() {
 
   if (!hasStoredPins && !pinnedApps.length) pinnedApps = [...DEFAULT_PINNED_APPS];
 }
-
+// savePinnedApps()
+// WHAT THIS DOES: savePinnedApps changes saved state or updates data.
+// WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+// HOW TO USE IT: call savePinnedApps(...) with the new values you want to persist.
 function savePinnedApps() {
   try {
     localStorage.setItem(PINNED_APPS_STORAGE_KEY, JSON.stringify(pinnedApps));
   } catch (_) {}
 }
-
+// isPinnedApp()
+// WHAT THIS DOES: isPinnedApp answers a yes/no rule check.
+// WHY IT EXISTS: guard checks are kept readable and reusable in one place.
+// HOW TO USE IT: call isPinnedApp(...) and branch logic based on true/false.
 function isPinnedApp(tabName) {
   return pinnedApps.includes(tabName);
 }
-
 function togglePinnedApp(tabName) {
   if (isPinnedApp(tabName)) {
     pinnedApps = pinnedApps.filter((tab) => tab !== tabName);
@@ -519,7 +660,10 @@ function togglePinnedApp(tabName) {
   buildLauncherMenu();
   renderPinnedApps();
 }
-
+// reorderPinnedApps()
+// WHAT THIS DOES: reorderPinnedApps is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call reorderPinnedApps(...) where this helper behavior is needed.
 function reorderPinnedApps(dragTab, beforeTab) {
   if (!dragTab || !pinnedApps.includes(dragTab)) return;
   const next = pinnedApps.filter((tab) => tab !== dragTab);
@@ -530,13 +674,19 @@ function reorderPinnedApps(dragTab, beforeTab) {
   buildLauncherMenu();
   renderPinnedApps();
 }
-
+// clearPinnedDropTargets()
+// WHAT THIS DOES: clearPinnedDropTargets removes, resets, or shuts down existing state.
+// WHY IT EXISTS: cleanup is explicit so stale state does not leak into new runs.
+// HOW TO USE IT: call clearPinnedDropTargets(...) when you need a safe teardown/reset path.
 function clearPinnedDropTargets() {
   document.querySelectorAll('.os-pinned-app.drop-target, .os-dash-app.drop-target').forEach((el) => {
     el.classList.remove('drop-target');
   });
 }
-
+// onPinnedDragStart()
+// WHAT THIS DOES: onPinnedDragStart handles an event and routes follow-up actions.
+// WHY IT EXISTS: event flow is easier to debug when listener logic is centralized.
+// HOW TO USE IT: wire onPinnedDragStart to the relevant event source or dispatcher.
 function onPinnedDragStart(event) {
   const el = event.currentTarget;
   if (!(el instanceof Element)) return;
@@ -550,7 +700,10 @@ function onPinnedDragStart(event) {
     event.dataTransfer.setData('text/plain', tab);
   }
 }
-
+// onPinnedDragEnd()
+// WHAT THIS DOES: onPinnedDragEnd handles an event and routes follow-up actions.
+// WHY IT EXISTS: event flow is easier to debug when listener logic is centralized.
+// HOW TO USE IT: wire onPinnedDragEnd to the relevant event source or dispatcher.
 function onPinnedDragEnd(event) {
   const el = event.currentTarget;
   if (el instanceof Element) el.classList.remove('is-dragging');
@@ -559,7 +712,10 @@ function onPinnedDragEnd(event) {
   pinnedDragState.hoveringTab = null;
   clearPinnedDropTargets();
 }
-
+// onPinnedDragOver()
+// WHAT THIS DOES: onPinnedDragOver handles an event and routes follow-up actions.
+// WHY IT EXISTS: event flow is easier to debug when listener logic is centralized.
+// HOW TO USE IT: wire onPinnedDragOver to the relevant event source or dispatcher.
 function onPinnedDragOver(event) {
   if (!pinnedDragState.tab) return;
   event.preventDefault();
@@ -571,7 +727,10 @@ function onPinnedDragOver(event) {
   el.classList.add('drop-target');
   pinnedDragState.hoveringTab = targetTab;
 }
-
+// onPinnedDrop()
+// WHAT THIS DOES: onPinnedDrop handles an event and routes follow-up actions.
+// WHY IT EXISTS: event flow is easier to debug when listener logic is centralized.
+// HOW TO USE IT: wire onPinnedDrop to the relevant event source or dispatcher.
 function onPinnedDrop(event) {
   if (!pinnedDragState.tab) return;
   event.preventDefault();
@@ -580,12 +739,18 @@ function onPinnedDrop(event) {
   reorderPinnedApps(pinnedDragState.tab, targetTab || pinnedDragState.hoveringTab || null);
   clearPinnedDropTargets();
 }
-
+// onPinnedContainerDragOver()
+// WHAT THIS DOES: onPinnedContainerDragOver handles an event and routes follow-up actions.
+// WHY IT EXISTS: event flow is easier to debug when listener logic is centralized.
+// HOW TO USE IT: wire onPinnedContainerDragOver to the relevant event source or dispatcher.
 function onPinnedContainerDragOver(event) {
   if (!pinnedDragState.tab) return;
   event.preventDefault();
 }
-
+// onPinnedContainerDrop()
+// WHAT THIS DOES: onPinnedContainerDrop handles an event and routes follow-up actions.
+// WHY IT EXISTS: event flow is easier to debug when listener logic is centralized.
+// HOW TO USE IT: wire onPinnedContainerDrop to the relevant event source or dispatcher.
 function onPinnedContainerDrop(event) {
   if (!pinnedDragState.tab) return;
   event.preventDefault();
@@ -596,7 +761,10 @@ function onPinnedContainerDrop(event) {
   }
   clearPinnedDropTargets();
 }
-
+// createPinnedButton()
+// WHAT THIS DOES: createPinnedButton creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call createPinnedButton(...) before code that depends on this setup.
 function createPinnedButton(app, className) {
   const button = document.createElement('button');
   button.className = className;
@@ -612,12 +780,21 @@ function createPinnedButton(app, className) {
   button.addEventListener('drop', onPinnedDrop);
   return button;
 }
-
+// syncDetachedShellStateUI()
+// WHAT THIS DOES: syncDetachedShellStateUI is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call syncDetachedShellStateUI(...) where this helper behavior is needed.
 function syncDetachedShellStateUI(registry) {
   const detachedRegistry = registry && typeof registry === 'object'
     ? registry
     : (typeof getPopoutRegistrySnapshot === 'function' ? getPopoutRegistrySnapshot() : {});
 
+  // isDetached()
+  // Purpose: helper wrapper used by this module's main flow.
+  // isDetached()
+  // WHAT THIS DOES: isDetached answers a yes/no rule check.
+  // WHY IT EXISTS: guard checks are kept readable and reusable in one place.
+  // HOW TO USE IT: call isDetached(...) and branch logic based on true/false.
   const isDetached = (tabName) => !!(tabName && detachedRegistry && detachedRegistry[tabName]);
 
   document.querySelectorAll('.os-pinned-app[data-tab], .os-dash-app[data-tab], .os-overflow-app[data-tab], .os-shortcut[data-tab], .wm-window[data-tab]').forEach((el) => {
@@ -656,7 +833,10 @@ function syncDetachedShellStateUI(registry) {
     }
   });
 }
-
+// updateTaskbarOverflow()
+// WHAT THIS DOES: updateTaskbarOverflow changes saved state or updates data.
+// WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+// HOW TO USE IT: call updateTaskbarOverflow(...) with the new values you want to persist.
 function updateTaskbarOverflow() {
   if (taskbarOverflowRaf) {
     cancelAnimationFrame(taskbarOverflowRaf);
@@ -730,7 +910,10 @@ function updateTaskbarOverflow() {
     }
   });
 }
-
+// bindTaskbarOverflowControls()
+// WHAT THIS DOES: bindTaskbarOverflowControls is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call bindTaskbarOverflowControls(...) where this helper behavior is needed.
 function bindTaskbarOverflowControls() {
   const overflowWrap = document.getElementById('osTaskbarOverflowWrap');
   const overflowButton = document.getElementById('osTaskbarOverflowButton');
@@ -752,7 +935,10 @@ function bindTaskbarOverflowControls() {
     overflowButton.setAttribute('aria-expanded', 'false');
   });
 }
-
+// renderPinnedApps()
+// WHAT THIS DOES: renderPinnedApps builds or updates what the user sees.
+// WHY IT EXISTS: display logic is separated from data/business logic for clarity.
+// HOW TO USE IT: call renderPinnedApps(...) after state changes that need UI refresh.
 function renderPinnedApps() {
   const taskbarHost = document.getElementById('osTaskbarPinned');
   const dashHost = document.getElementById('osSideDashPinned');
@@ -808,6 +994,10 @@ function renderPinnedApps() {
  * of a duplicate entry here. Non-pinned open windows get a full button.
  * Called from syncShellStatusWidgets() on every window state change.
  */
+// syncRunningApps()
+// WHAT THIS DOES: syncRunningApps is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call syncRunningApps(...) where this helper behavior is needed.
 function syncRunningApps() {
   const host = document.getElementById('osTaskbarRunning');
   if (!host || !windowManager.initialized) return;
@@ -859,6 +1049,10 @@ function syncRunningApps() {
  * Standard taskbar click: if the window is focused → minimize it,
  * if minimized or unfocused → open/focus it (like Windows/macOS).
  */
+// taskbarAppClick()
+// WHAT THIS DOES: taskbarAppClick is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call taskbarAppClick(...) where this helper behavior is needed.
 function taskbarAppClick(tabName) {
   var meta = windowManager.windows.get(tabName);
   if (!meta) { switchMainTab(tabName); return; }

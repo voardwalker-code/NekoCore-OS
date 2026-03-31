@@ -1,4 +1,18 @@
 #!/usr/bin/env node
+// ── Scripts · Dedup Shared Css ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This script automates maintenance, generation, validation, or local
+// development workflows.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: fs, path. Keep import and
+// call-site contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
 // dedup-shared-css.js
 // Finds exact duplicate CSS rules inside the /* BEGIN / END GENERATED INLINE
 // STYLE CLASSES */ block in css/system-shared.css, then:
@@ -34,11 +48,19 @@ if (DRY_RUN) console.log('[dry-run] No files will be written.\n');
 // ── Helpers ────────────────────────────────────────────────────────────────
 
 /** Escape a string for use in a RegExp */
+// escRe()
+// WHAT THIS DOES: escRe is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call escRe(...) where this helper behavior is needed.
 function escRe(s) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 /** Recursively collect all .html files under a directory */
+// findHtml()
+// WHAT THIS DOES: findHtml reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call findHtml(...), then use the returned value in your next step.
 function findHtml(dir, out = []) {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
     const full = path.join(dir, entry.name);
@@ -58,6 +80,10 @@ function findHtml(dir, out = []) {
  * Input:  "{ font-size: var(--text-xs); color: var(--text-secondary); }"
  * Output: "color:var(--text-secondary);font-size:var(--text-xs)"
  */
+// normalizeDecl()
+// WHAT THIS DOES: normalizeDecl reshapes data from one form into another.
+// WHY IT EXISTS: conversion rules live here so the same transformation is reused.
+// HOW TO USE IT: pass input data into normalizeDecl(...) and use the transformed output.
 function normalizeDecl(body) {
   return body
     .replace(/^\s*\{\s*/, '')
@@ -162,6 +188,10 @@ for (const htmlFile of htmlFiles) {
     // a class="..." attribute — surrounded by a quote, space, or word boundary
     // so that e.g. "nk-s-0001" does not partially match "nk-s-00010".
     const re = new RegExp(`(?<=class="[^"]*?)\\b${escRe(dup)}\\b`, 'g');
+    // occurrences()
+    // WHAT THIS DOES: occurrences is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call occurrences(...) where this helper behavior is needed.
     const occurrences = (updated.match(re) || []).length;
     if (occurrences > 0) {
       updated = updated.replace(re, canonical);
@@ -169,6 +199,10 @@ for (const htmlFile of htmlFiles) {
     }
   }
 
+  // if()
+  // WHAT THIS DOES: if is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call if(...) where this helper behavior is needed.
   if (updated !== original) {
     const rel = path.relative(PROJECT_CLIENT, htmlFile);
     changedHtml.push(rel);
@@ -183,6 +217,10 @@ for (const htmlFile of htmlFiles) {
 
 let newCss = cssOriginal;
 
+// for()
+// WHAT THIS DOES: for is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call for(...) where this helper behavior is needed.
 for (const className of toRemove) {
   // Remove the optional comment line immediately before the rule, then the rule.
   // Pattern covers:
@@ -206,6 +244,10 @@ if (!DRY_RUN) {
 
 // ── 5. Final rule count ────────────────────────────────────────────────────
 
+// finalRuleCount()
+// WHAT THIS DOES: finalRuleCount is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call finalRuleCount(...) where this helper behavior is needed.
 const finalRuleCount = (newCss.match(/^\.nk-s-\d{4}\s*\{/gm) || []).length;
 
 // ── 6. Report ──────────────────────────────────────────────────────────────

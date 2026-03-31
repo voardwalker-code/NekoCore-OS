@@ -1,3 +1,17 @@
+// ── Services · Client Archive UI ─────────────────────────────────────────────
+//
+// HOW ARCHIVE UI WORKS:
+// This module powers the Archive tab. It has two user flows:
+//   1. Search archive entries with filters (query, date range, type, month)
+//   2. Ingest local corpus files in resumable batches
+//
+// WHAT USES THIS:
+//   Archive tab buttons and inputs — bound through `initArchiveApp()`
+//
+// EXPORTS:
+//   initArchiveApp() on `window`
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // NekoCore OS — Archive UI
 // Core app — Phase 4.6  [BOUNDARY_OK]
@@ -15,13 +29,14 @@
   let _ingestState = null;  // { filePath, docId, type, maxChunks, total, resumeAt }
 
   // ── Helpers ────────────────────────────────────────────────
+  /** Return an element by ID. */
   function byId(id) { return document.getElementById(id); }
 
   function setStatus(id, text) {
     const el = byId(id);
     if (el) el.textContent = text;
   }
-
+  /** Escape text for HTML interpolation. */
   function escHtml(s) {
     return String(s)
       .replace(/&/g, '&amp;')
@@ -102,6 +117,7 @@
 
   // ── Corpus Ingest ──────────────────────────────────────────
 
+  /** Render ingest progress state and continue button visibility. */
   function _renderIngestProgress(result) {
     const progressEl = byId('archiveIngestProgress');
     const statusEl   = byId('archiveIngestStatus');
@@ -145,7 +161,7 @@
       if (contBtn) contBtn.disabled = false;
     }
   }
-
+  /** Initialize ingest state from form inputs and run first batch. */
   function startIngest() {
     const fileEl      = byId('archiveIngestFile');
     const docIdEl     = byId('archiveIngestDocId');
@@ -171,7 +187,7 @@
 
     _runIngestBatch();
   }
-
+  /** Continue ingest from saved batch state. */
   function continueIngest() {
     if (!_ingestState) return;
     _runIngestBatch();
@@ -179,6 +195,7 @@
 
   // ── Bind ───────────────────────────────────────────────────
 
+  /** Bind archive tab actions once. */
   function bindActions() {
     const searchBtn  = byId('archiveSearchBtn');
     const searchInput = byId('archiveSearchQuery');

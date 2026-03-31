@@ -1,4 +1,18 @@
 #!/usr/bin/env node
+// ── Scripts · Generate Fixer ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This script automates maintenance, generation, validation, or local
+// development workflows.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: fs, path, crypto,
+// ./health-scan. Keep import and call-site contracts aligned during
+// refactors.
+//
+// EXPORTS:
+// Exposed API includes: generateFixer.
+// ─────────────────────────────────────────────────────────────────────────────
 // ============================================================
 // NekoCore OS — System Repair Generator
 //
@@ -33,7 +47,10 @@ const PROJECT_ROOT = path.resolve(__dirname, '..');
 const { CORE_REGISTRY } = require('./health-scan');
 
 const DEFAULT_OUTPUT = path.join(PROJECT_ROOT, 'neko_fixer.py');
-
+// generateFixer()
+// WHAT THIS DOES: generateFixer is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call generateFixer(...) where this helper behavior is needed.
 function generateFixer(options = {}) {
   const { outputPath = DEFAULT_OUTPUT, dryRun = false } = options;
 

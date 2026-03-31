@@ -1,3 +1,18 @@
+// ── Services · Memory Operations ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This service module holds reusable business logic shared across runtime
+// paths.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: fs, path, zlib, crypto,
+// ../brain/utils/textrank. Keep import and call-site contracts aligned
+// during refactors.
+//
+// EXPORTS:
+// Exposed API includes: createMemoryOperations.
+// ─────────────────────────────────────────────────────────────────────────────
+
 'use strict';
 /**
  * server/services/memory-operations.js
@@ -25,12 +40,20 @@ const { extractTopSentences: trExtract } = require('../brain/utils/textrank');
 // IME I2-2: Apply TextRank when stored content exceeds 600 chars.
 // Below that threshold the overhead isn't worth it; above it, TextRank
 // selects the 3 most representative sentences instead of raw truncation.
+// semanticAbstract()
+// WHAT THIS DOES: semanticAbstract is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call semanticAbstract(...) where this helper behavior is needed.
 function semanticAbstract(text) {
   if (!text || text.length <= 600) return text;
   return trExtract(text, 3) || text.slice(0, 600);
 }
 
 // Slice 5: patch a connected memory's log.json with a reverse edge
+// _patchReverseEdge()
+// WHAT THIS DOES: _patchReverseEdge changes saved state or updates data.
+// WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+// HOW TO USE IT: call _patchReverseEdge(...) with the new values you want to persist.
 function _patchReverseEdge(targetMemId, reverseEdge, entityId) {
   try {
     const entityPathsMod = require('../entityPaths');
@@ -57,6 +80,10 @@ function _patchReverseEdge(targetMemId, reverseEdge, entityId) {
  *   logTimeline:        Function
  * }} deps
  */
+// createMemoryOperations()
+// WHAT THIS DOES: createMemoryOperations creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call createMemoryOperations(...) before code that depends on this setup.
 function createMemoryOperations({ getCurrentEntityId, getMemoryStorage, getMemoryGraph, logTimeline }) {
 
   function createCoreMemory({ semantic, narrative, emotion, topics, importance, creationContext, shape }) {
@@ -73,6 +100,10 @@ function createMemoryOperations({ getCurrentEntityId, getMemoryStorage, getMemor
     const episodicPath = entityPathsMod.getEpisodicMemoryPath(currentEntityId);
     // IME I2-2: abstract long semantic texts before storing.
     const semToStore = semanticAbstract(semantic || '');
+    // normalizedSemantic()
+    // WHAT THIS DOES: normalizedSemantic is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call normalizedSemantic(...) where this helper behavior is needed.
     const normalizedSemantic = (semToStore).toLowerCase().replace(/\s+/g, ' ').trim();
 
     if (!normalizedSemantic) {
@@ -219,7 +250,10 @@ function createMemoryOperations({ getCurrentEntityId, getMemoryStorage, getMemor
       return { ok: false, error: err.message };
     }
   }
-
+  // createSemanticKnowledge()
+  // WHAT THIS DOES: createSemanticKnowledge creates or initializes something needed by the flow.
+  // WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+  // HOW TO USE IT: call createSemanticKnowledge(...) before code that depends on this setup.
   function createSemanticKnowledge({ knowledge, topics, importance, sourceMemId, creationContext, shape }) {
     const currentEntityId = getCurrentEntityId();
     const memoryStorage = getMemoryStorage();
@@ -234,6 +268,10 @@ function createMemoryOperations({ getCurrentEntityId, getMemoryStorage, getMemor
     const semanticPath = entityPathsMod.getSemanticMemoryPath(currentEntityId);
     // IME I2-2: abstract long knowledge before storing.
     const knowledgeToStore = semanticAbstract(knowledge || '');
+    // normalizedKnowledge()
+    // WHAT THIS DOES: normalizedKnowledge is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call normalizedKnowledge(...) where this helper behavior is needed.
     const normalizedKnowledge = (knowledgeToStore).toLowerCase().replace(/\s+/g, ' ').trim();
 
     if (!normalizedKnowledge || normalizedKnowledge.length < 10) {

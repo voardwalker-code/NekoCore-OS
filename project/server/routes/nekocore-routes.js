@@ -1,8 +1,14 @@
-// ── NekoCore Routes ───────────────────────────────────────────────────────────
-// /api/nekocore/status
-// /api/nekocore/pending
-// /api/nekocore/model-recommend
-// /api/nekocore/model-apply
+// ── Routes · NekoCore Routes ─────────────────────────────────────────────────
+//
+// HOW NEKOCORE ROUTING WORKS:
+// This module exposes NekoCore system-entity endpoints for status, tooling,
+// persona management, model recommendation/apply flow, docs ingest, and chat.
+//
+// WHAT USES THIS:
+//   NekoCore admin UI and governance/control workflows
+//
+// EXPORTS:
+//   createNekoCoreRoutes(ctx)
 // ─────────────────────────────────────────────────────────────────────────────
 
 'use strict';
@@ -29,20 +35,30 @@ const entityPaths                             = require('../entityPaths');
 // Keyed by recommendationId. Server-restart safe is acceptable for v0.7.0.
 const _pendingRecommendations = new Map();
 
+// _shortId()
+// WHAT THIS DOES: Builds a compact recommendation id for pending records.
+// WHY IT EXISTS: IDs need to be readable in logs while still being unique enough for in-memory queue use.
+// HOW TO USE IT: Call _shortId() when creating a new pending recommendation object.
 function _shortId() {
   return Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 7);
 }
 
 // ── Route factory ─────────────────────────────────────────────────────────────
 
+// createNekoCoreRoutes()
+// WHAT THIS DOES: Creates the NekoCore route dispatcher and bound handlers.
+// WHY IT EXISTS: Keeps NekoCore governance/status/tooling endpoints organized behind one route factory.
+// HOW TO USE IT: Call createNekoCoreRoutes(ctx) during server route initialization.
 function createNekoCoreRoutes(ctx) {
   const { fs, path } = ctx;
   const NEKO_ENTITY_ID = 'nekocore';
-
   function getNekoEntityFile() {
     return path.join(entityPaths.getEntityRoot(NEKO_ENTITY_ID), 'entity.json');
   }
-
+  // readNekoEntity()
+  // WHAT THIS DOES: Reads the persisted NekoCore entity profile JSON.
+  // WHY IT EXISTS: Centralizes entity-file loading and validation so all handlers use the same source of truth.
+  // HOW TO USE IT: Call readNekoEntity() when you need current NekoCore profile fields.
   function readNekoEntity() {
     ensureSystemEntity();
     const entityFile = getNekoEntityFile();
@@ -51,11 +67,13 @@ function createNekoCoreRoutes(ctx) {
     }
     return JSON.parse(fs.readFileSync(entityFile, 'utf8'));
   }
-
+  // writeNekoEntity()
+  // WHAT THIS DOES: Persists updated NekoCore entity profile JSON to disk.
+  // WHY IT EXISTS: Ensures all profile writes follow one path and formatting behavior.
+  // HOW TO USE IT: Call writeNekoEntity(entity) after mutating NekoCore profile fields.
   function writeNekoEntity(entity) {
     fs.writeFileSync(getNekoEntityFile(), JSON.stringify(entity, null, 2), 'utf8');
   }
-
   function getNekoSkillManager() {
     const manager = new SkillManager({ entityId: NEKO_ENTITY_ID });
     manager.loadAll();
@@ -63,6 +81,10 @@ function createNekoCoreRoutes(ctx) {
   }
 
   // ── GET /api/nekocore/status ────────────────────────────────────────────────
+  // getStatus()
+  // WHAT THIS DOES: Returns runtime readiness, model, and tooling status for NekoCore.
+  // WHY IT EXISTS: The admin UI needs one consolidated status payload for setup and diagnostics.
+  // HOW TO USE IT: Route GET /api/nekocore/status to getStatus(req, res, apiHeaders).
   function getStatus(req, res, apiHeaders) {
     try {
       const memRoot = entityPaths.getMemoryRoot('nekocore');
@@ -102,7 +124,10 @@ function createNekoCoreRoutes(ctx) {
       res.end(JSON.stringify({ error: e.message }));
     }
   }
-
+  // getTooling()
+  // WHAT THIS DOES: Returns tooling config and skill inventory for NekoCore.
+  // WHY IT EXISTS: The tooling screen needs workspace/approval settings and skill list in one response.
+  // HOW TO USE IT: Route GET /api/nekocore/tooling to getTooling(req, res, apiHeaders).
   function getTooling(req, res, apiHeaders) {
     try {
       const entity = readNekoEntity();
@@ -236,6 +261,10 @@ function createNekoCoreRoutes(ctx) {
   }
 
   // ── GET /api/nekocore/persona ─────────────────────────────────────────────
+  // getPersona()
+  // WHAT THIS DOES: getPersona reads or finds data and gives it back.
+  // WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+  // HOW TO USE IT: call getPersona(...), then use the returned value in your next step.
   function getPersona(req, res, apiHeaders) {
     try {
       ensureSystemEntity();
@@ -347,6 +376,10 @@ function createNekoCoreRoutes(ctx) {
   // Disk size is informational only — the count wall is always hit first (~7 MB at 2000 memories).
   const MEMORY_SOFT_LIMIT_COUNT = 2000;
 
+  // _getDirSizeBytes()
+  // WHAT THIS DOES: _getDirSizeBytes reads or finds data and gives it back.
+  // WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+  // HOW TO USE IT: call _getDirSizeBytes(...), then use the returned value in your next step.
   function _getDirSizeBytes(dir) {
     let total = 0;
     try {
@@ -358,7 +391,10 @@ function createNekoCoreRoutes(ctx) {
     } catch (_) {}
     return total;
   }
-
+  // _countChildDirs()
+  // WHAT THIS DOES: _countChildDirs is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call _countChildDirs(...) where this helper behavior is needed.
   function _countChildDirs(dir, options = {}) {
     const exclude = new Set(Array.isArray(options.exclude) ? options.exclude : []);
     try {
@@ -369,7 +405,10 @@ function createNekoCoreRoutes(ctx) {
       return 0;
     }
   }
-
+  // getMemoryStats()
+  // WHAT THIS DOES: getMemoryStats reads or finds data and gives it back.
+  // WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+  // HOW TO USE IT: call getMemoryStats(...), then use the returned value in your next step.
   function getMemoryStats(req, res, apiHeaders) {
     try {
       const memRoot = getMemoryRoot('nekocore');
@@ -437,6 +476,10 @@ function createNekoCoreRoutes(ctx) {
   }
 
   // ── GET /api/nekocore/pending ───────────────────────────────────────────────
+  // getPending()
+  // WHAT THIS DOES: getPending reads or finds data and gives it back.
+  // WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+  // HOW TO USE IT: call getPending(...), then use the returned value in your next step.
   function getPending(req, res, apiHeaders) {
     const items = [..._pendingRecommendations.values()];
     res.writeHead(200, apiHeaders);
@@ -625,6 +668,12 @@ function createNekoCoreRoutes(ctx) {
     const pipelineAc = new AbortController();
     const traceId = `nekochat_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
     const reqStartTs = Date.now();
+    // logT()
+    // Purpose: helper wrapper used by this module's main flow.
+    // logT()
+    // WHAT THIS DOES: logT is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call logT(...) where this helper behavior is needed.
     const logT = (stage, detail) => {
       const iso = new Date().toISOString();
       const ms = Date.now() - reqStartTs;
@@ -634,9 +683,21 @@ function createNekoCoreRoutes(ctx) {
         console.log(`[CHAT_PIPE_DEBUG][${traceId}][${iso}][+${ms}ms] ${stage}`, detail);
       }
     };
+    // abortFromDisconnect()
+    // Purpose: helper wrapper used by this module's main flow.
+    // abortFromDisconnect()
+    // WHAT THIS DOES: abortFromDisconnect is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call abortFromDisconnect(...) where this helper behavior is needed.
     const abortFromDisconnect = () => {
       if (!pipelineAc.signal.aborted) pipelineAc.abort();
     };
+    // onReqAborted()
+    // Purpose: helper wrapper used by this module's main flow.
+    // onReqAborted()
+    // WHAT THIS DOES: onReqAborted handles an event and routes follow-up actions.
+    // WHY IT EXISTS: event flow is easier to debug when listener logic is centralized.
+    // HOW TO USE IT: wire onReqAborted to the relevant event source or dispatcher.
     const onReqAborted = () => abortFromDisconnect();
     const onResClose = () => {
       if (!res.writableEnded) abortFromDisconnect();

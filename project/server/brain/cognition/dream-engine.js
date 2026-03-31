@@ -1,3 +1,17 @@
+// ── Services · Dream Engine ──────────────────────────────────────────────────
+//
+// HOW DREAM GENERATION WORKS:
+// This module generates imaginative dream narratives for sleep cycles using
+// genre-specific prompts, optional memory seeds, and anti-repetition tracking.
+// It returns dream artifacts with semantic metadata for later consolidation.
+//
+// WHAT USES THIS:
+//   sleep/deep-sleep brain routines and dream memory pipelines
+//
+// EXPORTS:
+//   DreamEngine class
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // REM System — Dream Engine + Imagination System
 //
@@ -103,6 +117,7 @@ CRITICAL RULES:
 - NO meta-commentary about dreaming. Just tell the story.`;
 
 class DreamEngine {
+  /** Initialize dream generation config and anti-repetition state. */
   constructor(options = {}) {
     this.memStorage = options.memStorage;
     this.goalsManager = options.goalsManager;
@@ -126,6 +141,7 @@ class DreamEngine {
   /**
    * Set the entity's identity so dreams reflect its character.
    */
+  /** Inject entity identity so dream tone matches character. */
   setEntityIdentity(identity) {
     this.entityIdentity = identity;
   }
@@ -135,6 +151,7 @@ class DreamEngine {
    * @param {number} dreamCount — number of dreams to generate (from settings)
    * @param {boolean} isShutdown — if true, cap at 1 dream for quick shutdown
    */
+  /** Start one dream cycle and set dream quota. */
   startDreamCycle(dreamCount = null, isShutdown = false) {
     const requestedDreams = isShutdown ? 1 : (dreamCount || this.maxDreamsPerCycle);
     this.dreamQuota = Math.max(1, Math.min(requestedDreams, 10));

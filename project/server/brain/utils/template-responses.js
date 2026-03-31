@@ -1,3 +1,17 @@
+// ── Brain · Template Responses ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Used by related flows in its subsystem. Keep call contracts stable during
+// readability-only edits.
+//
+// EXPORTS:
+// Exposed API includes: getTemplateResponse, TEMPLATES, MOOD_DESCRIPTORS.
+// ─────────────────────────────────────────────────────────────────────────────
+
 'use strict';
 
 // ============================================================
@@ -66,6 +80,10 @@ const MOOD_DESCRIPTORS = {
  * @returns {{ response: string, _source: string } | null}
  *   null if no template available for this category
  */
+// getTemplateResponse()
+// WHAT THIS DOES: getTemplateResponse reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call getTemplateResponse(...), then use the returned value in your next step.
 function getTemplateResponse(category, context) {
   const templates = TEMPLATES[category];
   if (!templates) return null;

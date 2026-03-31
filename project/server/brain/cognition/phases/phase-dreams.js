@@ -1,3 +1,20 @@
+// ── Brain · Phase Dreams ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: path, fs,
+// ../../bus/thought-types, ../dream-maintenance-selector,
+// ../../knowledge/dream-link-writer. Keep import and call-site contracts
+// aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // Phase: Dream Generation
 // Generates vivid story-like dreams during REM cycles via the Imagination Engine.
 // Phase 9: frequency gate — dreams fire when seed pool is non-empty OR every dreamInterval cycles.
@@ -55,6 +72,10 @@ async function dreamsPhase(loop) {
   }
 
   // Resolve dream runtime from aspect configs
+  // dreamRuntime()
+  // WHAT THIS DOES: dreamRuntime is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call dreamRuntime(...) where this helper behavior is needed.
   const dreamRuntime = (loop._aspectConfigs &&
     (loop._aspectConfigs.dream || loop._aspectConfigs.subconscious || loop._aspectConfigs.main)) || null;
 
@@ -63,6 +84,12 @@ async function dreamsPhase(loop) {
     return;
   }
 
+  // dreamCallLLM()
+  // Purpose: helper wrapper used by this module's main flow.
+  // dreamCallLLM()
+  // WHAT THIS DOES: dreamCallLLM is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call dreamCallLLM(...) where this helper behavior is needed.
   const dreamCallLLM = async (prompt) => activeLLM(dreamRuntime, [
     { role: 'system', content: 'You are the Imagination Engine of a dreaming AI entity. Write vivid, creative, literary dream stories. First person, present tense. Every dream must be unique.' },
     { role: 'user', content: prompt }
@@ -78,6 +105,10 @@ async function dreamsPhase(loop) {
   }
 
   // Slice 10: Reconsolidation runs every 4th dream cycle (≈ every 20 brain loop cycles)
+  // reconsolidationCadence()
+  // WHAT THIS DOES: reconsolidationCadence is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call reconsolidationCadence(...) where this helper behavior is needed.
   const reconsolidationCadence = (loop.dreamInterval || 5) * 4;
   if (loop.cycleCount % reconsolidationCadence === 0) {
     try {
@@ -262,6 +293,12 @@ async function _generateDreamDiaryEntry(loop, dream) {
     if (!runtime) return;
 
     const prompt = getDreamDiaryPrompt(identity, dream);
+    // dreamDiaryCallLLM()
+    // Purpose: helper wrapper used by this module's main flow.
+    // dreamDiaryCallLLM()
+    // WHAT THIS DOES: dreamDiaryCallLLM is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call dreamDiaryCallLLM(...) where this helper behavior is needed.
     const dreamDiaryCallLLM = async (msg) => loop._callLLM(runtime, [
       { role: 'user', content: msg }
     ], { temperature: 0.75, maxTokens: 500 });
@@ -283,6 +320,10 @@ async function _generateDreamDiaryEntry(loop, dream) {
  * Append image references to the dream diary after pixel art generation.
  * @private
  */
+// _appendDreamImages()
+// WHAT THIS DOES: _appendDreamImages is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _appendDreamImages(...) where this helper behavior is needed.
 function _appendDreamImages(loop, cycleId, vizResult) {
   try {
     const entityId = loop.memoryStorage?.entityId;

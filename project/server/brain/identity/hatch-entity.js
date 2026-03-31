@@ -1,3 +1,19 @@
+// ── Brain · Hatch Entity ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: fs, path, crypto,
+// ../../entityPaths, ../memory/memory-index-cache. Keep import and call-site
+// contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // REM System — Entity Hatch System
 // Generates synthetic life history and entity identity on first run.
@@ -11,12 +27,20 @@ const entityPaths = require('../../entityPaths');
 const MemoryIndexCache = require('../memory/memory-index-cache');
 
 class HatchEntity {
+  // constructor()
+  // WHAT THIS DOES: constructor is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call constructor(...) where this helper behavior is needed.
   constructor(options = {}) {
     this.dataDir = path.join(__dirname, '../../data');
     this.entitiesRoot = path.join(__dirname, '../../../entities');
     this.entityId = options.entityId || null;
     this.entityDir = null;
     this.entityFile = null;
+    // if()
+    // WHAT THIS DOES: if is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call if(...) where this helper behavior is needed.
     if (this.entityId) {
       this.entityDir = entityPaths.getEntityRoot(this.entityId);
       this.entityFile = path.join(this.entityDir, 'entity.json');
@@ -42,6 +66,10 @@ class HatchEntity {
    * Resolve entity file reference when no explicit entityId was provided.
    * Selects the most recently modified valid entity.json under entities root.
    */
+  // resolveEntityReference()
+  // WHAT THIS DOES: resolveEntityReference is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call resolveEntityReference(...) where this helper behavior is needed.
   resolveEntityReference() {
     if (this.entityFile && typeof this.entityFile === 'string') {
       return this.entityFile;

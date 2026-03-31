@@ -1,3 +1,18 @@
+// ── Brain · Synthetic Memory Generator ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: fs, path. Keep import and
+// call-site contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // REM System — Synthetic Memory Generator
 // Generates synthetic episodic memories for life chapters.
@@ -7,6 +22,10 @@ const fs = require('fs').promises;
 const path = require('path');
 
 class SyntheticMemoryGenerator {
+  // constructor()
+  // WHAT THIS DOES: constructor is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call constructor(...) where this helper behavior is needed.
   constructor(memoryStorage) {
     this.memoryStorage = memoryStorage;
     this.memoryTemplates = {

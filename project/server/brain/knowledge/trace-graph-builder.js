@@ -1,9 +1,28 @@
+// ── Brain · Trace Graph Builder ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Used by related flows in its subsystem. Keep call contracts stable during
+// readability-only edits.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // REM System — Trace Graph Builder
 // Builds initial trace graphs connecting synthetic memories.
 // ============================================================
 
 class TraceGraphBuilder {
+  // constructor()
+  // WHAT THIS DOES: constructor is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call constructor(...) where this helper behavior is needed.
   constructor(traceGraph, memoryStorage) {
     this.traceGraph = traceGraph;
     this.memoryStorage = memoryStorage;
@@ -38,11 +57,19 @@ class TraceGraphBuilder {
   /**
    * Group memories by chapter
    */
+  // groupMemoriesByChapter()
+  // WHAT THIS DOES: groupMemoriesByChapter is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call groupMemoriesByChapter(...) where this helper behavior is needed.
   groupMemoriesByChapter(memories) {
     const groups = {};
 
     for (const memory of memories) {
       const chapterId = memory.chapter_id;
+      // if()
+      // WHAT THIS DOES: if is a helper used by this module's main flow.
+      // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+      // HOW TO USE IT: call if(...) where this helper behavior is needed.
       if (!groups[chapterId]) {
         groups[chapterId] = [];
       }
@@ -193,6 +220,10 @@ class TraceGraphBuilder {
     }
 
     // Adjust based on memory importance
+    // avgImportance()
+    // WHAT THIS DOES: avgImportance is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call avgImportance(...) where this helper behavior is needed.
     const avgImportance = (memory1.importance + memory2.importance) / 2;
     baseStrength += avgImportance * 0.2;
 

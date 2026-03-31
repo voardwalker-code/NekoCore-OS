@@ -1,3 +1,19 @@
+// ── Tests · Archive Query Narrowset Guards.Test ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This test file validates behavior and guards against regressions in its
+// target subsystem.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: node:test,
+// node:assert/strict, fs, path, os. Keep import and call-site contracts
+// aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // Guard Tests — Phase 4.7 E-6: Query Narrowing API + UI
 // Guards that define and lock the expected behavior of:
@@ -34,7 +50,10 @@ before(() => {
 after(() => {
   try { fs.rmSync(tmpRoot, { recursive: true, force: true }); } catch (_) {}
 });
-
+// getArchiveIndex()
+// WHAT THIS DOES: getArchiveIndex reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call getArchiveIndex(...), then use the returned value in your next step.
 function getArchiveIndex() {
   const aiPath = require.resolve('../../server/brain/utils/archive-index');
   const epPath = require.resolve('../../server/entityPaths');

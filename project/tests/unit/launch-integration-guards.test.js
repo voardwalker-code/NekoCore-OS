@@ -1,3 +1,18 @@
+// ── Tests · Launch Integration Guards.Test ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This test file validates behavior and guards against regressions in its
+// target subsystem.
+//
+// WHAT USES THIS:
+// Used by related flows in its subsystem. Keep call contracts stable during
+// readability-only edits.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 /* ╔════════════════════════════════════════════════════════════════╗
    ║  D-3 LAUNCH INTEGRATION + FALLBACK GUARDS                  ║
    ║  Tests for manifest-driven launch routing with shadow loader   ║
@@ -28,6 +43,10 @@ test('D-3: Launch Integration + Fallback', async (t) => {
     };
 
     // Mock function
+    // getManifestAppEntry()
+    // WHAT THIS DOES: getManifestAppEntry reads or finds data and gives it back.
+    // WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+    // HOW TO USE IT: call getManifestAppEntry(...), then use the returned value in your next step.
     function getManifestAppEntry(appId, manifest) {
       if (!manifest || !Array.isArray(manifest.apps)) return null;
       return manifest.apps.find((entry) => entry.id === appId) || null;
@@ -46,6 +65,10 @@ test('D-3: Launch Integration + Fallback', async (t) => {
   // ── Test 2: Launch routing detects packagePath and routes to shadow loader ──
   await t.test('Launch routing branches on packagePath presence', () => {
     // Mock router logic
+    // shouldUseShadowLoader()
+    // WHAT THIS DOES: shouldUseShadowLoader answers a yes/no rule check.
+    // WHY IT EXISTS: guard checks are kept readable and reusable in one place.
+    // HOW TO USE IT: call shouldUseShadowLoader(...) and branch logic based on true/false.
     function shouldUseShadowLoader(appEntry) {
       if (!appEntry || typeof appEntry !== 'object') return false;
       if (typeof appEntry.packagePath !== 'string' || appEntry.packagePath.trim().length === 0) return false;
@@ -70,20 +93,35 @@ test('D-3: Launch Integration + Fallback', async (t) => {
     const mockRegistry = new Map();
     
     class MockAppWindow {
+      // constructor()
+      // WHAT THIS DOES: constructor is a helper used by this module's main flow.
+      // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+      // HOW TO USE IT: call constructor(...) where this helper behavior is needed.
       constructor(tabName, metadata) {
         this.tabName = tabName;
         this.metadata = metadata;
         this.shadowRoot = null;
       }
+      // initialize()
+      // WHAT THIS DOES: initialize is a helper used by this module's main flow.
+      // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+      // HOW TO USE IT: call initialize(...) where this helper behavior is needed.
       initialize() {
         this.shadowRoot = { mode: 'open' };
         return this;
       }
+      // open()
+      // WHAT THIS DOES: open creates or initializes something needed by the flow.
+      // WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+      // HOW TO USE IT: call open(...) before code that depends on this setup.
       open() {
         return this;
       }
     }
-
+    // getOrCreateAppWindow()
+    // WHAT THIS DOES: getOrCreateAppWindow reads or finds data and gives it back.
+    // WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+    // HOW TO USE IT: call getOrCreateAppWindow(...), then use the returned value in your next step.
     function getOrCreateAppWindow(tabName, metadata) {
       if (!mockRegistry.has(tabName)) {
         const aw = new MockAppWindow(tabName, metadata);
@@ -101,6 +139,10 @@ test('D-3: Launch Integration + Fallback', async (t) => {
   });
 
   await t.test('Shadow launch keeps packagePath separate from packageEntry', () => {
+    // buildLoaderArgs()
+    // WHAT THIS DOES: buildLoaderArgs creates or initializes something needed by the flow.
+    // WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+    // HOW TO USE IT: call buildLoaderArgs(...) before code that depends on this setup.
     function buildLoaderArgs(packagePath, packageEntry) {
       return {
         packagePath,
@@ -117,6 +159,10 @@ test('D-3: Launch Integration + Fallback', async (t) => {
   // ── Test 4: Legacy fallback preserves existing iframe/tab behavior ──
   await t.test('Legacy fallback maintains iframe/tab launch for non-packaged apps', () => {
     // Mock fallback logic
+    // launchLegacy()
+    // WHAT THIS DOES: launchLegacy is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call launchLegacy(...) where this helper behavior is needed.
     function launchLegacy(tabName, sourcePath) {
       // Simulate finding or creating iframe element
       if (!sourcePath) return false;
@@ -136,6 +182,10 @@ test('D-3: Launch Integration + Fallback', async (t) => {
   // ── Test 5: Error boundary ensures failed shadow loads don't break shell ──
   await t.test('Error boundary on failed package load shows fallback UI', () => {
     // Mock error boundary
+    // injectErrorBoundary()
+    // WHAT THIS DOES: injectErrorBoundary is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call injectErrorBoundary(...) where this helper behavior is needed.
     function injectErrorBoundary(shadowRoot, errorMessage) {
       if (!shadowRoot) return false;
       const ui = {
@@ -180,6 +230,10 @@ test('D-3: Launch Integration + Fallback', async (t) => {
   // ── Test 7: Launch path detects installer marker for payload lifecycle ──
   await t.test('Load sequence detects installer markers for create/delete lifecycle', () => {
     // Mock marker detection
+    // extractInstallerMarker()
+    // WHAT THIS DOES: extractInstallerMarker is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call extractInstallerMarker(...) where this helper behavior is needed.
     function extractInstallerMarker(appEntry) {
       if (!appEntry || typeof appEntry !== 'object') return null;
       return appEntry._installerMarker || null;
@@ -229,7 +283,10 @@ test('D-3: Launch Integration + Fallback', async (t) => {
     const WINDOW_APPS = [
       { tab: 'browser', label: 'Browser', w: 900, h: 640 }
     ];
-
+    // getSafeAppMetadata()
+    // WHAT THIS DOES: getSafeAppMetadata reads or finds data and gives it back.
+    // WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+    // HOW TO USE IT: call getSafeAppMetadata(...), then use the returned value in your next step.
     function getSafeAppMetadata(tabName, manifestEntry) {
       if (manifestEntry) return manifestEntry;
       // Fallback to WINDOW_APPS
@@ -249,11 +306,18 @@ test('D-3: Launch Integration + Fallback', async (t) => {
     // Mock boundary registry
     const loaderBoundaries = new Map();
 
+    // registerLoaderBoundary()
+    // WHAT THIS DOES: registerLoaderBoundary is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call registerLoaderBoundary(...) where this helper behavior is needed.
     function registerLoaderBoundary(appId, boundary) {
       loaderBoundaries.set(appId, boundary);
       return true;
     }
-
+    // getLoaderBoundary()
+    // WHAT THIS DOES: getLoaderBoundary reads or finds data and gives it back.
+    // WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+    // HOW TO USE IT: call getLoaderBoundary(...), then use the returned value in your next step.
     function getLoaderBoundary(appId) {
       return loaderBoundaries.get(appId) || null;
     }

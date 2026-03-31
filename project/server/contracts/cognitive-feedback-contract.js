@@ -1,3 +1,18 @@
+// ── Contracts · Cognitive Feedback Contract ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This module belongs to the NekoCore OS codebase and provides focused
+// subsystem behavior.
+//
+// WHAT USES THIS:
+// Used by related flows in its subsystem. Keep call contracts stable during
+// readability-only edits.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 'use strict';
 
 // ============================================================
@@ -18,6 +33,10 @@ const VALID_MAGNITUDES     = ['minor', 'moderate', 'major'];
  * @param {Object} feedback
  * @returns {{ ok: boolean, errors: string[] }}
  */
+// validateFeedback()
+// WHAT THIS DOES: validateFeedback answers a yes/no rule check.
+// WHY IT EXISTS: guard checks are kept readable and reusable in one place.
+// HOW TO USE IT: call validateFeedback(...) and branch logic based on true/false.
 function validateFeedback(feedback) {
   const errors = [];
   if (!feedback || typeof feedback !== 'object') {

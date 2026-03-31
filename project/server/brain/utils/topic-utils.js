@@ -1,3 +1,18 @@
+// ── Brain · Topic Utils ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Used by related flows in its subsystem. Keep call contracts stable during
+// readability-only edits.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // REM System — Topic Utilities
 // Normalization, stemming & synonym expansion for topic indexing.
@@ -108,6 +123,10 @@ const STEM_RULES = [
  * Lightweight stem — strips one suffix layer.
  * Returns the stemmed word or the original if no rule matches.
  */
+// stemWord()
+// WHAT THIS DOES: stemWord is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call stemWord(...) where this helper behavior is needed.
 function stemWord(word) {
   if (!word || word.length < 4) return word;
   for (const rule of STEM_RULES) {
@@ -129,6 +148,10 @@ function stemWord(word) {
  * - collapse multiple spaces / replace hyphens with spaces
  * - strip trailing punctuation
  */
+// normalizeTopic()
+// WHAT THIS DOES: normalizeTopic reshapes data from one form into another.
+// WHY IT EXISTS: conversion rules live here so the same transformation is reused.
+// HOW TO USE IT: pass input data into normalizeTopic(...) and use the transformed output.
 function normalizeTopic(topic) {
   if (!topic || typeof topic !== 'string') return '';
   return topic
@@ -144,6 +167,10 @@ function normalizeTopic(topic) {
  * Stem a topic (may be multi-word).
  * Stems each word individually, then rejoins.
  */
+// stemTopic()
+// WHAT THIS DOES: stemTopic is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call stemTopic(...) where this helper behavior is needed.
 function stemTopic(topic) {
   if (!topic) return '';
   return topic.split(' ').map(stemWord).join(' ');
@@ -152,6 +179,10 @@ function stemTopic(topic) {
 /**
  * Get the canonical synonym for a topic, or the topic itself if no synonym.
  */
+// getCanonical()
+// WHAT THIS DOES: getCanonical reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call getCanonical(...), then use the returned value in your next step.
 function getCanonical(topic) {
   return _synonymToCanonical[topic] || topic;
 }
@@ -160,6 +191,10 @@ function getCanonical(topic) {
  * Expand a single topic into all synonyms that share its group.
  * Returns array including the original topic.
  */
+// expandSynonyms()
+// WHAT THIS DOES: expandSynonyms is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call expandSynonyms(...) where this helper behavior is needed.
 function expandSynonyms(topic) {
   const canonical = _synonymToCanonical[topic];
   if (!canonical) return [topic];
@@ -173,6 +208,10 @@ function expandSynonyms(topic) {
  *
  * Pipeline: raw → normalize → synonym canonical → stem
  */
+// canonicalizeTopic()
+// WHAT THIS DOES: canonicalizeTopic is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call canonicalizeTopic(...) where this helper behavior is needed.
 function canonicalizeTopic(raw) {
   const normalized = normalizeTopic(raw);
   if (!normalized) return '';
@@ -184,6 +223,10 @@ function canonicalizeTopic(raw) {
  * Process an array of topics through the full pipeline.
  * Returns deduplicated array of canonical forms.
  */
+// normalizeTopics()
+// WHAT THIS DOES: normalizeTopics reshapes data from one form into another.
+// WHY IT EXISTS: conversion rules live here so the same transformation is reused.
+// HOW TO USE IT: pass input data into normalizeTopics(...) and use the transformed output.
 function normalizeTopics(topics) {
   if (!Array.isArray(topics)) return [];
   const seen = new Set();
@@ -204,6 +247,10 @@ function normalizeTopics(topics) {
  *
  * Returns: Set of normalized/stemmed variants + synonym expansions
  */
+// expandQueryTopic()
+// WHAT THIS DOES: expandQueryTopic is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call expandQueryTopic(...) where this helper behavior is needed.
 function expandQueryTopic(raw) {
   const normalized = normalizeTopic(raw);
   if (!normalized) return new Set();

@@ -1,3 +1,18 @@
+// ── Brain · Entity Manager ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: fs, path, ../../entityPaths.
+// Keep import and call-site contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // REM System — Entity Manager
 // Manages entity loading, creation, deletion, and switching
@@ -11,6 +26,10 @@ class EntityManager {
     /**
      * Get the memories directory for a specific entity
      */
+    // getEntityMemoriesDir()
+    // WHAT THIS DOES: getEntityMemoriesDir reads or finds data and gives it back.
+    // WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+    // HOW TO USE IT: call getEntityMemoriesDir(...), then use the returned value in your next step.
     getEntityMemoriesDir(entityId) {
       return entityPaths.getMemoryRoot(entityId);
     }
@@ -29,6 +48,10 @@ class EntityManager {
   /**
    * List all available entities
    */
+  // listEntities()
+  // WHAT THIS DOES: listEntities is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call listEntities(...) where this helper behavior is needed.
   listEntities() {
     try {
       const entitiesRaw = fs.readdirSync(this.entitiesDir)
@@ -229,6 +252,10 @@ class EntityManager {
       }
 
       // Recursive delete
+      // deleteRecursive()
+      // WHAT THIS DOES: deleteRecursive removes, resets, or shuts down existing state.
+      // WHY IT EXISTS: cleanup is explicit so stale state does not leak into new runs.
+      // HOW TO USE IT: call deleteRecursive(...) when you need a safe teardown/reset path.
       const deleteRecursive = (dir) => {
         if (fs.existsSync(dir)) {
           fs.readdirSync(dir).forEach(file => {

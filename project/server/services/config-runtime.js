@@ -1,3 +1,17 @@
+// ── Services · Config Runtime ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This service module holds reusable business logic shared across runtime
+// paths.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: ./provider-capabilities. Keep
+// import and call-site contracts aligned during refactors.
+//
+// EXPORTS:
+// Exposed API includes: createConfigRuntime.
+// ─────────────────────────────────────────────────────────────────────────────
+
 'use strict';
 /**
  * server/services/config-runtime.js
@@ -22,7 +36,10 @@
 // ── Pure helpers ──────────────────────────────────────────────────────────────
 
 const { resolveCapabilities } = require('./provider-capabilities');
-
+// normalizeSubconsciousRuntimeConfig()
+// WHAT THIS DOES: normalizeSubconsciousRuntimeConfig reshapes data from one form into another.
+// WHY IT EXISTS: conversion rules live here so the same transformation is reused.
+// HOW TO USE IT: pass input data into normalizeSubconsciousRuntimeConfig(...) and use the transformed output.
 function normalizeSubconsciousRuntimeConfig(rawConfig) {
   if (!rawConfig || typeof rawConfig !== 'object') return null;
 
@@ -45,7 +62,10 @@ function normalizeSubconsciousRuntimeConfig(rawConfig) {
 
   return null;
 }
-
+// normalizeAspectRuntimeConfig()
+// WHAT THIS DOES: normalizeAspectRuntimeConfig reshapes data from one form into another.
+// WHY IT EXISTS: conversion rules live here so the same transformation is reused.
+// HOW TO USE IT: pass input data into normalizeAspectRuntimeConfig(...) and use the transformed output.
 function normalizeAspectRuntimeConfig(rawConfig) {
   if (!rawConfig || typeof rawConfig !== 'object') return null;
 
@@ -97,7 +117,10 @@ function normalizeAspectRuntimeConfig(rawConfig) {
 
   return null;
 }
-
+// mapAspectKey()
+// WHAT THIS DOES: mapAspectKey reshapes data from one form into another.
+// WHY IT EXISTS: conversion rules live here so the same transformation is reused.
+// HOW TO USE IT: pass input data into mapAspectKey(...) and use the transformed output.
 function mapAspectKey(aspectOrRole) {
   const raw = String(aspectOrRole || '').toLowerCase().trim();
   if (!raw) return 'main';
@@ -114,6 +137,10 @@ function mapAspectKey(aspectOrRole) {
  * Returns { main, subconscious, dream, orchestrator } with normalised runtime configs.
  * Attaches resolved capabilities from profile-level overrides.
  */
+// resolveProfileAspectConfigs()
+// WHAT THIS DOES: resolveProfileAspectConfigs is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call resolveProfileAspectConfigs(...) where this helper behavior is needed.
 function resolveProfileAspectConfigs(profile) {
   if (!profile) return {};
   const configs = {};
@@ -180,9 +207,12 @@ function resolveProfileAspectConfigs(profile) {
 /**
  * @param {{ getConfig: Function }} deps
  */
+// createConfigRuntime()
+// WHAT THIS DOES: createConfigRuntime creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call createConfigRuntime(...) before code that depends on this setup.
 function createConfigRuntime({ getConfig } = {}) {
   if (typeof getConfig !== 'function') throw new Error('createConfigRuntime: getConfig must be a function');
-
   function loadAspectRuntimeConfig(aspectOrRole, inlineAspectConfigs = null) {
     const aspect = mapAspectKey(aspectOrRole);
 
@@ -206,6 +236,12 @@ function createConfigRuntime({ getConfig } = {}) {
       const profileCaps = profile.capabilities || null;
       const profileMain = normalizeAspectRuntimeConfig(profile.main);
       if (profileMain) {
+        // attachCaps()
+        // Purpose: helper wrapper used by this module's main flow.
+        // attachCaps()
+        // WHAT THIS DOES: attachCaps is a helper used by this module's main flow.
+        // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+        // HOW TO USE IT: call attachCaps(...) where this helper behavior is needed.
         const attachCaps = (rt) => rt ? { ...rt, capabilities: resolveCapabilities(rt.type, profileCaps) } : null;
         if (aspect === 'main') return attachCaps(profileMain);
         if (aspect === 'dream') {

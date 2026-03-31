@@ -1,3 +1,17 @@
+// ── Services · Voice Profile ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This service module holds reusable business logic shared across runtime
+// paths.
+//
+// WHAT USES THIS:
+// Used by related flows in its subsystem. Keep call contracts stable during
+// readability-only edits.
+//
+// EXPORTS:
+// Exposed API includes: generateVoiceFromTraits, getDefaultVoice, DEFAULTS.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // Voice Profile Service
 // Generates per-entity typing voice profiles from personality traits.
@@ -106,10 +120,19 @@ const TRAIT_MODIFIERS = {
   blunt:      { speed: [3, 4], errors: 0.5, fillers: { chanceDelta: -0.04, phrases: [] }, brb: { chanceDelta: -0.02, phrases: ['sec. '], returnPhrase: '' } },
   stoic:      { speed: [1, 2], errors: 0.4, fillers: { chanceDelta: -0.045, phrases: [] }, brb: { chanceDelta: -0.03, phrases: ['...'], returnPhrase: '' } }
 };
-
+// clamp()
+// WHAT THIS DOES: clamp is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call clamp(...) where this helper behavior is needed.
 function clamp(val, min, max) { return Math.max(min, Math.min(max, val)); }
 
 function generateVoiceFromTraits(traits, gender) {
+  // traitList()
+  // Purpose: helper wrapper used by this module's main flow.
+  // traitList()
+  // WHAT THIS DOES: traitList is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call traitList(...) where this helper behavior is needed.
   const traitList = (Array.isArray(traits) ? traits : [])
     .map(t => String(t || '').toLowerCase().trim())
     .filter(Boolean);
@@ -193,7 +216,10 @@ function generateVoiceFromTraits(traits, gender) {
 
   return voice;
 }
-
+// round4()
+// WHAT THIS DOES: round4 is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call round4(...) where this helper behavior is needed.
 function round4(n) { return Math.round(n * 10000) / 10000; }
 
 function getDefaultVoice() {

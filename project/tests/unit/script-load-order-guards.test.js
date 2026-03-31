@@ -1,3 +1,19 @@
+// ── Tests · Script Load Order Guards.Test ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This test file validates behavior and guards against regressions in its
+// target subsystem.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: node:test,
+// node:assert/strict, node:fs, node:path. Keep import and call-site
+// contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 'use strict';
 
 // ============================================================
@@ -15,17 +31,22 @@ const path = require('node:path');
 
 const ROOT = path.resolve(__dirname, '..', '..');
 const INDEX_HTML = path.join(ROOT, 'client', 'index.html');
-
+// getScriptOrder()
+// WHAT THIS DOES: getScriptOrder reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call getScriptOrder(...), then use the returned value in your next step.
 function getScriptOrder() {
   const src = fs.readFileSync(INDEX_HTML, 'utf8');
   const matches = [...src.matchAll(/<script\s+src="([^"]+)"/g)];
   return matches.map(m => m[1]);
 }
-
+// indexOf()
+// WHAT THIS DOES: indexOf is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call indexOf(...) where this helper behavior is needed.
 function indexOf(scripts, fragment) {
   return scripts.findIndex(s => s.includes(fragment));
 }
-
 function assertBefore(scripts, a, b) {
   const idxA = indexOf(scripts, a);
   const idxB = indexOf(scripts, b);

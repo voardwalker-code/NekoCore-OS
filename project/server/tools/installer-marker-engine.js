@@ -1,24 +1,46 @@
+// ── Tools · Installer Marker Engine ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This module belongs to the NekoCore OS codebase and provides focused
+// subsystem behavior.
+//
+// WHAT USES THIS:
+// Used by related flows in its subsystem. Keep call contracts stable during
+// readability-only edits.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 'use strict';
 
 const OPEN_MARKER = '//Open Next json entry id';
 const CLOSE_MARKER = '//Close "';
-
+// _escapeRegex()
+// WHAT THIS DOES: _escapeRegex is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _escapeRegex(...) where this helper behavior is needed.
 function _escapeRegex(value) {
   return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
-
 function _toText(value) {
   return String(value == null ? '' : value);
 }
-
+// _escapeCommentString()
+// WHAT THIS DOES: _escapeCommentString is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _escapeCommentString(...) where this helper behavior is needed.
 function _escapeCommentString(value) {
   return _toText(value).replace(/\\/g, '\\\\').replace(/"/g, '\\"');
 }
-
 function _pickEol(matchText) {
   return matchText.includes('\r\n') ? '\r\n' : '\n';
 }
-
+// _nextBoundary()
+// WHAT THIS DOES: _nextBoundary is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _nextBoundary(...) where this helper behavior is needed.
 function _nextBoundary(content) {
   const pattern = new RegExp(`${_escapeRegex(OPEN_MARKER)}\\r?\\n\\r?\\n${_escapeRegex(CLOSE_MARKER)}`);
   const match = pattern.exec(content);
@@ -29,7 +51,10 @@ function _nextBoundary(content) {
     text: match[0]
   };
 }
-
+// _allBoundaries()
+// WHAT THIS DOES: _allBoundaries is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _allBoundaries(...) where this helper behavior is needed.
 function _allBoundaries(content) {
   const pattern = new RegExp(`${_escapeRegex(OPEN_MARKER)}\\r?\\n\\r?\\n${_escapeRegex(CLOSE_MARKER)}`, 'g');
   const out = [];
@@ -43,11 +68,13 @@ function _allBoundaries(content) {
   }
   return out;
 }
-
+// _emptyBoundary()
+// WHAT THIS DOES: _emptyBoundary is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _emptyBoundary(...) where this helper behavior is needed.
 function _emptyBoundary(eol) {
   return [OPEN_MARKER, '', CLOSE_MARKER].join(eol);
 }
-
 function _normalizeAdjacentEmptyBoundaries(content, eolHint) {
   const eol = eolHint || '\n';
   const one = _emptyBoundary(eol);
@@ -58,7 +85,10 @@ function _normalizeAdjacentEmptyBoundaries(content, eolHint) {
   }
   return next;
 }
-
+// _validateEntries()
+// WHAT THIS DOES: _validateEntries answers a yes/no rule check.
+// WHY IT EXISTS: guard checks are kept readable and reusable in one place.
+// HOW TO USE IT: call _validateEntries(...) and branch logic based on true/false.
 function _validateEntries(entries) {
   if (!Array.isArray(entries) || entries.length === 0) {
     return 'entries must be a non-empty array';
@@ -74,7 +104,10 @@ function _validateEntries(entries) {
   }
   return null;
 }
-
+// _validateRemoveEntries()
+// WHAT THIS DOES: _validateRemoveEntries answers a yes/no rule check.
+// WHY IT EXISTS: guard checks are kept readable and reusable in one place.
+// HOW TO USE IT: call _validateRemoveEntries(...) and branch logic based on true/false.
 function _validateRemoveEntries(entries) {
   if (!Array.isArray(entries) || entries.length === 0) {
     return 'entries must be a non-empty array';
@@ -87,7 +120,10 @@ function _validateRemoveEntries(entries) {
   }
   return null;
 }
-
+// _removeOneEntryById()
+// WHAT THIS DOES: _removeOneEntryById removes, resets, or shuts down existing state.
+// WHY IT EXISTS: cleanup is explicit so stale state does not leak into new runs.
+// HOW TO USE IT: call _removeOneEntryById(...) when you need a safe teardown/reset path.
 function _removeOneEntryById(content, entryId) {
   const entryLine = `//JsonEntryId: "${_escapeCommentString(entryId)}"`;
   const pattern = new RegExp(
@@ -123,7 +159,10 @@ function _removeOneEntryById(content, entryId) {
     updatedContent: updated
   };
 }
-
+// applyMarkerEntries()
+// WHAT THIS DOES: applyMarkerEntries is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call applyMarkerEntries(...) where this helper behavior is needed.
 function applyMarkerEntries(fileContent, entries) {
   const original = _toText(fileContent);
   const validationError = _validateEntries(entries);
@@ -198,7 +237,10 @@ function applyMarkerEntries(fileContent, entries) {
     logs
   };
 }
-
+// removeMarkerEntries()
+// WHAT THIS DOES: removeMarkerEntries removes, resets, or shuts down existing state.
+// WHY IT EXISTS: cleanup is explicit so stale state does not leak into new runs.
+// HOW TO USE IT: call removeMarkerEntries(...) when you need a safe teardown/reset path.
 function removeMarkerEntries(fileContent, entries) {
   const original = _toText(fileContent);
   const validationError = _validateRemoveEntries(entries);

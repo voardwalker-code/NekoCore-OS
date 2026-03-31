@@ -1,3 +1,18 @@
+// ── Brain · Rake ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Used by related flows in its subsystem. Keep call contracts stable during
+// readability-only edits.
+//
+// EXPORTS:
+// Exposed API includes: extractPhrases, buildCandidatePhrases,
+// computeWordScores, scorePhrases.
+// ─────────────────────────────────────────────────────────────────────────────
+
 'use strict';
 /**
  * server/brain/utils/rake.js
@@ -45,6 +60,10 @@ const PHRASE_DELIMITERS = /[.!?,;:()\[\]{}"'\n\t]+/;
  * @param {string} text
  * @returns {string[][]}
  */
+// buildCandidatePhrases()
+// WHAT THIS DOES: buildCandidatePhrases creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call buildCandidatePhrases(...) before code that depends on this setup.
 function buildCandidatePhrases(text) {
   // First split on hard punctuation to get sentence-level chunks
   const sentenceChunks = text.toLowerCase().split(PHRASE_DELIMITERS);
@@ -97,6 +116,10 @@ function buildCandidatePhrases(text) {
  *
  * RAKE word score = degree / freq
  */
+// computeWordScores()
+// WHAT THIS DOES: computeWordScores is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call computeWordScores(...) where this helper behavior is needed.
 function computeWordScores(candidates) {
   const freq = {};
   const degree = {};
@@ -121,6 +144,10 @@ function computeWordScores(candidates) {
  * Score each candidate phrase as the sum of its word scores.
  * Returns array of { phrase: string, score: number }.
  */
+// scorePhrases()
+// WHAT THIS DOES: scorePhrases is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call scorePhrases(...) where this helper behavior is needed.
 function scorePhrases(candidates, wordScores) {
   const seen = new Set();
   const results = [];
@@ -150,6 +177,10 @@ function scorePhrases(candidates, wordScores) {
  * @param {number} [maxPhrases]  - Maximum phrases to return (default 12)
  * @returns {string[]}           - Ranked array of phrase strings
  */
+// extractPhrases()
+// WHAT THIS DOES: extractPhrases is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call extractPhrases(...) where this helper behavior is needed.
 function extractPhrases(text, maxPhrases = 12) {
   if (!text || typeof text !== 'string' || text.trim().length === 0) return [];
 

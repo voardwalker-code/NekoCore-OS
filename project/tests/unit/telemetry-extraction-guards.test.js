@@ -1,3 +1,18 @@
+// ── Tests · Telemetry Extraction Guards.Test ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This test file validates behavior and guards against regressions in its
+// target subsystem.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: node:test,
+// node:assert/strict, node:fs, node:path. Keep import and call-site
+// contracts aligned during refactors.
+//
+// EXPORTS:
+// Exposed API includes: window-attached API object.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // P3-S11 extraction boundary guards — telemetry-ui.js
 // Asserts: redirect comment in app.js, ownership in telemetry-ui.js, script order in index.html
 const { test } = require('node:test');

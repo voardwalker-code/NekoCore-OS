@@ -1,3 +1,19 @@
+// ── Tests · App Manifest Guards.Test ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This test file validates behavior and guards against regressions in its
+// target subsystem.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: node:test,
+// node:assert/strict, node:fs, node:path. Keep import and call-site
+// contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 'use strict';
 
 // ============================================================
@@ -54,6 +70,10 @@ test('manifest covers all 22 expected WINDOW_APPS tab IDs', () => {
 });
 
 test('every manifest entry has a valid class (core or optional)', () => {
+  // for()
+  // WHAT THIS DOES: for is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call for(...) where this helper behavior is needed.
   for (const app of manifest.apps) {
     assert.ok(
       VALID_CLASSES.includes(app.class),
@@ -63,6 +83,10 @@ test('every manifest entry has a valid class (core or optional)', () => {
 });
 
 test('every manifest entry has a non-empty sourcePath', () => {
+  // for()
+  // WHAT THIS DOES: for is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call for(...) where this helper behavior is needed.
   for (const app of manifest.apps) {
     assert.ok(
       typeof app.sourcePath === 'string' && app.sourcePath.length > 0,
@@ -72,6 +96,10 @@ test('every manifest entry has a non-empty sourcePath', () => {
 });
 
 test('every manifest entry has a bootstrapCritical boolean', () => {
+  // for()
+  // WHAT THIS DOES: for is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call for(...) where this helper behavior is needed.
   for (const app of manifest.apps) {
     assert.strictEqual(
       typeof app.bootstrapCritical,
@@ -82,6 +110,10 @@ test('every manifest entry has a bootstrapCritical boolean', () => {
 });
 
 test('manifest JS sourcePaths that exist on disk are at expected locations', () => {
+  // for()
+  // WHAT THIS DOES: for is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call for(...) where this helper behavior is needed.
   for (const app of manifest.apps) {
     if (!app.sourcePath.endsWith('.js')) continue; // skip html iframe entries
     const absPath = path.join(ROOT, 'client', app.sourcePath);

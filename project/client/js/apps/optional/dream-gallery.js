@@ -1,3 +1,18 @@
+// ── Client Optional · Dream Gallery ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This client module drives browser-side behavior and state updates for UI
+// features.
+//
+// WHAT USES THIS:
+// Used by related flows in its subsystem. Keep call contracts stable during
+// readability-only edits.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // REM System — Dream Gallery UI
 // Client-side code for displaying pixel art dream visualizations.
@@ -91,6 +106,10 @@ async function loadDreamGallery() {
 /**
  * Show the generate art panel.
  */
+// generateMemoryArt()
+// WHAT THIS DOES: generateMemoryArt is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call generateMemoryArt(...) where this helper behavior is needed.
 function generateMemoryArt() {
   const panel = document.getElementById('generateArtPanel');
   if (panel) {
@@ -160,6 +179,10 @@ async function submitGenerateArt() {
 /**
  * Show a pixel art image in a modal overlay for full-size viewing.
  */
+// showPixelArtModal()
+// WHAT THIS DOES: showPixelArtModal builds or updates what the user sees.
+// WHY IT EXISTS: display logic is separated from data/business logic for clarity.
+// HOW TO USE IT: call showPixelArtModal(...) after state changes that need UI refresh.
 function showPixelArtModal(src, title) {
   // Remove existing modal if any
   const existing = document.getElementById('pixelArtModal');
@@ -206,6 +229,10 @@ if (_dreamGalleryTab) {
 // IMAGE GENERATION SETTINGS
 // ============================================================
 
+// toggleImageGenSettings()
+// WHAT THIS DOES: toggleImageGenSettings is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call toggleImageGenSettings(...) where this helper behavior is needed.
 function toggleImageGenSettings() {
   const panel = document.getElementById('imageGenSettingsPanel');
   if (!panel) return;
@@ -269,6 +296,12 @@ async function loadImageGenSettings() {
 async function saveImageGenSettings() {
   const statusEl = document.getElementById('imageGenSaveStatus');
   const mode = document.getElementById('imageGenMode')?.value || 'off';
+  // endpoint()
+  // Purpose: helper wrapper used by this module's main flow.
+  // endpoint()
+  // WHAT THIS DOES: endpoint is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call endpoint(...) where this helper behavior is needed.
   const endpoint = (document.getElementById('imageApiEndpoint')?.value || '').trim();
   const key = (document.getElementById('imageApiKey')?.value || '').trim();
   const model = (document.getElementById('imageApiModel')?.value || '').trim();

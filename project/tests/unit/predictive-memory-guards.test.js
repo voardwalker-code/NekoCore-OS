@@ -1,3 +1,20 @@
+// ── Tests · Predictive Memory Guards.Test ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This test file validates behavior and guards against regressions in its
+// target subsystem.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: node:test,
+// node:assert/strict, ../../server/contracts/memory-schema,
+// ../../server/brain/agent-echo, ../../server/brain/utils/archive-indexes.
+// Keep import and call-site contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 'use strict';
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
@@ -475,7 +492,10 @@ describe('Guard: rebuildShapeIndexes (Slice 4)', () => {
   const fs = require('fs');
   const path = require('path');
   const { writeIndex, readIndex, rebuildShapeIndexes: rebuildFn } = require('../../server/brain/utils/archive-indexes');
-
+  // makeTmpArchiveDir()
+  // WHAT THIS DOES: makeTmpArchiveDir creates or initializes something needed by the flow.
+  // WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+  // HOW TO USE IT: call makeTmpArchiveDir(...) before code that depends on this setup.
   function makeTmpArchiveDir(entityId, bucketEntries) {
     const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'pm-shape-idx-'));
     const archiveDir = path.join(tmpDir, `entity_${entityId}`, 'memories', 'archive');
@@ -486,6 +506,12 @@ describe('Guard: rebuildShapeIndexes (Slice 4)', () => {
     const router = {};
     const bucketLines = {};
     for (const entry of bucketEntries) {
+      // primaryTopic()
+      // Purpose: helper wrapper used by this module's main flow.
+      // primaryTopic()
+      // WHAT THIS DOES: primaryTopic is a helper used by this module's main flow.
+      // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+      // HOW TO USE IT: call primaryTopic(...) where this helper behavior is needed.
       const primaryTopic = (entry.topics || ['general'])[0] || 'general';
       const slug = primaryTopic.toLowerCase().replace(/[^a-z0-9]/g, '_');
       const bucketName = `bucket_${slug}.ndjson`;
@@ -782,11 +808,13 @@ describe('Guard: createCoreMemory accepts creationContext + shape', () => {
   const os = require('os');
   const fs = require('fs');
   const path = require('path');
-
+  // makeTmpDir()
+  // WHAT THIS DOES: makeTmpDir creates or initializes something needed by the flow.
+  // WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+  // HOW TO USE IT: call makeTmpDir(...) before code that depends on this setup.
   function makeTmpDir() {
     return fs.mkdtempSync(path.join(os.tmpdir(), 'pm-guard-'));
   }
-
   function makeMockDeps(entityDir) {
     const entityId = 'test-entity-slice3';
     // Create episodic + semantic dirs so writes succeed
@@ -949,7 +977,10 @@ describe('Guard: createCoreMemory accepts creationContext + shape', () => {
 describe('Guard: edge-builder seedEdges (Slice 5)', () => {
   const { seedEdges, MAX_EDGES, SCAN_WINDOW } = require('../../server/brain/memory/edge-builder');
   const { normalizeTopics } = require('../../server/brain/utils/topic-utils');
-
+  // mockIndexCache()
+  // WHAT THIS DOES: mockIndexCache is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call mockIndexCache(...) where this helper behavior is needed.
   function mockIndexCache(memories) {
     const memoryIndex = {};
     const recencyIndex = [];
@@ -1113,11 +1144,13 @@ describe('Guard: createCoreMemory persists edges (Slice 5)', () => {
   const os = require('os');
   const fs = require('fs');
   const path = require('path');
-
+  // makeTmpDir()
+  // WHAT THIS DOES: makeTmpDir creates or initializes something needed by the flow.
+  // WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+  // HOW TO USE IT: call makeTmpDir(...) before code that depends on this setup.
   function makeTmpDir() {
     return fs.mkdtempSync(path.join(os.tmpdir(), 'pm-edge-'));
   }
-
   function makeMockDeps(entityDir) {
     const entityId = 'test-entity-slice5';
     const episodicDir = path.join(entityDir, 'memories', 'episodic');
@@ -1246,7 +1279,10 @@ describe('Guard: createCoreMemory persists edges (Slice 5)', () => {
 
 describe('Guard: activation-network (Slice 6)', () => {
   const { activate, decayAllActivations, getPreActivated } = require('../../server/brain/memory/activation-network');
-
+  // mockIndexCache()
+  // WHAT THIS DOES: mockIndexCache is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call mockIndexCache(...) where this helper behavior is needed.
   function mockIndexCache(entries) {
     // entries: array of { memId, ...meta }
     const memoryIndex = {};
@@ -1429,7 +1465,10 @@ describe('Guard: activation-network (Slice 6)', () => {
 describe('Guard: activation wiring in retrieval + decay (Slice 7)', () => {
   const { activate, decayAllActivations, getPreActivated } = require('../../server/brain/memory/activation-network');
   const decayPhase = require('../../server/brain/cognition/phases/phase-decay');
-
+  // mockIndexCache()
+  // WHAT THIS DOES: mockIndexCache is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call mockIndexCache(...) where this helper behavior is needed.
   function mockIndexCache(entries) {
     const memoryIndex = {};
     for (const e of entries) {
@@ -1446,6 +1485,10 @@ describe('Guard: activation wiring in retrieval + decay (Slice 7)', () => {
 
   it('activation boost: pre-activated memory scores higher', () => {
     // Simulate what memory-retrieval.js does: adds activationLevel * 0.25
+    // baseScoringFn()
+    // WHAT THIS DOES: baseScoringFn is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call baseScoringFn(...) where this helper behavior is needed.
     const baseScoringFn = (meta) => {
       let score = meta.importance * 1.2;
       if ((meta.activationLevel || 0) > 0.15) {
@@ -1461,6 +1504,12 @@ describe('Guard: activation wiring in retrieval + decay (Slice 7)', () => {
   });
 
   it('activation boost: below-threshold memory gets no boost', () => {
+    // baseScoringFn()
+    // Purpose: helper wrapper used by this module's main flow.
+    // baseScoringFn()
+    // WHAT THIS DOES: baseScoringFn is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call baseScoringFn(...) where this helper behavior is needed.
     const baseScoringFn = (meta) => {
       let score = meta.importance * 1.2;
       if ((meta.activationLevel || 0) > 0.15) {
@@ -1553,7 +1602,10 @@ describe('Guard: activation wiring in retrieval + decay (Slice 7)', () => {
 describe('Guard: echoFuture implementation (Slice 8)', () => {
   const { echoFuture } = require('../../server/brain/agent-echo');
   const { activate } = require('../../server/brain/memory/activation-network');
-
+  // mockIndexCache()
+  // WHAT THIS DOES: mockIndexCache is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call mockIndexCache(...) where this helper behavior is needed.
   function mockIndexCache(entries) {
     const memoryIndex = {};
     for (const e of entries) {
@@ -1831,6 +1883,10 @@ describe('Guard: dream reconsolidation (Slice 10)', () => {
   } = require('../../server/brain/memory/reconsolidation');
 
   // Helper: build a mock indexCache
+  // mockIndexCache()
+  // WHAT THIS DOES: mockIndexCache is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call mockIndexCache(...) where this helper behavior is needed.
   function mockIndexCache(entries, recencyEntries) {
     const memoryIndex = {};
     for (const [id, meta] of Object.entries(entries)) {
@@ -2112,7 +2168,10 @@ describe('Guard: legacy memory migration (Slice 11)', () => {
   const fs = require('fs');
   const path = require('path');
   const { main, migrateEntity, scanMemories, buildMiniIndex } = require('../../server/tools/migrate-memory-agents');
-
+  // createSyntheticEntity()
+  // WHAT THIS DOES: createSyntheticEntity creates or initializes something needed by the flow.
+  // WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+  // HOW TO USE IT: call createSyntheticEntity(...) before code that depends on this setup.
   function createSyntheticEntity(tmpDir, entityId, memories) {
     const entityDir = path.join(tmpDir, `entity_${entityId}`);
     const epiDir = path.join(entityDir, 'memories', 'episodic');

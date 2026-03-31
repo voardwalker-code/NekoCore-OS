@@ -853,7 +853,9 @@ MA (Memory Architect) is a companion server that provides tool execution, web se
 MA runs as a separate server on port 3850:
 
 ```bash
-cd project/MA
+git clone https://github.com/voardwalker-code/MA-Memory-Architect.git
+cd MA-Memory-Architect/MA
+npm install
 node MA-Server.js
 ```
 
@@ -876,7 +878,7 @@ NekoCore OS will:
 
 ### MA's Own Interface
 
-MA also has its own browser GUI at `http://localhost:3850` with a complete chat interface, settings panel, and file drag-and-drop. See the [MA User Guide](../project/MA/USER-GUIDE.md) for full details.
+MA also has its own browser GUI at `http://localhost:3850` with a complete chat interface, settings panel, and file drag-and-drop. See the [MA-Memory-Architect repository](https://github.com/voardwalker-code/MA-Memory-Architect) for full docs.
 
 ### Related Servers
 
@@ -1049,7 +1051,7 @@ NekoCore OS can connect to Telegram for remote entity interaction:
 ### MA Not Connecting
 
 - If `/ma` shows a timeout, ensure MA's port (3850) is available
-- Check `project/MA/` exists and `MA-Server.js` is present
+- Check `MA-Memory-Architect/MA/` exists next to `NekoCore-OS-main` and `MA-Server.js` is present
 - MA auto-boots via the process manager — check process manager logs if boot fails
 
 ---

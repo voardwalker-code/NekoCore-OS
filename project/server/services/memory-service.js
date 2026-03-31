@@ -1,3 +1,21 @@
+// ── Services · Memory Service ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This service module holds reusable business logic shared across runtime
+// paths.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include:
+// ../brain/memory/memory-storage, ../brain/memory/memory-index,
+// ../brain/memory/memory-graph, ../brain/memory/archive-manager,
+// ../brain/memory/conscious-memory. Keep import and call-site contracts
+// aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // MemoryService — Unified Memory Facade
 //
@@ -29,6 +47,10 @@ class MemoryService {
    * @param {Object} [options]
    * @param {Object} [options.cognitiveBus]  — CognitiveBus instance for graph events
    */
+  // constructor()
+  // WHAT THIS DOES: constructor is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call constructor(...) where this helper behavior is needed.
   constructor(entityId, options = {}) {
     this.entityId = entityId;
     const memDir = entityPaths.getMemoryRoot(entityId);
@@ -51,6 +73,10 @@ class MemoryService {
     const memoryToStore = Object.assign({}, memory, normalized);
     const memId = await this._storage.storeMemory(memoryToStore);
     const memWithId = Object.assign({}, memoryToStore, { id: memId, memory_id: memId });
+    // if()
+    // WHAT THIS DOES: if is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call if(...) where this helper behavior is needed.
     if (memoryToStore.type === 'semantic') {
       this._index.addSemanticMemory(memoryToStore);
     } else {
@@ -59,10 +85,18 @@ class MemoryService {
 
     // Phase 11: optional image generation per memory.
     try {
+      // cfg()
+      // WHAT THIS DOES: cfg is a helper used by this module's main flow.
+      // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+      // HOW TO USE IT: call cfg(...) where this helper behavior is needed.
       const cfg = (configService.load && configService.load()) || {};
       const imageCfg = cfg.imageGeneration || cfg?.sleep?.imageGeneration || {};
       const imageGen = new ImageGenerator({ entityId: this.entityId, config: imageCfg });
       const generated = await imageGen.generateForMemory(memWithId);
+      // if()
+      // WHAT THIS DOES: if is a helper used by this module's main flow.
+      // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+      // HOW TO USE IT: call if(...) where this helper behavior is needed.
       if (generated && generated.imagePath) {
         this._images.setImagePath(memId, generated.imagePath, {
           prompt: generated.prompt,

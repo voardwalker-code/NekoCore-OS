@@ -1,3 +1,20 @@
+// ── Services · Entity Runtime ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This service module holds reusable business logic shared across runtime
+// paths.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: path,
+// ../brain/memory/conscious-memory, ./memory-service, ../brain/trace-graph,
+// ../brain/goals-manager. Keep import and call-site contracts aligned during
+// refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 const path = require('path');
 
 const ConsciousMemory = require('../brain/memory/conscious-memory');
@@ -31,6 +48,10 @@ class EntityRuntime {
    * @param {Function} globals.loadConfig
    * @param {Function} globals.broadcastSSE
    */
+  // constructor()
+  // WHAT THIS DOES: constructor is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call constructor(...) where this helper behavior is needed.
   constructor(globals = {}) {
     this.globals = globals;
 
@@ -98,6 +119,12 @@ class EntityRuntime {
     this.goalsManager = new GoalsManager({ memDir: entityMemDir });
     this.dreamEngine = new DreamEngine({ memDir: path.join(entityMemDir, 'dreams'), memStorage: this.memoryStorage });
 
+    // _sleepCfg()
+    // Purpose: helper wrapper used by this module's main flow.
+    // _sleepCfg()
+    // WHAT THIS DOES: _sleepCfg is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call _sleepCfg(...) where this helper behavior is needed.
     const _sleepCfg = (loadConfig ? loadConfig().sleep : {}) || {};
     this.dreamVisualizer = new DreamVisualizer({
       modelRouter,

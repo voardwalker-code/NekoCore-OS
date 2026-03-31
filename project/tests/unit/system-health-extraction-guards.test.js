@@ -1,3 +1,19 @@
+// ── Tests · System Health Extraction Guards.Test ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This test file validates behavior and guards against regressions in its
+// target subsystem.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: node:test,
+// node:assert/strict, node:fs, node:path. Keep import and call-site
+// contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 'use strict';
 
 // ============================================================
@@ -21,7 +37,10 @@ const ROOT = path.resolve(__dirname, '..', '..');
 const SH_JS  = path.join(ROOT, 'client', 'js', 'apps', 'core', 'system-health.js');
 const APP_JS = path.join(ROOT, 'client', 'js', 'app.js');
 const INDEX_HTML = path.join(ROOT, 'client', 'index.html');
-
+// read()
+// WHAT THIS DOES: read reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call read(...), then use the returned value in your next step.
 function read(filePath) {
   return fs.readFileSync(filePath, 'utf8');
 }

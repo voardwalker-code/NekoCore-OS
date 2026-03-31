@@ -1,3 +1,19 @@
+// ── Services · Agent Echo Retrieval Coordinator ─────────────────────────────
+//
+// HOW AGENT ECHO WORKS:
+// This module coordinates three non-LLM memory retrieval paths:
+//   - Echo Now: hot conscious STM/LTM window
+//   - Echo Past: archive probing across ranked archive shards
+//   - Echo Future: predictive recall from activation topology
+// It also supports promotion of strong archive hits into STM.
+//
+// WHAT USES THIS:
+//   turn-level memory retrieval and async enrichment flows
+//
+// EXPORTS:
+//   echoNow(), echoPast(), echoFuture(), promoteToStm()
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // Agent Echo — Non-LLM retrieval coordinator (Phase 4.7)
 //
@@ -15,6 +31,7 @@ const ConsciousMemory = require('./memory/conscious-memory');
 
 // Simple topic-overlap scorer used for merging STM+LTM pools.
 // Returns a value in [0, 1].
+/** Score topic overlap between one entry and query topics. */
 function _topicScore(entry, topics) {
   if (!entry.topics?.length || !topics?.length) return 0;
   const querySet = new Set(topics.map(t => t.toLowerCase()));
@@ -36,6 +53,7 @@ function _topicScore(entry, topics) {
  * @param {ConsciousMemory} [_opts.consciousMemory]  Injected instance for tests.
  * @returns {Object[]} Scored memory entries, highest relevance first.
  */
+/** Return top-N conscious memories relevant to query topics. */
 function echoNow(entityId, topics, limit = 8, _opts = {}) {
   if (!topics || topics.length === 0) return [];
 
@@ -93,6 +111,7 @@ function echoNow(entityId, topics, limit = 8, _opts = {}) {
  * @param {Function} [options._queryArchive]       Test injection: mock queryArchive.
  * @returns {Object[]}  Memory entries with `id` field. Round-2 entries include `_archiveScore`.
  */
+/** Search ranked archive shards for relevant older memories. */
 function echoPast(entityId, topics, options = {}) {
   if (!topics || topics.length === 0) return [];
 
@@ -167,6 +186,7 @@ const PROMOTION_SCORE_THRESHOLD = 1.2; // default minimum _archiveScore for STM 
  * @param {ConsciousMemory} [opts._consciousMemory]  Test injection.
  * @returns {number} Count of entries promoted.
  */
+/** Promote strong Echo Past hits into conscious STM for next-turn reuse. */
 function promoteToStm(entityId, hits, opts = {}) {
   if (!hits || hits.length === 0) return 0;
 
@@ -207,6 +227,7 @@ function promoteToStm(entityId, hits, opts = {}) {
  * @param {number}   [opts.limit=5]      Max results to return.
  * @returns {Object[]}  `[{ id, topics, shape, activationLevel, creationContext }]`
  */
+/** Predict likely needed memories using activation topology. */
 function echoFuture(entityId, topics, opts = {}) {
   if (!entityId) return [];
 

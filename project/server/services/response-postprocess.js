@@ -1,6 +1,19 @@
+// ── Services · Response Postprocess ──────────────────────────────────────────
+//
+// HOW RESPONSE POSTPROCESSING WORKS:
+// This module applies lightweight cleanup and sentence-capping rules, then
+// splits the final response into chunks for streaming/display consumers.
+//
+// WHAT USES THIS:
+//   chat response pipeline after orchestrator final text is produced
+//
+// EXPORTS:
+//   postProcessResponse(), enforceSentenceCap(), isLongFormRequested()
+// ─────────────────────────────────────────────────────────────────────────────
+
 const { humanizeResponse, quickClean } = require('../brain/generation/humanize-filter');
 const { splitIntoChunks } = require('../brain/generation/message-chunker');
-
+/** Return true when user message explicitly asks for long-form detail. */
 function isLongFormRequested(userMsg = '') {
   const t = String(userMsg || '').toLowerCase();
   const signals = [
@@ -10,7 +23,7 @@ function isLongFormRequested(userMsg = '') {
   ];
   return signals.some((s) => t.includes(s));
 }
-
+/** Truncate response to a maximum sentence count when needed. */
 function enforceSentenceCap(text, maxSentences = 6) {
   const src = String(text || '').trim();
   if (!src) return src;

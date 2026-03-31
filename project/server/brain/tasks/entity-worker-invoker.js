@@ -1,3 +1,18 @@
+// ── Brain · Entity Worker Invoker ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: fs, path, ../../entityPaths.
+// Keep import and call-site contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 /**
  * Entity Worker Invoker
  * Loads an entity's persona from disk and invokes an LLM call in that
@@ -22,6 +37,10 @@ const ENTITY_DIR = path.join(__dirname, '../../../entities');
  * @param {Object} [fallback] — override fields when entity has no disk presence
  * @returns {{ name: string, traits: string[], persona: Object|null, systemPromptText: string|null }}
  */
+// loadEntityProfile()
+// WHAT THIS DOES: loadEntityProfile reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call loadEntityProfile(...), then use the returned value in your next step.
 function loadEntityProfile(entityId, fallback = {}) {
   const entityPaths = require('../../entityPaths');
   const entityRoot = entityPaths.getEntityRoot(entityId);
@@ -65,6 +84,10 @@ function loadEntityProfile(entityId, fallback = {}) {
  * @param {string} sessionPrompt — the original planning question
  * @returns {string}
  */
+// buildEntityWorkerPrompt()
+// WHAT THIS DOES: buildEntityWorkerPrompt creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call buildEntityWorkerPrompt(...) before code that depends on this setup.
 function buildEntityWorkerPrompt(profile, sessionPrompt) {
   const name = profile.name || 'Specialist';
   const traits = Array.isArray(profile.traits) && profile.traits.length

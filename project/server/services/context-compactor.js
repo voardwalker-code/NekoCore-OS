@@ -1,3 +1,18 @@
+// ── Services · Context Compactor ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This service module holds reusable business logic shared across runtime
+// paths.
+//
+// WHAT USES THIS:
+// Used by related flows in its subsystem. Keep call contracts stable during
+// readability-only edits.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 'use strict';
 /**
  * server/services/context-compactor.js
@@ -18,6 +33,10 @@ const SUMMARY_MAX_TOKENS = 800;
  * Estimate rough token count for an array of messages.
  * Uses ~4 chars per token heuristic (same as estimateUsageFromText pattern).
  */
+// estimateTokens()
+// WHAT THIS DOES: estimateTokens is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call estimateTokens(...) where this helper behavior is needed.
 function estimateTokens(messages) {
   let chars = 0;
   for (const msg of messages) {

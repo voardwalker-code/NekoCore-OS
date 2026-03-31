@@ -1,3 +1,16 @@
+// ── Services · Skill Manager ─────────────────────────────────────────────────
+//
+// HOW SKILL MANAGEMENT WORKS:
+// This module loads entity-scoped skills, tracks enabled state overrides,
+// supports quarantine/vetting flows, and exposes workspace-safe skill file ops.
+//
+// WHAT USES THIS:
+//   skill install/list/enable/edit flows and prompt assembly for enabled skills
+//
+// EXPORTS:
+//   SkillManager class
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // REM System — Skill Manager (Per-Entity, ClawHub-Compatible)
 //
@@ -25,6 +38,7 @@ class SkillManager {
    * @param {Object} options
    * @param {string} options.entityId - Entity ID this manager is scoped to
    */
+  /** Initialize entity-scoped paths and in-memory skill state containers. */
   constructor(options = {}) {
     this.entityId = options.entityId || null;
     this.skillsRoot = null;
@@ -42,11 +56,13 @@ class SkillManager {
     }
   }
 
+  /** Return path to persisted enabled/disabled override state file. */
   getStateFilePath() {
     if (!this.skillsRoot) return null;
     return path.join(this.skillsRoot, '.skill-state.json');
   }
 
+  /** Load persisted per-skill enablement overrides into memory. */
   loadEnabledOverrides() {
     this.enabledOverrides = Object.create(null);
     const stateFile = this.getStateFilePath();
@@ -1075,7 +1091,7 @@ class SkillManager {
     return { ok: true, name: dirName, warnings, quarantined: true };
   }
 }
-
+/** Escape XML special characters for prompt-safe skill tags. */
 function escapeXml(str) {
   return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }

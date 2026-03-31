@@ -1,12 +1,30 @@
+// ── Tests · Task Routes.Test ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This test file validates behavior and guards against regressions in its
+// target subsystem.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: node:test,
+// node:assert/strict, ../../server/routes/task-routes. Keep import and
+// call-site contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 
 const createTaskRoutes = require('../../server/routes/task-routes');
-
+// makeReq()
+// WHAT THIS DOES: makeReq creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call makeReq(...) before code that depends on this setup.
 function makeReq(method, body) {
   return { method, _body: body ? JSON.stringify(body) : '' };
 }
-
 function makeRes() {
   return {
     status: null,

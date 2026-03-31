@@ -1,3 +1,18 @@
+// ── Brain · Archive Directory ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: fs, path, ../../entityPaths.
+// Keep import and call-site contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 'use strict';
 // ============================================================
 // server/brain/utils/archive-directory.js
@@ -31,6 +46,10 @@ const { getArchiveRoot } = require('../../entityPaths');
 
 // ── Internal path helpers ─────────────────────────────────────────────────────
 
+// _directoryPath()
+// WHAT THIS DOES: _directoryPath is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _directoryPath(...) where this helper behavior is needed.
 function _directoryPath(entityId, opts) {
   if (opts && opts.baseDir) {
     return path.join(opts.baseDir, `entity_${entityId}`, 'memories', 'archive', 'archive_directory.json');
@@ -49,6 +68,10 @@ function _directoryPath(entityId, opts) {
  * @param {string} [opts.baseDir]  Override entities root (for tests).
  * @returns {Object[]} Array of archive header objects.
  */
+// readDirectory()
+// WHAT THIS DOES: readDirectory reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call readDirectory(...), then use the returned value in your next step.
 function readDirectory(entityId, opts = {}) {
   const filePath = _directoryPath(entityId, opts);
   if (!fs.existsSync(filePath)) return [];
@@ -68,6 +91,10 @@ function readDirectory(entityId, opts = {}) {
  * @param {Object[]} directory  Array of archive header objects.
  * @param {Object}   [opts]
  */
+// writeDirectory()
+// WHAT THIS DOES: writeDirectory changes saved state or updates data.
+// WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+// HOW TO USE IT: call writeDirectory(...) with the new values you want to persist.
 function writeDirectory(entityId, directory, opts = {}) {
   const filePath = _directoryPath(entityId, opts);
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
@@ -86,6 +113,10 @@ function writeDirectory(entityId, directory, opts = {}) {
  * @param {Object} header      Header fields (topics, timeRange, entryCount, …).
  * @param {Object} [opts]
  */
+// registerArchive()
+// WHAT THIS DOES: registerArchive is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call registerArchive(...) where this helper behavior is needed.
 function registerArchive(entityId, archiveId, header, opts = {}) {
   const directory = readDirectory(entityId, opts);
   const idx = directory.findIndex(h => h.archiveId === archiveId);
@@ -101,6 +132,10 @@ function registerArchive(entityId, archiveId, header, opts = {}) {
 // ── Scoring helpers ───────────────────────────────────────────────────────────
 
 // Jaccard-style topic overlap score in [0, 1].
+// _topicOverlap()
+// WHAT THIS DOES: _topicOverlap is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _topicOverlap(...) where this helper behavior is needed.
 function _topicOverlap(headerTopics, queryTopics) {
   if (!headerTopics?.length || !queryTopics?.length) return 0;
   const qSet = new Set(queryTopics.map(t => t.toLowerCase()));
@@ -110,6 +145,10 @@ function _topicOverlap(headerTopics, queryTopics) {
 
 // Returns true if the header's timeRange overlaps the query date range.
 // If either range is absent, returns true (no filter applied).
+// _rangeOverlaps()
+// WHAT THIS DOES: _rangeOverlaps is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _rangeOverlaps(...) where this helper behavior is needed.
 function _rangeOverlaps(header, queryRange) {
   if (!queryRange) return true;
   if (!header.timeRange) return true;
@@ -137,6 +176,10 @@ function _rangeOverlaps(header, queryRange) {
  * @returns {Object[]} Ranked archive headers, highest relevance first.
  *                     The internal `_score` field is stripped before return.
  */
+// scanDirectory()
+// WHAT THIS DOES: scanDirectory is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call scanDirectory(...) where this helper behavior is needed.
 function scanDirectory(entityId, topics, timeRange = null, opts = {}) {
   if (!topics?.length) return [];
   const directory = readDirectory(entityId, opts);

@@ -1,3 +1,17 @@
+// ── Brain · Activation Network ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: fs, path, ../../entityPaths.
+// Keep import and call-site contracts aligned during refactors.
+//
+// EXPORTS:
+// Exposed API includes: activate, decayAllActivations, getPreActivated.
+// ─────────────────────────────────────────────────────────────────────────────
+
 'use strict';
 /**
  * server/brain/memory/activation-network.js
@@ -21,6 +35,10 @@ const path = require('path');
  * @param {string} entityId
  * @returns {Array<{targetId: string, strength: number}>}
  */
+// _defaultReadEdges()
+// WHAT THIS DOES: _defaultReadEdges is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _defaultReadEdges(...) where this helper behavior is needed.
 function _defaultReadEdges(memId, entityId) {
   if (!entityId) return [];
   try {
@@ -44,6 +62,10 @@ function _defaultReadEdges(memId, entityId) {
  * @param {function} [opts.readEdges] — (memId) => Array<{targetId, strength}>
  * @returns {{ activated: string[], propagated: number }}
  */
+// activate()
+// WHAT THIS DOES: activate is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call activate(...) where this helper behavior is needed.
 function activate(memId, energy, indexCache, opts = {}) {
   const readEdges = opts.readEdges || ((id) => _defaultReadEdges(id, opts.entityId));
   const clamped = Math.min(1.0, Math.max(0.0, energy));
@@ -106,6 +128,10 @@ function activate(memId, energy, indexCache, opts = {}) {
  * @param {object} indexCache — MemoryIndexCache instance
  * @param {number} [rate=0.3] — decay rate per cycle (0.0–1.0)
  */
+// decayAllActivations()
+// WHAT THIS DOES: decayAllActivations is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call decayAllActivations(...) where this helper behavior is needed.
 function decayAllActivations(indexCache, rate = 0.3) {
   indexCache.load();
   const factor = 1 - Math.min(1, Math.max(0, rate));
@@ -125,6 +151,10 @@ function decayAllActivations(indexCache, rate = 0.3) {
  * @param {number} [limit=20]
  * @returns {string[]} — memIds sorted by activationLevel descending
  */
+// getPreActivated()
+// WHAT THIS DOES: getPreActivated reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call getPreActivated(...), then use the returned value in your next step.
 function getPreActivated(indexCache, threshold = 0.15, limit = 20) {
   indexCache.load();
   const results = [];

@@ -1,3 +1,19 @@
+// ── Tests · Bench Archive ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This test file validates behavior and guards against regressions in its
+// target subsystem.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: ../server/brain/utils/rake,
+// ../server/brain/utils/bm25. Keep import and call-site contracts aligned
+// during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 'use strict';
 /**
  * Benchmark: RAKE extraction + BM25 archive search at various scales.
@@ -23,7 +39,10 @@ const TOPICS = [
   'digital consciousness', 'memory layers', 'episodic recall',
   'hierarchical context', 'active learning', 'self model',
 ];
-
+// randomTopics()
+// WHAT THIS DOES: randomTopics is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call randomTopics(...) where this helper behavior is needed.
 function randomTopics(n) {
   const picked = [];
   for (let i = 0; i < n; i++) {
@@ -31,7 +50,10 @@ function randomTopics(n) {
   }
   return picked;
 }
-
+// generateEntries()
+// WHAT THIS DOES: generateEntries is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call generateEntries(...) where this helper behavior is needed.
 function generateEntries(count) {
   const entries = [];
   for (let i = 0; i < count; i++) {
@@ -48,6 +70,10 @@ function generateEntries(count) {
 
 // ── Benchmark: RAKE extraction ───────────────────────────────────────────────
 
+// benchRake()
+// WHAT THIS DOES: benchRake is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call benchRake(...) where this helper behavior is needed.
 function benchRake() {
   const texts = [
     'How does the subconscious dream processing pipeline work with belief propagation?',
@@ -73,6 +99,10 @@ function benchRake() {
 
 // ── Benchmark: BM25 scoring per entry ────────────────────────────────────────
 
+// benchBm25()
+// WHAT THIS DOES: benchBm25 is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call benchBm25(...) where this helper behavior is needed.
 function benchBm25() {
   const queryTopics = ['neuroscience', 'pipeline orchestration', 'entity memory', 'dream states'];
   const doc = randomTopics(8);
@@ -89,6 +119,10 @@ function benchBm25() {
 
 // ── Benchmark: Full query simulation (in-memory, no disk) ────────────────────
 
+// benchQuerySim()
+// WHAT THIS DOES: benchQuerySim is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call benchQuerySim(...) where this helper behavior is needed.
 function benchQuerySim() {
   const queryTopics = extractPhrases(
     'How does neuroscience inform the memory consolidation and dream state processing pipeline?'
@@ -139,6 +173,10 @@ function benchQuerySim() {
 
 // ── Benchmark: Sharded path (bucket read simulation) ─────────────────────────
 
+// benchBucketParse()
+// WHAT THIS DOES: benchBucketParse is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call benchBucketParse(...) where this helper behavior is needed.
 function benchBucketParse() {
   console.log('\n=== NDJSON Bucket Parse Simulation ===');
   const sizes = [100, 500, 1000, 5000, 10000];
@@ -174,6 +212,10 @@ function benchBucketParse() {
 
 // ── Benchmark: End-to-end (RAKE extract + BM25 query sim) ────────────────────
 
+// benchEndToEnd()
+// WHAT THIS DOES: benchEndToEnd is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call benchEndToEnd(...) where this helper behavior is needed.
 function benchEndToEnd() {
   const query = 'How does the archive sharding system handle neuroscience documents with temporal decay and dream state consolidation?';
   console.log('\n=== End-to-End: RAKE + Query (no disk I/O) ===');

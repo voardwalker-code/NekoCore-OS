@@ -1,3 +1,18 @@
+// ── Services · Auto Open Browser ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This service module holds reusable business logic shared across runtime
+// paths.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: fs, os, path, child_process.
+// Keep import and call-site contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
@@ -36,17 +51,22 @@ const LINUX_RUNTIME_CONFIG = {
   chromium: { exe: 'chromium', args: ['--new-window', '--start-fullscreen', '--app=$URL'] },
   firefox: { exe: 'firefox', args: ['--new-window', '--kiosk', '$URL'] }
 };
-
+// getBrowserOpenLockPath()
+// WHAT THIS DOES: getBrowserOpenLockPath reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call getBrowserOpenLockPath(...), then use the returned value in your next step.
 function getBrowserOpenLockPath() {
   return path.join(os.tmpdir(), 'rem-system-browser-open.lock.json');
 }
-
 function buildOpenCommand(url, platform = process.platform) {
   if (platform === 'win32') return `start "" "${url}"`;
   if (platform === 'darwin') return `open "${url}"`;
   return `xdg-open "${url}"`;
 }
-
+// normalizeRuntimeName()
+// WHAT THIS DOES: normalizeRuntimeName reshapes data from one form into another.
+// WHY IT EXISTS: conversion rules live here so the same transformation is reused.
+// HOW TO USE IT: pass input data into normalizeRuntimeName(...) and use the transformed output.
 function normalizeRuntimeName(name) {
   const value = String(name || '').trim().toLowerCase();
   if (!value) return '';
@@ -60,7 +80,10 @@ function normalizeRuntimeName(name) {
   if (value === 'chromium-browser' || value === 'chromiumhtm') return 'chromium';
   return value;
 }
-
+// detectDefaultRuntime()
+// WHAT THIS DOES: detectDefaultRuntime is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call detectDefaultRuntime(...) where this helper behavior is needed.
 function detectDefaultRuntime(platform = process.platform, options = {}) {
   if (platform === 'win32') {
     try {
@@ -117,7 +140,10 @@ function detectDefaultRuntime(platform = process.platform, options = {}) {
 
   return '';
 }
-
+// chooseDesiredRuntime()
+// WHAT THIS DOES: chooseDesiredRuntime is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call chooseDesiredRuntime(...) where this helper behavior is needed.
 function chooseDesiredRuntime(platform, options = {}) {
   const explicit = normalizeRuntimeName(options.preferredRuntime || process.env.REM_UI_RUNTIME);
   if (explicit) return explicit;
@@ -128,7 +154,10 @@ function chooseDesiredRuntime(platform, options = {}) {
 
   return DEFAULT_RUNTIME_BY_PLATFORM[platform] || detected;
 }
-
+// checkCommandExists()
+// WHAT THIS DOES: checkCommandExists answers a yes/no rule check.
+// WHY IT EXISTS: guard checks are kept readable and reusable in one place.
+// HOW TO USE IT: call checkCommandExists(...) and branch logic based on true/false.
 function checkCommandExists(command, platform = process.platform) {
   if (!command) return false;
   if (platform === 'win32') {
@@ -138,7 +167,10 @@ function checkCommandExists(command, platform = process.platform) {
   const probe = spawnSync('which', [command], { stdio: 'ignore' });
   return probe.status === 0;
 }
-
+// resolveWindowsExecutablePath()
+// WHAT THIS DOES: resolveWindowsExecutablePath is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call resolveWindowsExecutablePath(...) where this helper behavior is needed.
 function resolveWindowsExecutablePath(runtimeExe) {
   if (!runtimeExe) return null;
 
@@ -178,14 +210,20 @@ function resolveWindowsExecutablePath(runtimeExe) {
 
   return null;
 }
-
+// getRuntimeConfig()
+// WHAT THIS DOES: getRuntimeConfig reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call getRuntimeConfig(...), then use the returned value in your next step.
 function getRuntimeConfig(runtime, platform) {
   if (platform === 'win32') return WINDOWS_RUNTIME_CONFIG[runtime] || null;
   if (platform === 'darwin') return MAC_RUNTIME_CONFIG[runtime] || null;
   if (platform === 'linux') return LINUX_RUNTIME_CONFIG[runtime] || null;
   return null;
 }
-
+// resolvePreferredRuntime()
+// WHAT THIS DOES: resolvePreferredRuntime is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call resolvePreferredRuntime(...) where this helper behavior is needed.
 function resolvePreferredRuntime(platform, options = {}) {
   const commandExistsFn = options.commandExistsFn || checkCommandExists;
   const desired = chooseDesiredRuntime(platform, options);
@@ -226,7 +264,10 @@ function resolvePreferredRuntime(platform, options = {}) {
 
   return { ok: true, runtime: desired, config: cfg };
 }
-
+// buildMacFocusOrOpenCommand()
+// WHAT THIS DOES: buildMacFocusOrOpenCommand creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call buildMacFocusOrOpenCommand(...) before code that depends on this setup.
 function buildMacFocusOrOpenCommand(url, options = {}) {
   const safeUrl = String(url).replace(/"/g, '\\"');
   const fullscreenEnabled = options.fullscreen !== false;
@@ -248,7 +289,10 @@ function buildMacFocusOrOpenCommand(url, options = {}) {
   const escaped = scriptLines.join('\n').replace(/"/g, '\\"');
   return `osascript -e "${escaped}"`;
 }
-
+// buildLinuxFocusOrOpenCommand()
+// WHAT THIS DOES: buildLinuxFocusOrOpenCommand creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call buildLinuxFocusOrOpenCommand(...) before code that depends on this setup.
 function buildLinuxFocusOrOpenCommand(url, options = {}) {
   const titleHint = String(options.windowTitle || 'REM System').replace(/"/g, '\\"');
   const safeUrl = String(url).replace(/"/g, '\\"');
@@ -272,7 +316,10 @@ function buildLinuxFocusOrOpenCommand(url, options = {}) {
   const script = lines.join('; ').replace(/"/g, '\\"');
   return `bash -lc "${script}"`;
 }
-
+// readLockState()
+// WHAT THIS DOES: readLockState reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call readLockState(...), then use the returned value in your next step.
 function readLockState(fsModule, lockPath) {
   try {
     if (!fsModule.existsSync(lockPath)) return null;
@@ -283,7 +330,10 @@ function readLockState(fsModule, lockPath) {
     return null;
   }
 }
-
+// writeLockState()
+// WHAT THIS DOES: writeLockState changes saved state or updates data.
+// WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+// HOW TO USE IT: call writeLockState(...) with the new values you want to persist.
 function writeLockState(fsModule, lockPath, state) {
   try {
     fsModule.writeFileSync(lockPath, JSON.stringify(state, null, 2), 'utf8');
@@ -291,13 +341,19 @@ function writeLockState(fsModule, lockPath, state) {
     // Non-fatal.
   }
 }
-
+// isLockStateFresh()
+// WHAT THIS DOES: isLockStateFresh answers a yes/no rule check.
+// WHY IT EXISTS: guard checks are kept readable and reusable in one place.
+// HOW TO USE IT: call isLockStateFresh(...) and branch logic based on true/false.
 function isLockStateFresh(state, now = Date.now(), ttlMs = WEBUI_PRESENCE_TTL_MS) {
   if (!state || state.isOpen !== true) return false;
   const lastSeenAt = Number(state.lastSeenAt) || 0;
   return lastSeenAt > 0 && now - lastSeenAt <= ttlMs;
 }
-
+// buildWindowsFocusOrOpenCommand()
+// WHAT THIS DOES: buildWindowsFocusOrOpenCommand creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call buildWindowsFocusOrOpenCommand(...) before code that depends on this setup.
 function buildWindowsFocusOrOpenCommand(url, options = {}) {
   const titleHint = String(options.windowTitle || 'REM System').replace(/"/g, '`"');
   const safeUrl = String(url).replace(/"/g, '`"');
@@ -340,12 +396,18 @@ function buildWindowsFocusOrOpenCommand(url, options = {}) {
   const encoded = Buffer.from(psScript, 'utf16le').toString('base64');
   return `powershell -NoProfile -ExecutionPolicy Bypass -EncodedCommand ${encoded}`;
 }
-
+// buildWindowsRuntimeArgs()
+// WHAT THIS DOES: buildWindowsRuntimeArgs creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call buildWindowsRuntimeArgs(...) before code that depends on this setup.
 function buildWindowsRuntimeArgs(url, runtime) {
   const cfg = WINDOWS_RUNTIME_CONFIG[normalizeRuntimeName(runtime || 'edge')] || WINDOWS_RUNTIME_CONFIG.edge;
   return cfg.args.map((arg) => arg.replace('$URL', url));
 }
-
+// focusWindowsWindow()
+// WHAT THIS DOES: focusWindowsWindow is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call focusWindowsWindow(...) where this helper behavior is needed.
 function focusWindowsWindow(url, options = {}) {
   const execFn = options.execFn || exec;
   const command = buildWindowsFocusOrOpenCommand(url, {
@@ -361,7 +423,10 @@ function focusWindowsWindow(url, options = {}) {
   });
   return command;
 }
-
+// closeDedicatedWebUiWindow()
+// WHAT THIS DOES: closeDedicatedWebUiWindow removes, resets, or shuts down existing state.
+// WHY IT EXISTS: cleanup is explicit so stale state does not leak into new runs.
+// HOW TO USE IT: call closeDedicatedWebUiWindow(...) when you need a safe teardown/reset path.
 function closeDedicatedWebUiWindow(options = {}) {
   const platform = options.platform || process.platform;
   const logger = options.logger || console;
@@ -434,7 +499,10 @@ function closeDedicatedWebUiWindow(options = {}) {
 
   return { ok: false, platform, reason: 'unsupported-platform' };
 }
-
+// updateBrowserOpenState()
+// WHAT THIS DOES: updateBrowserOpenState changes saved state or updates data.
+// WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+// HOW TO USE IT: call updateBrowserOpenState(...) with the new values you want to persist.
 function updateBrowserOpenState(state = {}, options = {}) {
   const fsModule = options.fsModule || fs;
   const lockPath = options.lockPath || getBrowserOpenLockPath();
@@ -448,7 +516,10 @@ function updateBrowserOpenState(state = {}, options = {}) {
   writeLockState(fsModule, lockPath, next);
   return next;
 }
-
+// tryAutoOpenBrowser()
+// WHAT THIS DOES: tryAutoOpenBrowser is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call tryAutoOpenBrowser(...) where this helper behavior is needed.
 function tryAutoOpenBrowser(url, options = {}) {
   const fsModule = options.fsModule || fs;
   const execFn = options.execFn || exec;

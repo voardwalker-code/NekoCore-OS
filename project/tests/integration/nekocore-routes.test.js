@@ -1,3 +1,19 @@
+// ── Tests · Nekocore Routes.Test ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This test file validates behavior and guards against regressions in its
+// target subsystem.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: node:test,
+// node:assert/strict, fs, path, ../../server/routes/nekocore-routes. Keep
+// import and call-site contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // Integration Tests — nekocore-routes.js  (Phase E-6)
 // Smoke tests for GET /api/nekocore/status and
@@ -14,7 +30,10 @@ const createNekoCoreRoutes = require('../../server/routes/nekocore-routes');
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 const BASE_HEADERS = { 'Content-Type': 'application/json' };
-
+// makeCtx()
+// WHAT THIS DOES: makeCtx creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call makeCtx(...) before code that depends on this setup.
 function makeCtx(cfg = {}) {
   let _cfg = { lastActive: 'default', profiles: { default: { main: { model: 'google/gemini-flash-2.0' } } }, ...cfg };
   return {
@@ -24,7 +43,10 @@ function makeCtx(cfg = {}) {
     saveConfig: (c) => { _cfg = JSON.parse(JSON.stringify(c)); }
   };
 }
-
+// makeRes()
+// WHAT THIS DOES: makeRes creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call makeRes(...) before code that depends on this setup.
 function makeRes() {
   const res = {
     statusCode: null,
@@ -38,7 +60,10 @@ function makeRes() {
   };
   return res;
 }
-
+// makeReq()
+// WHAT THIS DOES: makeReq creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call makeReq(...) before code that depends on this setup.
 function makeReq(method = 'GET', body = null) { return { method, body, accountId: 'test-user', on() {}, removeListener() {} }; }
 function readBodyFn(body) { return () => Promise.resolve(typeof body === 'string' ? body : '{}'); }
 function makeUrl(p)  { return new URL(p, 'http://localhost:3000'); }

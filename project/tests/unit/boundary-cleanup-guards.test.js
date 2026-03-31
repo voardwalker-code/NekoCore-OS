@@ -1,3 +1,19 @@
+// ── Tests · Boundary Cleanup Guards.Test ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This test file validates behavior and guards against regressions in its
+// target subsystem.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: node:test,
+// node:assert/strict, node:fs, node:path. Keep import and call-site
+// contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -5,7 +21,10 @@ const path = require('node:path');
 
 const ROOT = path.resolve(__dirname, '..', '..');
 const SERVER_FILE = path.join(ROOT, 'server', 'server.js');
-
+// readServer()
+// WHAT THIS DOES: readServer reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call readServer(...), then use the returned value in your next step.
 function readServer() {
   return fs.readFileSync(SERVER_FILE, 'utf8');
 }
@@ -275,7 +294,10 @@ const APP_JS    = path.join(ROOT, 'client', 'js', 'app.js');
 const CTX_JS    = path.join(ROOT, 'client', 'js', 'context-menu.js');
 const VFS_JS    = path.join(ROOT, 'client', 'js', 'vfs.js');
 const INDEX_HTML = path.join(ROOT, 'client', 'index.html');
-
+// readClientFile()
+// WHAT THIS DOES: readClientFile reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call readClientFile(...), then use the returned value in your next step.
 function readClientFile(p) { return fs.readFileSync(p, 'utf8'); }
 
 test('P2-S4: ctxMenu IIFE must not be defined inline in app.js', () => {

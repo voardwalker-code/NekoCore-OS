@@ -1,3 +1,18 @@
+// ── Services · User Profiles ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This service module holds reusable business logic shared across runtime
+// paths.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: fs, path. Keep import and
+// call-site contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // REM System — User Profiles Service
 //
@@ -20,6 +35,10 @@ const USER_ID_PREFIX = 'user_';
 /**
  * Generate a simple unique user ID.
  */
+// generateUserId()
+// WHAT THIS DOES: generateUserId is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call generateUserId(...) where this helper behavior is needed.
 function generateUserId() {
   return USER_ID_PREFIX + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
 }
@@ -27,6 +46,10 @@ function generateUserId() {
 /**
  * Get the users directory for an entity, creating it if needed.
  */
+// getUsersDir()
+// WHAT THIS DOES: getUsersDir reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call getUsersDir(...), then use the returned value in your next step.
 function getUsersDir(entityId, entityPaths) {
   const memRoot = entityPaths.getMemoryRoot(entityId);
   const dir = path.join(memRoot, 'users');
@@ -38,6 +61,10 @@ function getUsersDir(entityId, entityPaths) {
  * List all user profiles for an entity.
  * @returns {Array<{id, name, info, created, lastSeen}>}
  */
+// listUsers()
+// WHAT THIS DOES: listUsers is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call listUsers(...) where this helper behavior is needed.
 function listUsers(entityId, entityPaths) {
   const dir = getUsersDir(entityId, entityPaths);
   const files = fs.readdirSync(dir).filter(f => f.endsWith('.json') && !f.startsWith('_'));
@@ -56,6 +83,10 @@ function listUsers(entityId, entityPaths) {
  * Get a single user profile by ID.
  * @returns {Object|null}
  */
+// getUser()
+// WHAT THIS DOES: getUser reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call getUser(...), then use the returned value in your next step.
 function getUser(entityId, userId, entityPaths) {
   const dir = getUsersDir(entityId, entityPaths);
   const filePath = path.join(dir, userId + '.json');
@@ -73,6 +104,10 @@ function getUser(entityId, userId, entityPaths) {
  * @param {{ name: string, info?: string }} data
  * @returns {{ ok: boolean, user?: Object, error?: string }}
  */
+// createUser()
+// WHAT THIS DOES: createUser creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call createUser(...) before code that depends on this setup.
 function createUser(entityId, data, entityPaths) {
   const name = String(data.name || '').trim();
   if (!name) return { ok: false, error: 'Name is required' };
@@ -99,6 +134,10 @@ function createUser(entityId, data, entityPaths) {
  * @param {{ name?: string, info?: string }} updates
  * @returns {{ ok: boolean, user?: Object, error?: string }}
  */
+// updateUser()
+// WHAT THIS DOES: updateUser changes saved state or updates data.
+// WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+// HOW TO USE IT: call updateUser(...) with the new values you want to persist.
 function updateUser(entityId, userId, updates, entityPaths) {
   const existing = getUser(entityId, userId, entityPaths);
   if (!existing) return { ok: false, error: 'User not found' };
@@ -114,6 +153,10 @@ function updateUser(entityId, userId, updates, entityPaths) {
 /**
  * Delete a user profile.
  */
+// deleteUser()
+// WHAT THIS DOES: deleteUser removes, resets, or shuts down existing state.
+// WHY IT EXISTS: cleanup is explicit so stale state does not leak into new runs.
+// HOW TO USE IT: call deleteUser(...) when you need a safe teardown/reset path.
 function deleteUser(entityId, userId, entityPaths) {
   const dir = getUsersDir(entityId, entityPaths);
   const filePath = path.join(dir, userId + '.json');
@@ -131,6 +174,10 @@ function deleteUser(entityId, userId, entityPaths) {
  * Get the currently active (selected) user for an entity.
  * Returns null if none set.
  */
+// getActiveUser()
+// WHAT THIS DOES: getActiveUser reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call getActiveUser(...), then use the returned value in your next step.
 function getActiveUser(entityId, entityPaths) {
   const dir = getUsersDir(entityId, entityPaths);
   const activePath = path.join(dir, '_active.json');
@@ -147,6 +194,10 @@ function getActiveUser(entityId, entityPaths) {
 /**
  * Set the active user for this entity. Pass null userId to clear.
  */
+// setActiveUser()
+// WHAT THIS DOES: setActiveUser changes saved state or updates data.
+// WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+// HOW TO USE IT: call setActiveUser(...) with the new values you want to persist.
 function setActiveUser(entityId, userId, entityPaths) {
   const dir = getUsersDir(entityId, entityPaths);
   const activePath = path.join(dir, '_active.json');

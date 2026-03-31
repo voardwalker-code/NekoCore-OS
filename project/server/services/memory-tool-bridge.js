@@ -1,3 +1,18 @@
+// ── Services · Memory Tool Bridge ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This service module holds reusable business logic shared across runtime
+// paths.
+//
+// WHAT USES THIS:
+// Used by related flows in its subsystem. Keep call contracts stable during
+// readability-only edits.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 'use strict';
 /**
  * server/services/memory-tool-bridge.js
@@ -64,6 +79,10 @@ const MAX_TOOL_ROUNDS = 3;
 /**
  * Get Anthropic-format tool definitions for memory operations.
  */
+// getMemoryToolSchemas()
+// WHAT THIS DOES: getMemoryToolSchemas reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call getMemoryToolSchemas(...), then use the returned value in your next step.
 function getMemoryToolSchemas() {
   return MEMORY_TOOL_SCHEMAS;
 }
@@ -71,6 +90,10 @@ function getMemoryToolSchemas() {
 /**
  * Check if a tool name is a memory bridge tool.
  */
+// isMemoryTool()
+// WHAT THIS DOES: isMemoryTool answers a yes/no rule check.
+// WHY IT EXISTS: guard checks are kept readable and reusable in one place.
+// HOW TO USE IT: call isMemoryTool(...) and branch logic based on true/false.
 function isMemoryTool(name) {
   return MEMORY_TOOL_SCHEMAS.some(t => t.name === name);
 }
@@ -97,6 +120,12 @@ async function executeMemoryToolCall(name, input, deps) {
       try {
         const result = await deps.memorySearch(query);
         if (!result?.ok) return { content: result?.error || result?.message || 'Memory search failed.', is_error: true };
+        // memories()
+        // Purpose: helper wrapper used by this module's main flow.
+        // memories()
+        // WHAT THIS DOES: memories is a helper used by this module's main flow.
+        // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+        // HOW TO USE IT: call memories(...) where this helper behavior is needed.
         const memories = (result.memories || []).slice(0, 10).map(m => ({
           id: m.id || m.memory_id,
           type: m.type,
@@ -160,6 +189,12 @@ async function executeMemoryToolCall(name, input, deps) {
       try {
         const limit = Math.min(Math.max(1, Number(input?.limit) || 10), 50);
         const memories = await deps.memoryStorage.listMemories(limit, 0);
+        // summary()
+        // Purpose: helper wrapper used by this module's main flow.
+        // summary()
+        // WHAT THIS DOES: summary is a helper used by this module's main flow.
+        // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+        // HOW TO USE IT: call summary(...) where this helper behavior is needed.
         const summary = (memories || []).map(m => ({
           id: m.id || m.memory_id,
           type: m.type,
@@ -188,6 +223,10 @@ async function executeMemoryToolCall(name, input, deps) {
  * @param {Object} [deps.memoryStorage] - MemoryStorage instance
  * @returns {Function} wrapCallLLM(originalCallLLM) => wrappedCallLLM
  */
+// createMemoryToolBridge()
+// WHAT THIS DOES: createMemoryToolBridge creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call createMemoryToolBridge(...) before code that depends on this setup.
 function createMemoryToolBridge(deps) {
   return function wrapCallLLM(originalCallLLM) {
     return async function callLLMWithMemoryTools(runtime, messages, options = {}) {

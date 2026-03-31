@@ -1,3 +1,20 @@
+// ── Tests · Escalation Guardrails.Test ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This test file validates behavior and guards against regressions in its
+// target subsystem.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: node:test,
+// node:assert/strict, node:path, node:fs,
+// ../../server/brain/core/orchestration-policy. Keep import and call-site
+// contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 'use strict';
 /**
  * tests/unit/escalation-guardrails.test.js
@@ -179,6 +196,12 @@ describe('enforceLatencyGuard', () => {
   });
 
   test('rejects with { timedOut:true } when call exceeds ceiling', async () => {
+    // neverResolves()
+    // Purpose: helper wrapper used by this module's main flow.
+    // neverResolves()
+    // WHAT THIS DOES: neverResolves is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call neverResolves(...) where this helper behavior is needed.
     const neverResolves = () => new Promise(() => {}); // hangs forever
     const rejection = await enforceLatencyGuard(neverResolves, 30)
       .then(() => null)
@@ -194,6 +217,12 @@ describe('enforceLatencyGuard', () => {
   });
 
   test('forwards call errors when they fire before timeout', async () => {
+    // boom()
+    // Purpose: helper wrapper used by this module's main flow.
+    // boom()
+    // WHAT THIS DOES: boom is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call boom(...) where this helper behavior is needed.
     const boom = () => Promise.reject(new Error('network'));
     const err = await enforceLatencyGuard(boom, 5000).catch((e) => e);
     assert.equal(err.message, 'network');

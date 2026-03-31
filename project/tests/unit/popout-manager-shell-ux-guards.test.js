@@ -1,3 +1,18 @@
+// ── Tests · Popout Manager Shell Ux Guards.Test ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This test file validates behavior and guards against regressions in its
+// target subsystem.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: node:test,
+// node:assert/strict, node:fs, node:path. Keep import and call-site
+// contracts aligned during refactors.
+//
+// EXPORTS:
+// Exposed API includes: window-attached API object.
+// ─────────────────────────────────────────────────────────────────────────────
+
 'use strict';
 
 const { test } = require('node:test');
@@ -12,7 +27,10 @@ const WINDOW_MANAGER_JS = path.join(ROOT, 'client', 'js', 'window-manager.js');
 const CONTEXT_MENU_JS = path.join(ROOT, 'client', 'js', 'context-menu.js');
 const POPOUT_MANAGER_JS = path.join(ROOT, 'client', 'js', 'apps', 'optional', 'popout-manager.js');
 const UI_CSS = path.join(ROOT, 'client', 'css', 'ui-v2.css');
-
+// read()
+// WHAT THIS DOES: read reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call read(...), then use the returned value in your next step.
 function read(filePath) {
   return fs.readFileSync(filePath, 'utf8');
 }

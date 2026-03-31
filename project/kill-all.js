@@ -1,4 +1,18 @@
 #!/usr/bin/env node
+// ── Module · Kill All ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This module belongs to the NekoCore OS codebase and provides focused
+// subsystem behavior.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: fs, path. Keep import and
+// call-site contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
 'use strict';
 // ── Kill All Servers ────────────────────────────────────────────────────────
 // Stops every NekoCore-ecosystem server that was launched via its background

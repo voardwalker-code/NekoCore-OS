@@ -1,3 +1,17 @@
+// ── Client · Shadow Content Loader ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This client module drives browser-side behavior and state updates for UI
+// features.
+//
+// WHAT USES THIS:
+// Used by related flows in its subsystem. Keep call contracts stable during
+// readability-only edits.
+//
+// EXPORTS:
+// Exposed API includes: window-attached API object.
+// ─────────────────────────────────────────────────────────────────────────────
+
 /* ╔══════════════════════════════════════════════════════════════╗
    ║  SHADOW CONTENT LOADER                                         ║
    ║  Safe fetch and inject of app payloads into shadow roots       ║
@@ -21,6 +35,10 @@
  */
 
 class ShadowContentLoader {
+  // constructor()
+  // WHAT THIS DOES: constructor is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call constructor(...) where this helper behavior is needed.
   constructor(appWindow, packagePath, packageEntry) {
     this.appWindow = appWindow;
     this.packagePath = packagePath || ('apps/' + appWindow.tabName);
@@ -39,6 +57,10 @@ class ShadowContentLoader {
   async fetchPackageHTML() {
     try {
       const response = await fetch('/' + this.packageEntry);
+      // if()
+      // WHAT THIS DOES: if is a helper used by this module's main flow.
+      // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+      // HOW TO USE IT: call if(...) where this helper behavior is needed.
       if (!response.ok) {
         throw new Error('HTTP ' + response.status + ' ' + response.statusText);
       }
@@ -56,6 +78,10 @@ class ShadowContentLoader {
    * @param {string} html - Full HTML document
    * @returns {Object} { bodyContent, styles, scripts, externalStyles }
    */
+  // parseHTML()
+  // WHAT THIS DOES: parseHTML reshapes data from one form into another.
+  // WHY IT EXISTS: conversion rules live here so the same transformation is reused.
+  // HOW TO USE IT: pass input data into parseHTML(...) and use the transformed output.
   parseHTML(html) {
     const temp = document.createElement('div');
     temp.innerHTML = html;
@@ -304,6 +330,10 @@ window.__shadowLoaderRegistry = window.__shadowLoaderRegistry || new Map();
  * @param {string} packagePath - Optional custom package path (default: apps/{tabName})
  * @returns {ShadowContentLoader} Loader instance
  */
+// getOrCreateShadowLoader()
+// WHAT THIS DOES: getOrCreateShadowLoader reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call getOrCreateShadowLoader(...), then use the returned value in your next step.
 function getOrCreateShadowLoader(appWindow, packagePath, packageEntry) {
   const key = appWindow.tabName;
   let loader = window.__shadowLoaderRegistry.get(key);
@@ -326,6 +356,10 @@ function getOrCreateShadowLoader(appWindow, packagePath, packageEntry) {
  * @param {string} tabName - App tab identifier
  * @returns {ShadowContentLoader|null} Loader instance or null
  */
+// getShadowLoader()
+// WHAT THIS DOES: getShadowLoader reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call getShadowLoader(...), then use the returned value in your next step.
 function getShadowLoader(tabName) {
   return window.__shadowLoaderRegistry.get(tabName) || null;
 }

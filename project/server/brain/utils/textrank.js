@@ -1,3 +1,18 @@
+// ── Brain · Textrank ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Used by related flows in its subsystem. Keep call contracts stable during
+// readability-only edits.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 'use strict';
 /**
  * server/brain/utils/textrank.js
@@ -25,6 +40,10 @@
  * @param {string} text
  * @returns {string[]}
  */
+// splitSentences()
+// WHAT THIS DOES: splitSentences is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call splitSentences(...) where this helper behavior is needed.
 function splitSentences(text) {
   // Split on . ! ? followed by optional whitespace and an uppercase letter or EOL.
   const raw = text
@@ -49,7 +68,10 @@ const TR_STOPWORDS = new Set([
   'those', 'as', 'by', 'from', 'not', 'we', 'he', 'she', 'they', 'you', 'i',
   'also', 'but', 'so', 'if', 'do', 'did', 'does', 'had', 'has', 'have',
 ]);
-
+// tokenizeToFreq()
+// WHAT THIS DOES: tokenizeToFreq is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call tokenizeToFreq(...) where this helper behavior is needed.
 function tokenizeToFreq(sentence) {
   const words = sentence
     .toLowerCase()
@@ -72,6 +94,10 @@ function tokenizeToFreq(sentence) {
  * @param {Map<string, number>} freqB
  * @returns {number}
  */
+// cosineSimilarity()
+// WHAT THIS DOES: cosineSimilarity is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call cosineSimilarity(...) where this helper behavior is needed.
 function cosineSimilarity(freqA, freqB) {
   if (freqA.size === 0 || freqB.size === 0) return 0;
 
@@ -98,6 +124,10 @@ function cosineSimilarity(freqA, freqB) {
  * @param {number}               [threshold=0.1]
  * @returns {number[][]}  N×N row-normalized adjacency matrix
  */
+// buildSimilarityGraph()
+// WHAT THIS DOES: buildSimilarityGraph creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call buildSimilarityGraph(...) before code that depends on this setup.
 function buildSimilarityGraph(freqMaps, threshold = 0.1) {
   const n = freqMaps.length;
   const graph = Array.from({ length: n }, () => new Array(n).fill(0));
@@ -125,6 +155,10 @@ function buildSimilarityGraph(freqMaps, threshold = 0.1) {
  * @param {number}     [damping=0.85]
  * @returns {number[]} score per sentence index
  */
+// pageRank()
+// WHAT THIS DOES: pageRank is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call pageRank(...) where this helper behavior is needed.
 function pageRank(graph, iterations = 20, damping = 0.85) {
   const n = graph.length;
   if (n === 0) return [];
@@ -156,6 +190,10 @@ function pageRank(graph, iterations = 20, damping = 0.85) {
  * @param {number} [maxSentences=3]
  * @returns {string[]}  Ordered array of representative sentences
  */
+// rankSentences()
+// WHAT THIS DOES: rankSentences is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call rankSentences(...) where this helper behavior is needed.
 function rankSentences(text, maxSentences = 3) {
   if (!text || typeof text !== 'string' || text.trim().length === 0) return [];
 
@@ -197,6 +235,10 @@ function rankSentences(text, maxSentences = 3) {
  * @param {number} [maxSentences=3]
  * @returns {string}
  */
+// extractTopSentences()
+// WHAT THIS DOES: extractTopSentences is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call extractTopSentences(...) where this helper behavior is needed.
 function extractTopSentences(text, maxSentences = 3) {
   return rankSentences(text, maxSentences).join(' ');
 }

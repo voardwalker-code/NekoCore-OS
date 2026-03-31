@@ -1,3 +1,19 @@
+// ── Tests · Installer Marker Engine.Test ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This test file validates behavior and guards against regressions in its
+// target subsystem.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: node:test,
+// node:assert/strict, ../../server/tools/installer-marker-engine. Keep
+// import and call-site contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 'use strict';
 
 const { test } = require('node:test');
@@ -180,6 +196,12 @@ test('remove collapses adjacent empty boundaries to one safe slot', () => {
 
   const result = removeMarkerEntries(content, [{ entryId: 'entry-1' }]);
   assert.equal(result.ok, true);
+  // openCount()
+  // Purpose: helper wrapper used by this module's main flow.
+  // openCount()
+  // WHAT THIS DOES: openCount creates or initializes something needed by the flow.
+  // WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+  // HOW TO USE IT: call openCount(...) before code that depends on this setup.
   const openCount = (result.updatedContent.match(/\/\/Open Next json entry id/g) || []).length;
   assert.equal(openCount, 1);
 });

@@ -1,3 +1,18 @@
+// ── Module · Api Entity Last Memory ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This module belongs to the NekoCore OS codebase and provides focused
+// subsystem behavior.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: fs, path, ./entityPaths. Keep
+// import and call-site contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // GET /api/entity-last-memory — get summary of the last memory for the current entity
 // Returns { ok: true, summary: string, memory: object|null }
 // NOTE: Expects `currentEntityId` and `currentEntityName` to be passed in via closure/bind from server.js

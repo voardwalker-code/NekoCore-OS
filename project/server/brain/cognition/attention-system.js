@@ -1,3 +1,18 @@
+// ── Brain · Attention System ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: ../bus/thought-types. Keep
+// import and call-site contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // REM System — Attention System Module
 // Computes attention scores and determines cognitive focus.
@@ -6,6 +21,10 @@
 const ThoughtTypes = require('../bus/thought-types');
 
 class AttentionSystem {
+  // constructor()
+  // WHAT THIS DOES: constructor is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call constructor(...) where this helper behavior is needed.
   constructor(options = {}) {
     this.cognitiveBus = options.cognitiveBus;
     this.neurochemistry = options.neurochemistry || null;
@@ -24,6 +43,10 @@ class AttentionSystem {
     this.maxHistorySize = options.maxHistorySize || 500;
 
     // If cognitive bus provided, subscribe to relevant events
+    // if()
+    // WHAT THIS DOES: if is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call if(...) where this helper behavior is needed.
     if (this.cognitiveBus) {
       this.subscribe();
     }
@@ -32,6 +55,10 @@ class AttentionSystem {
   /**
    * Subscribe to thought events on the cognitive bus
    */
+  // subscribe()
+  // WHAT THIS DOES: subscribe is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call subscribe(...) where this helper behavior is needed.
   subscribe() {
     if (!this.cognitiveBus) return;
 

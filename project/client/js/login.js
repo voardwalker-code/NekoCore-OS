@@ -1,3 +1,18 @@
+// ── Client · Login ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This client module drives browser-side behavior and state updates for UI
+// features.
+//
+// WHAT USES THIS:
+// Used by related flows in its subsystem. Keep call contracts stable during
+// readability-only edits.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // REM System — Login / Account System
 // Handles login overlay, register, and session state.
@@ -10,12 +25,19 @@ let _remUsername    = null;
 let _remDisplayName = null;
 let _remAccountInfo = null;
 let _authWaiters    = [];
-
+// getAccountId()
+// WHAT THIS DOES: getAccountId reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call getAccountId(...), then use the returned value in your next step.
 function getAccountId()   { return _remAccountId;   }
 function getUsername()    { return _remUsername;     }
 function getDisplayName() { return _remDisplayName; }
 function getAccountInfo() { return _remAccountInfo; }
 
+// getCurrentAccount()
+// WHAT THIS DOES: getCurrentAccount reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call getCurrentAccount(...), then use the returned value in your next step.
 function getCurrentAccount() {
   if (!_remAccountId) return null;
   return {
@@ -25,7 +47,10 @@ function getCurrentAccount() {
     info: _remAccountInfo
   };
 }
-
+// resolveAuthWaiters()
+// WHAT THIS DOES: resolveAuthWaiters is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call resolveAuthWaiters(...) where this helper behavior is needed.
 function resolveAuthWaiters(account) {
   const waiters = _authWaiters;
   _authWaiters = [];
@@ -33,6 +58,10 @@ function resolveAuthWaiters(account) {
 }
 
 // ── Tab switcher ──────────────────────────────────────────────────────────────
+// switchLoginTab()
+// WHAT THIS DOES: switchLoginTab is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call switchLoginTab(...) where this helper behavior is needed.
 function switchLoginTab(tab) {
   const loginTab   = document.getElementById('authLoginTab');
   const registerTab = document.getElementById('authRegisterTab');
@@ -54,7 +83,10 @@ function switchLoginTab(tab) {
   // Clear errors on tab switch
   clearLoginErrors();
 }
-
+// clearLoginErrors()
+// WHAT THIS DOES: clearLoginErrors removes, resets, or shuts down existing state.
+// WHY IT EXISTS: cleanup is explicit so stale state does not leak into new runs.
+// HOW TO USE IT: call clearLoginErrors(...) when you need a safe teardown/reset path.
 function clearLoginErrors() {
   const le = document.getElementById('authLoginError');
   const re = document.getElementById('authRegisterError');
@@ -63,17 +95,28 @@ function clearLoginErrors() {
 }
 
 // ── Overlay show/hide ─────────────────────────────────────────────────────────
+// showLoginOverlay()
+// WHAT THIS DOES: showLoginOverlay builds or updates what the user sees.
+// WHY IT EXISTS: display logic is separated from data/business logic for clarity.
+// HOW TO USE IT: call showLoginOverlay(...) after state changes that need UI refresh.
 function showLoginOverlay() {
   const overlay = document.getElementById('loginOverlay');
   if (overlay) overlay.style.display = 'flex';
 }
-
+// hideLoginOverlay()
+// WHAT THIS DOES: hideLoginOverlay is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call hideLoginOverlay(...) where this helper behavior is needed.
 function hideLoginOverlay() {
   const overlay = document.getElementById('loginOverlay');
   if (overlay) overlay.style.display = 'none';
 }
 
 // ── Header badge update ───────────────────────────────────────────────────────
+// _updateAccountBadge()
+// WHAT THIS DOES: _updateAccountBadge changes saved state or updates data.
+// WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+// HOW TO USE IT: call _updateAccountBadge(...) with the new values you want to persist.
 function _updateAccountBadge(username) {
   const badge     = document.getElementById('accountBadge');
   const nameSpan  = document.getElementById('accountUsername');
@@ -81,7 +124,10 @@ function _updateAccountBadge(username) {
   if (nameSpan) nameSpan.textContent = username;
   if (typeof updateStartUserChip === 'function') updateStartUserChip();
 }
-
+// _clearAccountBadge()
+// WHAT THIS DOES: _clearAccountBadge removes, resets, or shuts down existing state.
+// WHY IT EXISTS: cleanup is explicit so stale state does not leak into new runs.
+// HOW TO USE IT: call _clearAccountBadge(...) when you need a safe teardown/reset path.
 function _clearAccountBadge() {
   const badge = document.getElementById('accountBadge');
   if (badge) badge.style.display = 'none';
@@ -89,6 +135,10 @@ function _clearAccountBadge() {
 }
 
 // ── On successful auth ────────────────────────────────────────────────────────
+// _onAuthSuccess()
+// WHAT THIS DOES: _onAuthSuccess handles an event and routes follow-up actions.
+// WHY IT EXISTS: event flow is easier to debug when listener logic is centralized.
+// HOW TO USE IT: wire _onAuthSuccess to the relevant event source or dispatcher.
 function _onAuthSuccess(account) {
   _remAccountId   = account.id;
   _remUsername    = account.username;
@@ -103,6 +153,10 @@ function _onAuthSuccess(account) {
   // Auto-launch setup wizard if no valid LLM profile is configured yet
   setTimeout(() => {
     try {
+      // profiles()
+      // WHAT THIS DOES: profiles is a helper used by this module's main flow.
+      // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+      // HOW TO USE IT: call profiles(...) where this helper behavior is needed.
       const profiles = (typeof savedConfig !== 'undefined' && savedConfig && savedConfig.profiles) ? savedConfig.profiles : {};
       const hasValidProfile = Object.values(profiles).some(p => typeof getMainConfigFromProfile === 'function' && getMainConfigFromProfile(p) !== null);
       if (!hasValidProfile && typeof showSetupWizard === 'function') {
@@ -120,10 +174,12 @@ async function getAuthBootstrap() {
   } catch (_) {}
   return { ok: false, authenticated: false, hasAccounts: false, account: null };
 }
-
+// beginAuthFlow()
+// WHAT THIS DOES: beginAuthFlow is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call beginAuthFlow(...) where this helper behavior is needed.
 function beginAuthFlow(preferredTab = 'login') {
   switchLoginTab(preferredTab === 'register' ? 'register' : 'login');
-
 function clearFirstRunThemeLocalState(bootstrap) {
   if (!bootstrap || bootstrap.hasAccounts !== false) return;
   const keys = ['rem-ui-user-themes', 'rem-ui-theme-custom', 'rem-ui-theme'];
@@ -142,6 +198,10 @@ function clearFirstRunThemeLocalState(bootstrap) {
 
 // ── Login ─────────────────────────────────────────────────────────────────────
 async function handleLogin() {
+  // username()
+  // WHAT THIS DOES: username is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call username(...) where this helper behavior is needed.
   const username = (document.getElementById('authLoginUsername') || {}).value || '';
   const password = (document.getElementById('authLoginPassword') || {}).value || '';
   const errEl    = document.getElementById('authLoginError');
@@ -170,8 +230,18 @@ async function handleLogin() {
 
 // ── Register ──────────────────────────────────────────────────────────────────
 async function handleRegister() {
+  // displayName()
+  // WHAT THIS DOES: displayName builds or updates what the user sees.
+  // WHY IT EXISTS: display logic is separated from data/business logic for clarity.
+  // HOW TO USE IT: call displayName(...) after state changes that need UI refresh.
   const displayName = (document.getElementById('authRegDisplayName') || {}).value || '';
   const info        = (document.getElementById('authRegInfo')        || {}).value || '';
+  // username()
+  // Purpose: helper wrapper used by this module's main flow.
+  // username()
+  // WHAT THIS DOES: username is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call username(...) where this helper behavior is needed.
   const username    = (document.getElementById('authRegUsername')    || {}).value || '';
   const password    = (document.getElementById('authRegPassword')    || {}).value || '';
   const errEl       = document.getElementById('authRegisterError');

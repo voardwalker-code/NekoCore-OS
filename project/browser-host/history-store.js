@@ -1,3 +1,18 @@
+// ── Services · Browser History Store ────────────────────────────────────────
+//
+// HOW HISTORY STORAGE WORKS:
+// This file keeps a rolling list of visited pages. It loads history once into
+// memory, updates that list as pages are visited, and writes JSON to disk so
+// history survives restarts.
+//
+// WHAT USES THIS:
+//   browser host routes/services — read, search, and clear browsing history
+//
+// EXPORTS:
+//   addEntry(url, title), getAll(), search(query), deleteEntry(id)
+//   deleteByDateRange(startMs, endMs), clear(), exportAll(), importEntries(entries), reset()
+// ─────────────────────────────────────────────────────────────────────────────
+
 'use strict';
 
 /**
@@ -11,12 +26,19 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 
+// ── Constants ───────────────────────────────────────────────────────────────
+
 const HISTORY_FILE = path.join(__dirname, '..', 'server', 'data', 'browser-history.json');
 const MAX_ENTRIES = 500;
+
+// ── State ───────────────────────────────────────────────────────────────────
 
 let _entries = [];
 let _loaded = false;
 
+// ── Persistence Helpers ─────────────────────────────────────────────────────
+
+/** Load history JSON once into memory (best effort). */
 function _load() {
   if (_loaded) return;
   _loaded = true;
@@ -27,6 +49,7 @@ function _load() {
   } catch { _entries = []; }
 }
 
+/** Persist current in-memory history list to disk (best effort). */
 function _save() {
   try {
     fs.mkdirSync(path.dirname(HISTORY_FILE), { recursive: true });
@@ -34,6 +57,9 @@ function _save() {
   } catch { /* best effort */ }
 }
 
+// ── Core Logic ──────────────────────────────────────────────────────────────
+
+/** Add a new history entry and trim to max size. */
 function addEntry(url, title) {
   _load();
   const entry = {
@@ -48,11 +74,13 @@ function addEntry(url, title) {
   return entry;
 }
 
+/** Return full history list in current order (newest first). */
 function getAll() {
   _load();
   return _entries;
 }
 
+/** Search history by URL or title (case-insensitive). */
 function search(query) {
   _load();
   const q = (query || '').toLowerCase();
@@ -60,6 +88,7 @@ function search(query) {
   return _entries.filter(e => e.url.toLowerCase().includes(q) || (e.title || '').toLowerCase().includes(q));
 }
 
+/** Delete a single history entry by ID. */
 function deleteEntry(id) {
   _load();
   const idx = _entries.findIndex(e => e.id === id);
@@ -69,6 +98,7 @@ function deleteEntry(id) {
   return true;
 }
 
+/** Delete entries whose timestamps are inside the provided range. */
 function deleteByDateRange(startMs, endMs) {
   _load();
   const before = _entries.length;
@@ -77,16 +107,19 @@ function deleteByDateRange(startMs, endMs) {
   return before - _entries.length;
 }
 
+/** Clear all history and persist empty state. */
 function clear() {
   _entries = [];
   _save();
 }
 
+/** Return a deep copy of history entries for export. */
 function exportAll() {
   _load();
   return JSON.parse(JSON.stringify(_entries));
 }
 
+/** Import entries from an array and trim to max size. */
 function importEntries(entries) {
   _load();
   if (!Array.isArray(entries)) return 0;
@@ -106,6 +139,9 @@ function importEntries(entries) {
   return added;
 }
 
+/** Reset in-memory state for tests (does not write). */
 function reset() { _entries = []; _loaded = false; }
+
+// ── Exports ─────────────────────────────────────────────────────────────────
 
 module.exports = { addEntry, getAll, search, deleteEntry, deleteByDateRange, clear, exportAll, importEntries, reset };

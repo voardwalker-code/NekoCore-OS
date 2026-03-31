@@ -1,3 +1,18 @@
+// ── Brain · Goals Manager ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: fs, path. Keep import and
+// call-site contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // REM System — Goals Manager Module
 // Manages exploration goals and goal emergence from memory patterns.
@@ -7,6 +22,10 @@ const fs = require('fs');
 const path = require('path');
 
 class GoalsManager {
+  // constructor()
+  // WHAT THIS DOES: constructor is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call constructor(...) where this helper behavior is needed.
   constructor(options = {}) {
     this.memDir = options.memDir || path.join(__dirname, '../../../memories');
     this.goalsDir = path.join(this.memDir, 'goals');
@@ -24,6 +43,10 @@ class GoalsManager {
   /**
    * Load goals from disk
    */
+  // load()
+  // WHAT THIS DOES: load reads or finds data and gives it back.
+  // WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+  // HOW TO USE IT: call load(...), then use the returned value in your next step.
   load() {
     try {
       if (fs.existsSync(this.goalsFile)) {
@@ -40,6 +63,10 @@ class GoalsManager {
   /**
    * Save goals to disk
    */
+  // save()
+  // WHAT THIS DOES: save changes saved state or updates data.
+  // WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+  // HOW TO USE IT: call save(...) with the new values you want to persist.
   save() {
     try {
       fs.writeFileSync(this.goalsFile, JSON.stringify(this.goals, null, 2), 'utf8');
@@ -102,6 +129,10 @@ class GoalsManager {
       }
 
       // Track emotional keywords
+      // content()
+      // WHAT THIS DOES: content is a helper used by this module's main flow.
+      // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+      // HOW TO USE IT: call content(...) where this helper behavior is needed.
       const content = (mem.semantic || mem.summary || '').toLowerCase();
       const emotionalWords = ['confused', 'uncertain', 'question', 'wonder', 'curious', 'fascinated', 'struggling', 'conflicted'];
       emotionalWords.forEach(word => {
@@ -194,6 +225,10 @@ class GoalsManager {
 
       // Only decay if not recently updated
       const lastUpdate = new Date(goal.last_updated);
+      // daysSinceUpdate()
+      // WHAT THIS DOES: daysSinceUpdate is a helper used by this module's main flow.
+      // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+      // HOW TO USE IT: call daysSinceUpdate(...) where this helper behavior is needed.
       const daysSinceUpdate = (Date.now() - lastUpdate.getTime()) / (1000 * 60 * 60 * 24);
 
       if (daysSinceUpdate > 1) {
@@ -313,6 +348,12 @@ class GoalsManager {
       total_explorations: totalExplorations,
       avg_explorations: this.goals.length > 0 ? totalExplorations / this.goals.length : 0,
       stale_goals: this.goals.filter(g => {
+        // daysOld()
+        // Purpose: helper wrapper used by this module's main flow.
+        // daysOld()
+        // WHAT THIS DOES: daysOld is a helper used by this module's main flow.
+        // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+        // HOW TO USE IT: call daysOld(...) where this helper behavior is needed.
         const daysOld = (Date.now() - new Date(g.last_updated).getTime()) / (1000 * 60 * 60 * 24);
         return daysOld > 7;
       }).length

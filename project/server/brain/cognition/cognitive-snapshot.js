@@ -1,3 +1,17 @@
+// ── Services · Cognitive Snapshot Assembler ─────────────────────────────────
+//
+// HOW COGNITIVE SNAPSHOTS WORK:
+// Before each turn, this module reads available subsystems (beliefs, goals,
+// mood chemistry, diary, curiosity, introspection) and composes one structured
+// snapshot plus a formatted text block for prompt injection.
+//
+// WHAT USES THIS:
+//   brain orchestration pipeline — pre-turn context assembly
+//
+// EXPORTS:
+//   assembleCognitiveSnapshot(deps) → { snapshot, block }
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // Cognitive Snapshot Assembler
 // Assembles a unified pre-turn cognitive state snapshot from
@@ -23,6 +37,7 @@ const LifeDiary = require('../identity/life-diary');
  * @param {string[]} [deps.userMessageTopics] - Topics extracted from the user message (for relevance matching)
  * @returns {{ snapshot: Object, block: string }}
  */
+/** Assemble full cross-subsystem snapshot with graceful degradation. */
 function assembleCognitiveSnapshot(deps = {}) {
   const snapshot = {};
   const topics = deps.userMessageTopics || [];

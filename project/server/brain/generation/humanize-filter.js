@@ -1,3 +1,17 @@
+// ── Brain · Humanize Filter ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Used by related flows in its subsystem. Keep call contracts stable during
+// readability-only edits.
+//
+// EXPORTS:
+// Exposed API includes: humanizeResponse, quickClean.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // Humanize Filter
 // Post-processes an LLM-generated response to remove common
@@ -34,6 +48,10 @@ const AI_CLOSERS = [
  * @param {string} text
  * @returns {string}
  */
+// quickClean()
+// WHAT THIS DOES: quickClean is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call quickClean(...) where this helper behavior is needed.
 function quickClean(text) {
   let t = text.trim();
 

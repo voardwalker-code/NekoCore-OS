@@ -1,3 +1,17 @@
+// ── Client · App Window ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This client module drives browser-side behavior and state updates for UI
+// features.
+//
+// WHAT USES THIS:
+// Used by related flows in its subsystem. Keep call contracts stable during
+// readability-only edits.
+//
+// EXPORTS:
+// Exposed API includes: window-attached API object.
+// ─────────────────────────────────────────────────────────────────────────────
+
 /* ╔══════════════════════════════════════════════════════════════╗
    ║  APPWINDOW CLASS                                               ║
    ║  Shadow Root host for isolated app content & styles          ║
@@ -24,6 +38,10 @@
  */
 
 class AppWindow {
+  // constructor()
+  // WHAT THIS DOES: constructor is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call constructor(...) where this helper behavior is needed.
   constructor(tabName, appMetadata = {}) {
     this.tabName = tabName;
     this.appMetadata = appMetadata;
@@ -49,10 +67,18 @@ class AppWindow {
    * This is called once when the window is first created.
    * Depends on: windowManager global, getWindowApp() function
    */
+  // initialize()
+  // WHAT THIS DOES: initialize is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call initialize(...) where this helper behavior is needed.
   initialize() {
     if (this.meta) return; // Already initialized
     
     // Ensure windowManager is available
+    // if()
+    // WHAT THIS DOES: if is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call if(...) where this helper behavior is needed.
     if (typeof windowManager === 'undefined') {
       console.error('[AppWindow] windowManager not initialized; skipping ' + this.tabName);
       return;
@@ -60,6 +86,10 @@ class AppWindow {
 
     // Get the existing window metadata or create stub
     this.meta = windowManager.windows.get(this.tabName);
+    // if()
+    // WHAT THIS DOES: if is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call if(...) where this helper behavior is needed.
     if (!this.meta) {
       console.warn('[AppWindow] window ' + this.tabName + ' not found in windowManager');
       return;
@@ -307,6 +337,10 @@ window.__appWindowRegistry = window.__appWindowRegistry || new Map();
  * @param {Object} appMetadata - Optional app metadata
  * @returns {AppWindow} AppWindow instance
  */
+// getOrCreateAppWindow()
+// WHAT THIS DOES: getOrCreateAppWindow reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call getOrCreateAppWindow(...), then use the returned value in your next step.
 function getOrCreateAppWindow(tabName, appMetadata = {}) {
   let appWindow = window.__appWindowRegistry.get(tabName);
   if (!appWindow) {
@@ -322,6 +356,10 @@ function getOrCreateAppWindow(tabName, appMetadata = {}) {
  * @param {string} tabName - App tab identifier
  * @returns {AppWindow|null} AppWindow instance or null
  */
+// getAppWindow()
+// WHAT THIS DOES: getAppWindow reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call getAppWindow(...), then use the returned value in your next step.
 function getAppWindow(tabName) {
   return window.__appWindowRegistry.get(tabName) || null;
 }

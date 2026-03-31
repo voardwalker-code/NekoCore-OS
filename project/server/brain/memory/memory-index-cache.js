@@ -1,3 +1,19 @@
+// ── Brain · Memory Index Cache ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: fs, path, ../../entityPaths,
+// ../utils/topic-utils. Keep import and call-site contracts aligned during
+// refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // REM System — Memory Index Cache
 // Maintains three index files per entity for fast memory lookups
@@ -15,6 +31,10 @@ const { getIndexPath } = require('../../entityPaths');
 const { normalizeTopics, expandQueryTopic } = require('../utils/topic-utils');
 
 class MemoryIndexCache {
+  // constructor()
+  // WHAT THIS DOES: constructor is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call constructor(...) where this helper behavior is needed.
   constructor(entityId) {
     this.entityId = entityId;
     this.indexDir = getIndexPath(entityId);
@@ -31,6 +51,10 @@ class MemoryIndexCache {
     this._loaded = false;
   }
 
+  // _atomicWriteJson()
+  // WHAT THIS DOES: _atomicWriteJson is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call _atomicWriteJson(...) where this helper behavior is needed.
   _atomicWriteJson(filePath, data) {
     try {
       const tmpPath = filePath + '.tmp-' + process.pid + '-' + Date.now();
@@ -43,6 +67,10 @@ class MemoryIndexCache {
 
   // ── Load / Save ──────────────────────────────────────────
 
+  // load()
+  // WHAT THIS DOES: load reads or finds data and gives it back.
+  // WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+  // HOW TO USE IT: call load(...), then use the returned value in your next step.
   load() {
     if (this._loaded) return;
     this.memoryIndex = this._readJson(this.memoryIndexPath, {});
@@ -51,6 +79,10 @@ class MemoryIndexCache {
     this._loaded = true;
   }
 
+  // save()
+  // WHAT THIS DOES: save changes saved state or updates data.
+  // WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+  // HOW TO USE IT: call save(...) with the new values you want to persist.
   save() {
     this._atomicWriteJson(this.memoryIndexPath, this.memoryIndex);
     this._atomicWriteJson(this.topicIndexPath, this.topicIndex);
@@ -283,6 +315,12 @@ class MemoryIndexCache {
     this.recencyIndex = [];
     this._loaded = true;
 
+    // scanDir()
+    // Purpose: helper wrapper used by this module's main flow.
+    // scanDir()
+    // WHAT THIS DOES: scanDir is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call scanDir(...) where this helper behavior is needed.
     const scanDir = (dir) => {
       if (!dir || !fs.existsSync(dir)) return 0;
       const memDirs = fs.readdirSync(dir);

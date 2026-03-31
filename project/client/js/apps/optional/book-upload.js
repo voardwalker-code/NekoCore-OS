@@ -1,3 +1,17 @@
+// ── Client Optional · Book Upload ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This client module drives browser-side behavior and state updates for UI
+// features.
+//
+// WHAT USES THIS:
+// Used by related flows in its subsystem. Keep call contracts stable during
+// readability-only edits.
+//
+// EXPORTS:
+// Exposed API includes: window-attached API object.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // NekoCore OS — Book Upload + Header File Menu
 // Manages the "File" dropdown in the header bar and the
@@ -27,7 +41,10 @@
       if (e.key === 'Escape') closeFileMenu();
     });
   }
-
+  // closeFileMenu()
+  // WHAT THIS DOES: closeFileMenu removes, resets, or shuts down existing state.
+  // WHY IT EXISTS: cleanup is explicit so stale state does not leak into new runs.
+  // HOW TO USE IT: call closeFileMenu(...) when you need a safe teardown/reset path.
   function closeFileMenu() {
     if (!fileDrop) return;
     fileDrop.classList.remove('open');
@@ -58,7 +75,10 @@
   const resultEl = document.getElementById('bookUploadResult');
 
   let uploading = false;
-
+  // openBookUpload()
+  // WHAT THIS DOES: openBookUpload creates or initializes something needed by the flow.
+  // WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+  // HOW TO USE IT: call openBookUpload(...) before code that depends on this setup.
   function openBookUpload() {
     if (!overlay) return;
     overlay.classList.add('open');
@@ -130,7 +150,14 @@
     try {
       // 1. Start MA server
       const startResp = await fetch('/api/servers/ma/start', { method: 'POST' });
-      if (!startResp.ok) throw new Error('Failed to start MA server');
+      const startData = await startResp.json().catch(function () { return {}; });
+      if (startData.reason === 'ma_not_found' || startData.repoUrl) {
+        var repo = startData.repoUrl || 'https://github.com/voardwalker-code/MA-Memory-Architect';
+        throw new Error('MA (Memory Architect) is not installed. Get it at: ' + repo);
+      }
+      if (!startResp.ok || startData.ok === false) {
+        throw new Error(startData.error || 'Failed to start MA server');
+      }
       if (statusText) statusText.textContent = 'Reading file…';
       if (barEl) barEl.style.width = '30%';
 
@@ -170,7 +197,10 @@
       uploading = false;
     }
   }
-
+  // readBookFileAsText()
+  // WHAT THIS DOES: readBookFileAsText reads or finds data and gives it back.
+  // WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+  // HOW TO USE IT: call readBookFileAsText(...), then use the returned value in your next step.
   function readBookFileAsText(file) {
     return new Promise(function (resolve, reject) {
       var reader = new FileReader();
@@ -179,7 +209,10 @@
       reader.readAsText(file);
     });
   }
-
+  // showUploadResult()
+  // WHAT THIS DOES: showUploadResult builds or updates what the user sees.
+  // WHY IT EXISTS: display logic is separated from data/business logic for clarity.
+  // HOW TO USE IT: call showUploadResult(...) after state changes that need UI refresh.
   function showUploadResult(data, title) {
     if (!resultEl) return;
     resultEl.style.display = 'block';
@@ -199,16 +232,22 @@
   };
 
   // ── Helpers ───────────────────────────────────────────────────────────────
+  // escHtml()
+  // WHAT THIS DOES: escHtml is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call escHtml(...) where this helper behavior is needed.
   function escHtml(s) {
     var d = document.createElement('div');
     d.textContent = s;
     return d.innerHTML;
   }
-
+  // escAttr()
+  // WHAT THIS DOES: escAttr is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call escAttr(...) where this helper behavior is needed.
   function escAttr(s) {
     return s.replace(/'/g, "\\'").replace(/\\/g, '\\\\');
   }
-
   function showBookNotice(msg, type) {
     var notifyApi = window.notify;
     if (notifyApi && typeof notifyApi.show === 'function') {

@@ -1,3 +1,19 @@
+// ── Tests · Archive Index Rebuild Guards.Test ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This test file validates behavior and guards against regressions in its
+// target subsystem.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: node:test,
+// node:assert/strict, fs, path, os. Keep import and call-site contracts
+// aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // Guard Tests — Phase 4.7 E-3 + E-4: Temporal & Subject Index Builders
 // Guards that define and lock the expected behavior of:
@@ -21,6 +37,10 @@ const phasesIndexPath       = path.join(__dirname, '../../server/brain/cognition
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
+// tmpBase()
+// WHAT THIS DOES: tmpBase is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call tmpBase(...) where this helper behavior is needed.
 function tmpBase() {
   return path.join(os.tmpdir(), `neko_idx_rebuild_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`);
 }
@@ -29,6 +49,10 @@ function tmpBase() {
  * Write fake bucket NDJSON entries for test isolation.
  * baseDir mirrors the live entities root layout.
  */
+// writeBucket()
+// WHAT THIS DOES: writeBucket changes saved state or updates data.
+// WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+// HOW TO USE IT: call writeBucket(...) with the new values you want to persist.
 function writeBucket(baseDir, entityId, filename, entries) {
   const { getArchiveRoot } = require(path.join(__dirname, '../../server/entityPaths'));
   // We can't call getArchiveRoot with baseDir override, so we build the path manually.
@@ -41,6 +65,10 @@ function writeBucket(baseDir, entityId, filename, entries) {
 /**
  * Write a fake router.json for test isolation.
  */
+// writeRouter()
+// WHAT THIS DOES: writeRouter changes saved state or updates data.
+// WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+// HOW TO USE IT: call writeRouter(...) with the new values you want to persist.
 function writeRouter(baseDir, entityId, routerObj) {
   const routerPath = path.join(baseDir, `entity_${entityId}`, 'memories', 'archive', 'router.json');
   fs.mkdirSync(path.dirname(routerPath), { recursive: true });

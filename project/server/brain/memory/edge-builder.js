@@ -1,3 +1,17 @@
+// ── Brain · Edge Builder ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: ../utils/topic-utils. Keep
+// import and call-site contracts aligned during refactors.
+//
+// EXPORTS:
+// Exposed API includes: seedEdges, seedBeliefEdges, MAX_EDGES, SCAN_WINDOW.
+// ─────────────────────────────────────────────────────────────────────────────
+
 'use strict';
 /**
  * server/brain/memory/edge-builder.js
@@ -26,6 +40,10 @@ const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
  * @param {object} indexCache — MemoryIndexCache instance (must be loaded)
  * @returns {{ edges: Array<{targetId: string, relation: string, strength: number}>, patchedIds: string[] }}
  */
+// seedEdges()
+// WHAT THIS DOES: seedEdges is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call seedEdges(...) where this helper behavior is needed.
 function seedEdges(newMemId, newMeta, indexCache) {
   const edges = [];
   const patchedIds = [];
@@ -35,6 +53,12 @@ function seedEdges(newMemId, newMeta, indexCache) {
   if (isNaN(newTs)) return { edges, patchedIds };
 
   const newTopicSet = new Set(normalizeTopics(newMeta.topics || []));
+  // newEmotion()
+  // Purpose: helper wrapper used by this module's main flow.
+  // newEmotion()
+  // WHAT THIS DOES: newEmotion is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call newEmotion(...) where this helper behavior is needed.
   const newEmotion = ((newMeta.emotion || newMeta.emotionalTag || '') + '').toLowerCase().trim();
   const newUserId = newMeta.userId
     || (newMeta.creationContext && newMeta.creationContext.userId)
@@ -52,6 +76,12 @@ function seedEdges(newMemId, newMeta, indexCache) {
     const timeDiff = Math.abs(newTs - candTs);
 
     const candTopics = meta.topics || [];
+    // candEmotion()
+    // Purpose: helper wrapper used by this module's main flow.
+    // candEmotion()
+    // WHAT THIS DOES: candEmotion is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call candEmotion(...) where this helper behavior is needed.
     const candEmotion = ((meta.emotion || meta.emotionalTag || '') + '').toLowerCase().trim();
     const candUserId = meta.userId || null;
 
@@ -106,6 +136,10 @@ function seedEdges(newMemId, newMeta, indexCache) {
  * @param {Set|string[]} [existingTargets]  — target IDs already in edges (to dedup)
  * @returns {Array<{ targetId: string, relation: string, strength: number }>}
  */
+// seedBeliefEdges()
+// WHAT THIS DOES: seedBeliefEdges is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call seedBeliefEdges(...) where this helper behavior is needed.
 function seedBeliefEdges(newMemId, beliefs, existingTargets) {
   const edges = [];
   const seen = existingTargets instanceof Set

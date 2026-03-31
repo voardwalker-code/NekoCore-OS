@@ -1,3 +1,17 @@
+// ── Client · Sound System ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This client module drives browser-side behavior and state updates for UI
+// features.
+//
+// WHAT USES THIS:
+// Used by related flows in its subsystem. Keep call contracts stable during
+// readability-only edits.
+//
+// EXPORTS:
+// Exposed API includes: window-attached API object.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // NekoCore OS — Sound System
 // Synthesized OS sounds using Web Audio API.
@@ -11,7 +25,10 @@
   var enabled = true;
   var volume = 0.35;
   var unlocked = false;
-
+  // getCtx()
+  // WHAT THIS DOES: getCtx reads or finds data and gives it back.
+  // WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+  // HOW TO USE IT: call getCtx(...), then use the returned value in your next step.
   function getCtx() {
     if (!unlocked) return null;
     if (!ctx) {
@@ -19,7 +36,10 @@
     }
     return ctx;
   }
-
+  // ensureResumed()
+  // WHAT THIS DOES: ensureResumed is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call ensureResumed(...) where this helper behavior is needed.
   function ensureResumed() {
     var c = getCtx();
     if (c && c.state === 'suspended') c.resume();
@@ -27,6 +47,10 @@
   }
 
   // Defer AudioContext creation until first user gesture (browser autoplay policy)
+  // unlockAudio()
+  // WHAT THIS DOES: unlockAudio is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call unlockAudio(...) where this helper behavior is needed.
   function unlockAudio() {
     if (unlocked) return;
     unlocked = true;
@@ -38,6 +62,10 @@
 
   // ── Synthesis helpers ──────────────────────────────────────
 
+  // playTone()
+  // WHAT THIS DOES: playTone is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call playTone(...) where this helper behavior is needed.
   function playTone(freq, duration, type, gainVal, delay) {
     var c = ensureResumed();
     if (!c || !enabled) return;
@@ -53,7 +81,10 @@
     osc.start(now);
     osc.stop(now + duration);
   }
-
+  // playNoise()
+  // WHAT THIS DOES: playNoise is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call playNoise(...) where this helper behavior is needed.
   function playNoise(duration, gainVal, delay) {
     var c = ensureResumed();
     if (!c || !enabled) return;

@@ -1,3 +1,17 @@
+// ── Client Optional · Task Ui ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This client module drives browser-side behavior and state updates for UI
+// features.
+//
+// WHAT USES THIS:
+// Used by related flows in its subsystem. Keep call contracts stable during
+// readability-only edits.
+//
+// EXPORTS:
+// Exposed API includes: window-attached API object.
+// ─────────────────────────────────────────────────────────────────────────────
+
 /**
  * NekoCore OS — Task UI
  * T-7: Client task panel SSE events, step indicators, stall badge, and history.
@@ -83,6 +97,10 @@ window.handleTaskSSEEvent = function handleTaskSSEEvent(eventName, data) {
 };
 
 // ─── Badge Rendering ──────────────────────────────────────────────────────────
+// _taskUIRenderBadge()
+// WHAT THIS DOES: _taskUIRenderBadge is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _taskUIRenderBadge(...) where this helper behavior is needed.
 function _taskUIRenderBadge() {
   const badge = document.getElementById('taskStatusBadge');
   if (!badge) return;
@@ -96,6 +114,10 @@ function _taskUIRenderBadge() {
 
   // State class
   badge.className = 'task-badge';
+  // if()
+  // WHAT THIS DOES: if is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call if(...) where this helper behavior is needed.
   if (_taskUI.complete) {
     badge.classList.add('task-badge-complete');
   } else if (_taskUI.stalled) {
@@ -116,6 +138,10 @@ function _taskUIRenderBadge() {
   const labelEl = badge.querySelector('.task-badge-label');
   const stepEl = badge.querySelector('.task-badge-step');
   if (labelEl) labelEl.textContent = statusIcon + ' ' + typeLabel;
+  // if()
+  // WHAT THIS DOES: if is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call if(...) where this helper behavior is needed.
   if (stepEl) {
     if (_taskUI.complete) {
       stepEl.textContent = 'Done';
@@ -128,7 +154,10 @@ function _taskUIRenderBadge() {
     }
   }
 }
-
+// _taskUIClearBadge()
+// WHAT THIS DOES: _taskUIClearBadge is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _taskUIClearBadge(...) where this helper behavior is needed.
 function _taskUIClearBadge() {
   _taskUI.activeSessionId = null;
   _taskUI.activeTaskType = null;
@@ -144,6 +173,10 @@ function _taskUIClearBadge() {
 }
 
 // ─── Telemetry Bridge ─────────────────────────────────────────────────────────
+// _taskUIPushTelemetry()
+// WHAT THIS DOES: _taskUIPushTelemetry is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _taskUIPushTelemetry(...) where this helper behavior is needed.
 function _taskUIPushTelemetry(eventName, detail) {
   try {
     if (typeof pushTelemetryEvent === 'function') {
@@ -192,7 +225,10 @@ async function openTaskHistory() {
     document.getElementById('taskHistoryList').innerHTML = '<div class="task-panel-empty">Could not load history: ' + (err.message || 'unknown error') + '</div>';
   }
 }
-
+// _taskUIRenderHistoryList()
+// WHAT THIS DOES: _taskUIRenderHistoryList is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _taskUIRenderHistoryList(...) where this helper behavior is needed.
 function _taskUIRenderHistoryList(sessions) {
   const listEl = document.getElementById('taskHistoryList');
   if (!listEl) return;
@@ -207,6 +243,12 @@ function _taskUIRenderHistoryList(sessions) {
     const statusClass = s.status === 'complete' ? 'task-history-status-done'
       : s.status === 'error' ? 'task-history-status-error'
       : 'task-history-status-active';
+    // taskType()
+    // Purpose: helper wrapper used by this module's main flow.
+    // taskType()
+    // WHAT THIS DOES: taskType is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call taskType(...) where this helper behavior is needed.
     const taskType = (s.taskType || 'task').replace(/_/g, ' ');
     return '<div class="task-history-row" onclick="openTaskSessionDetail(\'' + s.sessionId + '\')">' +
       '<div class="task-history-meta">' +
@@ -217,7 +259,10 @@ function _taskUIRenderHistoryList(sessions) {
     '</div>';
   }).join('');
 }
-
+// closeTaskHistory()
+// WHAT THIS DOES: closeTaskHistory removes, resets, or shuts down existing state.
+// WHY IT EXISTS: cleanup is explicit so stale state does not leak into new runs.
+// HOW TO USE IT: call closeTaskHistory(...) when you need a safe teardown/reset path.
 function closeTaskHistory() {
   _taskUI.historyOpen = false;
   const panel = document.getElementById('taskHistoryPanel');
@@ -248,7 +293,10 @@ async function openTaskSessionDetail(sessionId) {
     document.getElementById('taskDetailContent').innerHTML = '<div class="task-panel-empty">Could not load session: ' + (err.message || 'unknown error') + '</div>';
   }
 }
-
+// _taskUIRenderDetail()
+// WHAT THIS DOES: _taskUIRenderDetail is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _taskUIRenderDetail(...) where this helper behavior is needed.
 function _taskUIRenderDetail(session) {
   const el = document.getElementById('taskDetailContent');
   if (!el) return;
@@ -257,12 +305,24 @@ function _taskUIRenderDetail(session) {
   const steps = Array.isArray(session.milestones) ? session.milestones
     : Array.isArray(session.steps) ? session.steps : [];
 
+  // taskType()
+  // Purpose: helper wrapper used by this module's main flow.
+  // taskType()
+  // WHAT THIS DOES: taskType is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call taskType(...) where this helper behavior is needed.
   const taskType = (session.taskType || 'Task').replace(/_/g, ' ');
   const status = session.status || 'unknown';
   const date = session.updatedAt ? new Date(session.updatedAt).toLocaleString() : '—';
 
   const stepsHtml = steps.length
     ? steps.map((step, i) => {
+        // label()
+        // Purpose: helper wrapper used by this module's main flow.
+        // label()
+        // WHAT THIS DOES: label is a helper used by this module's main flow.
+        // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+        // HOW TO USE IT: call label(...) where this helper behavior is needed.
         const label = (typeof step === 'string') ? step
           : (step.label || step.milestone || step.title || ('Step ' + (i + 1)));
         const done = step.done || step.completed || step.status === 'complete';
@@ -283,7 +343,10 @@ function _taskUIRenderDetail(session) {
     '<div class="task-step-list">' + stepsHtml + '</div>' +
     (session.summary ? '<div class="task-detail-summary">' + session.summary + '</div>' : '');
 }
-
+// closeTaskDetail()
+// WHAT THIS DOES: closeTaskDetail removes, resets, or shuts down existing state.
+// WHY IT EXISTS: cleanup is explicit so stale state does not leak into new runs.
+// HOW TO USE IT: call closeTaskDetail(...) when you need a safe teardown/reset path.
 function closeTaskDetail() {
   _taskUI.detailOpen = false;
   _taskUI.detailSessionId = null;

@@ -1,3 +1,19 @@
+// ── Tests · Shadow Cleanup A0 Guards.Test ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This test file validates behavior and guards against regressions in its
+// target subsystem.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: node:test,
+// node:assert/strict, node:fs, node:path. Keep import and call-site
+// contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 'use strict';
 
 const { test } = require('node:test');
@@ -17,7 +33,10 @@ const desktopJs = fs.readFileSync(DESKTOP_PATH, 'utf8');
 const windowManagerJs = fs.readFileSync(WINDOW_MANAGER_PATH, 'utf8');
 
 const scriptSrcs = [...indexHtml.matchAll(/<script\s+src="([^"]+)"/g)].map((match) => match[1]);
-
+// scriptIndex()
+// WHAT THIS DOES: scriptIndex is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call scriptIndex(...) where this helper behavior is needed.
 function scriptIndex(src) {
   return scriptSrcs.indexOf(src);
 }

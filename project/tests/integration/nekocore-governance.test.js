@@ -1,3 +1,19 @@
+// ── Tests · Nekocore Governance.Test ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This test file validates behavior and guards against regressions in its
+// target subsystem.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: node:test,
+// node:assert/strict, fs, path, ../../server/routes/nekocore-routes. Keep
+// import and call-site contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // Integration Tests — nekocore-routes.js  (Phase D-5)
 // Tests NekoCore model governance endpoints:
@@ -22,6 +38,10 @@ const BASE_HEADERS = { 'Content-Type': 'application/json' };
  * Build a minimal ctx object suitable for nekocore-routes.
  * Config is kept in-memory; fs/path are the real Node built-ins.
  */
+// makeCtx()
+// WHAT THIS DOES: makeCtx creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call makeCtx(...) before code that depends on this setup.
 function makeCtx(initialCfg = {}) {
   let _cfg = {
     lastActive: 'test-profile',
@@ -47,6 +67,10 @@ function makeCtx(initialCfg = {}) {
 /**
  * Build a fake response object that captures writeHead + end calls.
  */
+// makeRes()
+// WHAT THIS DOES: makeRes creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call makeRes(...) before code that depends on this setup.
 function makeRes() {
   const res = {
     statusCode: null,
@@ -58,15 +82,20 @@ function makeRes() {
   };
   return res;
 }
-
+// makeReq()
+// WHAT THIS DOES: makeReq creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call makeReq(...) before code that depends on this setup.
 function makeReq(bodyObj = null) {
   return { method: bodyObj ? 'POST' : 'GET', accountId: 'test-user' };
 }
-
 function readBodyFn(bodyObj) {
   return (_req) => Promise.resolve(bodyObj ? JSON.stringify(bodyObj) : '{}');
 }
-
+// makeUrl()
+// WHAT THIS DOES: makeUrl creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call makeUrl(...) before code that depends on this setup.
 function makeUrl(path_) {
   return new URL(path_, 'http://localhost:3000');
 }

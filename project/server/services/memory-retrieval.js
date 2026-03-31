@@ -1,3 +1,19 @@
+// ── Services · Memory Retrieval ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This service module holds reusable business logic shared across runtime
+// paths.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: fs, path, zlib,
+// ../brain/topic-utils, ../brain/utils/rake. Keep import and call-site
+// contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 'use strict';
 /**
  * server/services/memory-retrieval.js
@@ -31,6 +47,10 @@ const ThoughtTypes = require('../brain/thought-types');
 
 // ── Pure helpers ──────────────────────────────────────────────────────────────
 
+// extractSubconsciousTopics()
+// WHAT THIS DOES: extractSubconsciousTopics is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call extractSubconsciousTopics(...) where this helper behavior is needed.
 function extractSubconsciousTopics(messageText) {
   if (!messageText || typeof messageText !== 'string') return [];
 
@@ -40,7 +60,10 @@ function extractSubconsciousTopics(messageText) {
   const phrases = rakeExtract(messageText, 12);
   return normalizeTopics(phrases);
 }
-
+// getSemanticPreview()
+// WHAT THIS DOES: getSemanticPreview reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call getSemanticPreview(...), then use the returned value in your next step.
 function getSemanticPreview(memRoot, memId) {
   try {
     // Check episodic first, then semantic knowledge store
@@ -63,6 +86,10 @@ function getSemanticPreview(memRoot, memId) {
  * Reads from the ltm/ directory's content.txt (full compressed chatlog).
  * Falls back to decompressing memory.zip from episodic if ltm dir not found.
  */
+// getChatlogContent()
+// WHAT THIS DOES: getChatlogContent reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call getChatlogContent(...), then use the returned value in your next step.
 function getChatlogContent(memRoot, ltmId, maxChars = 2000) {
   try {
     // Primary: read from ltm/ directory content.txt
@@ -82,7 +109,10 @@ function getChatlogContent(memRoot, ltmId, maxChars = 2000) {
     return '';
   }
 }
-
+// buildSubconsciousContextBlock()
+// WHAT THIS DOES: buildSubconsciousContextBlock creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call buildSubconsciousContextBlock(...) before code that depends on this setup.
 function buildSubconsciousContextBlock(messageText, topics, connections, chatlogContext, relationshipBlock) {
   const lines = [];
   const normalizeTopicList = (arr) => {
@@ -114,6 +144,12 @@ function buildSubconsciousContextBlock(messageText, topics, connections, chatlog
       const sem = c.semantic ? c.semantic.replace(/\s+/g, ' ').trim() : '';
       const isDocument = c.source === 'document_digest' || c.type === 'knowledge_memory' || String(c.id || '').startsWith('doc_');
       const memType = isDocument ? '[DOCUMENT]' : (c.type === 'semantic_knowledge') ? '[KNOWLEDGE]' : '[EXPERIENCE]';
+      // userTag()
+      // Purpose: helper wrapper used by this module's main flow.
+      // userTag()
+      // WHAT THIS DOES: userTag is a helper used by this module's main flow.
+      // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+      // HOW TO USE IT: call userTag(...) where this helper behavior is needed.
       const userTag = (!isDocument && c.userName) ? ` with user="${c.userName}"` : '';
       lines.push(
         `${idx + 1}. ${memType}${userTag} id=${c.id} score=${Number(c.relevanceScore || 0).toFixed(3)} topics=[${topicStr}] summary="${sem || 'n/a'}"`
@@ -161,6 +197,10 @@ function buildSubconsciousContextBlock(messageText, topics, connections, chatlog
  *   loadAspectRuntimeConfig:  Function
  * }} deps
  */
+// createMemoryRetrieval()
+// WHAT THIS DOES: createMemoryRetrieval creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call createMemoryRetrieval(...) before code that depends on this setup.
 function createMemoryRetrieval({
   getCurrentEntityId,
   getMemoryStorage,
@@ -225,6 +265,12 @@ function createMemoryRetrieval({
           if (!meta) continue;
           const importance = Number(meta.importance ?? 0.5);
           const decay = Number(meta.decay ?? 1.0);
+          // relevanceScore()
+          // Purpose: helper wrapper used by this module's main flow.
+          // relevanceScore()
+          // WHAT THIS DOES: relevanceScore is a helper used by this module's main flow.
+          // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+          // HOW TO USE IT: call relevanceScore(...) where this helper behavior is needed.
           const relevanceScore = (importance * 0.7) + (decay * 0.3);
           connections.push({
             id: memId,
@@ -515,6 +561,12 @@ function createMemoryRetrieval({
               const hit = rerank.scoreMap.get(c.id);
               if (!hit) return;
               const lexicalNormalized = Math.min(1, Number(c.relevanceScore || 0) / 10);
+              // blended()
+              // Purpose: helper wrapper used by this module's main flow.
+              // blended()
+              // WHAT THIS DOES: blended is a helper used by this module's main flow.
+              // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+              // HOW TO USE IT: call blended(...) where this helper behavior is needed.
               const blended = (lexicalNormalized * 0.45) + (hit.relevance * 0.55);
               c.lexicalScore = lexicalNormalized;
               c.subconsciousScore = hit.relevance;
@@ -620,6 +672,12 @@ function createMemoryRetrieval({
         let bestPath = Array.isArray(best.pulsePath) ? best.pulsePath.slice() : [];
         if ((!bestPath || bestPath.length < 2) && typeof cognitivePulse.getBestPath === 'function') {
           const state = typeof cognitivePulse.getState === 'function' ? cognitivePulse.getState() : null;
+          // fromId()
+          // Purpose: helper wrapper used by this module's main flow.
+          // fromId()
+          // WHAT THIS DOES: fromId is a helper used by this module's main flow.
+          // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+          // HOW TO USE IT: call fromId(...) where this helper behavior is needed.
           const fromId = (pulseHints.find(h => h.id === best.id) || {}).startId || state?.nodeId || null;
           if (fromId && fromId !== best.id) {
             const computed = cognitivePulse.getBestPath(fromId, best.id, 6);

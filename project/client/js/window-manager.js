@@ -1,3 +1,17 @@
+// ── Client · Window Manager ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This client module drives browser-side behavior and state updates for UI
+// features.
+//
+// WHAT USES THIS:
+// Used by related flows in its subsystem. Keep call contracts stable during
+// readability-only edits.
+//
+// EXPORTS:
+// Exposed API includes: window-attached API object.
+// ─────────────────────────────────────────────────────────────────────────────
+
 /* ╔══════════════════════════════════════════════════════════════╗
    ║  WINDOW MANAGER                                            ║
    ║  Floating window lifecycle, drag, resize, snap, layout     ║
@@ -13,6 +27,10 @@
 
 // ── Geometry helpers ────────────────────────────────────────────────────────
 
+// getStageRect()
+// WHAT THIS DOES: getStageRect reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call getStageRect(...), then use the returned value in your next step.
 function getStageRect() {
   if (!windowManager.stage) {
     const reserved = taskbarLayout && taskbarLayout.height ? (taskbarLayout.height + 40) : 108;
@@ -22,6 +40,10 @@ function getStageRect() {
 }
 
 var _wmResizing = false;
+// scheduleLayoutResizeSignal()
+// WHAT THIS DOES: scheduleLayoutResizeSignal is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call scheduleLayoutResizeSignal(...) where this helper behavior is needed.
 function scheduleLayoutResizeSignal(detail = {}) {
   if (layoutResizeRaf) return;
   layoutResizeRaf = requestAnimationFrame(() => {
@@ -29,7 +51,10 @@ function scheduleLayoutResizeSignal(detail = {}) {
     try { window.dispatchEvent(new CustomEvent('rem:layout-resized', { detail })); } catch (_) {}
   });
 }
-
+// clampWindowRect()
+// WHAT THIS DOES: clampWindowRect is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call clampWindowRect(...) where this helper behavior is needed.
 function clampWindowRect(rect, minWidth = 460, minHeight = 320) {
   const stage = getStageRect();
   const width = Math.max(minWidth, Math.min(rect.width, stage.width));
@@ -40,7 +65,10 @@ function clampWindowRect(rect, minWidth = 460, minHeight = 320) {
   const top = Math.max(0, Math.min(rect.top, maxTop));
   return { left, top, width, height };
 }
-
+// setWindowRect()
+// WHAT THIS DOES: setWindowRect changes saved state or updates data.
+// WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+// HOW TO USE IT: call setWindowRect(...) with the new values you want to persist.
 function setWindowRect(meta, rect) {
   const clamped = clampWindowRect(rect);
   meta.el.style.left = clamped.left + 'px';
@@ -49,7 +77,10 @@ function setWindowRect(meta, rect) {
   meta.el.style.height = clamped.height + 'px';
   scheduleLayoutResizeSignal({ tab: meta.tab, width: clamped.width, height: clamped.height });
 }
-
+// captureWindowRect()
+// WHAT THIS DOES: captureWindowRect is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call captureWindowRect(...) where this helper behavior is needed.
 function captureWindowRect(meta) {
   return {
     left: parseFloat(meta.el.style.left) || 0,
@@ -58,18 +89,27 @@ function captureWindowRect(meta) {
     height: parseFloat(meta.el.style.height) || 640
   };
 }
-
+// rememberWindowRestoreRect()
+// WHAT THIS DOES: rememberWindowRestoreRect is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call rememberWindowRestoreRect(...) where this helper behavior is needed.
 function rememberWindowRestoreRect(meta) {
   if (meta.maximized || meta.snapState) return;
   meta.restoreRect = captureWindowRect(meta);
 }
-
+// clearWindowDockState()
+// WHAT THIS DOES: clearWindowDockState removes, resets, or shuts down existing state.
+// WHY IT EXISTS: cleanup is explicit so stale state does not leak into new runs.
+// HOW TO USE IT: call clearWindowDockState(...) when you need a safe teardown/reset path.
 function clearWindowDockState(meta) {
   meta.maximized = false;
   meta.snapState = null;
   meta.el.classList.remove('maximized');
 }
-
+// restoreWindowForDrag()
+// WHAT THIS DOES: restoreWindowForDrag is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call restoreWindowForDrag(...) where this helper behavior is needed.
 function restoreWindowForDrag(meta, pointerEvent) {
   if (!meta.maximized && !meta.snapState) {
     return captureWindowRect(meta);
@@ -102,6 +142,10 @@ function restoreWindowForDrag(meta, pointerEvent) {
 
 // ── Focus & activation ───────────────────────────────────────────────────────
 
+// focusWindow()
+// WHAT THIS DOES: focusWindow is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call focusWindow(...) where this helper behavior is needed.
 function focusWindow(tabName) {
   const meta = windowManager.windows.get(tabName);
   if (!meta || !meta.open) return;
@@ -111,7 +155,10 @@ function focusWindow(tabName) {
   meta.el.classList.add('focused');
   runtimeTelemetry.activeWindowTab = tabName;
 }
-
+// applyWindowActivationEffects()
+// WHAT THIS DOES: applyWindowActivationEffects is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call applyWindowActivationEffects(...) where this helper behavior is needed.
 function applyWindowActivationEffects(tabName) {
   if (tabName === 'physical') {
     if (typeof initPhysicalTab === 'function') initPhysicalTab();
@@ -138,6 +185,10 @@ function applyWindowActivationEffects(tabName) {
 
 // ── Open / Close ─────────────────────────────────────────────────────────────
 
+// openNekoCoreWithMessage()
+// WHAT THIS DOES: openNekoCoreWithMessage creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call openNekoCoreWithMessage(...) before code that depends on this setup.
 function openNekoCoreWithMessage(msg) {
   const text = (msg || '').trim();
   if (!text) { openWindow('nekocore'); return; }
@@ -149,6 +200,10 @@ function openNekoCoreWithMessage(msg) {
   // Load the iframe if not yet loaded
   const fr = document.getElementById('nekocore-panel-frame');
   if (!fr) return;
+  // dispatch()
+  // WHAT THIS DOES: dispatch handles an event and routes follow-up actions.
+  // WHY IT EXISTS: event flow is easier to debug when listener logic is centralized.
+  // HOW TO USE IT: wire dispatch to the relevant event source or dispatcher.
   const dispatch = () => fr.contentWindow && fr.contentWindow.postMessage({ type: 'nk_send_message', text }, '*');
   if (!frameHasExpectedPath(fr, ['nekocore.html'])) {
     fr.addEventListener('load', () => setTimeout(dispatch, 80), { once: true });
@@ -161,6 +216,10 @@ function openNekoCoreWithMessage(msg) {
 
 // ── D-3: Manifest Entry Lookup ──────────────────────────────────────────────────
 
+// getManifestAppEntry()
+// WHAT THIS DOES: getManifestAppEntry reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call getManifestAppEntry(...), then use the returned value in your next step.
 function getManifestAppEntry(appId) {
   try {
     if (typeof window.SystemAppsAdapter !== 'object' || typeof window.SystemAppsAdapter.loadManifestSync !== 'function') {
@@ -176,6 +235,10 @@ function getManifestAppEntry(appId) {
 
 // ── D-3: Shadow App Loader Integration ──────────────────────────────────────────
 
+// launchAppViaShadowLoader()
+// WHAT THIS DOES: launchAppViaShadowLoader is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call launchAppViaShadowLoader(...) where this helper behavior is needed.
 function launchAppViaShadowLoader(tabName, packagePath, packageEntry) {
   try {
     // Guard: AppWindow and ShadowContentLoader must be available
@@ -206,7 +269,10 @@ function launchAppViaShadowLoader(tabName, packagePath, packageEntry) {
     return false;
   }
 }
-
+// shouldLaunchViaShadowLoader()
+// WHAT THIS DOES: shouldLaunchViaShadowLoader answers a yes/no rule check.
+// WHY IT EXISTS: guard checks are kept readable and reusable in one place.
+// HOW TO USE IT: call shouldLaunchViaShadowLoader(...) and branch logic based on true/false.
 function shouldLaunchViaShadowLoader(manifestEntry) {
   if (!manifestEntry || typeof manifestEntry !== 'object') {
     return false;
@@ -220,7 +286,10 @@ function shouldLaunchViaShadowLoader(manifestEntry) {
   }
   return true;
 }
-
+// frameHasExpectedPath()
+// WHAT THIS DOES: frameHasExpectedPath is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call frameHasExpectedPath(...) where this helper behavior is needed.
 function frameHasExpectedPath(frame, expectedPaths) {
   if (!frame || !Array.isArray(expectedPaths) || expectedPaths.length === 0) {
     return false;
@@ -242,7 +311,10 @@ function frameHasExpectedPath(frame, expectedPaths) {
     return normalizedExpected.some((expected) => fallbackPath === expected || fallbackPath.endsWith('/' + expected));
   }
 }
-
+// openWindow()
+// WHAT THIS DOES: openWindow creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call openWindow(...) before code that depends on this setup.
 function openWindow(tabName, options = {}) {
   const meta = windowManager.windows.get(tabName);
   if (!meta) return;
@@ -317,6 +389,12 @@ function openWindow(tabName, options = {}) {
   if (tabName === 'workspace' && typeof feRender === 'function') feRender();
   if (tabName === 'creator') {
     const fr = document.getElementById('creatorAppFrame');
+    // resetCreator()
+    // Purpose: helper wrapper used by this module's main flow.
+    // resetCreator()
+    // WHAT THIS DOES: resetCreator removes, resets, or shuts down existing state.
+    // WHY IT EXISTS: cleanup is explicit so stale state does not leak into new runs.
+    // HOW TO USE IT: call resetCreator(...) when you need a safe teardown/reset path.
     const resetCreator = () => {
       try {
         if (fr && fr.contentWindow && typeof fr.contentWindow.resetCreatorFlow === 'function') {
@@ -338,7 +416,10 @@ function openWindow(tabName, options = {}) {
     if (fr && !frameHasExpectedPath(fr, ['nekocore.html'])) fr.src = '/nekocore.html';
   }
 }
-
+// closeWindow()
+// WHAT THIS DOES: closeWindow removes, resets, or shuts down existing state.
+// WHY IT EXISTS: cleanup is explicit so stale state does not leak into new runs.
+// HOW TO USE IT: call closeWindow(...) when you need a safe teardown/reset path.
 function closeWindow(tabName) {
   const meta = windowManager.windows.get(tabName);
   if (!meta) return;
@@ -383,7 +464,10 @@ function closeWindow(tabName) {
   }
   syncShellStatusWidgets();
 }
-
+// minimizeWindow()
+// WHAT THIS DOES: minimizeWindow is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call minimizeWindow(...) where this helper behavior is needed.
 function minimizeWindow(tabName) {
   const meta = windowManager.windows.get(tabName);
   if (!meta || !meta.open) return;
@@ -397,6 +481,10 @@ function minimizeWindow(tabName) {
 
 // ── Maximize & Snap ──────────────────────────────────────────────────────────
 
+// toggleMaximizeWindow()
+// WHAT THIS DOES: toggleMaximizeWindow is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call toggleMaximizeWindow(...) where this helper behavior is needed.
 function toggleMaximizeWindow(tabName, force) {
   const meta = windowManager.windows.get(tabName);
   if (!meta) return;
@@ -414,7 +502,10 @@ function toggleMaximizeWindow(tabName, force) {
     if (meta.restoreRect) setWindowRect(meta, meta.restoreRect);
   }
 }
-
+// snapWindow()
+// WHAT THIS DOES: snapWindow is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call snapWindow(...) where this helper behavior is needed.
 function snapWindow(tabName, side) {
   const meta = windowManager.windows.get(tabName);
   if (!meta) return;
@@ -451,7 +542,10 @@ function snapWindow(tabName, side) {
   }
   focusWindow(tabName);
 }
-
+// showSnapDock()
+// WHAT THIS DOES: showSnapDock builds or updates what the user sees.
+// WHY IT EXISTS: display logic is separated from data/business logic for clarity.
+// HOW TO USE IT: call showSnapDock(...) after state changes that need UI refresh.
 function showSnapDock(tabName) {
   const overlay = windowManager.dock.overlay;
   if (!overlay || windowManager.popoutTab) return;
@@ -460,7 +554,10 @@ function showSnapDock(tabName) {
   overlay.classList.add('open');
   overlay.setAttribute('aria-hidden', 'false');
 }
-
+// hideSnapDock()
+// WHAT THIS DOES: hideSnapDock is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call hideSnapDock(...) where this helper behavior is needed.
 function hideSnapDock() {
   const overlay = windowManager.dock.overlay;
   if (!overlay) return;
@@ -471,7 +568,10 @@ function hideSnapDock() {
   overlay.setAttribute('aria-hidden', 'true');
   overlay.querySelectorAll('.wm-snap-zone').forEach((zone) => zone.classList.remove('is-active'));
 }
-
+// updateSnapDockPointer()
+// WHAT THIS DOES: updateSnapDockPointer changes saved state or updates data.
+// WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+// HOW TO USE IT: call updateSnapDockPointer(...) with the new values you want to persist.
 function updateSnapDockPointer(clientX, clientY) {
   if (!windowManager.dock.active || !windowManager.dock.overlay) return;
   const hovered = document.elementFromPoint(clientX, clientY);
@@ -481,7 +581,10 @@ function updateSnapDockPointer(clientX, clientY) {
   });
   windowManager.dock.selectedZone = zoneEl ? zoneEl.getAttribute('data-zone') : null;
 }
-
+// resolveEdgeSnap()
+// WHAT THIS DOES: resolveEdgeSnap is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call resolveEdgeSnap(...) where this helper behavior is needed.
 function resolveEdgeSnap(clientX, clientY) {
   const stage = getStageRect();
   const x = clientX - stage.left;
@@ -506,6 +609,10 @@ function resolveEdgeSnap(clientX, clientY) {
 
 // ── Drag & Resize ────────────────────────────────────────────────────────────
 
+// startDrag()
+// WHAT THIS DOES: startDrag creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call startDrag(...) before code that depends on this setup.
 function startDrag(meta, event) {
   event.preventDefault();
   const startX = event.clientX;
@@ -530,6 +637,12 @@ function startDrag(meta, event) {
   meta.el.style.opacity = '0';
   meta.el.style.pointerEvents = 'none';
 
+  // move()
+  // Purpose: helper wrapper used by this module's main flow.
+  // move()
+  // WHAT THIS DOES: move is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call move(...) where this helper behavior is needed.
   const move = (moveEvent) => {
     const stage = getStageRect();
     const relativeY = moveEvent.clientY - stage.top;
@@ -554,6 +667,12 @@ function startDrag(meta, event) {
     ghost.style.left = (snapLeft + (moveEvent.clientX - startX)) + 'px';
     ghost.style.top = (snapTop + (moveEvent.clientY - startY)) + 'px';
   };
+  // up()
+  // Purpose: helper wrapper used by this module's main flow.
+  // up()
+  // WHAT THIS DOES: up is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call up(...) where this helper behavior is needed.
   const up = (upEvent) => {
     // Place real window at ghost's final position
     const finalLeft = parseFloat(ghost.style.left) || 0;
@@ -587,7 +706,10 @@ function startDrag(meta, event) {
   document.addEventListener('pointermove', move);
   document.addEventListener('pointerup', up);
 }
-
+// startResize()
+// WHAT THIS DOES: startResize creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call startResize(...) before code that depends on this setup.
 function startResize(meta, direction, event) {
   if (meta.maximized) return;
   event.preventDefault();
@@ -602,6 +724,12 @@ function startResize(meta, direction, event) {
     height: parseFloat(meta.el.style.height) || 640
   };
 
+  // move()
+  // Purpose: helper wrapper used by this module's main flow.
+  // move()
+  // WHAT THIS DOES: move is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call move(...) where this helper behavior is needed.
   const move = (moveEvent) => {
     const dx = moveEvent.clientX - startX;
     const dy = moveEvent.clientY - startY;
@@ -620,6 +748,12 @@ function startResize(meta, direction, event) {
 
     setWindowRect(meta, next);
   };
+  // up()
+  // Purpose: helper wrapper used by this module's main flow.
+  // up()
+  // WHAT THIS DOES: up is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call up(...) where this helper behavior is needed.
   const up = () => {
     document.removeEventListener('pointermove', move);
     document.removeEventListener('pointerup', up);
@@ -631,6 +765,10 @@ function startResize(meta, direction, event) {
 
 // ── Pop-out ──────────────────────────────────────────────────────────────────
 
+// popOutWindow()
+// WHAT THIS DOES: popOutWindow is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call popOutWindow(...) where this helper behavior is needed.
 function popOutWindow(tabName) {
   const app = getWindowApp(tabName);
   const width = Math.max(720, Number(app.w) || 980);
@@ -653,6 +791,10 @@ function popOutWindow(tabName) {
 
 // ── Shell creation ───────────────────────────────────────────────────────────
 
+// createWindowShell()
+// WHAT THIS DOES: createWindowShell creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call createWindowShell(...) before code that depends on this setup.
 function createWindowShell(tabName, tabElement) {
   const app = getWindowApp(tabName);
   const isCurrentPopout = windowManager.popoutTab === tabName;
@@ -726,6 +868,10 @@ function createWindowShell(tabName, tabElement) {
 
 // ── Start menu / launcher builder ────────────────────────────────────────────
 
+// buildLauncherMenu()
+// WHAT THIS DOES: buildLauncherMenu creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call buildLauncherMenu(...) before code that depends on this setup.
 function buildLauncherMenu() {
   const categoryHost = document.getElementById('osStartCategoryGrid');
   const appsHost = document.getElementById('osStartCategoryApps');
@@ -755,6 +901,12 @@ function buildLauncherMenu() {
     }));
   const startApps = [...allApps, ...START_MENU_SPECIAL_APPS];
 
+  // makeAppButton()
+  // Purpose: helper wrapper used by this module's main flow.
+  // makeAppButton()
+  // WHAT THIS DOES: makeAppButton creates or initializes something needed by the flow.
+  // WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+  // HOW TO USE IT: call makeAppButton(...) before code that depends on this setup.
   const makeAppButton = (app) => {
     const button = document.createElement('button');
     button.className = 'os-launcher-item os-start-app-item';
@@ -795,7 +947,10 @@ function buildLauncherMenu() {
     }
     return button;
   };
-
+  // syncDetachedIfAvailable()
+  // WHAT THIS DOES: syncDetachedIfAvailable is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call syncDetachedIfAvailable(...) where this helper behavior is needed.
   function syncDetachedIfAvailable() {
     if (typeof syncDetachedShellStateUI === 'function') syncDetachedShellStateUI();
   }
@@ -970,6 +1125,10 @@ function buildLauncherMenu() {
 
 // ── Layout persistence ───────────────────────────────────────────────────────
 
+// serializeWindow()
+// WHAT THIS DOES: serializeWindow is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call serializeWindow(...) where this helper behavior is needed.
 function serializeWindow(meta) {
   return {
     open: meta.open,
@@ -981,7 +1140,10 @@ function serializeWindow(meta) {
     z: parseInt(meta.el.style.zIndex || '1', 10)
   };
 }
-
+// saveWindowLayout()
+// WHAT THIS DOES: saveWindowLayout changes saved state or updates data.
+// WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+// HOW TO USE IT: call saveWindowLayout(...) with the new values you want to persist.
 function saveWindowLayout() {
   const layout = {};
   windowManager.windows.forEach((meta, tabName) => {
@@ -994,7 +1156,10 @@ function saveWindowLayout() {
     lg('warn', 'Could not save window layout: ' + err.message);
   }
 }
-
+// restoreWindowLayout()
+// WHAT THIS DOES: restoreWindowLayout is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call restoreWindowLayout(...) where this helper behavior is needed.
 function restoreWindowLayout() {
   let raw = null;
   try {
@@ -1043,7 +1208,10 @@ function restoreWindowLayout() {
   syncShellStatusWidgets();
   return true;
 }
-
+// resetWindowLayout()
+// WHAT THIS DOES: resetWindowLayout removes, resets, or shuts down existing state.
+// WHY IT EXISTS: cleanup is explicit so stale state does not leak into new runs.
+// HOW TO USE IT: call resetWindowLayout(...) when you need a safe teardown/reset path.
 function resetWindowLayout() {
   try {
     localStorage.removeItem(WINDOW_LAYOUT_STORAGE_KEY);
@@ -1056,6 +1224,10 @@ function resetWindowLayout() {
 
 // ── Initialization ───────────────────────────────────────────────────────────
 
+// initWindowManager()
+// WHAT THIS DOES: initWindowManager creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call initWindowManager(...) before code that depends on this setup.
 function initWindowManager() {
   if (windowManager.initialized) return;
   const stage = document.getElementById('windowStage');

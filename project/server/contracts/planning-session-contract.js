@@ -1,3 +1,18 @@
+// ── Contracts · Planning Session Contract ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This module belongs to the NekoCore OS codebase and provides focused
+// subsystem behavior.
+//
+// WHAT USES THIS:
+// Used by related flows in its subsystem. Keep call contracts stable during
+// readability-only edits.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // Planning Session Contract
 // Validates the shape of multi-entity planning sessions,
@@ -5,7 +20,10 @@
 // ============================================================
 
 'use strict';
-
+// isObject()
+// WHAT THIS DOES: isObject answers a yes/no rule check.
+// WHY IT EXISTS: guard checks are kept readable and reusable in one place.
+// HOW TO USE IT: call isObject(...) and branch logic based on true/false.
 function isObject(value) {
   return !!value && typeof value === 'object' && !Array.isArray(value);
 }
@@ -15,6 +33,10 @@ function isObject(value) {
  * @param {Object} session
  * @returns {{ ok: boolean, errors: string[] }}
  */
+// validatePlanningSession()
+// WHAT THIS DOES: validatePlanningSession answers a yes/no rule check.
+// WHY IT EXISTS: guard checks are kept readable and reusable in one place.
+// HOW TO USE IT: call validatePlanningSession(...) and branch logic based on true/false.
 function validatePlanningSession(session) {
   const errors = [];
   if (!isObject(session)) return { ok: false, errors: ['session must be an object'] };
@@ -51,6 +73,10 @@ function validatePlanningSession(session) {
  * @param {Object} round
  * @returns {{ ok: boolean, errors: string[] }}
  */
+// validatePlanningRound()
+// WHAT THIS DOES: validatePlanningRound answers a yes/no rule check.
+// WHY IT EXISTS: guard checks are kept readable and reusable in one place.
+// HOW TO USE IT: call validatePlanningRound(...) and branch logic based on true/false.
 function validatePlanningRound(round) {
   const errors = [];
   if (!isObject(round)) return { ok: false, errors: ['round must be an object'] };
@@ -83,6 +109,10 @@ function validatePlanningRound(round) {
  * @param {Object} participant
  * @returns {{ ok: boolean, errors: string[] }}
  */
+// validateParticipant()
+// WHAT THIS DOES: validateParticipant answers a yes/no rule check.
+// WHY IT EXISTS: guard checks are kept readable and reusable in one place.
+// HOW TO USE IT: call validateParticipant(...) and branch logic based on true/false.
 function validateParticipant(participant) {
   const errors = [];
   if (!isObject(participant)) return { ok: false, errors: ['participant must be an object'] };
@@ -108,6 +138,10 @@ function validateParticipant(participant) {
  * @param {Object} artifacts
  * @returns {{ ok: boolean, errors: string[] }}
  */
+// validatePlanningArtifacts()
+// WHAT THIS DOES: validatePlanningArtifacts answers a yes/no rule check.
+// WHY IT EXISTS: guard checks are kept readable and reusable in one place.
+// HOW TO USE IT: call validatePlanningArtifacts(...) and branch logic based on true/false.
 function validatePlanningArtifacts(artifacts) {
   const errors = [];
   if (!isObject(artifacts)) return { ok: false, errors: ['artifacts must be an object'] };

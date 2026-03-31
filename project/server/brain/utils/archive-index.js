@@ -1,3 +1,19 @@
+// ── Brain · Archive Index ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: fs, path, ./bm25,
+// ../../entityPaths, ./archive-router. Keep import and call-site contracts
+// aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 'use strict';
 /**
  * server/brain/utils/archive-index.js
@@ -42,14 +58,20 @@ const {
   getArchiveMigrationMarkerPath,
 } = require('../../entityPaths');
 const { topicToSlug, updateRouter, resolveQueryBuckets } = require('./archive-router');
-
+// _sleepMs()
+// WHAT THIS DOES: _sleepMs is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _sleepMs(...) where this helper behavior is needed.
 function _sleepMs(ms) {
   const end = Date.now() + ms;
   while (Date.now() < end) {
     // Intentional tiny sync wait for retry-based atomic rename on Windows.
   }
 }
-
+// _replaceFileAtomic()
+// WHAT THIS DOES: _replaceFileAtomic is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _replaceFileAtomic(...) where this helper behavior is needed.
 function _replaceFileAtomic(filePath, content) {
   const tmpPath = `${filePath}.tmp-${process.pid}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
   fs.writeFileSync(tmpPath, content, 'utf8');
@@ -82,6 +104,10 @@ function _replaceFileAtomic(filePath, content) {
  * @param {string} filename  e.g. 'bucket_neuroscience.ndjson'
  * @param {object} lineObj
  */
+// _appendBucketLine()
+// WHAT THIS DOES: _appendBucketLine is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _appendBucketLine(...) where this helper behavior is needed.
 function _appendBucketLine(entityId, filename, lineObj) {
   const bucketPath = getArchiveBucketPath(entityId, filename);
   fs.mkdirSync(path.dirname(bucketPath), { recursive: true });
@@ -96,6 +122,10 @@ function _appendBucketLine(entityId, filename, lineObj) {
  * @param {string} filename
  * @param {string} memId
  */
+// _removeBucketLine()
+// WHAT THIS DOES: _removeBucketLine removes, resets, or shuts down existing state.
+// WHY IT EXISTS: cleanup is explicit so stale state does not leak into new runs.
+// HOW TO USE IT: call _removeBucketLine(...) when you need a safe teardown/reset path.
 function _removeBucketLine(entityId, filename, memId) {
   const bucketPath = getArchiveBucketPath(entityId, filename);
   if (!fs.existsSync(bucketPath)) return;
@@ -115,6 +145,10 @@ function _removeBucketLine(entityId, filename, memId) {
  * @param {string} filename
  * @returns {{ memId: string, [key: string]: any }[]}
  */
+// _readBucket()
+// WHAT THIS DOES: _readBucket reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call _readBucket(...), then use the returned value in your next step.
 function _readBucket(entityId, filename) {
   const bucketPath = getArchiveBucketPath(entityId, filename);
   if (!fs.existsSync(bucketPath)) return [];
@@ -139,6 +173,10 @@ function _readBucket(entityId, filename) {
  *
  * @param {string} entityId
  */
+// ensureArchiveDirs()
+// WHAT THIS DOES: ensureArchiveDirs is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call ensureArchiveDirs(...) where this helper behavior is needed.
 function ensureArchiveDirs(entityId) {
   fs.mkdirSync(getArchiveRoot(entityId),         { recursive: true });
   fs.mkdirSync(getArchiveEpisodicPath(entityId), { recursive: true });
@@ -155,6 +193,10 @@ function ensureArchiveDirs(entityId) {
  * @param {string} entityId
  * @returns {object}  { memId: entry, ... }
  */
+// readArchiveIndex()
+// WHAT THIS DOES: readArchiveIndex reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call readArchiveIndex(...), then use the returned value in your next step.
 function readArchiveIndex(entityId) {
   const indexPath = getArchiveIndexPath(entityId);
   if (!fs.existsSync(indexPath)) return {};
@@ -171,6 +213,10 @@ function readArchiveIndex(entityId) {
  * @param {string} entityId
  * @param {object} index
  */
+// _writeArchiveIndex()
+// WHAT THIS DOES: _writeArchiveIndex changes saved state or updates data.
+// WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+// HOW TO USE IT: call _writeArchiveIndex(...) with the new values you want to persist.
 function _writeArchiveIndex(entityId, index) {
   const indexPath = getArchiveIndexPath(entityId);
   fs.mkdirSync(path.dirname(indexPath), { recursive: true });
@@ -193,6 +239,10 @@ function _writeArchiveIndex(entityId, index) {
  *   docId:          string|null
  * }} entry
  */
+// appendArchiveEntry()
+// WHAT THIS DOES: appendArchiveEntry is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call appendArchiveEntry(...) where this helper behavior is needed.
 function appendArchiveEntry(entityId, memId, entry) {
   ensureArchiveDirs(entityId);
   const normalized = {
@@ -233,6 +283,10 @@ function appendArchiveEntry(entityId, memId, entry) {
  * @param {string} entityId
  * @param {string} memId
  */
+// removeArchiveEntry()
+// WHAT THIS DOES: removeArchiveEntry removes, resets, or shuts down existing state.
+// WHY IT EXISTS: cleanup is explicit so stale state does not leak into new runs.
+// HOW TO USE IT: call removeArchiveEntry(...) when you need a safe teardown/reset path.
 function removeArchiveEntry(entityId, memId) {
   const index = readArchiveIndex(entityId);
   if (!index[memId]) return;
@@ -278,9 +332,19 @@ function removeArchiveEntry(entityId, memId) {
  * @returns {{ memId: string, score: number, meta: object }[]}
  *   Sorted by BM25 score descending.
  */
+// queryArchive()
+// WHAT THIS DOES: queryArchive is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call queryArchive(...) where this helper behavior is needed.
 function queryArchive(entityId, topics, limit = 20, yearRange = {}, types = null, narrowSet = null) {
   if (!topics || topics.length === 0) return [];
 
+  // typeSet()
+  // Purpose: helper wrapper used by this module's main flow.
+  // typeSet()
+  // WHAT THIS DOES: typeSet is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call typeSet(...) where this helper behavior is needed.
   const typeSet = (types && types.length > 0) ? new Set(types) : null;
   const typeOk  = typeSet ? (meta) => typeSet.has(meta.type || 'episodic') : () => true;
 
@@ -341,6 +405,10 @@ function queryArchive(entityId, topics, limit = 20, yearRange = {}, types = null
  *
  * @param {string} entityId
  */
+// migrateToShards()
+// WHAT THIS DOES: migrateToShards is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call migrateToShards(...) where this helper behavior is needed.
 function migrateToShards(entityId) {
   const markerPath = getArchiveMigrationMarkerPath(entityId);
   if (fs.existsSync(markerPath)) return;

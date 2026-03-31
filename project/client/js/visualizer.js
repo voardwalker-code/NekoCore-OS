@@ -1,3 +1,17 @@
+// ── Client · Visualizer ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This client module drives browser-side behavior and state updates for UI
+// features.
+//
+// WHAT USES THIS:
+// Used by related flows in its subsystem. Keep call contracts stable during
+// readability-only edits.
+//
+// EXPORTS:
+// Exposed API includes: window-attached API object.
+// ─────────────────────────────────────────────────────────────────────────────
+
 ﻿// ============================================================
 // REM System — Neural Visualizer (standalone page JS)
 // Chat display + 3D memory graph + memory browser + diagnostics
@@ -21,7 +35,10 @@
   let timelineLiveSse = null;
   let timelineSpeed = 1;
   let selectedEntityId = null;
-
+  // appendEntityId()
+  // WHAT THIS DOES: appendEntityId is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call appendEntityId(...) where this helper behavior is needed.
   function appendEntityId(urlOrPath, entityId) {
     if (!entityId) return urlOrPath;
     const url = new URL(urlOrPath, window.location.origin);
@@ -50,6 +67,10 @@
     chatlog:           0xf472b6
   };
   const DEFAULT_COLOR = 0x71717a;
+  // getMemColor()
+  // WHAT THIS DOES: getMemColor reads or finds data and gives it back.
+  // WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+  // HOW TO USE IT: call getMemColor(...), then use the returned value in your next step.
   function getMemColor(type) { return MEM_COLORS[type] || DEFAULT_COLOR; }
 
   // ═══════════════════ INIT ═══════════════════
@@ -109,7 +130,10 @@
       }
     }
   });
-
+  // setEntitySwitchStatus()
+  // WHAT THIS DOES: setEntitySwitchStatus changes saved state or updates data.
+  // WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+  // HOW TO USE IT: call setEntitySwitchStatus(...) with the new values you want to persist.
   function setEntitySwitchStatus(text, cls) {
     const el = document.getElementById('vizEntitySwitchStatus');
     if (!el) return;
@@ -288,6 +312,10 @@
   }
 
   // ═══════════════════ TABS ═══════════════════
+  // initTabs()
+  // WHAT THIS DOES: initTabs creates or initializes something needed by the flow.
+  // WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+  // HOW TO USE IT: call initTabs(...) before code that depends on this setup.
   function initTabs() {
     document.querySelectorAll('.viz-tab').forEach(tab => {
       tab.addEventListener('click', () => {
@@ -298,7 +326,10 @@
       });
     });
   }
-
+  // initDiagTabs()
+  // WHAT THIS DOES: initDiagTabs creates or initializes something needed by the flow.
+  // WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+  // HOW TO USE IT: call initDiagTabs(...) before code that depends on this setup.
   function initDiagTabs() {
     document.querySelectorAll('.viz-diag-tab').forEach(tab => {
       tab.addEventListener('click', () => {
@@ -330,6 +361,10 @@
   }
 
   // ═══════════════════ SSE EVENT STREAM ═══════════════════
+  // initSSE()
+  // WHAT THIS DOES: initSSE creates or initializes something needed by the flow.
+  // WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+  // HOW TO USE IT: call initSSE(...) before code that depends on this setup.
   function initSSE() {
     if (eventSource) return;
     const statusEl = document.getElementById('sseStatus');
@@ -431,6 +466,10 @@
   }
 
   // ═══════════════════ CHAT PANEL ═══════════════════
+  // initChatPanel()
+  // WHAT THIS DOES: initChatPanel creates or initializes something needed by the flow.
+  // WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+  // HOW TO USE IT: call initChatPanel(...) before code that depends on this setup.
   function initChatPanel() {
     // Listen for messages sent from the main UI via BroadcastChannel
     try {
@@ -442,7 +481,10 @@
       };
     } catch (_) { /* BroadcastChannel not supported, fall back to polling */ }
   }
-
+  // addChatExchange()
+  // WHAT THIS DOES: addChatExchange is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call addChatExchange(...) where this helper behavior is needed.
   function addChatExchange(data) {
     const exchange = {
       id: data.id || Date.now(),
@@ -461,7 +503,10 @@
     // Auto-save to server
     saveChatExchange(exchange);
   }
-
+  // saveChatExchange()
+  // WHAT THIS DOES: saveChatExchange changes saved state or updates data.
+  // WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+  // HOW TO USE IT: call saveChatExchange(...) with the new values you want to persist.
   function saveChatExchange(exchange) {
     fetch('/api/visualizer/chat-history', {
       method: 'POST',
@@ -499,7 +544,10 @@
     }
     setTimeout(() => { statusEl.textContent = ''; }, 4000);
   }
-
+  // renderChatExchanges()
+  // WHAT THIS DOES: renderChatExchanges builds or updates what the user sees.
+  // WHY IT EXISTS: display logic is separated from data/business logic for clarity.
+  // HOW TO USE IT: call renderChatExchanges(...) after state changes that need UI refresh.
   function renderChatExchanges() {
     const container = document.getElementById('chatMessages');
     container.innerHTML = '';
@@ -519,6 +567,12 @@
       const header = document.createElement('div');
       header.className = 'viz-exchange-header';
       const timeStr = ex.timestamp ? new Date(ex.timestamp).toLocaleTimeString() : '';
+      // preview()
+      // Purpose: helper wrapper used by this module's main flow.
+      // preview()
+      // WHAT THIS DOES: preview is a helper used by this module's main flow.
+      // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+      // HOW TO USE IT: call preview(...) where this helper behavior is needed.
       const preview = (ex.user || '').slice(0, 60) + ((ex.user || '').length > 60 ? '...' : '');
       header.innerHTML = '<span class="viz-exchange-arrow">▾</span>'
         + '<span class="viz-exchange-num">#' + (idx + 1) + '</span>'
@@ -600,6 +654,10 @@
         // Token usage summary
         if (ex.thinking.tokenUsage) {
           const tu = ex.thinking.tokenUsage;
+          // fmt()
+          // WHAT THIS DOES: fmt is a helper used by this module's main flow.
+          // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+          // HOW TO USE IT: call fmt(...) where this helper behavior is needed.
           const fmt = (u) => u ? u.prompt_tokens + ' → ' + u.completion_tokens + ' (' + u.total_tokens + ')' : '—';
           const tokenText = 'Subconscious: ' + fmt(tu.subconscious) + '\n'
             + 'Compress: ' + fmt(tu.compress) + '\n'
@@ -631,6 +689,10 @@
   }
 
   /** Create a collapsible section with a toggle header */
+  // makeCollapsibleSection()
+  // WHAT THIS DOES: makeCollapsibleSection creates or initializes something needed by the flow.
+  // WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+  // HOW TO USE IT: call makeCollapsibleSection(...) before code that depends on this setup.
   function makeCollapsibleSection(label, content, cssClass, startCollapsed, onHeaderClick) {
     const section = document.createElement('div');
     section.className = 'viz-section viz-section-' + cssClass + (startCollapsed ? ' collapsed' : '');
@@ -661,7 +723,10 @@
     section.appendChild(body);
     return section;
   }
-
+  // createMemoryButton()
+  // WHAT THIS DOES: createMemoryButton creates or initializes something needed by the flow.
+  // WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+  // HOW TO USE IT: call createMemoryButton(...) before code that depends on this setup.
   function createMemoryButton(mem, isNew) {
     const btn = document.createElement('button');
     btn.className = 'viz-mem-btn' + (isNew ? ' new-memory' : '') + (selectedMemoryId === mem.id ? ' active' : '');
@@ -674,7 +739,10 @@
     };
     return btn;
   }
-
+  // selectExchange()
+  // WHAT THIS DOES: selectExchange is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call selectExchange(...) where this helper behavior is needed.
   function selectExchange(exchangeId) {
     if (selectedExchangeId === exchangeId) {
       // Deselect
@@ -697,7 +765,10 @@
     }
     renderChatExchanges();
   }
-
+  // selectMemory()
+  // WHAT THIS DOES: selectMemory is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call selectMemory(...) where this helper behavior is needed.
   function selectMemory(memId) {
     if (selectedMemoryId === memId) {
       selectedMemoryId = null;
@@ -730,6 +801,10 @@
     showNodeDetail(memId);
   }
 
+  // updateLatestExchangeThinking()
+  // WHAT THIS DOES: updateLatestExchangeThinking changes saved state or updates data.
+  // WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+  // HOW TO USE IT: call updateLatestExchangeThinking(...) with the new values you want to persist.
   function updateLatestExchangeThinking(innerDialog) {
     if (chatExchanges.length === 0) return;
     const latest = chatExchanges[chatExchanges.length - 1];
@@ -748,12 +823,22 @@
   }
 
   // ═══════════════════ MEMORY BROWSER ═══════════════════
+  // initMemoryBrowser()
+  // WHAT THIS DOES: initMemoryBrowser creates or initializes something needed by the flow.
+  // WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+  // HOW TO USE IT: call initMemoryBrowser(...) before code that depends on this setup.
   function initMemoryBrowser() {
     const searchBtn = document.getElementById('btnSearchMemories');
     const searchInput = document.getElementById('memorySearchInput');
     const typeFilter = document.getElementById('memoryTypeFilter');
     const sortBy = document.getElementById('memorySortBy');
 
+    // doSearch()
+    // Purpose: helper wrapper used by this module's main flow.
+    // doSearch()
+    // WHAT THIS DOES: doSearch is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call doSearch(...) where this helper behavior is needed.
     const doSearch = () => searchMemories(searchInput.value, typeFilter.value, sortBy.value);
     searchBtn.onclick = doSearch;
     searchInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') doSearch(); });
@@ -803,6 +888,12 @@
 
         const isLTM = mem.type === 'long_term_memory' || mem.type === 'chatlog';
         const isDocKnowledge = mem.type === 'knowledge_memory';
+        // reconstructBtn()
+        // Purpose: helper wrapper used by this module's main flow.
+        // reconstructBtn()
+        // WHAT THIS DOES: reconstructBtn is a helper used by this module's main flow.
+        // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+        // HOW TO USE IT: call reconstructBtn(...) where this helper behavior is needed.
         const reconstructBtn = (isLTM || isDocKnowledge)
           ? '<button class="mem-reconstruct-btn" data-mem-id="' + escapeAttr(mem.id) + '">Reconstruct</button>'
           : '';
@@ -979,6 +1070,10 @@
   // Expose for inline onclick in detail panel
   window._vizSelectMemory = selectMemory;
 
+  // initTimelinePanel()
+  // WHAT THIS DOES: initTimelinePanel creates or initializes something needed by the flow.
+  // WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+  // HOW TO USE IT: call initTimelinePanel(...) before code that depends on this setup.
   function initTimelinePanel() {
     const speedInput = document.getElementById('timelineSpeed');
     const speedValue = document.getElementById('timelineSpeedValue');
@@ -1022,7 +1117,10 @@
 
     bindTimelineKeyboardShortcuts();
   }
-
+  // bindTimelineKeyboardShortcuts()
+  // WHAT THIS DOES: bindTimelineKeyboardShortcuts is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call bindTimelineKeyboardShortcuts(...) where this helper behavior is needed.
   function bindTimelineKeyboardShortcuts() {
     document.addEventListener('keydown', (e) => {
       if (e.key !== ' ' && e.code !== 'Space') return;
@@ -1069,7 +1167,10 @@
       diagLog('events', 'error', 'Timeline load error: ' + e.message);
     }
   }
-
+  // playTimeline()
+  // WHAT THIS DOES: playTimeline is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call playTimeline(...) where this helper behavior is needed.
   function playTimeline() {
     if (!timelineRecords.length) {
       loadTimelineRecords().then(() => {
@@ -1086,6 +1187,12 @@
     }
 
     setTimelineStatus('Playing');
+    // tick()
+    // Purpose: helper wrapper used by this module's main flow.
+    // tick()
+    // WHAT THIS DOES: tick is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call tick(...) where this helper behavior is needed.
     const tick = () => {
       if (timelineCursor >= timelineRecords.length) {
         pauseTimeline();
@@ -1103,7 +1210,10 @@
 
     tick();
   }
-
+  // pauseTimeline()
+  // WHAT THIS DOES: pauseTimeline is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call pauseTimeline(...) where this helper behavior is needed.
   function pauseTimeline() {
     if (timelineTimer) {
       clearTimeout(timelineTimer);
@@ -1111,7 +1221,10 @@
     }
     setTimelineStatus('Paused');
   }
-
+  // stopTimeline()
+  // WHAT THIS DOES: stopTimeline removes, resets, or shuts down existing state.
+  // WHY IT EXISTS: cleanup is explicit so stale state does not leak into new runs.
+  // HOW TO USE IT: call stopTimeline(...) when you need a safe teardown/reset path.
   function stopTimeline() {
     pauseTimeline();
     timelineCursor = 0;
@@ -1122,7 +1235,10 @@
       NeuralViz.exitPlaybackMode();
     }
   }
-
+  // stepTimeline()
+  // WHAT THIS DOES: stepTimeline is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call stepTimeline(...) where this helper behavior is needed.
   function stepTimeline(direction) {
     if (!timelineRecords.length) return;
     pauseTimeline();
@@ -1145,7 +1261,10 @@
     timelineCursor = Math.min(timelineRecords.length, timelineCursor + 1);
     setTimelineStatus('Step forward to ' + timelineCursor + '/' + timelineRecords.length);
   }
-
+  // jumpTimeline()
+  // WHAT THIS DOES: jumpTimeline is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call jumpTimeline(...) where this helper behavior is needed.
   function jumpTimeline(delta) {
     if (!timelineRecords.length) return;
     pauseTimeline();
@@ -1160,7 +1279,10 @@
       setTimelineStatus('Fast-forwarded to ' + (timelineCursor + 1) + '/' + timelineRecords.length);
     }
   }
-
+  // setTimelineSpeedPreset()
+  // WHAT THIS DOES: setTimelineSpeedPreset changes saved state or updates data.
+  // WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+  // HOW TO USE IT: call setTimelineSpeedPreset(...) with the new values you want to persist.
   function setTimelineSpeedPreset(speed) {
     const value = Math.max(0.25, Math.min(4, Number(speed) || 1));
     timelineSpeed = value;
@@ -1175,10 +1297,13 @@
 
   // Slower base (900ms at 1x speed) makes playback feel like a movie.
   // At 2x → ~450ms, slow-mo (0.25x) → ~3600ms.
+  // computeTimelineDelayMs()
+  // WHAT THIS DOES: computeTimelineDelayMs is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call computeTimelineDelayMs(...) where this helper behavior is needed.
   function computeTimelineDelayMs() {
     return Math.max(150, Math.round(900 / Math.max(0.25, timelineSpeed)));
   }
-
   function toggleTimelineLive() {
     const btnLive = document.getElementById('btnTimelineLive');
     if (!btnLive) return;
@@ -1220,7 +1345,10 @@
       diagLog('events', 'error', 'Timeline stream error: ' + e.message);
     }
   }
-
+  // applyTimelineRecord()
+  // WHAT THIS DOES: applyTimelineRecord is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call applyTimelineRecord(...) where this helper behavior is needed.
   function applyTimelineRecord(rec, idx, appendOnly) {
     if (!rec) return;
 
@@ -1277,7 +1405,10 @@
       }
     }
   }
-
+  // renderTimelineLog()
+  // WHAT THIS DOES: renderTimelineLog builds or updates what the user sees.
+  // WHY IT EXISTS: display logic is separated from data/business logic for clarity.
+  // HOW TO USE IT: call renderTimelineLog(...) after state changes that need UI refresh.
   function renderTimelineLog() {
     const logEl = document.getElementById('timelineLog');
     if (!logEl) return;
@@ -1294,7 +1425,10 @@
       appendTimelineLine(timelineRecords[i], i, i === timelineCursor);
     }
   }
-
+  // appendTimelineLine()
+  // WHAT THIS DOES: appendTimelineLine is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call appendTimelineLine(...) where this helper behavior is needed.
   function appendTimelineLine(rec, idx, active) {
     const logEl = document.getElementById('timelineLog');
     if (!logEl || !rec) return;
@@ -1307,7 +1441,10 @@
     logEl.appendChild(line);
     logEl.scrollTop = logEl.scrollHeight;
   }
-
+  // highlightTimelineLine()
+  // WHAT THIS DOES: highlightTimelineLine is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call highlightTimelineLine(...) where this helper behavior is needed.
   function highlightTimelineLine(idx) {
     const logEl = document.getElementById('timelineLog');
     if (!logEl) return;
@@ -1320,7 +1457,10 @@
     }
     renderTimelineLog();
   }
-
+  // summarizeTimelineRecord()
+  // WHAT THIS DOES: summarizeTimelineRecord is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call summarizeTimelineRecord(...) where this helper behavior is needed.
   function summarizeTimelineRecord(rec) {
     const type = String(rec.type || 'unknown');
     const payload = rec.payload || {};
@@ -1338,11 +1478,18 @@
   // ── Live event queue ──────────────────────────────────────────
   // Events from SSE are buffered here and replayed with a 500ms gap so the
   // 3D trace animations have time to run before the next event overwrites them.
+  // _enqueueLiveRecord()
+  // WHAT THIS DOES: _enqueueLiveRecord is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call _enqueueLiveRecord(...) where this helper behavior is needed.
   function _enqueueLiveRecord(rec) {
     _liveQueue.push(rec);
     if (!_liveQueueRunning) _processLiveQueue();
   }
-
+  // _processLiveQueue()
+  // WHAT THIS DOES: _processLiveQueue is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call _processLiveQueue(...) where this helper behavior is needed.
   function _processLiveQueue() {
     if (!_liveQueue.length) { _liveQueueRunning = false; return; }
     _liveQueueRunning = true;
@@ -1350,13 +1497,20 @@
     applyTimelineRecord(rec, timelineRecords.length - _liveQueue.length, true);
     setTimeout(_processLiveQueue, 500);
   }
-
+  // setTimelineStatus()
+  // WHAT THIS DOES: setTimelineStatus changes saved state or updates data.
+  // WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+  // HOW TO USE IT: call setTimelineStatus(...) with the new values you want to persist.
   function setTimelineStatus(text) {
     const el = document.getElementById('timelineStatus');
     if (el) el.textContent = text;
   }
 
   // ═══════════════════ DIAGNOSTICS ═══════════════════
+  // initDiagnostics()
+  // WHAT THIS DOES: initDiagnostics creates or initializes something needed by the flow.
+  // WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+  // HOW TO USE IT: call initDiagnostics(...) before code that depends on this setup.
   function initDiagnostics() {
     loadBrainStatus();
     loadNeurochemistry();
@@ -1368,7 +1522,10 @@
       loadGraphStats();
     }, 30000);
   }
-
+  // diagLog()
+  // WHAT THIS DOES: diagLog is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call diagLog(...) where this helper behavior is needed.
   function diagLog(target, cls, text) {
     const logId = target === 'phases' ? 'diagPhaseLog' : 'diagEventLog';
     const log = document.getElementById(logId);
@@ -1382,7 +1539,10 @@
     while (log.children.length > 500) log.removeChild(log.firstChild);
     log.scrollTop = log.scrollHeight;
   }
-
+  // updateDiagCard()
+  // WHAT THIS DOES: updateDiagCard changes saved state or updates data.
+  // WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+  // HOW TO USE IT: call updateDiagCard(...) with the new values you want to persist.
   function updateDiagCard(cardId, text) {
     const card = document.getElementById(cardId);
     if (!card) return;
@@ -1430,6 +1590,10 @@
   }
 
   // ═══════════════════ 3D VISUALIZATION (delegated to NeuralViz) ═══════════
+  // init3D()
+  // WHAT THIS DOES: init3D is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call init3D(...) where this helper behavior is needed.
   function init3D() {
     NeuralViz.init(document.getElementById('vizContainer'));
 
@@ -1445,7 +1609,10 @@
       }
     };
   }
-
+  // loadGraphData()
+  // WHAT THIS DOES: loadGraphData reads or finds data and gives it back.
+  // WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+  // HOW TO USE IT: call loadGraphData(...), then use the returned value in your next step.
   function loadGraphData() {
     NeuralViz.loadGraphData(selectedEntityId);
   }
@@ -1466,7 +1633,10 @@
       btn.disabled = false;
     }
   }
-
+  // loadTraceData()
+  // WHAT THIS DOES: loadTraceData reads or finds data and gives it back.
+  // WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+  // HOW TO USE IT: call loadTraceData(...), then use the returned value in your next step.
   function loadTraceData() { /* handled internally by NeuralViz */ }
 
   // ═══════════════════ FILTERING ═══════════════════
@@ -1476,7 +1646,10 @@
     document.getElementById('filterLabel').textContent = 'Showing: ' + label + ' (' + filteredNodeIds.size + ')';
     document.getElementById('filterIndicator').style.display = 'flex';
   }
-
+  // clearFilter()
+  // WHAT THIS DOES: clearFilter removes, resets, or shuts down existing state.
+  // WHY IT EXISTS: cleanup is explicit so stale state does not leak into new runs.
+  // HOW TO USE IT: call clearFilter(...) when you need a safe teardown/reset path.
   function clearFilter() {
     filteredNodeIds = null;
     selectedExchangeId = null;
@@ -1487,20 +1660,30 @@
     document.getElementById('filterIndicator').style.display = 'none';
     renderChatExchanges();
   }
-
+  // centerCamera()
+  // WHAT THIS DOES: centerCamera is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call centerCamera(...) where this helper behavior is needed.
   function centerCamera() { NeuralViz.resetCamera(); }
 
   // ═══════════════════ NODE DETAIL PANEL ═══════════════════
   function showNodeDetail(memId) { NeuralViz.selectNodeById(memId); }
 
   // ═══════════════════ HELPERS ═══════════════════
+  // escapeHtml()
+  // WHAT THIS DOES: escapeHtml is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call escapeHtml(...) where this helper behavior is needed.
   function escapeHtml(text) {
     if (!text) return '';
     const div = document.createElement('div');
     div.textContent = String(text);
     return div.innerHTML;
   }
-
+  // escapeAttr()
+  // WHAT THIS DOES: escapeAttr is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call escapeAttr(...) where this helper behavior is needed.
   function escapeAttr(text) {
     return String(text || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   }

@@ -1,3 +1,16 @@
+// ── Routes · Browser Routes ──────────────────────────────────────────────────
+//
+// HOW BROWSER ROUTING WORKS:
+// This module exposes browser-host read/command APIs plus LLM research flows
+// (summarize, ask-page, extraction, memory save, and research sessions).
+//
+// WHAT USES THIS:
+//   browser app UI, LLM mode tools, and research session workflows
+//
+// EXPORTS:
+//   createBrowserRoutes(ctx)
+// ─────────────────────────────────────────────────────────────────────────────
+
 'use strict';
 
 /**
@@ -32,7 +45,7 @@
 const browserHost = require('../../browser-host');
 const { tabModel, navigation, lifecycle, downloadManager, eventBus,
         historyStore, bookmarkStore, sessionStore, settingsStore, researchSession } = browserHost;
-
+/** Build browser-route dispatcher with read, command, and LLM endpoints. */
 function createBrowserRoutes(ctx) {
   const { broadcastSSE, webFetch, callLLMWithRuntime, loadAspectRuntimeConfig,
           createCoreMemory, createSemanticKnowledge } = ctx;
@@ -48,12 +61,12 @@ function createBrowserRoutes(ctx) {
   if (!lifecycle.getHostState()) {
     lifecycle.startup();
   }
-
+  /** Write JSON response with provided status code and body. */
   function json(res, apiHeaders, status, body) {
     res.writeHead(status, apiHeaders);
     res.end(JSON.stringify(body));
   }
-
+  /** Write standardized error envelope for API failures. */
   function errEnvelope(res, apiHeaders, status, code, message) {
     json(res, apiHeaders, status, { ok: false, code, message });
   }

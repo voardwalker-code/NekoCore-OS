@@ -1,10 +1,25 @@
+// ── Routes · Chat Routes ─────────────────────────────────────────────────────
+//
+// HOW CHAT ROUTING WORKS:
+// This module handles main chat request dispatch, slash interception, skill
+// approvals, shutdown endpoint, and Telegram control/status endpoints.
+//
+// WHAT USES THIS:
+//   chat UI request flow and Telegram integration controls
+//
+// EXPORTS:
+//   createChatRoutes(ctx)
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ── Chat Routes ───────────────────────────────────────────────
 // POST /api/chat, POST /api/shutdown,
 // GET|POST /api/telegram/*, 
 
+/** Build chat route dispatcher and associated request handlers. */
 function createChatRoutes(ctx) {
   const { enforceResponseContract } = require('../contracts/response-contracts');
   const slashInterceptor = require('./slash-interceptor');
+  /** Timeline logger helper guarded for optional logger availability. */
   const logTimeline = (type, payload = {}) => {
     try {
       if (ctx.timelineLogger && typeof ctx.timelineLogger.logEvent === 'function') {
@@ -47,6 +62,7 @@ function createChatRoutes(ctx) {
     const pipelineAc = new AbortController();
     const traceId = `chat_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
     const reqStartTs = Date.now();
+    /** Structured per-request debug logger with trace id and elapsed ms. */
     const logT = (stage, detail) => {
       const iso = new Date().toISOString();
       const ms = Date.now() - reqStartTs;
@@ -56,12 +72,14 @@ function createChatRoutes(ctx) {
         console.log(`[CHAT_PIPE_DEBUG][${traceId}][${iso}][+${ms}ms] ${stage}`, detail);
       }
     };
+    /** Abort active chat pipeline when client disconnects early. */
     const abortFromDisconnect = (source) => {
       if (!pipelineAc.signal.aborted) {
         logT(`disconnect.abort_signal ${source}`);
         pipelineAc.abort();
       }
     };
+    /** Request aborted event handler bound to abort helper. */
     const onReqAborted = () => abortFromDisconnect('req.aborted');
     const onResClose = () => {
       // `close` before `writableEnded` indicates the client disconnected early.
@@ -278,7 +296,7 @@ function createChatRoutes(ctx) {
       res.end(JSON.stringify({ ok: false, error: e.message }));
     }
   }
-
+  /** Return Telegram integration status and active chat stats. */
   function telegramStatus(req, res, apiHeaders) {
     const config = ctx.loadConfig();
     const tgConfig = config?.telegram || {};
@@ -334,7 +352,7 @@ function createChatRoutes(ctx) {
       res.end(JSON.stringify({ error: e.message }));
     }
   }
-
+  /** Stop Telegram bot runtime and return disconnected state. */
   function telegramStop(req, res, apiHeaders) {
     if (ctx.telegramBot) {
       ctx.telegramBot.stop();

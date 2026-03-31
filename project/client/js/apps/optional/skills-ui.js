@@ -1,3 +1,18 @@
+// ── Client Optional · Skills Ui ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This client module drives browser-side behavior and state updates for UI
+// features.
+//
+// WHAT USES THIS:
+// Used by related flows in its subsystem. Keep call contracts stable during
+// readability-only edits.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // REM System v0.6.0 — Skills & Sleep Cycle UI
 // ============================================================
@@ -65,7 +80,7 @@ async function loadMASkillsList() {
     const skills = data.skills || [];
 
     if (!skills.length) {
-      container.innerHTML = '<div style="color:var(--td);text-align:center;padding:2rem">No MA skills found. Drop a folder with SKILL.md into MA/MA-skills/ to add one.</div>';
+      container.innerHTML = '<div style="color:var(--td);text-align:center;padding:2rem">No MA skills found. MA (Memory Architect) is a separate project.<br><a href="https://github.com/voardwalker-code/MA-Memory-Architect" target="_blank" rel="noopener" style="color:#8b5cf6;text-decoration:underline;">Get MA from GitHub →</a></div>';
       return;
     }
 
@@ -131,6 +146,12 @@ async function loadSkillsList() {
     }
 
     container.innerHTML = skills.map(s => {
+      // toolCount()
+      // Purpose: helper wrapper used by this module's main flow.
+      // toolCount()
+      // WHAT THIS DOES: toolCount is a helper used by this module's main flow.
+      // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+      // HOW TO USE IT: call toolCount(...) where this helper behavior is needed.
       const toolCount = (s.tools && s.tools.length) || 0;
       const toolBadge = toolCount > 0 ? `<span style="font-size:.6rem;padding:.15rem .4rem;border-radius:4px;background:rgba(96,165,250,.15);color:var(--ac);margin-left:.5rem">${toolCount} tool${toolCount > 1 ? 's' : ''}</span>` : '';
       const versionBadge = s.version ? `<span style="font-size:.6rem;color:var(--td);margin-left:.5rem">v${escapeHtml(s.version)}</span>` : '';
@@ -249,7 +270,10 @@ async function openSkillDetail(name) {
     console.error('Open skill detail error:', err);
   }
 }
-
+// closeSkillDetail()
+// WHAT THIS DOES: closeSkillDetail removes, resets, or shuts down existing state.
+// WHY IT EXISTS: cleanup is explicit so stale state does not leak into new runs.
+// HOW TO USE IT: call closeSkillDetail(...) when you need a safe teardown/reset path.
 function closeSkillDetail() {
   document.getElementById('skillDetailPanel').style.display = 'none';
   document.getElementById('workspaceFileEditor').style.display = 'none';
@@ -302,7 +326,10 @@ async function refreshWorkspaceFiles() {
     browser.innerHTML = `<div style="color:var(--dn);text-align:center;padding:1rem">${escapeHtml(err.message)}</div>`;
   }
 }
-
+// navigateWorkspace()
+// WHAT THIS DOES: navigateWorkspace is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call navigateWorkspace(...) where this helper behavior is needed.
 function navigateWorkspace(dir) {
   if (dir === '..') {
     const parts = currentWorkspacePath.split('/').filter(Boolean);
@@ -348,11 +375,13 @@ async function saveWorkspaceFile() {
     console.error('Save file error:', err);
   }
 }
-
+// closeFileEditor()
+// WHAT THIS DOES: closeFileEditor removes, resets, or shuts down existing state.
+// WHY IT EXISTS: cleanup is explicit so stale state does not leak into new runs.
+// HOW TO USE IT: call closeFileEditor(...) when you need a safe teardown/reset path.
 function closeFileEditor() {
   document.getElementById('workspaceFileEditor').style.display = 'none';
 }
-
 function showWorkspaceNewFile() {
   const name = prompt('New file name (e.g., notes.txt):');
   if (!name || !name.trim()) return;
@@ -411,12 +440,21 @@ async function loadPendingSkills() {
     container.innerHTML = '';
   }
 }
-
+// renderPendingCard()
+// WHAT THIS DOES: renderPendingCard builds or updates what the user sees.
+// WHY IT EXISTS: display logic is separated from data/business logic for clarity.
+// HOW TO USE IT: call renderPendingCard(...) after state changes that need UI refresh.
 function renderPendingCard(proposal) {
   const isEdit = proposal.type === 'edit';
   const typeBadge = isEdit
     ? '<span style="font-size:.55rem;padding:.1rem .35rem;border-radius:3px;background:rgba(96,165,250,.15);color:var(--ac)">EDIT</span>'
     : '<span style="font-size:.55rem;padding:.1rem .35rem;border-radius:3px;background:rgba(52,211,153,.15);color:var(--em)">NEW</span>';
+  // hasDanger()
+  // Purpose: helper wrapper used by this module's main flow.
+  // hasDanger()
+  // WHAT THIS DOES: hasDanger answers a yes/no rule check.
+  // WHY IT EXISTS: guard checks are kept readable and reusable in one place.
+  // HOW TO USE IT: call hasDanger(...) and branch logic based on true/false.
   const hasDanger = (proposal.warnings || []).some(w => w.level === 'danger');
   const hasWarn = (proposal.warnings || []).length > 0;
   const borderColor = hasDanger ? '#ef4444' : hasWarn ? '#fbbf24' : 'var(--bd)';
@@ -447,7 +485,10 @@ function renderPendingCard(proposal) {
       </div>
     </div>`;
 }
-
+// renderSecurityWarnings()
+// WHAT THIS DOES: renderSecurityWarnings builds or updates what the user sees.
+// WHY IT EXISTS: display logic is separated from data/business logic for clarity.
+// HOW TO USE IT: call renderSecurityWarnings(...) after state changes that need UI refresh.
 function renderSecurityWarnings(warnings) {
   if (!warnings || !warnings.length) return '<div style="font-size:.65rem;color:var(--em);margin-bottom:.5rem">✓ No security concerns detected</div>';
   return `<div style="margin-bottom:.5rem">${warnings.map(w => {
@@ -519,11 +560,20 @@ async function loadQuarantineList() {
     container.innerHTML = '';
   }
 }
-
+// renderQuarantineCard()
+// WHAT THIS DOES: renderQuarantineCard builds or updates what the user sees.
+// WHY IT EXISTS: display logic is separated from data/business logic for clarity.
+// HOW TO USE IT: call renderQuarantineCard(...) after state changes that need UI refresh.
 function renderQuarantineCard(q) {
   const hasDanger = (q.warnings || []).some(w => w.level === 'danger');
   const warnCount = (q.warnings || []).length;
   const borderColor = hasDanger ? '#ef4444' : warnCount > 0 ? '#fbbf24' : 'var(--bd)';
+  // dangerCount()
+  // Purpose: helper wrapper used by this module's main flow.
+  // dangerCount()
+  // WHAT THIS DOES: dangerCount is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call dangerCount(...) where this helper behavior is needed.
   const dangerCount = (q.warnings || []).filter(w => w.level === 'danger').length;
   const sourceBadge = q.source ? `<span style="font-size:.55rem;padding:.1rem .35rem;border-radius:3px;background:rgba(148,163,184,.15);color:var(--td)">${escapeHtml(q.source)}</span>` : '';
 
@@ -612,14 +662,20 @@ async function rescanQuarantined(name) {
 // CREATE / DELETE SKILLS
 // ============================================================
 
+// showCreateSkillDialog()
+// WHAT THIS DOES: showCreateSkillDialog builds or updates what the user sees.
+// WHY IT EXISTS: display logic is separated from data/business logic for clarity.
+// HOW TO USE IT: call showCreateSkillDialog(...) after state changes that need UI refresh.
 function showCreateSkillDialog() {
   document.getElementById('createSkillModal').style.display = 'flex';
 }
-
 function closeCreateSkillDialog() {
   document.getElementById('createSkillModal').style.display = 'none';
 }
-
+// fillSkillTemplate()
+// WHAT THIS DOES: fillSkillTemplate is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call fillSkillTemplate(...) where this helper behavior is needed.
 function fillSkillTemplate() {
   const ta = document.getElementById('newSkillInstructions');
   if (!ta) return;
@@ -660,6 +716,12 @@ async function executeCreateSkill() {
   const name = document.getElementById('newSkillName').value.trim();
   const description = document.getElementById('newSkillDesc').value.trim();
   const instructions = document.getElementById('newSkillInstructions').value.trim();
+  // version()
+  // Purpose: helper wrapper used by this module's main flow.
+  // version()
+  // WHAT THIS DOES: version is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call version(...) where this helper behavior is needed.
   const version = (document.getElementById('newSkillVersion')?.value || '').trim() || '1.0.0';
   const trigger = (document.getElementById('newSkillTrigger')?.value || '').trim() || null;
 
@@ -812,7 +874,10 @@ async function saveSleepConfig() {
     statusEl.textContent = '✗ ' + err.message;
   }
 }
-
+// toggleSleepAuto()
+// WHAT THIS DOES: toggleSleepAuto is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call toggleSleepAuto(...) where this helper behavior is needed.
 function toggleSleepAuto() {
   const toggle = document.getElementById('sleepAutoToggle');
   const label = document.getElementById('sleepAutoLabel');
@@ -960,11 +1025,18 @@ async function resetTokenLimits() {
 // HTML ESCAPE HELPERS
 // ============================================================
 
+// escapeHtml()
+// WHAT THIS DOES: escapeHtml is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call escapeHtml(...) where this helper behavior is needed.
 function escapeHtml(str) {
   if (!str) return '';
   return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
-
+// escapeHtmlAttr()
+// WHAT THIS DOES: escapeHtmlAttr is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call escapeHtmlAttr(...) where this helper behavior is needed.
 function escapeHtmlAttr(str) {
   if (!str) return '';
   return String(str).replace(/&/g, '&amp;').replace(/'/g, '&#39;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -1050,6 +1122,12 @@ async function refreshEntityWorkspace() {
     for (const f of files) {
       const name = typeof f === 'string' ? f : f.name;
       const isDir = typeof f === 'string' ? f.endsWith('/') : f.type === 'directory';
+      // size()
+      // Purpose: helper wrapper used by this module's main flow.
+      // size()
+      // WHAT THIS DOES: size is a helper used by this module's main flow.
+      // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+      // HOW TO USE IT: call size(...) where this helper behavior is needed.
       const size = (typeof f === 'object' && f.size) ? f.size : '';
       const icon = isDir ? '📁' : '📄';
       const sizeStr = (!isDir && size) ? '<span style="font-size:.7rem;color:var(--td);margin-left:auto">' + escapeHtml(String(size)) + '</span>' : '';
@@ -1066,12 +1144,18 @@ async function refreshEntityWorkspace() {
     browser.innerHTML = '<div style="color:var(--dn);text-align:center;padding:2rem;font-size:.85rem">' + escapeHtml(err.message) + '</div>';
   }
 }
-
+// entityWsNavigate()
+// WHAT THIS DOES: entityWsNavigate is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call entityWsNavigate(...) where this helper behavior is needed.
 function entityWsNavigate(dirName) {
   entityWsCurrentPath = entityWsCurrentPath ? entityWsCurrentPath + '/' + dirName : dirName;
   refreshEntityWorkspace();
 }
-
+// entityWsNavigateUp()
+// WHAT THIS DOES: entityWsNavigateUp is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call entityWsNavigateUp(...) where this helper behavior is needed.
 function entityWsNavigateUp() {
   const parts = entityWsCurrentPath.split('/');
   parts.pop();
@@ -1113,7 +1197,10 @@ async function saveEntityWsFile() {
     alert('Error saving file: ' + err.message);
   }
 }
-
+// showEntityWsNewFile()
+// WHAT THIS DOES: showEntityWsNewFile builds or updates what the user sees.
+// WHY IT EXISTS: display logic is separated from data/business logic for clarity.
+// HOW TO USE IT: call showEntityWsNewFile(...) after state changes that need UI refresh.
 function showEntityWsNewFile() {
   const fileName = prompt('Enter file name:');
   if (!fileName || !fileName.trim()) return;
@@ -1131,6 +1218,10 @@ function showEntityWsNewFile() {
 // sidebarWsPath kept for backwards compat with any inline onclick in index.html
 let sidebarWsPath = '';
 
+// toggleSidebarSection()
+// WHAT THIS DOES: toggleSidebarSection is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call toggleSidebarSection(...) where this helper behavior is needed.
 function toggleSidebarSection(id) {
   const body = document.getElementById(id);
   const arrow = document.getElementById(id + 'Arrow');
@@ -1166,14 +1257,20 @@ async function feNavigate(virtPath, pushHistory) {
   if (backBtn) backBtn.disabled = feHistoryIndex === 0;
   await feRender();
 }
-
+// feGoBack()
+// WHAT THIS DOES: feGoBack is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call feGoBack(...) where this helper behavior is needed.
 function feGoBack() {
   if (feHistoryIndex > 0) {
     feHistoryIndex--;
     feNavigate(feHistory[feHistoryIndex], false);
   }
 }
-
+// feRefresh()
+// WHAT THIS DOES: feRefresh is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call feRefresh(...) where this helper behavior is needed.
 function feRefresh() { feRender(); }
 
 function feUpdateBreadcrumb() {
@@ -1224,10 +1321,19 @@ async function feRender() {
     grid.appendChild(feCreateItem(entry));
   }
 }
-
+// feGetIcon()
+// WHAT THIS DOES: feGetIcon is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call feGetIcon(...) where this helper behavior is needed.
 function feGetIcon(entry) {
   if (entry.type === 'shortcut') return '🔗';
   if (entry.type === 'folder') return '📁';
+  // ext()
+  // Purpose: helper wrapper used by this module's main flow.
+  // ext()
+  // WHAT THIS DOES: ext is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call ext(...) where this helper behavior is needed.
   const ext = (entry.fileExt || '').toLowerCase();
   if (ext === 'note' || ext === 'md') return '📝';
   if (ext === 'json') return '📋';
@@ -1235,7 +1341,10 @@ function feGetIcon(entry) {
   if (ext === 'png' || ext === 'jpg' || ext === 'gif' || ext === 'webp') return '🖼️';
   return '📄';
 }
-
+// feCreateItem()
+// WHAT THIS DOES: feCreateItem is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call feCreateItem(...) where this helper behavior is needed.
 function feCreateItem(entry) {
   const el = document.createElement('div');
   el.className = 'fe-item';
@@ -1274,7 +1383,10 @@ function feCreateItem(entry) {
 
   return el;
 }
-
+// feShowItemMenu()
+// WHAT THIS DOES: feShowItemMenu is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call feShowItemMenu(...) where this helper behavior is needed.
 function feShowItemMenu(x, y, virtPath, type) {
   if (typeof ctxMenu === 'undefined') return;
   const name = virtPath.split('/').pop();
@@ -1321,13 +1433,19 @@ async function feEditorSave() {
     });
   } catch (_) {}
 }
-
+// feEditorClose()
+// WHAT THIS DOES: feEditorClose is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call feEditorClose(...) where this helper behavior is needed.
 function feEditorClose() {
   const editor = document.getElementById('feEditor');
   if (editor) editor.style.display = 'none';
   feEditorPath = null;
 }
-
+// feBeginRename()
+// WHAT THIS DOES: feBeginRename is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call feBeginRename(...) where this helper behavior is needed.
 function feBeginRename(el, virtPath) {
   if (!el) return;
   const nameEl = el.querySelector('.fe-item-name');
@@ -1382,6 +1500,12 @@ async function feDeleteEntry(virtPath) {
 }
 
 async function feNewFolder() {
+  // newPath()
+  // Purpose: helper wrapper used by this module's main flow.
+  // newPath()
+  // WHAT THIS DOES: newPath is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call newPath(...) where this helper behavior is needed.
   const newPath = (feCurrentPath === '/' ? '' : feCurrentPath) + '/New Folder';
   try {
     const r = await fetch('/api/vfs/mkdir', {
@@ -1403,6 +1527,12 @@ async function feNewFolder() {
 }
 
 async function feNewFile() {
+  // newPath()
+  // Purpose: helper wrapper used by this module's main flow.
+  // newPath()
+  // WHAT THIS DOES: newPath is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call newPath(...) where this helper behavior is needed.
   const newPath = (feCurrentPath === '/' ? '' : feCurrentPath) + '/New File.txt';
   try {
     const r = await fetch('/api/vfs/write', {
@@ -1432,6 +1562,10 @@ async function refreshSidebarWorkspace() {
 // ENTITY ACTIVITY FEED (Chat tab right panel)
 // ============================================================
 
+// addActivityItem()
+// WHAT THIS DOES: addActivityItem is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call addActivityItem(...) where this helper behavior is needed.
 function addActivityItem(type, text) {
   const feed = document.getElementById('activityFeed');
   if (!feed) return;
@@ -1464,6 +1598,10 @@ function addActivityItem(type, text) {
  * Process tool results from the chat API response.
  * Adds activity feed items and chat notifications.
  */
+// processToolResults()
+// WHAT THIS DOES: processToolResults is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call processToolResults(...) where this helper behavior is needed.
 function processToolResults(toolResults) {
   if (!toolResults || !toolResults.length) return;
 
@@ -1505,6 +1643,10 @@ function processToolResults(toolResults) {
 /**
  * Display task plan progress in the chat and activity feed.
  */
+// displayTaskPlan()
+// WHAT THIS DOES: displayTaskPlan builds or updates what the user sees.
+// WHY IT EXISTS: display logic is separated from data/business logic for clarity.
+// HOW TO USE IT: call displayTaskPlan(...) after state changes that need UI refresh.
 function displayTaskPlan(taskPlan) {
   if (!taskPlan || !taskPlan.steps) return;
 

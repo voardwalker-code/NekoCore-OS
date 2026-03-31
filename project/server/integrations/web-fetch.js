@@ -1,3 +1,18 @@
+// ── Module · Web Fetch ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This module belongs to the NekoCore OS codebase and provides focused
+// subsystem behavior.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: https, http, url. Keep import
+// and call-site contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // REM System — Web Fetch Module
 //
@@ -17,6 +32,10 @@ const MAX_TEXT_LENGTH = 8000;      // Max extracted text chars to return
 const SEARCH_MAX_RESULTS = 5;
 
 // ── Fetch a URL and return raw body ─────────────────────────
+// fetchUrl()
+// WHAT THIS DOES: fetchUrl reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call fetchUrl(...), then use the returned value in your next step.
 function fetchUrl(urlStr, redirectsLeft = MAX_REDIRECTS) {
   return new Promise((resolve, reject) => {
     let parsed;
@@ -93,6 +112,10 @@ function fetchUrl(urlStr, redirectsLeft = MAX_REDIRECTS) {
 }
 
 // ── SSRF protection: block private/internal hosts ───────────
+// isPrivateHost()
+// WHAT THIS DOES: isPrivateHost answers a yes/no rule check.
+// WHY IT EXISTS: guard checks are kept readable and reusable in one place.
+// HOW TO USE IT: call isPrivateHost(...) and branch logic based on true/false.
 function isPrivateHost(hostname) {
   if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1') return true;
   if (hostname.endsWith('.local') || hostname.endsWith('.internal')) return true;
@@ -110,6 +133,10 @@ function isPrivateHost(hostname) {
 }
 
 // ── Extract readable text from HTML ─────────────────────────
+// extractTextFromHtml()
+// WHAT THIS DOES: extractTextFromHtml is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call extractTextFromHtml(...) where this helper behavior is needed.
 function extractTextFromHtml(html) {
   // Remove script, style, nav, footer, header tags and their contents
   let text = html
@@ -162,6 +189,10 @@ function extractTextFromHtml(html) {
 }
 
 // ── Decode common HTML entities ─────────────────────────────
+// decodeHtmlEntities()
+// WHAT THIS DOES: decodeHtmlEntities is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call decodeHtmlEntities(...) where this helper behavior is needed.
 function decodeHtmlEntities(str) {
   return str
     .replace(/&amp;/g, '&')
@@ -251,6 +282,10 @@ async function webSearch(query) {
 }
 
 // ── DDG POST request (bypasses bot challenge on GET) ────────
+// ddgPost()
+// WHAT THIS DOES: ddgPost is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call ddgPost(...) where this helper behavior is needed.
 function ddgPost(query) {
   return new Promise((resolve, reject) => {
     const postData = `q=${encodeURIComponent(query)}`;
@@ -289,6 +324,10 @@ function ddgPost(query) {
 }
 
 // ── Extract URLs from text ──────────────────────────────────
+// extractUrls()
+// WHAT THIS DOES: extractUrls is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call extractUrls(...) where this helper behavior is needed.
 function extractUrls(text) {
   const urlPattern = /https?:\/\/[^\s<>"{}|\\^`\[\]]+/gi;
   const matches = text.match(urlPattern) || [];
@@ -327,6 +366,10 @@ async function processWebContent(text) {
 }
 
 // ── Format search results as context ────────────────────────
+// formatSearchResults()
+// WHAT THIS DOES: formatSearchResults reshapes data from one form into another.
+// WHY IT EXISTS: conversion rules live here so the same transformation is reused.
+// HOW TO USE IT: pass input data into formatSearchResults(...) and use the transformed output.
 function formatSearchResults(results, query) {
   if (!results || results.length === 0) {
     return `[WEB SEARCH: "${query}"]\nNo results found.\n[/WEB SEARCH]`;

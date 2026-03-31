@@ -1,3 +1,19 @@
+// ── Tests · Archive Search.Test ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This test file validates behavior and guards against regressions in its
+// target subsystem.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: node:test,
+// node:assert/strict, fs, path, os. Keep import and call-site contracts
+// aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 'use strict';
 /**
  * tests/integration/archive-search.test.js
@@ -69,11 +85,13 @@ after(() => {
   if (ep._origEntitiesDir) ep.ENTITIES_DIR = ep._origEntitiesDir;
   try { fs.rmSync(tmpRoot, { recursive: true, force: true }); } catch (_) {}
 });
-
+// makeCtx()
+// WHAT THIS DOES: makeCtx creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call makeCtx(...) before code that depends on this setup.
 function makeCtx(entityId = tmpEntityId) {
   return { currentEntityId: entityId };
 }
-
 function makeRes() {
   return {
     statusCode: null,
@@ -84,15 +102,20 @@ function makeRes() {
     json() { return JSON.parse(this.body); },
   };
 }
-
+// makeReq()
+// WHAT THIS DOES: makeReq creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call makeReq(...) before code that depends on this setup.
 function makeReq(accountId = 'test-user') {
   return { method: 'POST', accountId };
 }
-
 function readBodyFn(bodyObj) {
   return () => Promise.resolve(JSON.stringify(bodyObj));
 }
-
+// makeUrl()
+// WHAT THIS DOES: makeUrl creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call makeUrl(...) before code that depends on this setup.
 function makeUrl(p) {
   return new URL(p, 'http://localhost:3000');
 }

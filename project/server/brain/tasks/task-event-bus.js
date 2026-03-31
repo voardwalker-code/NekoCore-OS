@@ -1,3 +1,18 @@
+// ── Brain · Task Event Bus ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: events. Keep import and
+// call-site contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 /**
  * Task Event Bus
  * Per-session event queue for task execution lifecycle events.
@@ -7,6 +22,10 @@
 const { EventEmitter } = require('events');
 
 class TaskEventBus extends EventEmitter {
+  // constructor()
+  // WHAT THIS DOES: constructor is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call constructor(...) where this helper behavior is needed.
   constructor() {
     super();
     // Per-session queues for polling/drain consumers
@@ -20,6 +39,10 @@ class TaskEventBus extends EventEmitter {
    * @param {Object} event - The event object ({ type, ... })
    * @returns {boolean} True
    */
+  // emit()
+  // WHAT THIS DOES: emit is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call emit(...) where this helper behavior is needed.
   emit(sessionId, event) {
     // Queue for drain() consumers
     if (!this._queues.has(sessionId)) {
@@ -41,6 +64,10 @@ class TaskEventBus extends EventEmitter {
    * @param {string} sessionId - The session ID
    * @param {Function} handler - Handler function(event)
    */
+  // subscribe()
+  // WHAT THIS DOES: subscribe is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call subscribe(...) where this helper behavior is needed.
   subscribe(sessionId, handler) {
     this.on(sessionId, handler);
   }

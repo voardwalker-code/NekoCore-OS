@@ -1,3 +1,18 @@
+// ── Brain · Task Module Registry ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: ./task-types. Keep import and
+// call-site contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 /**
  * Task Module Registry
  * Manages task type definitions and their associated module configurations.
@@ -7,6 +22,10 @@
 const { DEFAULT_MODULE_CONFIGS, TASK_TYPES } = require('./task-types');
 
 class TaskModuleRegistry {
+  // constructor()
+  // WHAT THIS DOES: constructor is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call constructor(...) where this helper behavior is needed.
   constructor() {
     this.registry = new Map();
     // Load all default modules
@@ -16,6 +35,10 @@ class TaskModuleRegistry {
   /**
    * Load default module configurations into the registry
    */
+  // loadDefaults()
+  // WHAT THIS DOES: loadDefaults reads or finds data and gives it back.
+  // WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+  // HOW TO USE IT: call loadDefaults(...), then use the returned value in your next step.
   loadDefaults() {
     Object.values(DEFAULT_MODULE_CONFIGS).forEach(config => {
       this.registerModule(config);
@@ -27,6 +50,10 @@ class TaskModuleRegistry {
    * @param {string} taskType - The task type (e.g., 'research', 'code', 'planning')
    * @returns {Object|null} The module config, or null if not found
    */
+  // getModule()
+  // WHAT THIS DOES: getModule reads or finds data and gives it back.
+  // WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+  // HOW TO USE IT: call getModule(...), then use the returned value in your next step.
   getModule(taskType) {
     if (!taskType) return null;
     const module = this.registry.get(taskType);
@@ -37,6 +64,10 @@ class TaskModuleRegistry {
    * List all registered modules
    * @returns {Array<Object>} Array of all module configs
    */
+  // listModules()
+  // WHAT THIS DOES: listModules is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call listModules(...) where this helper behavior is needed.
   listModules() {
     return Array.from(this.registry.values());
   }

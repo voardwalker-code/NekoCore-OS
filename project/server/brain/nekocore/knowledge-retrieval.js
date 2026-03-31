@@ -1,3 +1,18 @@
+// ── Brain · Knowledge Retrieval ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: fs, path, zlib,
+// ../../entityPaths. Keep import and call-site contracts aligned during
+// refactors.
+//
+// EXPORTS:
+// Exposed API includes: buildNekoKnowledgeContext.
+// ─────────────────────────────────────────────────────────────────────────────
+
 'use strict';
 // ============================================================
 // NekoCore — Knowledge Retrieval
@@ -29,7 +44,13 @@ const STOPWORDS = new Set([
   'tell', 'know', 'explain', 'describe', 'show', 'just', 'more', 'about', 'help',
 ]);
 
+// extractTopics()
+// WHAT THIS DOES: extractTopics is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call extractTopics(...) where this helper behavior is needed.
 function extractTopics(text) {
+  // lower()
+  // Purpose: helper wrapper used by this module's main flow.
   const lower = (text || '').toLowerCase();
   const words = lower.split(/[^a-z0-9]+/).filter(w => w.length >= 3 && !STOPWORDS.has(w));
   const seen = new Set();
@@ -44,6 +65,10 @@ function extractTopics(text) {
 }
 
 // ── Score a memory against query topics ──────────────────────────────────────
+// scoreMemory()
+// WHAT THIS DOES: scoreMemory is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call scoreMemory(...) where this helper behavior is needed.
 function scoreMemory(memTopics, queryTopics) {
   if (!Array.isArray(memTopics) || !Array.isArray(queryTopics)) return 0;
   let hits = 0;
@@ -54,6 +79,10 @@ function scoreMemory(memTopics, queryTopics) {
 }
 
 // ── Scan an episodic memory directory for topic matches ───────────────────────
+// scanEpisodicDir()
+// WHAT THIS DOES: scanEpisodicDir is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call scanEpisodicDir(...) where this helper behavior is needed.
 function scanEpisodicDir(episodicDir, topics, limit, srcType, entityName) {
   if (!fs.existsSync(episodicDir)) return [];
   let entries;
@@ -99,7 +128,10 @@ function scanEpisodicDir(episodicDir, topics, limit, srcType, entityName) {
   }
   return results;
 }
-
+// scanRecentConversationMemories()
+// WHAT THIS DOES: scanRecentConversationMemories is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call scanRecentConversationMemories(...) where this helper behavior is needed.
 function scanRecentConversationMemories(episodicDir, limit = 6) {
   if (!fs.existsSync(episodicDir)) return [];
 
@@ -161,6 +193,10 @@ function scanRecentConversationMemories(episodicDir, limit = 6) {
 }
 
 // ── Build context block in the shape the Orchestrator's subconscious expects ─
+// buildContextBlock()
+// WHAT THIS DOES: buildContextBlock creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call buildContextBlock(...) before code that depends on this setup.
 function buildContextBlock(userMessage, topics, matches, recentRecalls = []) {
   const lines = [];
   lines.push('[SUBCONSCIOUS MEMORY CONTEXT]');
@@ -173,6 +209,12 @@ function buildContextBlock(userMessage, topics, matches, recentRecalls = []) {
   } else {
     lines.push('Potentially related memories (main should decide relevance):');
     matches.forEach((m, idx) => {
+      // topicStr()
+      // Purpose: helper wrapper used by this module's main flow.
+      // topicStr()
+      // WHAT THIS DOES: topicStr is a helper used by this module's main flow.
+      // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+      // HOW TO USE IT: call topicStr(...) where this helper behavior is needed.
       const topicStr = (m.topics || []).join(', ');
       const preview = (m.semantic || '').replace(/\s+/g, ' ').trim().slice(0, 200);
       let tag;
@@ -192,6 +234,12 @@ function buildContextBlock(userMessage, topics, matches, recentRecalls = []) {
     lines.push('[CONVERSATION RECALL]');
     recentRecalls.forEach((m, idx) => {
       const when = m.created > 0 ? new Date(m.created).toISOString() : 'unknown-time';
+      // preview()
+      // Purpose: helper wrapper used by this module's main flow.
+      // preview()
+      // WHAT THIS DOES: preview is a helper used by this module's main flow.
+      // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+      // HOW TO USE IT: call preview(...) where this helper behavior is needed.
       const preview = (m.convoPreview || m.semantic || '').replace(/\s+/g, ' ').trim().slice(0, 220);
       lines.push(`${idx + 1}. ${m.id} (${when}) ${preview}`);
     });
@@ -213,6 +261,10 @@ function buildContextBlock(userMessage, topics, matches, recentRecalls = []) {
  * @param {number} [opts.limit=10]
  * @returns {{ contextBlock: string, topics: string[], connections: Array, chatlogContext: [] }}
  */
+// buildNekoKnowledgeContext()
+// WHAT THIS DOES: buildNekoKnowledgeContext creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call buildNekoKnowledgeContext(...) before code that depends on this setup.
 function buildNekoKnowledgeContext(userMessage, memRoot, opts = {}) {
   const limit  = opts.limit || 10;
   const recentConversationLimit = opts.recentConversationLimit || 6;
@@ -283,6 +335,10 @@ function buildNekoKnowledgeContext(userMessage, memRoot, opts = {}) {
   // ── 4. Merge — recent recall first, then docs/self/entities topic matches ───
   const merged = [];
   const seen = new Set();
+  // pushUnique()
+  // WHAT THIS DOES: pushUnique is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call pushUnique(...) where this helper behavior is needed.
   const pushUnique = (arr) => {
     for (const item of arr) {
       if (!item || !item.id || seen.has(item.id)) continue;

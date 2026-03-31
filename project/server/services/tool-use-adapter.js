@@ -1,3 +1,19 @@
+// ── Services · Tool Use Adapter ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This service module holds reusable business logic shared across runtime
+// paths.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include:
+// ../brain/skills/workspace-tools. Keep import and call-site contracts
+// aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 'use strict';
 /**
  * server/services/tool-use-adapter.js
@@ -168,6 +184,10 @@ const TOOL_DEFS = Object.freeze([
 // ── Schema Builders ─────────────────────────────────────────────────────────
 
 /** Build Anthropic-format tool schemas ({ name, description, input_schema }). */
+// buildAnthropicTools()
+// WHAT THIS DOES: buildAnthropicTools creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call buildAnthropicTools(...) before code that depends on this setup.
 function buildAnthropicTools() {
   return TOOL_DEFS.map(t => ({
     name: t.name,
@@ -177,6 +197,10 @@ function buildAnthropicTools() {
 }
 
 /** Build OpenAI/OpenRouter-format tool schemas ({ type: 'function', function: { ... } }). */
+// buildOpenRouterTools()
+// WHAT THIS DOES: buildOpenRouterTools creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call buildOpenRouterTools(...) before code that depends on this setup.
 function buildOpenRouterTools() {
   return TOOL_DEFS.map(t => ({
     type: 'function',
@@ -194,6 +218,10 @@ function buildOpenRouterTools() {
  * @param {string} providerType - 'anthropic' | 'openrouter' | 'ollama'
  * @returns {Array|null}
  */
+// buildToolSchemas()
+// WHAT THIS DOES: buildToolSchemas creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call buildToolSchemas(...) before code that depends on this setup.
 function buildToolSchemas(providerType) {
   if (providerType === 'anthropic') return buildAnthropicTools();
   if (providerType === 'openrouter') return buildOpenRouterTools();
@@ -207,6 +235,10 @@ function buildToolSchemas(providerType) {
  * @param {object} data - Raw Anthropic API response
  * @returns {{ content: string, toolCalls: Array<{ id: string, name: string, input: object }> }}
  */
+// parseAnthropicResponse()
+// WHAT THIS DOES: parseAnthropicResponse reshapes data from one form into another.
+// WHY IT EXISTS: conversion rules live here so the same transformation is reused.
+// HOW TO USE IT: pass input data into parseAnthropicResponse(...) and use the transformed output.
 function parseAnthropicResponse(data) {
   const textParts = [];
   const toolCalls = [];
@@ -224,9 +256,19 @@ function parseAnthropicResponse(data) {
  * @param {object} data - Raw OpenRouter API response
  * @returns {{ content: string, toolCalls: Array<{ id: string, name: string, input: object }> }}
  */
+// parseOpenRouterResponse()
+// WHAT THIS DOES: parseOpenRouterResponse reshapes data from one form into another.
+// WHY IT EXISTS: conversion rules live here so the same transformation is reused.
+// HOW TO USE IT: pass input data into parseOpenRouterResponse(...) and use the transformed output.
 function parseOpenRouterResponse(data) {
   const msg = data?.choices?.[0]?.message;
   if (!msg) return { content: '', toolCalls: [] };
+  // toolCalls()
+  // Purpose: helper wrapper used by this module's main flow.
+  // toolCalls()
+  // WHAT THIS DOES: toolCalls is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call toolCalls(...) where this helper behavior is needed.
   const toolCalls = (msg.tool_calls || []).map(tc => {
     let input = {};
     try { input = JSON.parse(tc.function?.arguments || '{}'); } catch (_) {}
@@ -242,6 +284,10 @@ function parseOpenRouterResponse(data) {
  * @param {Array<{ id: string, tool: string, result: string, ok: boolean }>} results
  * @returns {Array<object>}
  */
+// formatAnthropicToolResults()
+// WHAT THIS DOES: formatAnthropicToolResults reshapes data from one form into another.
+// WHY IT EXISTS: conversion rules live here so the same transformation is reused.
+// HOW TO USE IT: pass input data into formatAnthropicToolResults(...) and use the transformed output.
 function formatAnthropicToolResults(results) {
   return results.map(r => ({
     type: 'tool_result',
@@ -256,6 +302,10 @@ function formatAnthropicToolResults(results) {
  * @param {Array<{ id: string, tool: string, result: string, ok: boolean }>} results
  * @returns {Array<object>}
  */
+// formatOpenRouterToolResults()
+// WHAT THIS DOES: formatOpenRouterToolResults reshapes data from one form into another.
+// WHY IT EXISTS: conversion rules live here so the same transformation is reused.
+// HOW TO USE IT: pass input data into formatOpenRouterToolResults(...) and use the transformed output.
 function formatOpenRouterToolResults(results) {
   return results.map(r => ({
     role: 'tool',
@@ -271,6 +321,10 @@ function formatOpenRouterToolResults(results) {
  * @param {string} name
  * @returns {boolean}
  */
+// isWorkspaceTool()
+// WHAT THIS DOES: isWorkspaceTool answers a yes/no rule check.
+// WHY IT EXISTS: guard checks are kept readable and reusable in one place.
+// HOW TO USE IT: call isWorkspaceTool(...) and branch logic based on true/false.
 function isWorkspaceTool(name) {
   return TOOL_DEFS.some(t => t.name === name);
 }
@@ -292,6 +346,10 @@ function isWorkspaceTool(name) {
  * @param {Function} deps.profileUpdate
  * @returns {Function} async (name, input) => { content: string, is_error?: boolean }
  */
+// createToolExecutor()
+// WHAT THIS DOES: createToolExecutor creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call createToolExecutor(...) before code that depends on this setup.
 function createToolExecutor(deps) {
   const workspaceTools = require('../brain/skills/workspace-tools');
 

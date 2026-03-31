@@ -1,13 +1,14 @@
-// ── Entity Enrichment Routes ────────────────────────────────────────────────
-// Utility API for external systems (e.g. MA) to inject memories, trigger
-// cognitive processing, and read cognitive state for any entity.
+// ── Routes · Entity Enrichment Routes ────────────────────────────────────────
 //
-// These routes do NOT replace the existing entity creation pipeline.
-// They enable iterative enrichment after an entity has been created.
+// HOW ENRICHMENT ROUTING WORKS:
+// This module provides entity enrichment endpoints for memory injection and
+// cognitive ticks/state retrieval tied to per-entity storage.
 //
-//   POST /api/entities/:id/memories/inject       — write a memory to disk
-//   POST /api/entities/:id/cognitive/tick         — run one cognitive cycle
-//   GET  /api/entities/:id/cognitive/state        — read cognitive snapshot
+// WHAT USES THIS:
+//   entity enrichment tools and onboarding/runtime augmentation flows
+//
+// EXPORTS:
+//   createEntityEnrichmentRoutes(ctx)
 // ─────────────────────────────────────────────────────────────────────────────
 
 'use strict';
@@ -22,8 +23,8 @@ const { normalizeMemoryRecord } = require('../contracts/memory-schema');
 
 // ── route factory ───────────────────────────────────────────────────────────
 
+/** Build enrichment route handlers and dispatcher for entity endpoints. */
 function createEntityEnrichmentRoutes(ctx) {
-
   function json(res, code, obj, apiHeaders) {
     res.writeHead(code, apiHeaders);
     res.end(JSON.stringify(obj));
@@ -325,6 +326,7 @@ function createEntityEnrichmentRoutes(ctx) {
 
   // ── Helpers ─────────────────────────────────────────────────────────────
 
+  /** Read most recent episodic memory logs from disk up to limit count. */
   function _getRecentMemories(episodicDir, limit) {
     if (!fs.existsSync(episodicDir)) return [];
     try {
@@ -347,7 +349,7 @@ function createEntityEnrichmentRoutes(ctx) {
       return mems.slice(0, limit);
     } catch (_) { return []; }
   }
-
+  /** Map emotion label to relative neurochemistry deltas. */
   function _emotionToChemistry(emotion) {
     const map = {
       joy:         { dopamine: 0.3,  cortisol: -0.1, serotonin: 0.15, oxytocin: 0.1 },

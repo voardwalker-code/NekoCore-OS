@@ -1,3 +1,17 @@
+// ── Client Optional · Browser App ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This client module drives browser-side behavior and state updates for UI
+// features.
+//
+// WHAT USES THIS:
+// Used by related flows in its subsystem. Keep call contracts stable during
+// readability-only edits.
+//
+// EXPORTS:
+// Exposed API includes: window-attached API object.
+// ─────────────────────────────────────────────────────────────────────────────
+
 /**
  * NekoCore Browser — Client Core (NB-6 LLM Mode Foundation)
  *
@@ -49,6 +63,10 @@ async function _browserApi(method, path, body) {
 }
 
 // ─── Tab Management ───────────────────────────────────────────────────────────
+// _browserCreateIframe()
+// WHAT THIS DOES: _browserCreateIframe is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _browserCreateIframe(...) where this helper behavior is needed.
 function _browserCreateIframe(tabId) {
   const iframe = document.createElement('iframe');
   iframe.className = 'browser-frame';
@@ -126,6 +144,10 @@ async function browserNewTab(url, makeActive = true) {
   if (!targetUrl) _browserShowHomeView();
 }
 
+// _browserActivateTabLocal()
+// WHAT THIS DOES: _browserActivateTabLocal is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _browserActivateTabLocal(...) where this helper behavior is needed.
 function _browserActivateTabLocal(tabId) {
   _browserActiveTabId = tabId;
   // Show/hide iframes
@@ -177,6 +199,10 @@ async function browserCloseTab(tabId) {
 // ─── Tab Context Menu ─────────────────────────────────────────────────────────
 let _browserContextMenuEl = null;
 
+// _browserShowTabContextMenu()
+// WHAT THIS DOES: _browserShowTabContextMenu is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _browserShowTabContextMenu(...) where this helper behavior is needed.
 function _browserShowTabContextMenu(tabId, x, y) {
   _browserHideTabContextMenu();
   const tab = _browserTabs.get(tabId);
@@ -215,34 +241,50 @@ function _browserShowTabContextMenu(tabId, x, y) {
     document.addEventListener('click', _browserHideTabContextMenu, { once: true });
   }, 10);
 }
-
+// _browserHideTabContextMenu()
+// WHAT THIS DOES: _browserHideTabContextMenu is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _browserHideTabContextMenu(...) where this helper behavior is needed.
 function _browserHideTabContextMenu() {
   if (_browserContextMenuEl) {
     _browserContextMenuEl.remove();
     _browserContextMenuEl = null;
   }
 }
-
+// _browserTogglePin()
+// WHAT THIS DOES: _browserTogglePin is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _browserTogglePin(...) where this helper behavior is needed.
 function _browserTogglePin(tabId) {
   const tab = _browserTabs.get(tabId);
   if (!tab) return;
   tab.pinned = !tab.pinned;
   _browserUpdateTabStrip();
 }
-
+// _browserToggleMute()
+// WHAT THIS DOES: _browserToggleMute is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _browserToggleMute(...) where this helper behavior is needed.
 function _browserToggleMute(tabId) {
   const tab = _browserTabs.get(tabId);
   if (!tab) return;
   tab.muted = !tab.muted;
   _browserUpdateTabStrip();
 }
-
+// _browserCloseOtherTabs()
+// WHAT THIS DOES: _browserCloseOtherTabs is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _browserCloseOtherTabs(...) where this helper behavior is needed.
 function _browserCloseOtherTabs(keepTabId) {
   const toClose = [..._browserTabs.keys()].filter(id => id !== keepTabId);
   toClose.forEach(id => browserCloseTab(id));
 }
 
 // ─── Navigation ───────────────────────────────────────────────────────────────
+// _browserIsUrl()
+// WHAT THIS DOES: _browserIsUrl is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _browserIsUrl(...) where this helper behavior is needed.
 function _browserIsUrl(raw) {
   const trimmed = (raw || '').trim();
   if (!trimmed) return false;
@@ -252,7 +294,10 @@ function _browserIsUrl(raw) {
   if (/^[a-zA-Z0-9][-a-zA-Z0-9]*\.[a-zA-Z]{2,}/.test(trimmed)) return true;
   return false;
 }
-
+// _browserNormalizeUrl()
+// WHAT THIS DOES: _browserNormalizeUrl is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _browserNormalizeUrl(...) where this helper behavior is needed.
 function _browserNormalizeUrl(raw) {
   const trimmed = (raw || '').trim();
   if (!trimmed) return '';
@@ -290,10 +335,19 @@ async function browserNavigate(url) {
   // Check for blocked iframe after a delay
   _browserCheckIframeLoaded(_browserActiveTabId);
 }
-
+// browserNavigateFromInput()
+// WHAT THIS DOES: browserNavigateFromInput is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call browserNavigateFromInput(...) where this helper behavior is needed.
 function browserNavigateFromInput() {
   const input = document.getElementById('browserUrlInput');
   if (!input) return;
+  // raw()
+  // Purpose: helper wrapper used by this module's main flow.
+  // raw()
+  // WHAT THIS DOES: raw is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call raw(...) where this helper behavior is needed.
   const raw = (input.value || '').trim();
   if (!raw) return;
   if (_browserIsUrl(raw)) {
@@ -304,7 +358,10 @@ function browserNavigateFromInput() {
     input.value = raw;
   }
 }
-
+// browserGoBack()
+// WHAT THIS DOES: browserGoBack is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call browserGoBack(...) where this helper behavior is needed.
 function browserGoBack() {
   const tab = _browserTabs.get(_browserActiveTabId);
   if (!tab || !tab.iframe) return;
@@ -312,6 +369,10 @@ function browserGoBack() {
   _browserShowPageView();
 }
 
+// browserGoForward()
+// WHAT THIS DOES: browserGoForward is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call browserGoForward(...) where this helper behavior is needed.
 function browserGoForward() {
   const tab = _browserTabs.get(_browserActiveTabId);
   if (!tab || !tab.iframe) return;
@@ -319,6 +380,10 @@ function browserGoForward() {
   _browserShowPageView();
 }
 
+// browserReload()
+// WHAT THIS DOES: browserReload is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call browserReload(...) where this helper behavior is needed.
 function browserReload() {
   const tab = _browserTabs.get(_browserActiveTabId);
   if (!tab || !tab.iframe) return;
@@ -330,12 +395,19 @@ function browserReload() {
   _browserShowPageView();
 }
 
+// browserGoHome()
+// WHAT THIS DOES: browserGoHome is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call browserGoHome(...) where this helper behavior is needed.
 function browserGoHome() {
   _browserShowHomeView();
   const input = document.getElementById('browserUrlInput');
   if (input) input.value = '';
 }
-
+// browserOpenExternal()
+// WHAT THIS DOES: browserOpenExternal is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call browserOpenExternal(...) where this helper behavior is needed.
 function browserOpenExternal() {
   const tab = _browserTabs.get(_browserActiveTabId);
   const url = tab ? tab.url : BROWSER_HOMEPAGE;
@@ -366,7 +438,10 @@ async function browserToggleBookmark() {
   _browserUpdateBookmarkStar();
   _browserRenderHomeBookmarks();
 }
-
+// _browserUpdateBookmarkStar()
+// WHAT THIS DOES: _browserUpdateBookmarkStar is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _browserUpdateBookmarkStar(...) where this helper behavior is needed.
 function _browserUpdateBookmarkStar() {
   const btn = document.getElementById('browserBookmarkBtn');
   if (!btn) return;
@@ -377,6 +452,10 @@ function _browserUpdateBookmarkStar() {
 }
 
 // ─── Downloads Panel ──────────────────────────────────────────────────────────
+// browserToggleDownloads()
+// WHAT THIS DOES: browserToggleDownloads is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call browserToggleDownloads(...) where this helper behavior is needed.
 function browserToggleDownloads() {
   const panel = document.getElementById('browserDownloadsPanel');
   if (!panel) return;
@@ -414,6 +493,10 @@ async function _browserRefreshDownloads() {
 }
 
 // ─── View Switching ───────────────────────────────────────────────────────────
+// _browserShowHomeView()
+// WHAT THIS DOES: _browserShowHomeView is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _browserShowHomeView(...) where this helper behavior is needed.
 function _browserShowHomeView() {
   const homeWrap = document.getElementById('browserHomeWrap');
   const framesWrap = document.getElementById('browserFrames');
@@ -423,7 +506,10 @@ function _browserShowHomeView() {
   if (resultsWrap) resultsWrap.classList.add('hidden');
   _browserRenderHome();
 }
-
+// _browserShowPageView()
+// WHAT THIS DOES: _browserShowPageView is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _browserShowPageView(...) where this helper behavior is needed.
 function _browserShowPageView() {
   const homeWrap = document.getElementById('browserHomeWrap');
   const framesWrap = document.getElementById('browserFrames');
@@ -432,7 +518,10 @@ function _browserShowPageView() {
   if (framesWrap) framesWrap.classList.remove('hidden');
   if (resultsWrap) resultsWrap.classList.add('hidden');
 }
-
+// _browserShowResultsView()
+// WHAT THIS DOES: _browserShowResultsView is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _browserShowResultsView(...) where this helper behavior is needed.
 function _browserShowResultsView() {
   const homeWrap = document.getElementById('browserHomeWrap');
   const framesWrap = document.getElementById('browserFrames');
@@ -443,6 +532,10 @@ function _browserShowResultsView() {
 }
 
 // ─── Tab Strip UI ─────────────────────────────────────────────────────────────
+// _browserUpdateTabStrip()
+// WHAT THIS DOES: _browserUpdateTabStrip is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _browserUpdateTabStrip(...) where this helper behavior is needed.
 function _browserUpdateTabStrip() {
   const strip = document.getElementById('browserTabs');
   if (!strip) return;
@@ -459,6 +552,10 @@ function _browserUpdateTabStrip() {
     btn.dataset.tabId = id;
     // Context menu on right-click
     btn.oncontextmenu = (e) => { e.preventDefault(); _browserShowTabContextMenu(id, e.clientX, e.clientY); };
+    // prefix()
+    // WHAT THIS DOES: prefix is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call prefix(...) where this helper behavior is needed.
     const prefix = (tab.pinned ? '📌 ' : '') + (tab.muted ? '🔇 ' : '');
     const titleSpan = document.createElement('span');
     titleSpan.className = 'browser-tab-title';
@@ -478,7 +575,10 @@ function _browserUpdateTabStrip() {
     strip.appendChild(btn);
   }
 }
-
+// _browserUpdateNavBar()
+// WHAT THIS DOES: _browserUpdateNavBar is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _browserUpdateNavBar(...) where this helper behavior is needed.
 function _browserUpdateNavBar() {
   const input = document.getElementById('browserUrlInput');
   const tab = _browserTabs.get(_browserActiveTabId);
@@ -488,12 +588,19 @@ function _browserUpdateNavBar() {
 }
 
 // ─── Home Page ────────────────────────────────────────────────────────────────
+// _browserRenderHome()
+// WHAT THIS DOES: _browserRenderHome is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _browserRenderHome(...) where this helper behavior is needed.
 function _browserRenderHome() {
   _browserRenderSearchChips();
   _browserRenderHomeBookmarks();
   _browserRenderHomeHistory();
 }
-
+// _browserRenderSearchChips()
+// WHAT THIS DOES: _browserRenderSearchChips is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _browserRenderSearchChips(...) where this helper behavior is needed.
 function _browserRenderSearchChips() {
   const quickEl = document.getElementById('browserQuickSearchChips');
   const recentEl = document.getElementById('browserRecentSearchChips');
@@ -522,7 +629,10 @@ function _browserRenderSearchChips() {
     recentEl.appendChild(chip);
   });
 }
-
+// _browserRenderHomeBookmarks()
+// WHAT THIS DOES: _browserRenderHomeBookmarks is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _browserRenderHomeBookmarks(...) where this helper behavior is needed.
 function _browserRenderHomeBookmarks() {
   const el = document.getElementById('browserBookmarksList');
   if (!el) return;
@@ -568,18 +678,28 @@ async function _browserRenderHomeHistory() {
 }
 
 // ─── Web Search ───────────────────────────────────────────────────────────────
+// _browserLoadSearchHistory()
+// WHAT THIS DOES: _browserLoadSearchHistory is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _browserLoadSearchHistory(...) where this helper behavior is needed.
 function _browserLoadSearchHistory() {
   try {
     const raw = localStorage.getItem(BROWSER_SEARCH_HISTORY_KEY);
     _browserSearchHistory = raw ? JSON.parse(raw).filter(Boolean).slice(0, 12) : [];
   } catch { _browserSearchHistory = []; }
 }
-
+// _browserSaveSearchHistory()
+// WHAT THIS DOES: _browserSaveSearchHistory is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _browserSaveSearchHistory(...) where this helper behavior is needed.
 function _browserSaveSearchHistory() {
   try { localStorage.setItem(BROWSER_SEARCH_HISTORY_KEY, JSON.stringify(_browserSearchHistory.slice(0, 12))); } catch {}
 }
-
 function _browserRememberSearch(query) {
+  // q()
+  // WHAT THIS DOES: q is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call q(...) where this helper behavior is needed.
   const q = (query || '').trim();
   if (!q) return;
   _browserSearchHistory = [q, ..._browserSearchHistory.filter(s => s.toLowerCase() !== q.toLowerCase())].slice(0, 12);
@@ -589,6 +709,12 @@ function _browserRememberSearch(query) {
 async function browserExecuteSearch(queryArg) {
   const resultsEl = document.getElementById('browserSearchResultsList');
   if (!resultsEl) return;
+  // query()
+  // Purpose: helper wrapper used by this module's main flow.
+  // query()
+  // WHAT THIS DOES: query is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call query(...) where this helper behavior is needed.
   const query = (typeof queryArg === 'string' ? queryArg : '').trim();
   if (!query) return;
   _browserRememberSearch(query);
@@ -633,6 +759,10 @@ async function browserExecuteSearch(queryArg) {
 }
 
 // ─── Session Save / Restore ───────────────────────────────────────────────────
+// _browserScheduleSessionSave()
+// WHAT THIS DOES: _browserScheduleSessionSave is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _browserScheduleSessionSave(...) where this helper behavior is needed.
 function _browserScheduleSessionSave() {
   if (_browserSessionSaveTimer) clearTimeout(_browserSessionSaveTimer);
   _browserSessionSaveTimer = setTimeout(() => {
@@ -675,6 +805,10 @@ async function _browserRestoreSession() {
 }
 
 // ─── SSE Event Listeners ──────────────────────────────────────────────────────
+// _browserHandleSSE()
+// WHAT THIS DOES: _browserHandleSSE is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _browserHandleSSE(...) where this helper behavior is needed.
 function _browserHandleSSE(eventType, data) {
   if (eventType === 'browser.download.state') {
     // Auto-refresh downloads panel if visible
@@ -722,7 +856,10 @@ async function browserResetSettings() {
     if (typeof showNotification === 'function') showNotification('Failed to reset browser settings', 'error');
   }
 }
-
+// _browserPopulateSettingsUI()
+// WHAT THIS DOES: _browserPopulateSettingsUI is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _browserPopulateSettingsUI(...) where this helper behavior is needed.
 function _browserPopulateSettingsUI() {
   const homepageEl = document.getElementById('browserSettingsHomepage');
   const searchEl = document.getElementById('browserSettingsSearch');
@@ -733,7 +870,10 @@ function _browserPopulateSettingsUI() {
   if (sessionEl) sessionEl.checked = _browserSettings.sessionRestore !== false;
   if (linkEl) linkEl.value = _browserSettings.externalLinkBehavior || 'in-app';
 }
-
+// browserSaveSettingsFromUI()
+// WHAT THIS DOES: browserSaveSettingsFromUI is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call browserSaveSettingsFromUI(...) where this helper behavior is needed.
 function browserSaveSettingsFromUI() {
   const homepage = (document.getElementById('browserSettingsHomepage')?.value || '').trim();
   const searchEngine = document.getElementById('browserSettingsSearch')?.value || 'google';
@@ -762,7 +902,10 @@ async function browserClearBookmarks() {
 let _bmManagerOpen = false;
 let _bmManagerFilter = '';
 let _bmManagerFolder = '';
-
+// browserOpenBookmarkManager()
+// WHAT THIS DOES: browserOpenBookmarkManager is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call browserOpenBookmarkManager(...) where this helper behavior is needed.
 function browserOpenBookmarkManager() {
   _bmManagerOpen = true;
   _bmManagerFilter = '';
@@ -770,7 +913,10 @@ function browserOpenBookmarkManager() {
   const panel = document.getElementById('browserBookmarkManager');
   if (panel) { panel.classList.remove('hidden'); _bmRender(); }
 }
-
+// browserCloseBookmarkManager()
+// WHAT THIS DOES: browserCloseBookmarkManager is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call browserCloseBookmarkManager(...) where this helper behavior is needed.
 function browserCloseBookmarkManager() {
   _bmManagerOpen = false;
   const panel = document.getElementById('browserBookmarkManager');
@@ -829,19 +975,28 @@ async function _bmRender() {
     listEl.appendChild(row);
   });
 }
-
+// _bmFilterChanged()
+// WHAT THIS DOES: _bmFilterChanged is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _bmFilterChanged(...) where this helper behavior is needed.
 function _bmFilterChanged() {
   const searchEl = document.getElementById('bmManagerSearch');
   _bmManagerFilter = searchEl ? searchEl.value : '';
   _bmRender();
 }
-
+// _bmFolderChanged()
+// WHAT THIS DOES: _bmFolderChanged is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _bmFolderChanged(...) where this helper behavior is needed.
 function _bmFolderChanged() {
   const folderEl = document.getElementById('bmManagerFolderFilter');
   _bmManagerFolder = folderEl ? folderEl.value : '';
   _bmRender();
 }
-
+// _bmStartEdit()
+// WHAT THIS DOES: _bmStartEdit is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _bmStartEdit(...) where this helper behavior is needed.
 function _bmStartEdit(bm, row) {
   const infoEl = row.querySelector('.bm-manager-info');
   if (!infoEl) return;
@@ -897,14 +1052,20 @@ async function bmAddBookmarkFromManager() {
 let _histManagerOpen = false;
 let _histManagerFilter = '';
 let _histManagerEntries = [];
-
+// browserOpenHistoryManager()
+// WHAT THIS DOES: browserOpenHistoryManager is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call browserOpenHistoryManager(...) where this helper behavior is needed.
 function browserOpenHistoryManager() {
   _histManagerOpen = true;
   _histManagerFilter = '';
   const panel = document.getElementById('browserHistoryManager');
   if (panel) { panel.classList.remove('hidden'); _histRender(); }
 }
-
+// browserCloseHistoryManager()
+// WHAT THIS DOES: browserCloseHistoryManager is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call browserCloseHistoryManager(...) where this helper behavior is needed.
 function browserCloseHistoryManager() {
   _histManagerOpen = false;
   const panel = document.getElementById('browserHistoryManager');
@@ -955,7 +1116,10 @@ async function _histRender() {
     });
   }
 }
-
+// _histFilterChanged()
+// WHAT THIS DOES: _histFilterChanged is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _histFilterChanged(...) where this helper behavior is needed.
 function _histFilterChanged() {
   const searchEl = document.getElementById('histManagerSearch');
   _histManagerFilter = searchEl ? searchEl.value : '';
@@ -1000,6 +1164,10 @@ async function browserExportBookmarks() {
   } catch { if (typeof showNotification === 'function') showNotification('Export failed', 'error'); }
 }
 
+// browserImportBookmarks()
+// WHAT THIS DOES: browserImportBookmarks is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call browserImportBookmarks(...) where this helper behavior is needed.
 function browserImportBookmarks() {
   const input = document.createElement('input');
   input.type = 'file';
@@ -1038,6 +1206,10 @@ async function browserExportSettings() {
   } catch { if (typeof showNotification === 'function') showNotification('Export failed', 'error'); }
 }
 
+// browserImportSettings()
+// WHAT THIS DOES: browserImportSettings is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call browserImportSettings(...) where this helper behavior is needed.
 function browserImportSettings() {
   const input = document.createElement('input');
   input.type = 'file';
@@ -1075,11 +1247,19 @@ async function browserExportHistory() {
 }
 
 // ─── Keyboard Shortcuts ───────────────────────────────────────────────────────
+// _browserHandleKeydown()
+// WHAT THIS DOES: _browserHandleKeydown is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _browserHandleKeydown(...) where this helper behavior is needed.
 function _browserHandleKeydown(e) {
   // Only handle when browser tab is active
   const browserTab = document.getElementById('tab-browser');
   if (!browserTab || browserTab.classList.contains('hidden') || browserTab.style.display === 'none') return;
   // Don't capture when typing in non-browser inputs
+  // tag()
+  // WHAT THIS DOES: tag is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call tag(...) where this helper behavior is needed.
   const tag = (e.target.tagName || '').toLowerCase();
   const isBrowserInput = e.target.id === 'browserUrlInput';
 
@@ -1166,6 +1346,10 @@ function _browserHandleKeydown(e) {
 }
 
 // ─── Shell Launch Routing ─────────────────────────────────────────────────────
+// openInBrowser()
+// WHAT THIS DOES: openInBrowser creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call openInBrowser(...) before code that depends on this setup.
 function openInBrowser(url) {
   // Open the browser window and navigate to the given URL
   if (typeof openWindow === 'function') {
@@ -1174,6 +1358,10 @@ function openInBrowser(url) {
     switchMainTab('browser');
   }
   // Wait for init if needed, then navigate
+  // doNav()
+  // WHAT THIS DOES: doNav is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call doNav(...) where this helper behavior is needed.
   const doNav = () => {
     if (url) browserNavigate(url);
   };
@@ -1186,6 +1374,10 @@ function openInBrowser(url) {
 }
 
 // ─── Shell Status Reporting ───────────────────────────────────────────────────
+// _browserReportStatus()
+// WHAT THIS DOES: _browserReportStatus is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _browserReportStatus(...) where this helper behavior is needed.
 function _browserReportStatus() {
   // Update the browser status card in the task manager if it exists
   const tabCount = document.getElementById('tmBrowserTabCount');
@@ -1203,7 +1395,10 @@ function _browserReportStatus() {
   // Update taskbar badge
   _browserUpdateTaskbarBadge();
 }
-
+// _browserUpdateTaskbarBadge()
+// WHAT THIS DOES: _browserUpdateTaskbarBadge is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _browserUpdateTaskbarBadge(...) where this helper behavior is needed.
 function _browserUpdateTaskbarBadge() {
   // Find the taskbar button for the browser and update its badge
   const btns = document.querySelectorAll('.os-pinned-app[data-tab="browser"]');
@@ -1223,6 +1418,10 @@ function _browserUpdateTaskbarBadge() {
 }
 
 // ─── Iframe Fallback / Blocked Site Handling ──────────────────────────────────
+// _browserShowBlockedOverlay()
+// WHAT THIS DOES: _browserShowBlockedOverlay is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _browserShowBlockedOverlay(...) where this helper behavior is needed.
 function _browserShowBlockedOverlay(tabId) {
   const tab = _browserTabs.get(tabId);
   if (!tab || !tab.iframe) return;
@@ -1249,6 +1448,10 @@ function _browserShowBlockedOverlay(tabId) {
 }
 
 // Proactive blocked-site check: after navigation, check if iframe loaded
+// _browserCheckIframeLoaded()
+// WHAT THIS DOES: _browserCheckIframeLoaded is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _browserCheckIframeLoaded(...) where this helper behavior is needed.
 function _browserCheckIframeLoaded(tabId) {
   setTimeout(() => {
     const tab = _browserTabs.get(tabId);
@@ -1268,6 +1471,10 @@ function _browserCheckIframeLoaded(tabId) {
 }
 
 // ─── Graceful Shutdown ────────────────────────────────────────────────────────
+// _browserSaveSessionSync()
+// WHAT THIS DOES: _browserSaveSessionSync is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _browserSaveSessionSync(...) where this helper behavior is needed.
 function _browserSaveSessionSync() {
   // Synchronous session save using sendBeacon for beforeunload
   if (!_browserInitialized || _browserTabs.size === 0) return;
@@ -1280,7 +1487,10 @@ function _browserSaveSessionSync() {
     navigator.sendBeacon('/api/browser/session/save', new Blob([payload], { type: 'application/json' }));
   } catch { /* best effort */ }
 }
-
+// browserCleanup()
+// WHAT THIS DOES: browserCleanup is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call browserCleanup(...) where this helper behavior is needed.
 function browserCleanup() {
   // Called when browser window is closed or shell is shutting down
   _browserSaveSessionSync();
@@ -1289,6 +1499,10 @@ function browserCleanup() {
 }
 
 // ─── Utilities ────────────────────────────────────────────────────────────────
+// _truncate()
+// WHAT THIS DOES: _truncate is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _truncate(...) where this helper behavior is needed.
 function _truncate(s, max) { return s && s.length > max ? s.slice(0, max) + '…' : (s || ''); }
 function _escHtml(s) {
   const d = document.createElement('div');
@@ -1301,6 +1515,10 @@ function _escHtml(s) {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 // ─── Mode Toggle ──────────────────────────────────────────────────────────────
+// browserToggleLLMMode()
+// WHAT THIS DOES: browserToggleLLMMode is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call browserToggleLLMMode(...) where this helper behavior is needed.
 function browserToggleLLMMode() {
   _browserLLMMode = !_browserLLMMode;
   const panel = document.getElementById('browserLLMPanel');
@@ -1348,7 +1566,10 @@ async function browserExtractPage() {
     if (statusEl) statusEl.textContent = 'Extraction error: ' + err.message;
   }
 }
-
+// _llmUpdateSourcePreview()
+// WHAT THIS DOES: _llmUpdateSourcePreview is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _llmUpdateSourcePreview(...) where this helper behavior is needed.
 function _llmUpdateSourcePreview() {
   const preview = document.getElementById('llmSourcePreview');
   if (!preview) return;
@@ -1477,7 +1698,10 @@ async function browserExtractStructured(type) {
     if (output) output.innerHTML = `<div class="llm-error">${_escHtml(err.message)}</div>`;
   }
 }
-
+// _llmRenderExtraction()
+// WHAT THIS DOES: _llmRenderExtraction is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _llmRenderExtraction(...) where this helper behavior is needed.
 function _llmRenderExtraction(type, data, usage) {
   const output = document.getElementById('llmOutput');
   if (!output) return;
@@ -1539,6 +1763,10 @@ function _llmRenderExtraction(type, data, usage) {
 }
 
 // ─── Save to Entity Memory (with confirmation) ───────────────────────────────
+// browserSaveToMemory()
+// WHAT THIS DOES: browserSaveToMemory is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call browserSaveToMemory(...) where this helper behavior is needed.
 function browserSaveToMemory() {
   const output = document.getElementById('llmOutput');
   if (!output || !output.textContent.trim()) {
@@ -1553,7 +1781,10 @@ function browserSaveToMemory() {
     dialog.classList.remove('hidden');
   }
 }
-
+// browserConfirmSave()
+// WHAT THIS DOES: browserConfirmSave is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call browserConfirmSave(...) where this helper behavior is needed.
 function browserConfirmSave() {
   const dialog = document.getElementById('llmSaveConfirm');
   if (dialog) dialog.classList.add('hidden');
@@ -1580,13 +1811,20 @@ function browserConfirmSave() {
     if (typeof showNotification === 'function') showNotification('Save error: ' + err.message, 'error');
   });
 }
-
+// browserCancelSave()
+// WHAT THIS DOES: browserCancelSave is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call browserCancelSave(...) where this helper behavior is needed.
 function browserCancelSave() {
   const dialog = document.getElementById('llmSaveConfirm');
   if (dialog) dialog.classList.add('hidden');
 }
 
 // ─── Ephemeral vs Saved Toggle ────────────────────────────────────────────────
+// browserToggleEphemeral()
+// WHAT THIS DOES: browserToggleEphemeral is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call browserToggleEphemeral(...) where this helper behavior is needed.
 function browserToggleEphemeral() {
   _browserEphemeralMode = !_browserEphemeralMode;
   const btn = document.getElementById('llmEphemeralBtn');
@@ -1614,7 +1852,10 @@ async function browserEndResearchSession() {
   _browserResearchSessionId = null;
   _llmUpdateSessionLabel();
 }
-
+// _llmUpdateSessionLabel()
+// WHAT THIS DOES: _llmUpdateSessionLabel is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _llmUpdateSessionLabel(...) where this helper behavior is needed.
 function _llmUpdateSessionLabel() {
   const label = document.getElementById('llmSessionLabel');
   if (!label) return;
@@ -1627,6 +1868,10 @@ function _llmUpdateSessionLabel() {
 }
 
 // ─── Render Helpers ───────────────────────────────────────────────────────────
+// _llmRenderOutput()
+// WHAT THIS DOES: _llmRenderOutput is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _llmRenderOutput(...) where this helper behavior is needed.
 function _llmRenderOutput(title, content, citations, usage) {
   const output = document.getElementById('llmOutput');
   if (!output) return;
@@ -1643,7 +1888,10 @@ function _llmRenderOutput(title, content, citations, usage) {
   }
   output.innerHTML = html;
 }
-
+// _llmFormatMarkdown()
+// WHAT THIS DOES: _llmFormatMarkdown is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _llmFormatMarkdown(...) where this helper behavior is needed.
 function _llmFormatMarkdown(text) {
   if (!text) return '';
   // Basic markdown → HTML (headings, bold, italic, code, lists, links)
@@ -1659,7 +1907,10 @@ function _llmFormatMarkdown(text) {
     .replace(/\n\n/g, '<br><br>')
     .replace(/\n/g, '<br>');
 }
-
+// _llmClearOutput()
+// WHAT THIS DOES: _llmClearOutput is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _llmClearOutput(...) where this helper behavior is needed.
 function _llmClearOutput() {
   const output = document.getElementById('llmOutput');
   if (output) output.innerHTML = '';
@@ -1709,14 +1960,26 @@ async function initBrowserApp() {
 
 // ─── Compatibility shims for app.js references ───────────────────────────────
 // These are called from app.js init and other legacy paths
+// loadBrowserSearchHistory()
+// WHAT THIS DOES: loadBrowserSearchHistory reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call loadBrowserSearchHistory(...), then use the returned value in your next step.
 function loadBrowserSearchHistory() { _browserLoadSearchHistory(); }
 function renderBrowserSearchHome() { if (_browserInitialized) _browserRenderSearchChips(); }
 function openBrowserHome() { browserGoHome(); }
 function navigateBrowserToInput() { browserNavigateFromInput(); }
+// executeBrowserSearch()
+// WHAT THIS DOES: executeBrowserSearch is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call executeBrowserSearch(...) where this helper behavior is needed.
 function executeBrowserSearch() { browserExecuteSearch(); }
 function showBrowserHomeView() { _browserShowHomeView(); }
 function showBrowserPageView() { _browserShowPageView(); }
 function showBrowserResultsView() { _browserShowResultsView(); }
+// openBrowserExternal()
+// WHAT THIS DOES: openBrowserExternal creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call openBrowserExternal(...) before code that depends on this setup.
 function openBrowserExternal() { browserOpenExternal(); }
 
 // ─── Exports for shell integration (NB-5) ────────────────────────────────────

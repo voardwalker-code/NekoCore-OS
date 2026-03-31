@@ -1,3 +1,19 @@
+// ── Tests · Chat Extraction Guards.Test ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This test file validates behavior and guards against regressions in its
+// target subsystem.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: node:test,
+// node:assert/strict, node:fs, node:path. Keep import and call-site
+// contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 'use strict';
 
 // ============================================================
@@ -23,12 +39,19 @@ const ROOT = path.resolve(__dirname, '..', '..');
 const CHAT_JS = path.join(ROOT, 'client', 'js', 'apps', 'core', 'chat.js');
 const APP_JS  = path.join(ROOT, 'client', 'js', 'app.js');
 const ENTITY_UI_JS = path.join(ROOT, 'client', 'js', 'apps', 'core', 'entity-ui.js');
-
+// read()
+// WHAT THIS DOES: read reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call read(...), then use the returned value in your next step.
 function read(filePath) {
   return fs.readFileSync(filePath, 'utf8');
 }
 
 // ── helpers ────────────────────────────────────────────────
+// hasDecl()
+// WHAT THIS DOES: hasDecl answers a yes/no rule check.
+// WHY IT EXISTS: guard checks are kept readable and reusable in one place.
+// HOW TO USE IT: call hasDecl(...) and branch logic based on true/false.
 function hasDecl(src, sig) {
   return src.includes(sig);
 }

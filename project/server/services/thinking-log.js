@@ -1,3 +1,17 @@
+// ── Services · Thinking Log ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This service module holds reusable business logic shared across runtime
+// paths.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: fs, path. Keep import and
+// call-site contracts aligned during refactors.
+//
+// EXPORTS:
+// Exposed API includes: createThinkingLog.
+// ─────────────────────────────────────────────────────────────────────────────
+
 'use strict';
 /**
  * server/services/thinking-log.js
@@ -17,6 +31,10 @@ const path = require('path');
  * @param {Object} deps
  * @param {Function} deps.getThinkingLogDir - (entityId) => absolute path to thinking-logs dir
  */
+// createThinkingLog()
+// WHAT THIS DOES: createThinkingLog creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call createThinkingLog(...) before code that depends on this setup.
 function createThinkingLog({ getThinkingLogDir }) {
 
   function _ensureDir(dir) {
@@ -34,6 +52,10 @@ function createThinkingLog({ getThinkingLogDir }) {
    * @param {string} [contextSummary] - brief description of what the entity was responding to
    * @returns {string} The thinking log ID (tlog_...)
    */
+  // storeThinkingEntry()
+  // WHAT THIS DOES: storeThinkingEntry is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call storeThinkingEntry(...) where this helper behavior is needed.
   function storeThinkingEntry(entityId, aspect, thinkingContent, contextSummary) {
     if (!entityId || !thinkingContent || typeof thinkingContent !== 'string' || !thinkingContent.trim()) {
       return null;
@@ -65,6 +87,10 @@ function createThinkingLog({ getThinkingLogDir }) {
    * @param {string} logId - tlog_... identifier
    * @returns {Object|null} The entry, or null if not found
    */
+  // getThinkingEntry()
+  // WHAT THIS DOES: getThinkingEntry reads or finds data and gives it back.
+  // WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+  // HOW TO USE IT: call getThinkingEntry(...), then use the returned value in your next step.
   function getThinkingEntry(entityId, logId) {
     if (!entityId || !logId) return null;
 

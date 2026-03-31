@@ -16,8 +16,12 @@
     </div>
     <!-- iframe -->
     <div style="flex:1;position:relative;overflow:hidden;">
-      <div id="maOfflineMsg" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--text-tertiary,#888);font-size:15px;z-index:1;">
-        Server offline — press <strong style="margin:0 5px;">▶ Start</strong> to launch
+      <div id="maOfflineMsg" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--text-tertiary,#888);font-size:15px;z-index:1;gap:12px;">
+        <div>Server offline — press <strong style="margin:0 5px;">▶ Start</strong> to launch</div>
+        <div id="maNotInstalledMsg" style="display:none;text-align:center;">
+          <div style="color:#e8e4f0;margin-bottom:8px;"><strong>MA (Memory Architect)</strong> is a separate project.</div>
+          <a href="https://github.com/voardwalker-code/MA-Memory-Architect" target="_blank" rel="noopener" style="color:#8b5cf6;text-decoration:underline;font-size:14px;">Get MA from GitHub →</a>
+        </div>
       </div>
       <iframe id="maFrame" style="width:100%;height:100%;border:none;display:none;" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
     </div>
@@ -35,12 +39,14 @@
   var startBtn   = document.getElementById('maStartBtn');
   var stopBtn    = document.getElementById('maStopBtn');
   var refreshBtn = document.getElementById('maRefreshBtn');
+  var notInstalledMsg = document.getElementById('maNotInstalledMsg');
   var pollId = null;
+  var maNotFound = false;
 
   function setStatus(running, healthy) {
     if (healthy)     { dot.style.background = '#2ecc71'; label.textContent = 'Healthy · port ' + PORT; }
     else if (running){ dot.style.background = '#f39c12'; label.textContent = 'Starting…'; }
-    else             { dot.style.background = '#555';    label.textContent = 'Offline'; }
+    else             { dot.style.background = '#555';    label.textContent = maNotFound ? 'Not Installed' : 'Offline'; }
 
     if (healthy) {
       offline.style.display = 'none';
@@ -52,6 +58,7 @@
       frame.style.display = 'none';
       frame.removeAttribute('src');
       offline.style.display = 'flex';
+      if (notInstalledMsg) notInstalledMsg.style.display = maNotFound ? 'block' : 'none';
     }
   }
 
@@ -64,9 +71,14 @@
   startBtn.addEventListener('click', function () {
     label.textContent = 'Starting…';
     dot.style.background = '#f39c12';
-    fetch('/api/servers/' + SRV + '/start', { method: 'POST' }).then(function () {
-      setTimeout(poll, 2500);
-    });
+    fetch('/api/servers/' + SRV + '/start', { method: 'POST' }).then(function (r) { return r.json(); }).then(function (d) {
+      if (d.reason === 'ma_not_found' || d.repoUrl) {
+        maNotFound = true;
+        setStatus(false, false);
+      } else {
+        setTimeout(poll, 2500);
+      }
+    }).catch(function () { setTimeout(poll, 2500); });
   });
 
   stopBtn.addEventListener('click', function () {

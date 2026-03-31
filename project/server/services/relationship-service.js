@@ -1,3 +1,18 @@
+// ── Services · Relationship Service ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This service module holds reusable business logic shared across runtime
+// paths.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: fs, path, ../entityPaths.
+// Keep import and call-site contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // REM System — Relationship Service
 //
@@ -52,6 +67,10 @@ const ENTITY_ROLES = [
 ];
 
 // ── Default relationship state ────────────────────────────────────────────────
+// defaultRelationship()
+// WHAT THIS DOES: defaultRelationship is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call defaultRelationship(...) where this helper behavior is needed.
 function defaultRelationship(userId, userName) {
   return {
     userId,
@@ -71,13 +90,20 @@ function defaultRelationship(userId, userName) {
 }
 
 // ── Storage helpers ───────────────────────────────────────────────────────────
+// getRelationshipsDir()
+// WHAT THIS DOES: getRelationshipsDir reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call getRelationshipsDir(...), then use the returned value in your next step.
 function getRelationshipsDir(entityId) {
   const entityPaths = require('../entityPaths');
   const dir = path.join(entityPaths.getMemoryRoot(entityId), 'relationships');
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
   return dir;
 }
-
+// getRelationshipPath()
+// WHAT THIS DOES: getRelationshipPath reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call getRelationshipPath(...), then use the returned value in your next step.
 function getRelationshipPath(entityId, userId) {
   return path.join(getRelationshipsDir(entityId), userId + '.json');
 }
@@ -88,6 +114,10 @@ function getRelationshipPath(entityId, userId) {
  * Load the relationship between the entity and a user.
  * Returns the default state if no file exists yet.
  */
+// getRelationship()
+// WHAT THIS DOES: getRelationship reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call getRelationship(...), then use the returned value in your next step.
 function getRelationship(entityId, userId, userName) {
   if (!entityId || !userId) return null;
   const p = getRelationshipPath(entityId, userId);
@@ -100,6 +130,10 @@ function getRelationship(entityId, userId, userName) {
 /**
  * Save a relationship object for a user.
  */
+// saveRelationship()
+// WHAT THIS DOES: saveRelationship changes saved state or updates data.
+// WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+// HOW TO USE IT: call saveRelationship(...) with the new values you want to persist.
 function saveRelationship(entityId, rel) {
   if (!entityId || !rel || !rel.userId) return;
   rel.updatedAt = new Date().toISOString();
@@ -110,6 +144,10 @@ function saveRelationship(entityId, rel) {
 /**
  * List all relationship objects for an entity.
  */
+// listRelationships()
+// WHAT THIS DOES: listRelationships is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call listRelationships(...) where this helper behavior is needed.
 function listRelationships(entityId) {
   try {
     const dir = getRelationshipsDir(entityId);
@@ -126,6 +164,10 @@ function listRelationships(entityId) {
 /**
  * Increment the interaction counter and update lastSeen on every turn.
  */
+// touchRelationship()
+// WHAT THIS DOES: touchRelationship is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call touchRelationship(...) where this helper behavior is needed.
 function touchRelationship(entityId, userId, userName) {
   const rel = getRelationship(entityId, userId, userName);
   if (!rel) return null;
@@ -142,11 +184,21 @@ function touchRelationship(entityId, userId, userName) {
 /**
  * Build the LLM prompt that asks the model to update the relationship.
  */
+// buildRelationshipUpdatePrompt()
+// WHAT THIS DOES: buildRelationshipUpdatePrompt creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call buildRelationshipUpdatePrompt(...) before code that depends on this setup.
 function buildRelationshipUpdatePrompt(rel, entityName, userMessage, entityResponse, entityPersona) {
   const personaHint = entityPersona
     ? `Entity personality traits: ${(entityPersona.personality_traits || []).join(', ')}. Backstory: ${String(entityPersona.backstory || '').slice(0, 300)}.`
     : `Entity name: ${entityName}.`;
 
+  // beliefsSummary()
+  // Purpose: helper wrapper used by this module's main flow.
+  // beliefsSummary()
+  // WHAT THIS DOES: beliefsSummary is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call beliefsSummary(...) where this helper behavior is needed.
   const beliefsSummary = (rel.beliefs || []).slice(-5)
     .map(b => `- "${b.belief}" (confidence ${b.confidence})`)
     .join('\n') || 'None yet.';
@@ -287,6 +339,10 @@ async function updateRelationshipFromExchange(params = {}) {
  * Build a compact [USER RELATIONSHIP] block for injection into
  * the subconscious context.  Returns an empty string if no relationship data.
  */
+// buildRelationshipContextBlock()
+// WHAT THIS DOES: buildRelationshipContextBlock creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call buildRelationshipContextBlock(...) before code that depends on this setup.
 function buildRelationshipContextBlock(rel) {
   if (!rel || rel.feeling === undefined) return '';
 
@@ -295,6 +351,12 @@ function buildRelationshipContextBlock(rel) {
   const trustViz  = '█'.repeat(trustBar)  + '░'.repeat(10 - trustBar);
   const rapportViz = '█'.repeat(rapportBar) + '░'.repeat(10 - rapportBar);
 
+  // beliefsStr()
+  // Purpose: helper wrapper used by this module's main flow.
+  // beliefsStr()
+  // WHAT THIS DOES: beliefsStr is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call beliefsStr(...) where this helper behavior is needed.
   const beliefsStr = (rel.beliefs || []).slice(0, 5)
     .map(b => `  - "${b.belief}" (confidence ${Number(b.confidence || 0).toFixed(2)})`)
     .join('\n') || '  (none yet)';

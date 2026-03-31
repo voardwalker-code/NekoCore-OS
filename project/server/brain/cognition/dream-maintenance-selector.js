@@ -1,3 +1,17 @@
+// ── Services · Dream Maintenance Selector ────────────────────────────────────
+//
+// HOW DREAM MAINTENANCE SELECTION WORKS:
+// This module scores memories for dream-maintenance runs and ranks candidates
+// by emotional intensity, learning/error tags, staleness, and graph weakness.
+// It returns ordered candidates and optional buckets for multi-dream cycles.
+//
+// WHAT USES THIS:
+//   idle/sleep maintenance path before dream generation
+//
+// EXPORTS:
+//   scoreDreamCandidate(), selectDreamCandidates(), bucketDreamCandidates()
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // REM System — Dream Maintenance Selector  [JS_OFFLOAD]
 //
@@ -37,6 +51,7 @@ const DEFAULT_POLICY = {
  * @param {Object} policy     - Override policy (defaults merged with DEFAULT_POLICY)
  * @returns {number} Score 0..1
  */
+/** Score one memory candidate for dream-maintenance eligibility. */
 function scoreDreamCandidate(memoryMeta = {}, graphMeta = null, policy = {}) {
   if (!memoryMeta || typeof memoryMeta !== 'object') return 0;
   const p = _mergePolicy(policy);
@@ -75,6 +90,7 @@ function scoreDreamCandidate(memoryMeta = {}, graphMeta = null, policy = {}) {
  * @param {Object} [policy]    - Override policy
  * @returns {Array} Ranked array of { memory, score } objects, descending by score
  */
+/** Select and rank dream-maintenance candidates from memory index. */
 function selectDreamCandidates(memoryIndex = [], accessLog = null, graph = null, policy = {}) {
   const p = _mergePolicy(policy);
 
@@ -117,6 +133,7 @@ function selectDreamCandidates(memoryIndex = [], accessLog = null, graph = null,
  * @param {number} [bucketSize] - Override bucket size (defaults to policy default)
  * @returns {Array<Array>} Array of memory-only arrays (without score wrapper)
  */
+/** Split ranked candidates into fixed-size dream-cycle buckets. */
 function bucketDreamCandidates(candidates = [], bucketSize = DEFAULT_POLICY.bucketSize) {
   const size = Math.max(1, Number(bucketSize) || DEFAULT_POLICY.bucketSize);
   const buckets = [];
@@ -128,12 +145,13 @@ function bucketDreamCandidates(candidates = [], bucketSize = DEFAULT_POLICY.buck
 
 // ── Private helpers ────────────────────────────────────────────────────────
 
+/** Merge override policy onto defaults, including nested weights. */
 function _mergePolicy(override = {}) {
   const p = { ...DEFAULT_POLICY, ...override };
   p.weights = { ...DEFAULT_POLICY.weights, ...(override.weights || {}) };
   return p;
 }
-
+/** Score emotional salience using intensity/importance/tag fallbacks. */
 function _scoreEmotion(mem) {
   // Use importance or emotionalIntensity if available; fall back to emotionalTag presence
   const intensity = Number(mem.emotionalIntensity || mem.emotional_intensity || 0);
@@ -149,7 +167,7 @@ function _scoreEmotion(mem) {
 
   return 0;
 }
-
+/** Score presence of learning/lesson tags. */
 function _scoreLearnTags(mem) {
   const topics = _asTags(mem.topics);
   const tags = _asTags(mem.tags);
@@ -160,7 +178,7 @@ function _scoreLearnTags(mem) {
   if (combined.some(t => t.includes('lesson') || t.includes('insight'))) return 0.4;
   return 0;
 }
-
+/** Score presence of error/mistake/regret tags. */
 function _scoreErrorTags(mem) {
   const topics = _asTags(mem.topics);
   const tags = _asTags(mem.tags);
@@ -171,7 +189,7 @@ function _scoreErrorTags(mem) {
   if (combined.some(t => t.includes('problem') || t.includes('difficult'))) return 0.3;
   return 0;
 }
-
+/** Score staleness from last-access age against policy thresholds. */
 function _scoreStaleness(mem, policy) {
   const nowMs = Date.now();
   const lastMs = Number(mem._lastAccessedMs || 0) || _parseDate(mem.created);
@@ -186,7 +204,7 @@ function _scoreStaleness(mem, policy) {
   const overThreshold = ageDays - policy.staleThresholdDays;
   return Math.min(1, overThreshold / range);
 }
-
+/** Score weak graph connectivity (orphaned nodes score highest). */
 function _scoreWeakGraph(graphMeta) {
   if (!graphMeta || graphMeta.degree == null) return 0;
   const degree = Number(graphMeta.degree);
@@ -196,14 +214,14 @@ function _scoreWeakGraph(graphMeta) {
   if (degree <= 4) return 0.1;
   return 0;
 }
-
+/** Normalize tags/topics input to array of strings. */
 function _asTags(val) {
   if (!val) return [];
   if (Array.isArray(val)) return val;
   if (typeof val === 'string') return val.split(',').map(t => t.trim()).filter(Boolean);
   return [];
 }
-
+/** Parse date/timestamp input into epoch milliseconds. */
 function _parseDate(val) {
   if (!val) return 0;
   const ms = typeof val === 'number' ? val : new Date(val).getTime();

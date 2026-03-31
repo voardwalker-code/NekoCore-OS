@@ -1,3 +1,17 @@
+// ── Services · Boot ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This service module holds reusable business logic shared across runtime
+// paths.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: ../brain/thought-types. Keep
+// import and call-site contracts aligned during refactors.
+//
+// EXPORTS:
+// Exposed API includes: boot.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // NekoCore OS — Server Boot Service
 // Extracted from server.js P2-S6-d.

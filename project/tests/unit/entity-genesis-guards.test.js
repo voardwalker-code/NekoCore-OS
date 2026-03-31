@@ -1,3 +1,18 @@
+// ── Tests · Entity Genesis Guards.Test ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This test file validates behavior and guards against regressions in its
+// target subsystem.
+//
+// WHAT USES THIS:
+// Used by related flows in its subsystem. Keep call contracts stable during
+// readability-only edits.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ── Entity Genesis — Guard & Unit Tests ─────────────────────────────────────
 // Locks existing contracts and structure before Entity Genesis implementation.
 // Run with: node --test tests/unit/entity-genesis-guards.test.js (from project/)

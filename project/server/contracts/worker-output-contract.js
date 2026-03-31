@@ -1,3 +1,17 @@
+// ── Contracts · Worker Output Contract ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This module belongs to the NekoCore OS codebase and provides focused
+// subsystem behavior.
+//
+// WHAT USES THIS:
+// Used by related flows in its subsystem. Keep call contracts stable during
+// readability-only edits.
+//
+// EXPORTS:
+// Exposed API includes: validateWorkerOutput, normalizeWorkerOutput.
+// ─────────────────────────────────────────────────────────────────────────────
+
 'use strict';
 /**
  * server/contracts/worker-output-contract.js
@@ -23,6 +37,10 @@
  * @param {*} payload
  * @returns {{ ok: boolean, reason: string|null, value: object|null }}
  */
+// validateWorkerOutput()
+// WHAT THIS DOES: validateWorkerOutput answers a yes/no rule check.
+// WHY IT EXISTS: guard checks are kept readable and reusable in one place.
+// HOW TO USE IT: call validateWorkerOutput(...) and branch logic based on true/false.
 function validateWorkerOutput(payload) {
   if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
     return { ok: false, reason: 'payload-not-object', value: null };
@@ -62,6 +80,10 @@ function validateWorkerOutput(payload) {
  * @param {*} payload
  * @returns {object}
  */
+// normalizeWorkerOutput()
+// WHAT THIS DOES: normalizeWorkerOutput reshapes data from one form into another.
+// WHY IT EXISTS: conversion rules live here so the same transformation is reused.
+// HOW TO USE IT: pass input data into normalizeWorkerOutput(...) and use the transformed output.
 function normalizeWorkerOutput(payload) {
   if (!payload || typeof payload !== 'object') {
     return { summary: '', signals: {}, confidence: 0, memoryRefs: [], nextHints: [] };

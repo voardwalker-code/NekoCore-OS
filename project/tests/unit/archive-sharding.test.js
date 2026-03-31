@@ -1,3 +1,19 @@
+// ── Tests · Archive Sharding.Test ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This test file validates behavior and guards against regressions in its
+// target subsystem.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: node:test,
+// node:assert/strict, fs, os, path. Keep import and call-site contracts
+// aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 'use strict';
 // ============================================================
 // Unit Tests — archive-sharding.test.js
@@ -23,10 +39,13 @@ const path     = require('path');
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
+// makeTmpDir()
+// WHAT THIS DOES: makeTmpDir creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call makeTmpDir(...) before code that depends on this setup.
 function makeTmpDir() {
   return fs.mkdtempSync(path.join(os.tmpdir(), 'neko-archive-test-'));
 }
-
 function patchEntitiesDir(mod, tmpDir) {
   // Allow tests to redirect ENTITIES_DIR to a temp location
   mod.ENTITIES_DIR = tmpDir;
@@ -385,6 +404,10 @@ test('bulk-ingest: chunkHash differs for different content', { skip: !moduleExis
 
 // ── Helper ────────────────────────────────────────────────────────────────────
 
+// moduleExists()
+// WHAT THIS DOES: moduleExists is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call moduleExists(...) where this helper behavior is needed.
 function moduleExists(relPath) {
   try {
     require.resolve(path.resolve(__dirname, relPath));

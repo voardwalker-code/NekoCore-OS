@@ -1,3 +1,19 @@
+// ── Brain · Task Executor ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: crypto, ./task-event-bus,
+// ./task-module-registry, ./blueprint-loader, ../skills/task-runner. Keep
+// import and call-site contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 /**
  * Task Executor
  * Wraps task-runner.js with module-aware prompt assembly, tool filtering,
@@ -79,6 +95,10 @@ async function executeTask(config) {
   }
 
   // Per-step milestone callback
+  // onStep()
+  // WHAT THIS DOES: onStep handles an event and routes follow-up actions.
+  // WHY IT EXISTS: event flow is easier to debug when listener logic is centralized.
+  // HOW TO USE IT: wire onStep to the relevant event source or dispatcher.
   const onStep = async (stepResult) => {
     const milestoneEvent = {
       type: 'milestone',
@@ -109,6 +129,10 @@ async function executeTask(config) {
   };
 
   // Needs-input callback — suspends execution until resumeWithInput is called
+  // onNeedsInput()
+  // WHAT THIS DOES: onNeedsInput handles an event and routes follow-up actions.
+  // WHY IT EXISTS: event flow is easier to debug when listener logic is centralized.
+  // HOW TO USE IT: wire onNeedsInput to the relevant event source or dispatcher.
   const onNeedsInput = async (question) => {
     const needsInputEvent = {
       type: 'needs_input',
@@ -193,6 +217,10 @@ async function executeTask(config) {
  * @param {string} answer - The user's answer to unblock execution
  * @returns {boolean} True if a pending input was found and resolved, false otherwise
  */
+// resumeWithInput()
+// WHAT THIS DOES: resumeWithInput is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call resumeWithInput(...) where this helper behavior is needed.
 function resumeWithInput(sessionId, answer) {
   const pending = _pendingInputs.get(sessionId);
   if (!pending) return false;
@@ -209,6 +237,10 @@ function resumeWithInput(sessionId, answer) {
  * @param {Array} contextSnippets - Gathered context snippets
  * @returns {string} Assembled system prompt
  */
+// buildTaskSystemPrompt()
+// WHAT THIS DOES: buildTaskSystemPrompt creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call buildTaskSystemPrompt(...) before code that depends on this setup.
 function buildTaskSystemPrompt(moduleConfig, entity, contextSnippets) {
   const parts = [];
 
@@ -260,6 +292,10 @@ function buildTaskSystemPrompt(moduleConfig, entity, contextSnippets) {
  * @param {string[]} allowedToolNames - Tool names to keep
  * @returns {Object} Filtered tools object
  */
+// filterTools()
+// WHAT THIS DOES: filterTools is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call filterTools(...) where this helper behavior is needed.
 function filterTools(allTools, allowedToolNames) {
   if (!allTools || typeof allTools !== 'object') return {};
   if (!allowedToolNames || allowedToolNames.length === 0) return allTools;
@@ -278,6 +314,10 @@ function filterTools(allTools, allowedToolNames) {
  * @param {string} outputText
  * @returns {string[]} Unique URLs found in the text
  */
+// extractSources()
+// WHAT THIS DOES: extractSources is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call extractSources(...) where this helper behavior is needed.
 function extractSources(outputText) {
   if (!outputText || typeof outputText !== 'string') return [];
   const urlRegex = /https?:\/\/[^\s\]'"<>]+/g;
@@ -290,6 +330,10 @@ function extractSources(outputText) {
  * @param {string} sessionId
  * @returns {boolean}
  */
+// isStalled()
+// WHAT THIS DOES: isStalled answers a yes/no rule check.
+// WHY IT EXISTS: guard checks are kept readable and reusable in one place.
+// HOW TO USE IT: call isStalled(...) and branch logic based on true/false.
 function isStalled(sessionId) {
   return _pendingInputs.has(sessionId);
 }

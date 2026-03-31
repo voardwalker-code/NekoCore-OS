@@ -1,3 +1,18 @@
+// ── Brain · Phase Traces ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Used by related flows in its subsystem. Keep call contracts stable during
+// readability-only edits.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // Phase: Trace Analysis
 // Analyzes reasoning trace patterns accumulated since last review.
 // Runs every 10 cycles; skippable under homeostatic stress.

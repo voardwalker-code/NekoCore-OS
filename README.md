@@ -49,7 +49,8 @@
 <h3 align="center">⚒ Phase 6 — <em>Forge & Polish</em></h3>
 <p align="center">
   <strong>The raw metal becomes the blade.</strong><br>
-  All new features halted. Every bug gets crushed. Every edge gets filed.
+  All new features halted. Every bug gets crushed. Every edge gets filed.<br>
+  <strong>Phase 6.1 complete:</strong> full codebase comment standardization pass — 65+ files, zero logic changes.
 </p>
 
 <br>
@@ -62,6 +63,9 @@
 >
 > **Phase 6: Forge & Polish** is now active — a dedicated stability pass to crush every known issue,
 > harden error recovery, and polish the entire system for real-world use.
+>
+> **Phase 6.1** (complete): a codebase-wide comment standardization applying the
+> [How-We-Work](MA-Memory-Architect/MA/MA-workspace/How-We_Work) conventions to 65+ files with zero logic changes.
 >
 > APIs, data formats, and behaviour may change without notice between releases.
 > Active bug tracking: [`docs/CURRENT-BUGS.md`](docs/CURRENT-BUGS.md)
@@ -547,7 +551,7 @@ pie title Estimated Per-Turn Token Allocation
 
 ## ⟶ Development Roadmap
 
-**35 feature phases** complete. **Phase 6: Forge & Polish** is active — all new features halted while we crush every bug and harden every subsystem:
+**35 feature phases** complete. **Phase 6: Forge & Polish** is active — all new features halted while we crush every bug and harden every subsystem. **Phase 6.1** (comment standardization) is complete:
 
 ```mermaid
 timeline
@@ -595,7 +599,34 @@ timeline
         Phase 5   : Predictive Memory Topology (2,816 tests)
     section Forge & Polish
         Phase 6 : 🔥 Bug Crush · Stability Hardening · Refactor
+        Phase 6.1 : 🧹 Codebase-Wide Comment Standardization (How-We-Work pass)
 ```
+
+### Phase 6.1 — Comment Standardization Pass
+
+A full readability-only sweep of the NekoCore OS codebase, applying the
+[How-We-Work](MA-Memory-Architect/MA/MA-workspace/How-We_Work) comment and
+header conventions to every production JavaScript file. **No logic was changed.**
+
+**What was done:**
+
+| Area | Files Touched | What Changed |
+|:-----|:-------------:|:-------------|
+| **Browser Host** | 12 | Module headers rewritten, section dividers standardized |
+| **Client Core Apps** | 6 | `chat.js`, `setup-ui.js`, `entity-ui.js`, `telemetry-ui.js`, `config-profiles.js`, `slash-commands.js` — all helper comments expanded to headered style |
+| **Server Brain** | ~20 | Cognition, affect, beliefs, skills, shim/re-export files — headers and function docs standardized |
+| **Server Contracts** | 2 | `memory-schema.js`, `cognitive-snapshot-contract.js` — headers aligned |
+| **Server Services** | 5 | `port-guard`, `ma-bridge`, `entity-memory-compat`, `post-response-cognitive-feedback`, `response-postprocess` |
+| **Server Routes** | 18 | Every route file — headers, helper comments, and section dividers brought to standard |
+| **Server Root** | 1 | `server.js` — header and helper docs standardized |
+| **Server Tools** | 1 | `audit-legacy-memory-records.js` — full header and function doc pass |
+
+**Standards applied to every touched file:**
+
+- `// ── {Group} · {Name} ──────` header block with `HOW ... WORKS`, `WHAT USES THIS`, `EXPORTS`
+- `// functionName()\n// WHAT THIS DOES: ...\n// WHY IT EXISTS: ...\n// HOW TO USE IT: ...` for helpers
+- `// ── Section Name ──────` dividers for logical sections
+- Comment voice: explain *why*, not just *what* — written for a reader seeing the code for the first time
 
 ---
 
@@ -752,13 +783,16 @@ Skills live in `project/skills/<name>/`. The entity's LLM invokes them via funct
 
 ### Memory Architect (MA)
 
-MA is a built-in AI coding assistant at `project/MA/`. Start it from NekoCore OS via the `/ma` slash command, the Start menu, or standalone:
+MA is an optional standalone companion AI coding assistant. NekoCore OS integrates with it via the `/ma` slash command, the Start menu, and server control surfaces.
+
+Install and run MA from the standalone repository:
 
 ```bash
-cd project/MA && npm install && npm start
+git clone https://github.com/voardwalker-code/MA-Memory-Architect.git
+cd MA-Memory-Architect/MA && npm install && npm start
 ```
 
-MA ships with blueprints for two companion projects: **REM System Core** and **NekoCore Cognitive Mind**. See [project/MA/README.md](project/MA/README.md) for the full guide. Also available as a [standalone repo](https://github.com/voardwalker-code/MA-Memory-Architect).
+MA ships with blueprints for two companion projects: **REM System Core** and **NekoCore Cognitive Mind**. Full guide: [MA-Memory-Architect](https://github.com/voardwalker-code/MA-Memory-Architect).
 
 ---
 
@@ -823,16 +857,13 @@ NekoCore-OS/
     ├── skills/                # 11 pluggable skill plugins
     ├── scripts/               # Health scanner, fixer generator
     ├── tests/                 # 2,816 passing tests
-    ├── MA/                    # Memory Architect — AI coding assistant
-    │   ├── MA-Server.js       #   HTTP server (port 3850)
-    │   ├── MA-server/         #   Core modules
-    │   ├── MA-client/         #   Browser GUI
-    │   ├── MA-blueprints/     #   Build blueprints
-    │   └── MA-workspace/      #   Project scaffolds
     ├── Config/                # Runtime config
     ├── entities/              # Runtime entity data (gitignored)
     └── memories/              # System memory (gitignored)
 ```
+
+Companion project (optional):
+- `MA-Memory-Architect/MA`     # Memory Architect standalone server + UI
 
 ---
 
@@ -936,7 +967,7 @@ The in-shell browser app uses an embedded page model — some sites block embedd
   &nbsp;·&nbsp;
   <a href="docs/NEKOCORE-OS-ARCHITECTURE-v1.md">Architecture</a>
   &nbsp;·&nbsp;
-  <a href="project/MA/README.md">Memory Architect</a>
+  <a href="https://github.com/voardwalker-code/MA-Memory-Architect">Memory Architect</a>
   &nbsp;·&nbsp;
   <a href="https://ko-fi.com/nekocoreos">Support</a>
 </p>

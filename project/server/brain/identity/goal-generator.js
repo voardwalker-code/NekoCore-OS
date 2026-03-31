@@ -1,3 +1,18 @@
+// ── Brain · Goal Generator ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: fs, path. Keep import and
+// call-site contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // REM System — Goal Generator
 // Generates exploration goals from synthetic memory analysis.
@@ -7,6 +22,10 @@ const fs = require('fs').promises;
 const path = require('path');
 
 class GoalGenerator {
+  // constructor()
+  // WHAT THIS DOES: constructor is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call constructor(...) where this helper behavior is needed.
   constructor(goalsManager) {
     this.goalsManager = goalsManager;
     this.goalsFilePath = path.join(__dirname, '../../entity', 'goals.json');
@@ -37,11 +56,19 @@ class GoalGenerator {
   /**
    * Analyze topic frequency across memories
    */
+  // analyzeTopicFrequency()
+  // WHAT THIS DOES: analyzeTopicFrequency is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call analyzeTopicFrequency(...) where this helper behavior is needed.
   analyzeTopicFrequency(memories) {
     const topicCounts = {};
     const topicEmotions = {};
     const topicImportance = {};
 
+    // for()
+    // WHAT THIS DOES: for is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call for(...) where this helper behavior is needed.
     for (const memory of memories) {
       const tags = memory.tags || [];
       const emotions = memory.emotions || [];

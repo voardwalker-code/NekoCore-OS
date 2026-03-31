@@ -1,3 +1,18 @@
+// ── Services · Llm Interface ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This service module holds reusable business logic shared across runtime
+// paths.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: ./http-fetch,
+// ./llm-runtime-utils, ./provider-capabilities. Keep import and call-site
+// contracts aligned during refactors.
+//
+// EXPORTS:
+// Exposed API includes: createLLMInterface.
+// ─────────────────────────────────────────────────────────────────────────────
+
 'use strict';
 /**
  * server/services/llm-interface.js
@@ -27,6 +42,10 @@ const ANTHROPIC_DEFAULT_ENDPOINT = 'https://api.anthropic.com/v1/messages';
 /**
  * @param {{ getSomaticAwareness: Function, getDefaultMaxTokens: Function }} deps
  */
+// createLLMInterface()
+// WHAT THIS DOES: createLLMInterface creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call createLLMInterface(...) before code that depends on this setup.
 function createLLMInterface({ getSomaticAwareness = () => null, getDefaultMaxTokens = () => 16000 } = {}) {
 
   async function callLLMWithRuntime(runtime, messages, options = {}) {
@@ -59,6 +78,12 @@ function createLLMInterface({ getSomaticAwareness = () => null, getDefaultMaxTok
       const ac = new AbortController();
       const timer = setTimeout(() => ac.abort(), timeoutMs);
       if (externalSignal) {
+        // onAbort()
+        // Purpose: helper wrapper used by this module's main flow.
+        // onAbort()
+        // WHAT THIS DOES: onAbort handles an event and routes follow-up actions.
+        // WHY IT EXISTS: event flow is easier to debug when listener logic is centralized.
+        // HOW TO USE IT: wire onAbort to the relevant event source or dispatcher.
         const onAbort = () => ac.abort();
         externalSignal.addEventListener('abort', onAbort, { once: true });
         ac.signal.addEventListener('abort', () => externalSignal.removeEventListener('abort', onAbort), { once: true });
@@ -294,6 +319,12 @@ function createLLMInterface({ getSomaticAwareness = () => null, getDefaultMaxTok
       const ac = new AbortController();
       const timer = setTimeout(() => ac.abort(), timeoutMs);
       if (externalSignal) {
+        // onAbort()
+        // Purpose: helper wrapper used by this module's main flow.
+        // onAbort()
+        // WHAT THIS DOES: onAbort handles an event and routes follow-up actions.
+        // WHY IT EXISTS: event flow is easier to debug when listener logic is centralized.
+        // HOW TO USE IT: wire onAbort to the relevant event source or dispatcher.
         const onAbort = () => ac.abort();
         externalSignal.addEventListener('abort', onAbort, { once: true });
         ac.signal.addEventListener('abort', () => externalSignal.removeEventListener('abort', onAbort), { once: true });
@@ -328,6 +359,12 @@ function createLLMInterface({ getSomaticAwareness = () => null, getDefaultMaxTok
       if (typeof options.executeToolCall === 'function') {
         let currentMessages = [...anthropicMessages];
         for (let round = 0; round < 3; round++) {
+          // toolUseBlocks()
+          // Purpose: helper wrapper used by this module's main flow.
+          // toolUseBlocks()
+          // WHAT THIS DOES: toolUseBlocks is a helper used by this module's main flow.
+          // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+          // HOW TO USE IT: call toolUseBlocks(...) where this helper behavior is needed.
           const toolUseBlocks = (data?.content || []).filter(b => b.type === 'tool_use');
           if (toolUseBlocks.length === 0) break;
 
@@ -435,6 +472,12 @@ function createLLMInterface({ getSomaticAwareness = () => null, getDefaultMaxTok
     const ac2 = new AbortController();
     const timer2 = setTimeout(() => ac2.abort(), timeoutMs);
     if (externalSignal) {
+      // onAbort()
+      // Purpose: helper wrapper used by this module's main flow.
+      // onAbort()
+      // WHAT THIS DOES: onAbort handles an event and routes follow-up actions.
+      // WHY IT EXISTS: event flow is easier to debug when listener logic is centralized.
+      // HOW TO USE IT: wire onAbort to the relevant event source or dispatcher.
       const onAbort = () => ac2.abort();
       externalSignal.addEventListener('abort', onAbort, { once: true });
       ac2.signal.addEventListener('abort', () => externalSignal.removeEventListener('abort', onAbort), { once: true });

@@ -1,4 +1,17 @@
 #!/usr/bin/env node
+// ── Scripts · Generate System Map ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This script automates maintenance, generation, validation, or local
+// development workflows.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: fs, path. Keep import and
+// call-site contracts aligned during refactors.
+//
+// EXPORTS:
+// Exposed API includes: window-attached API object.
+// ─────────────────────────────────────────────────────────────────────────────
 // ============================================================
 // NekoCore OS — System Map Generator
 // Generates docs/system-map.md and docs/system-map.json
@@ -18,6 +31,10 @@ const OUT_MD      = path.join(DOCS_DIR, 'system-map.md');
 const OUT_JSON    = path.join(DOCS_DIR, 'system-map.json');
 
 // ── Utilities ─────────────────────────────────────────────────
+// log()
+// WHAT THIS DOES: log is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call log(...) where this helper behavior is needed.
 function log(msg) { process.stdout.write('  ' + msg + '\n'); }
 
 function walkDir(dir, exts, results = []) {
@@ -38,20 +55,28 @@ function walkDir(dir, exts, results = []) {
   }
   return results;
 }
-
+// readFile()
+// WHAT THIS DOES: readFile reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call readFile(...), then use the returned value in your next step.
 function readFile(fp) {
   try { return fs.readFileSync(fp, 'utf8'); }
   catch (_) { return ''; }
 }
-
+// lineCount()
+// WHAT THIS DOES: lineCount is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call lineCount(...) where this helper behavior is needed.
 function lineCount(content) {
   return content ? content.split('\n').length : 0;
 }
-
 function relPath(fp) {
   return path.relative(ROOT, fp).replace(/\\/g, '/');
 }
-
+// escMd()
+// WHAT THIS DOES: escMd is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call escMd(...) where this helper behavior is needed.
 function escMd(s) {
   return String(s || '').replace(/\|/g, '\\|').replace(/`/g, "'");
 }
@@ -230,7 +255,10 @@ const slotRegistry = [];
 const dataCoreTabRe     = /data-core-tab=["']([^"']+)["']/gi;
 const dataOptionalTabRe = /data-optional-tab=["']([^"']+)["']/gi;
 const dataCoreOverlayRe = /data-core-overlay=["']([^"']+)["']/gi;
-
+// extractSlots()
+// WHAT THIS DOES: extractSlots is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call extractSlots(...) where this helper behavior is needed.
 function extractSlots(html, re, type, pathBuilder) {
   const items = [];
   let m;
@@ -279,6 +307,10 @@ const fetchApiReWith = /fetch\s*\(\s*[`'"]([^`'"]*\/api\/[^`'"\s?]+)/g;
 const fetchVarRe = /fetch\s*\(\s*`([^`]*\/api\/[^`]*)`/g;
 
 // Method hints via surrounding context — look for method: 'POST'/'GET' etc up to 5 lines after fetch
+// extractMethod()
+// WHAT THIS DOES: extractMethod is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call extractMethod(...) where this helper behavior is needed.
 function extractMethod(lines, lineIdx) {
   const window = lines.slice(lineIdx, lineIdx + 6).join(' ');
   const mMatch = window.match(/method\s*:\s*['"`]([A-Z]+)['"`]/);
@@ -437,6 +469,10 @@ while ((cssM = cssClassRe.exec(sharedCss)) !== null) {
 const htmlClassUsages = {};  // className -> [file]
 const htmlClassRe = /class=["'][^"']*\b(sys-inline-[A-Za-z0-9_-]+)\b[^"']*["']/g;
 
+// for()
+// WHAT THIS DOES: for is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call for(...) where this helper behavior is needed.
 for (const fp of htmlFiles) {
   const content = fileContents[fp] || '';
   const rel     = relPath(fp);
@@ -451,6 +487,10 @@ for (const fp of htmlFiles) {
 
 // Also check JS files that may set className or classList
 const jsClassRe = /(sys-inline-[A-Za-z0-9_-]+)/g;
+// for()
+// WHAT THIS DOES: for is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call for(...) where this helper behavior is needed.
 for (const fp of jsFiles) {
   const content = fileContents[fp] || '';
   const rel     = relPath(fp);
@@ -581,10 +621,18 @@ const jsonOut = {
 log('Rendering markdown...');
 
 const lines_md = [];
+// h1()
+// WHAT THIS DOES: h1 is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call h1(...) where this helper behavior is needed.
 function h1(t) { lines_md.push('# ' + t); lines_md.push(''); }
 function h2(t) { lines_md.push('## ' + t); lines_md.push(''); }
 function h3(t) { lines_md.push('### ' + t); lines_md.push(''); }
 function p(t)  { lines_md.push(t); lines_md.push(''); }
+// tableHeader()
+// WHAT THIS DOES: tableHeader is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call tableHeader(...) where this helper behavior is needed.
 function tableHeader(cols) { lines_md.push('| ' + cols.join(' | ') + ' |'); lines_md.push('| ' + cols.map(() => '---').join(' | ') + ' |'); }
 function tableRow(vals)    { lines_md.push('| ' + vals.map(v => escMd(String(v ?? ''))).join(' | ') + ' |'); }
 function tableEnd()        { lines_md.push(''); }

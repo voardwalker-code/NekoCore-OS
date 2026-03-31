@@ -1,3 +1,16 @@
+// ── Tools · Audit Legacy Memory Records ──────────────────────────────────────
+//
+// HOW MEMORY AUDIT WORKS:
+// This utility scans entity memory log files for missing schema-version fields
+// and can optionally backfill normalized schema fields with --apply.
+//
+// WHAT USES THIS:
+//   maintenance/migration workflows for legacy memory data
+//
+// EXPORTS:
+//   executable script entry via main()
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // Phase 13 Utility: Legacy Memory Audit and Optional Backfill
 //
@@ -9,7 +22,10 @@ const fs = require('fs');
 const path = require('path');
 const entityPaths = require('../entityPaths');
 const { MEMORY_SCHEMA_VERSION, normalizeMemoryRecord } = require('../contracts/memory-schema');
-
+// parseArgs()
+// WHAT THIS DOES: Parses CLI flags for entity targeting and apply mode.
+// WHY IT EXISTS: Utility can run either full audit or targeted apply mode from command line.
+// HOW TO USE IT: Call parseArgs(process.argv) at script startup.
 function parseArgs(argv) {
   const args = { entity: null, apply: false };
   for (let i = 2; i < argv.length; i++) {
@@ -23,7 +39,10 @@ function parseArgs(argv) {
   }
   return args;
 }
-
+// listEntityIds()
+// WHAT THIS DOES: Lists entity ids from entities directory naming convention.
+// WHY IT EXISTS: Batch audits need discovery of all local entity folders.
+// HOW TO USE IT: Call listEntityIds(baseEntitiesDir) when --entity is not provided.
 function listEntityIds(baseEntitiesDir) {
   if (!fs.existsSync(baseEntitiesDir)) return [];
   return fs.readdirSync(baseEntitiesDir)
@@ -37,7 +56,10 @@ function listEntityIds(baseEntitiesDir) {
     })
     .map(name => name.replace(/^entity_/, ''));
 }
-
+// safeReadJson()
+// WHAT THIS DOES: Reads JSON safely and returns null on parse/read failure.
+// WHY IT EXISTS: Audit should continue even when individual files are malformed.
+// HOW TO USE IT: Call safeReadJson(filePath) before accessing memory record fields.
 function safeReadJson(filePath) {
   try {
     return JSON.parse(fs.readFileSync(filePath, 'utf8'));
@@ -45,7 +67,10 @@ function safeReadJson(filePath) {
     return null;
   }
 }
-
+// auditMemoryLogFile()
+// WHAT THIS DOES: Audits one memory log.json and optionally patches missing schema fields.
+// WHY IT EXISTS: Legacy logs may lack schema version and normalized attributes.
+// HOW TO USE IT: Call auditMemoryLogFile(filePath, apply) for each discovered log.json.
 function auditMemoryLogFile(filePath, apply) {
   const json = safeReadJson(filePath);
   if (!json) {
@@ -69,7 +94,10 @@ function auditMemoryLogFile(filePath, apply) {
 
   return { scanned: 1, invalidJson: 0, missingSchema: 1, patched: 0 };
 }
-
+// auditConsciousLtmFile()
+// WHAT THIS DOES: Audits one conscious/ltm JSON and optionally adds schema version.
+// WHY IT EXISTS: Conscious LTM files need consistent schema-version tagging for tooling compatibility.
+// HOW TO USE IT: Call auditConsciousLtmFile(filePath, apply) during conscious/ltm scan.
 function auditConsciousLtmFile(filePath, apply) {
   const json = safeReadJson(filePath);
   if (!json) {
@@ -88,7 +116,10 @@ function auditConsciousLtmFile(filePath, apply) {
 
   return { scanned: 1, invalidJson: 0, missingSchema: 1, patched: 0 };
 }
-
+// runEntityAudit()
+// WHAT THIS DOES: Scans eligible memory artifacts for one entity and aggregates counts.
+// WHY IT EXISTS: Reporting needs per-entity totals for scanned, missing schema, and patched records.
+// HOW TO USE IT: Call runEntityAudit(entityId, apply) when building final report.
 function runEntityAudit(entityId, apply) {
   const memoryRoot = entityPaths.getMemoryRoot(entityId);
   const out = {
@@ -136,7 +167,10 @@ function runEntityAudit(entityId, apply) {
 
   return out;
 }
-
+// main()
+// WHAT THIS DOES: Runs audit/apply flow and prints JSON report.
+// WHY IT EXISTS: Script should provide machine-readable output for maintenance automation.
+// HOW TO USE IT: Execute this file directly via Node; main() handles argument parsing and reporting.
 function main() {
   const args = parseArgs(process.argv);
   const baseEntitiesDir = path.join(__dirname, '../../entities');

@@ -1,3 +1,19 @@
+// ── Tests · Archive Directory Guards.Test ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This test file validates behavior and guards against regressions in its
+// target subsystem.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: node:test,
+// node:assert/strict, fs, path, os. Keep import and call-site contracts
+// aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // Guard Tests — Phase 4.7 E-2: Echo Past (Round 1)
 // Guards that define and lock the expected behavior of:
@@ -46,6 +62,10 @@ test('archive-directory exports registerArchive as a function', () => {
 
 // ── readDirectory / writeDirectory ───────────────────────────────────────────
 
+// tmpBase()
+// WHAT THIS DOES: tmpBase is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call tmpBase(...) where this helper behavior is needed.
 function tmpBase() {
   return path.join(os.tmpdir(), `nekocore_archdir_test_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`);
 }

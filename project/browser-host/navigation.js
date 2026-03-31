@@ -1,3 +1,17 @@
+// ── Services · Browser Navigation ───────────────────────────────────────────
+//
+// HOW NAVIGATION WORKS:
+// This file handles tab movement through URLs, just like browser back/forward
+// buttons. For each tab it keeps a back stack and a forward stack, then emits
+// navigation state so UI can enable or disable controls.
+//
+// WHAT USES THIS:
+//   browser host routes/controllers — trigger navigate/back/forward/reload
+//
+// EXPORTS:
+//   navigate(tabId, url), goBack(tabId), goForward(tabId), reload(tabId, opts), reset()
+// ─────────────────────────────────────────────────────────────────────────────
+
 'use strict';
 
 /**
@@ -11,15 +25,20 @@
 const eventBus = require('./event-bus');
 const tabModel = require('./tab-model');
 
+// ── State ───────────────────────────────────────────────────────────────────
+
 /** Per-tab navigation history stacks. */
 const _backStack = new Map();   // tabId → string[]
 const _forwardStack = new Map(); // tabId → string[]
 
+// ── Helpers ─────────────────────────────────────────────────────────────────
+
+/** Ensure both history stacks exist for a tab. */
 function _ensureStacks(tabId) {
   if (!_backStack.has(tabId)) _backStack.set(tabId, []);
   if (!_forwardStack.has(tabId)) _forwardStack.set(tabId, []);
 }
-
+/** Emit current navigation flags for one tab. */
 function _emitNavState(tabId) {
   const tab = tabModel.getTab(tabId);
   if (!tab) return;
@@ -37,10 +56,9 @@ function _emitNavState(tabId) {
   eventBus.emit('browser.navigation.state', payload);
 }
 
-/**
- * Navigate a tab to a URL.
- * Returns { ok, tabId, url } or { ok: false, code, message }.
- */
+// ── Core Logic ──────────────────────────────────────────────────────────────
+
+/** Navigate a tab to a URL and emit lifecycle + nav state events. */
 function navigate(tabId, url) {
   const tab = tabModel.getTab(tabId);
   if (!tab) {
@@ -82,7 +100,7 @@ function navigate(tabId, url) {
   _emitNavState(tabId);
   return { ok: true, tabId, url };
 }
-
+/** Move one step backward in a tab's history. */
 function goBack(tabId) {
   _ensureStacks(tabId);
   const back = _backStack.get(tabId);
@@ -99,7 +117,7 @@ function goBack(tabId) {
   _emitNavState(tabId);
   return { ok: true, tabId, url: prevUrl };
 }
-
+/** Move one step forward in a tab's history. */
 function goForward(tabId) {
   _ensureStacks(tabId);
   const fwd = _forwardStack.get(tabId);
@@ -116,7 +134,7 @@ function goForward(tabId) {
   _emitNavState(tabId);
   return { ok: true, tabId, url: nextUrl };
 }
-
+/** Reload the current URL for a tab. */
 function reload(tabId, { hard = false } = {}) {
   const tab = tabModel.getTab(tabId);
   if (!tab) return { ok: false, code: 'TAB_NOT_FOUND', message: `Tab ${tabId} does not exist` };
@@ -132,10 +150,12 @@ function reload(tabId, { hard = false } = {}) {
   return { ok: true, tabId, url: tab.url, hard };
 }
 
-/** Reset navigation stacks (for testing). */
+/** Reset all navigation stacks (for tests). */
 function reset() {
   _backStack.clear();
   _forwardStack.clear();
 }
+
+// ── Exports ─────────────────────────────────────────────────────────────────
 
 module.exports = { navigate, goBack, goForward, reload, reset };

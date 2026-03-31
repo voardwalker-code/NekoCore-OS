@@ -1,3 +1,20 @@
+// ── Brain · Orchestrator ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: ../generation/aspect-prompts,
+// ../utils/turn-signals, ../../contracts/contributor-contracts,
+// ../cognition/dream-intuition-adapter, ./orchestration-policy. Keep import
+// and call-site contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // REM System — Orchestrator
 // Manages inner dialog between cognitive aspects (Subconscious,
@@ -46,6 +63,10 @@ class Orchestrator {
    * @param {Function} [options.getConsciousContext] - async (topics) => context string
    * @param {Function} [options.storeConsciousObservation] - async (userMessage, response, topics, thinkingLogId) => void
    */
+  // constructor()
+  // WHAT THIS DOES: constructor is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call constructor(...) where this helper behavior is needed.
   constructor(options = {}) {
     this.entity = options.entity;
     this.callLLM = options.callLLM;
@@ -569,6 +590,12 @@ Rules:
 
     const systemPrompt = getDreamPrompt(this.entity, subconsciousContext);
 
+    // isCollapsedDream()
+    // Purpose: helper wrapper used by this module's main flow.
+    // isCollapsedDream()
+    // WHAT THIS DOES: isCollapsedDream answers a yes/no rule check.
+    // WHY IT EXISTS: guard checks are kept readable and reusable in one place.
+    // HOW TO USE IT: call isCollapsedDream(...) and branch logic based on true/false.
     const isCollapsedDream = (text) => {
       const t = String(text || '').trim();
       if (!t) return true;
@@ -577,6 +604,12 @@ Rules:
       return words < 24;
     };
 
+    // fallbackDream()
+    // Purpose: helper wrapper used by this module's main flow.
+    // fallbackDream()
+    // WHAT THIS DOES: fallbackDream is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call fallbackDream(...) where this helper behavior is needed.
     const fallbackDream = () => {
       const clipped = String(subconsciousContext || '').replace(/\s+/g, ' ').slice(0, 420);
       return [
@@ -660,6 +693,12 @@ Rules:
     let activeRecallHint = '';
     try {
       const recall = options.memoryContext || null;
+      // memoryLines()
+      // Purpose: helper wrapper used by this module's main flow.
+      // memoryLines()
+      // WHAT THIS DOES: memoryLines is a helper used by this module's main flow.
+      // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+      // HOW TO USE IT: call memoryLines(...) where this helper behavior is needed.
       const memoryLines = (recall?.connections || [])
         .slice(0, 6)
         .map((m) => {
@@ -667,6 +706,12 @@ Rules:
           const score = Number(m?.relevanceScore || 0).toFixed(3);
           return `- ${m?.id || 'memory'} [${m?.type || 'episodic'}] score=${score} ${sem}`;
         });
+      // chatlogLines()
+      // Purpose: helper wrapper used by this module's main flow.
+      // chatlogLines()
+      // WHAT THIS DOES: chatlogLines is a helper used by this module's main flow.
+      // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+      // HOW TO USE IT: call chatlogLines(...) where this helper behavior is needed.
       const chatlogLines = (recall?.chatlogContext || [])
         .slice(0, 3)
         .map((cl) => {
@@ -698,6 +743,12 @@ Rules:
         const relSvc = require('../../services/relationship-service');
         const rel = relSvc.getRelationship(entityId, activeUserId, activeUserName);
         if (rel && typeof rel === 'object') {
+          // topBeliefs()
+          // Purpose: helper wrapper used by this module's main flow.
+          // topBeliefs()
+          // WHAT THIS DOES: topBeliefs is a helper used by this module's main flow.
+          // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+          // HOW TO USE IT: call topBeliefs(...) where this helper behavior is needed.
           const topBeliefs = (Array.isArray(rel.beliefs) ? rel.beliefs : [])
             .slice(0, 2)
             .map((b) => String(b?.belief || '').trim())
@@ -966,6 +1017,10 @@ Keep concise and structured.`;
     // the subconscious/dream/signals to brief summaries instead of full copies.
     const leanSub = String(subconsciousOutput || '').slice(0, 600) || '(No subconscious context)';
     const leanDream = String(dreamOutput || '').slice(0, 300) || '(No dream contribution)';
+    // signalsSummary()
+    // WHAT THIS DOES: signalsSummary is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call signalsSummary(...) where this helper behavior is needed.
     const signalsSummary = (() => {
       const ts = options.turnSignals || {};
       const parts = [];
@@ -1004,6 +1059,12 @@ The Conscious reasoning notes above define what to address (INTENT), which memor
     let content;
     let nativeThinkingContent = null;
 
+    // doCall()
+    // Purpose: helper wrapper used by this module's main flow.
+    // doCall()
+    // WHAT THIS DOES: doCall is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call doCall(...) where this helper behavior is needed.
     const doCall = async (rt) => this.callLLM(rt, [
       { role: 'system', content: finalOrcSystemPrompt },
       { role: 'user', content: mergePrompt }
@@ -1044,6 +1105,10 @@ The Conscious reasoning notes above define what to address (INTENT), which memor
 
     // Capture thinking content — from prompt-based tags or Anthropic native thinking
     let thinkingLogId = null;
+    // promptThinking()
+    // WHAT THIS DOES: promptThinking is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call promptThinking(...) where this helper behavior is needed.
     const promptThinking = (useOrcPromptThinking && typeof content === 'string') ? extractThinkingContent(content) : null;
     const thinkingContent = nativeThinkingContent || promptThinking;
     if (thinkingContent && this.thinkingLog) {

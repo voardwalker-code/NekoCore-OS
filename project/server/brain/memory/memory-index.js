@@ -1,9 +1,28 @@
+// ── Brain · Memory Index ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Used by related flows in its subsystem. Keep call contracts stable during
+// readability-only edits.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // REM System — Memory Index Module
 // Manages memory storage, retrieval, search, and decay.
 // ============================================================
 
 class MemoryIndex {
+  // constructor()
+  // WHAT THIS DOES: constructor is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call constructor(...) where this helper behavior is needed.
   constructor(options = {}) {
     this.episodicMemories = []; // Specific events, decay over time
     this.semanticMemories = []; // General knowledge, persist
@@ -15,6 +34,10 @@ class MemoryIndex {
   /**
    * Add an episodic memory (event-based)
    */
+  // addEpisodicMemory()
+  // WHAT THIS DOES: addEpisodicMemory is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call addEpisodicMemory(...) where this helper behavior is needed.
   addEpisodicMemory(memory) {
     if (!memory || !memory.id) return;
     
@@ -26,6 +49,10 @@ class MemoryIndex {
     this.episodicMemories.push(memory);
     
     // Trim if exceeded max
+    // if()
+    // WHAT THIS DOES: if is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call if(...) where this helper behavior is needed.
     if (this.episodicMemories.length > this.maxEpisodic) {
       // Remove oldest or least important
       this.episodicMemories.sort((a, b) => {
@@ -40,6 +67,10 @@ class MemoryIndex {
   /**
    * Add a semantic memory (knowledge-based)
    */
+  // addSemanticMemory()
+  // WHAT THIS DOES: addSemanticMemory is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call addSemanticMemory(...) where this helper behavior is needed.
   addSemanticMemory(memory) {
     if (!memory || !memory.id) return;
     

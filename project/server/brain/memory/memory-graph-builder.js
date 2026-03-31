@@ -1,3 +1,19 @@
+// ── Brain · Memory Graph Builder ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: fs, path, ./memory-graph,
+// ../bus/thought-types. Keep import and call-site contracts aligned during
+// refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // REM System — Memory Graph Builder Module
 // Loads stored memories from disk and builds associative graph.
@@ -9,6 +25,10 @@ const MemoryGraph = require('./memory-graph');
 const ThoughtTypes = require('../bus/thought-types');
 
 class MemoryGraphBuilder {
+  // constructor()
+  // WHAT THIS DOES: constructor is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call constructor(...) where this helper behavior is needed.
   constructor(options = {}) {
     this.memDir = options.memDir || path.join(__dirname, '../../../memories/Memory2');
     this.semanticDir = options.semanticDir || null;
@@ -23,6 +43,10 @@ class MemoryGraphBuilder {
   /**
    * Load all memories from disk and build the graph
    */
+  // buildGraph()
+  // WHAT THIS DOES: buildGraph creates or initializes something needed by the flow.
+  // WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+  // HOW TO USE IT: call buildGraph(...) before code that depends on this setup.
   buildGraph() {
     try {
       if (!fs.existsSync(this.memDir)) {
@@ -38,6 +62,10 @@ class MemoryGraphBuilder {
       // Phase 1: Load all memory nodes (episodic)
       const memories = [];
       const loadedIds = new Set(); // Track loaded IDs to avoid duplicates
+      // for()
+      // WHAT THIS DOES: for is a helper used by this module's main flow.
+      // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+      // HOW TO USE IT: call for(...) where this helper behavior is needed.
       for (const folder of memoryFolders) {
         // Skip LTM duplicates in episodic dir — they'll be loaded from ltm/ as chatlog type
         if (folder.startsWith('ltm_') && this.ltmDir) continue;

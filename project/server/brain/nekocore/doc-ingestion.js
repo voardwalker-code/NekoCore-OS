@@ -1,3 +1,18 @@
+// ── Brain · Doc Ingestion ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: fs, path, ../utils/textrank,
+// ../utils/archive-index. Keep import and call-site contracts aligned during
+// refactors.
+//
+// EXPORTS:
+// Exposed API includes: ingestArchitectureDocs.
+// ─────────────────────────────────────────────────────────────────────────────
+
 'use strict';
 // ============================================================
 // NekoCore — Architecture Document Ingestion
@@ -56,6 +71,10 @@ const TOPIC_STOPWORDS = new Set([
   'use', 'used', 'when', 'what', 'how', 'why', 'which', 'per', 'via', 'each',
 ]);
 
+// extractTopicsFromText()
+// WHAT THIS DOES: extractTopicsFromText is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call extractTopicsFromText(...) where this helper behavior is needed.
 function extractTopicsFromText(text, extra = []) {
   const raw = text
     .toLowerCase()
@@ -73,6 +92,10 @@ function extractTopicsFromText(text, extra = []) {
 }
 
 // ── Split a markdown document into sections by ## headers ───────────────────
+// chunkDocument()
+// WHAT THIS DOES: chunkDocument is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call chunkDocument(...) where this helper behavior is needed.
 function chunkDocument(docName, content) {
   const baseName = path.basename(docName, '.md');
   const seedTopics = DOC_TOPIC_SEEDS[baseName] || [];
@@ -114,6 +137,10 @@ function chunkDocument(docName, content) {
 // ── Write a single doc-archive chunk to disk ─────────────────────────────────
 // IME I3-2: writes to memories/archive/docs/ instead of memories/semantic/
 // Writes archiveIndex.json entry; does NOT touch memoryIndex.json.
+// writeChunk()
+// WHAT THIS DOES: writeChunk changes saved state or updates data.
+// WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+// HOW TO USE IT: call writeChunk(...) with the new values you want to persist.
 function writeChunk(archiveDocsDir, memRoot, memId, chunk, now) {
   const memDir = path.join(archiveDocsDir, memId);
   if (!fs.existsSync(memDir)) fs.mkdirSync(memDir, { recursive: true });
@@ -154,6 +181,10 @@ function writeChunk(archiveDocsDir, memRoot, memId, chunk, now) {
 
 // ── Remove old chunks for a doc that is being re-ingested ────────────────────
 // Checks both the new archive/docs path and the legacy memories/semantic/ path.
+// removeOldChunks()
+// WHAT THIS DOES: removeOldChunks removes, resets, or shuts down existing state.
+// WHY IT EXISTS: cleanup is explicit so stale state does not leak into new runs.
+// HOW TO USE IT: call removeOldChunks(...) when you need a safe teardown/reset path.
 function removeOldChunks(archiveDocsDir, oldChunkIds, legacySemanticDir) {
   for (const id of (oldChunkIds || [])) {
     for (const dir of [archiveDocsDir, legacySemanticDir].filter(Boolean)) {
@@ -167,6 +198,10 @@ function removeOldChunks(archiveDocsDir, oldChunkIds, legacySemanticDir) {
 
 // ── Main: ingest all docs from docsDir into NekoCore's archive/docs/ ─────────
 // IME I3-2: chunks go to memories/archive/docs/ not memories/semantic/
+// ingestArchitectureDocs()
+// WHAT THIS DOES: ingestArchitectureDocs is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call ingestArchitectureDocs(...) where this helper behavior is needed.
 function ingestArchitectureDocs(memRoot, docsDir) {
   if (!fs.existsSync(docsDir)) {
     console.log('  ℹ NekoCore doc ingestion: docs/ not found, skipping.');

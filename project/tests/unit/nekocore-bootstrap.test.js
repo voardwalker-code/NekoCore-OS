@@ -1,3 +1,19 @@
+// ── Tests · Nekocore Bootstrap.Test ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This test file validates behavior and guards against regressions in its
+// target subsystem.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: node:test,
+// node:assert/strict, node:fs, node:path, node:os. Keep import and call-site
+// contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // Unit Tests — NekoCore Bootstrap (A-3)
 // Tests ensureSystemEntity() idempotency, entity.json contents,
@@ -13,7 +29,10 @@ const path     = require('node:path');
 const os       = require('node:os');
 
 const { ensureSystemEntity, SYSTEM_ENTITY_ID } = require('../../server/brain/nekocore/bootstrap');
-
+// makeTmpDir()
+// WHAT THIS DOES: makeTmpDir creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call makeTmpDir(...) before code that depends on this setup.
 function makeTmpDir() {
   return fs.mkdtempSync(path.join(os.tmpdir(), 'nekocore-bootstrap-test-'));
 }
@@ -485,6 +504,12 @@ test('dreamsPhase runs normally when entity does NOT have dreamDisabled', async 
 test('Orchestrator includes entity summaries in mergePrompt when isSystemEntity is true', async () => {
   const Orchestrator = require('../../server/brain/core/orchestrator');
   let capturedUserMessage = null;
+  // fakeCallLLM()
+  // Purpose: helper wrapper used by this module's main flow.
+  // fakeCallLLM()
+  // WHAT THIS DOES: fakeCallLLM is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call fakeCallLLM(...) where this helper behavior is needed.
   const fakeCallLLM = async (runtime, messages) => {
     capturedUserMessage = (messages || []).find(m => m.role === 'user')?.content || '';
     return { content: 'ok', usage: null };
@@ -508,6 +533,12 @@ test('Orchestrator includes entity summaries in mergePrompt when isSystemEntity 
 test('Orchestrator omits entity summaries block when entity is not a system entity', async () => {
   const Orchestrator = require('../../server/brain/core/orchestrator');
   let capturedUserMessage = null;
+  // fakeCallLLM()
+  // Purpose: helper wrapper used by this module's main flow.
+  // fakeCallLLM()
+  // WHAT THIS DOES: fakeCallLLM is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call fakeCallLLM(...) where this helper behavior is needed.
   const fakeCallLLM = async (runtime, messages) => {
     capturedUserMessage = (messages || []).find(m => m.role === 'user')?.content || '';
     return { content: 'ok', usage: null };
@@ -527,6 +558,12 @@ test('Orchestrator getEntitySummaries does not mutate source entity objects', as
   const sourceEntities = [
     { id: 'entity_alice', name: 'Alice', personality_traits: ['curious', 'warm'] }
   ];
+  // fakeCallLLM()
+  // Purpose: helper wrapper used by this module's main flow.
+  // fakeCallLLM()
+  // WHAT THIS DOES: fakeCallLLM is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call fakeCallLLM(...) where this helper behavior is needed.
   const fakeCallLLM = async () => ({ content: 'ok', usage: null });
   const orch = new Orchestrator({
     entity: { id: 'nekocore', name: 'NekoCore', isSystemEntity: true },

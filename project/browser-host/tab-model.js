@@ -1,3 +1,20 @@
+// ── Services · Browser Tab Model ────────────────────────────────────────────
+//
+// HOW TAB STATE WORKS:
+// This file is the source of truth for tabs. It tracks open tabs, tab order,
+// and which tab is active. Other modules ask this file for tab state instead
+// of storing their own copy.
+//
+// WHAT USES THIS:
+//   navigation.js — reads and updates tab state during navigation
+//   browser-host index/consumers — create, switch, close, and inspect tabs
+//
+// EXPORTS:
+//   createTab(opts), activateTab(tabId), closeTab(tabId)
+//   getTab(tabId), getActiveTab(), getActiveTabId()
+//   getAllTabs(), getTabCount(), updateTabState(tabId, fields), reset()
+// ─────────────────────────────────────────────────────────────────────────────
+
 'use strict';
 
 /**
@@ -11,14 +28,21 @@
 const crypto = require('crypto');
 const eventBus = require('./event-bus');
 
-/** @type {Map<string, object>} tabId → tab state */
+// ── State ───────────────────────────────────────────────────────────────────
+
+/** @type {Map<string, object>} tabId -> tab state */
 const tabs = new Map();
 let activeTabId = null;
 let tabOrder = []; // ordered tab id list
 
+// ── Helpers ─────────────────────────────────────────────────────────────────
+
+/** Create a compact random tab ID. */
 function _makeTabId() {
   return 'tab_' + crypto.randomBytes(6).toString('hex');
 }
+
+// ── Core Logic ──────────────────────────────────────────────────────────────
 
 function createTab({ openerTabId, makeActive = true } = {}) {
   const tabId = _makeTabId();
@@ -40,7 +64,7 @@ function createTab({ openerTabId, makeActive = true } = {}) {
   }
   return tab;
 }
-
+/** Mark an existing tab as active. */
 function activateTab(tabId) {
   if (!tabs.has(tabId)) return null;
   activeTabId = tabId;
@@ -48,7 +72,7 @@ function activateTab(tabId) {
   tab.lastEventAt = Date.now();
   return tab;
 }
-
+/** Close a tab and pick a deterministic next active tab. */
 function closeTab(tabId) {
   if (!tabs.has(tabId)) return null;
   tabs.delete(tabId);
@@ -70,28 +94,31 @@ function closeTab(tabId) {
   tabOrder.forEach((id, i) => { tabs.get(id).index = i; });
   return activeTabId;
 }
-
+/** Return one tab by ID, or null when missing. */
 function getTab(tabId) {
   return tabs.get(tabId) || null;
 }
-
+/** Return the currently active tab object, or null. */
 function getActiveTab() {
   return activeTabId ? tabs.get(activeTabId) || null : null;
 }
 
+/** Return the active tab ID, or null. */
 function getActiveTabId() {
   return activeTabId;
 }
 
+/** Return all tab objects in current visual order. */
 function getAllTabs() {
   return tabOrder.map(id => tabs.get(id));
 }
 
+/** Return how many tabs are currently open. */
 function getTabCount() {
   return tabs.size;
 }
 
-/** Update tab fields after navigation events. */
+/** Update mutable tab fields (used by navigation/lifecycle flow). */
 function updateTabState(tabId, fields) {
   const tab = tabs.get(tabId);
   if (!tab) return null;
@@ -99,12 +126,14 @@ function updateTabState(tabId, fields) {
   return tab;
 }
 
-/** Reset all state (for testing). */
+/** Reset all tab state (for tests). */
 function reset() {
   tabs.clear();
   tabOrder = [];
   activeTabId = null;
 }
+
+// ── Exports ─────────────────────────────────────────────────────────────────
 
 module.exports = {
   createTab, activateTab, closeTab,

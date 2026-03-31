@@ -1,3 +1,19 @@
+// ── Brain · Dream Visualizer ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: @napi-rs/canvas,
+// gif-encoder-2, fs, path, ../generation/pixel-art-engine. Keep import and
+// call-site contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // REM System — Dream Visualizer
 //
@@ -11,7 +27,10 @@
 
 let _createCanvas = null;
 let _GIFEncoder = null;
-
+// requireCanvas()
+// WHAT THIS DOES: requireCanvas is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call requireCanvas(...) where this helper behavior is needed.
 function requireCanvas() {
   if (!_createCanvas) {
     try { _createCanvas = require('@napi-rs/canvas').createCanvas; } catch (_) {}
@@ -19,7 +38,10 @@ function requireCanvas() {
   if (!_createCanvas) throw new Error('MISSING_DEPS: @napi-rs/canvas is not installed. Run: npm install @napi-rs/canvas gif-encoder-2');
   return _createCanvas;
 }
-
+// requireGIF()
+// WHAT THIS DOES: requireGIF is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call requireGIF(...) where this helper behavior is needed.
 function requireGIF() {
   if (!_GIFEncoder) {
     try { _GIFEncoder = require('gif-encoder-2'); } catch (_) {}
@@ -33,6 +55,10 @@ const path = require('path');
 const NekoPixelPro = require('../generation/pixel-art-engine');
 
 class DreamVisualizer {
+  // constructor()
+  // WHAT THIS DOES: constructor is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call constructor(...) where this helper behavior is needed.
   constructor(options = {}) {
     this.pixelEngine = options.pixelEngine || new NekoPixelPro(options);
     this.gridSize = options.gridSize || 64;
@@ -49,6 +75,10 @@ class DreamVisualizer {
   /**
    * Update image generation settings at runtime.
    */
+  // setImageGenConfig()
+  // WHAT THIS DOES: setImageGenConfig changes saved state or updates data.
+  // WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+  // HOW TO USE IT: call setImageGenConfig(...) with the new values you want to persist.
   setImageGenConfig(config) {
     if (config.imageGenMode) this.imageGenMode = config.imageGenMode;
     if (config.imageApiEndpoint !== undefined) this.imageApiEndpoint = config.imageApiEndpoint;
@@ -61,6 +91,10 @@ class DreamVisualizer {
    * Returns { png: Buffer, metadata: object } or null on failure.
    */
   async generateImageFromAPI(narrative, emotion, genre) {
+    // if()
+    // WHAT THIS DOES: if is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call if(...) where this helper behavior is needed.
     if (!this.imageApiEndpoint || !this.imageApiKey) {
       console.warn('  ⚠ Image API not configured — falling back to pixel art');
       return null;

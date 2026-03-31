@@ -1,3 +1,18 @@
+// ── Brain · Identity Manager ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: fs, path. Keep import and
+// call-site contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // REM System — Identity Manager Module
 // Maintains persistent AI personality, beliefs, and trait profile.
@@ -7,6 +22,10 @@ const fs = require('fs');
 const path = require('path');
 
 class IdentityManager {
+  // constructor()
+  // WHAT THIS DOES: constructor is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call constructor(...) where this helper behavior is needed.
   constructor(options = {}) {
     this.memDir = options.memDir || path.join(__dirname, '../../../memories');
     this.identityPath = path.join(this.memDir, 'identity.json');
@@ -41,6 +60,10 @@ class IdentityManager {
   /**
    * Load identity from disk
    */
+  // load()
+  // WHAT THIS DOES: load reads or finds data and gives it back.
+  // WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+  // HOW TO USE IT: call load(...), then use the returned value in your next step.
   load() {
     try {
       if (fs.existsSync(this.identityPath)) {
@@ -149,6 +172,10 @@ class IdentityManager {
     }
 
     // Check for existing similar belief (simple substring match)
+    // normalStmt()
+    // WHAT THIS DOES: normalStmt is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call normalStmt(...) where this helper behavior is needed.
     const normalStmt = (statement || '').toLowerCase().trim();
     const existing = this.identity.beliefs[topic].find(b => {
       const existNorm = (b.statement || '').toLowerCase().trim();

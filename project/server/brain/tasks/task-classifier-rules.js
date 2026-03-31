@@ -1,3 +1,18 @@
+// ── Brain · Task Classifier Rules ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Used by related flows in its subsystem. Keep call contracts stable during
+// readability-only edits.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 /**
  * Task Classifier Rules
  * Maps each task type to keywords, patterns, and scoring rules.
@@ -143,6 +158,10 @@ const CONVERSATION_RULES = {
  * @param {Object} rules - Rules object with keywords and patterns
  * @returns {number} Confidence score 0-1
  */
+// calculateTaskConfidence()
+// WHAT THIS DOES: calculateTaskConfidence is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call calculateTaskConfidence(...) where this helper behavior is needed.
 function calculateTaskConfidence(message, rules) {
   const lowerMessage = String(message || '').toLowerCase().replace(/\s+/g, ' ');
   let score = 0;
@@ -184,6 +203,10 @@ function calculateTaskConfidence(message, rules) {
  * @param {string} message - The user message
  * @returns {Object} { taskType, confidence } - Best matching task type and its confidence
  */
+// classifyTaskType()
+// WHAT THIS DOES: classifyTaskType is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call classifyTaskType(...) where this helper behavior is needed.
 function classifyTaskType(message) {
   if (!message || typeof message !== 'string') {
     return { taskType: null, confidence: 0 };
@@ -218,6 +241,10 @@ function classifyTaskType(message) {
  * @param {string} message - The user message
  * @returns {Object} { intent, confidence, taskType }
  */
+// classifyIntentBasic()
+// WHAT THIS DOES: classifyIntentBasic is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call classifyIntentBasic(...) where this helper behavior is needed.
 function classifyIntentBasic(message) {
   if (!message || typeof message !== 'string') {
     return {

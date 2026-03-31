@@ -1,3 +1,18 @@
+// ── Client · Auth ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This client module drives browser-side behavior and state updates for UI
+// features.
+//
+// WHAT USES THIS:
+// Used by related flows in its subsystem. Keep call contracts stable during
+// readability-only edits.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // REM System v0.6.0 — Provider Module
 // Supports: OpenRouter (API key) and Ollama (local)
@@ -33,6 +48,12 @@ async function ollamaConnect(panel = 'main') {
     const resp = await fetch(url + '/api/tags');
     if (!resp.ok) throw new Error('Cannot reach Ollama');
     const data = await resp.json();
+    // models()
+    // Purpose: helper wrapper used by this module's main flow.
+    // models()
+    // WHAT THIS DOES: models is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call models(...) where this helper behavior is needed.
     const models = (data.models || []).map(m => m.name);
     if (models.length > 0) {
       if (document.getElementById(modelId).tagName === 'SELECT') {
@@ -61,12 +82,22 @@ async function ollamaConnect(panel = 'main') {
 // ============================================================
 // OPENROUTER (API KEY)
 // ============================================================
+// openrouterQuick()
+// WHAT THIS DOES: openrouterQuick is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call openrouterQuick(...) where this helper behavior is needed.
 function openrouterQuick(panel = 'main') {
   const endpointMap = { main: 'apikeyEndpoint-main', subconscious: 'subApiEndpoint', dreams: 'dreamApiEndpoint', orchestrator: 'orchApiEndpoint', nekocore: 'apikeyEndpoint-nekocore' };
   const modelMap = { main: 'apikeyModel-main', subconscious: 'subModel', dreams: 'dreamModel', orchestrator: 'orchModel', nekocore: 'nekocoreModel' };
   const endpointId = endpointMap[panel] || endpointMap.main;
   const modelId = modelMap[panel] || modelMap.main;
   const aspect = panel === 'nekocore' ? 'nekocore' : (panel === 'subconscious' ? 'subconscious' : (panel === 'dreams' ? 'dream' : (panel === 'orchestrator' ? 'orchestrator' : 'main')));
+  // preset()
+  // Purpose: helper wrapper used by this module's main flow.
+  // preset()
+  // WHAT THIS DOES: preset is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call preset(...) where this helper behavior is needed.
   const preset = (typeof getOpenRouterRolePreset === 'function')
     ? getOpenRouterRolePreset(aspect)
     : { models: OPENROUTER_PRESET.models, def: OPENROUTER_PRESET.def };
@@ -109,6 +140,12 @@ async function openrouterConnect(panel = 'main') {
   const modelId = modelMap[panel] || modelMap.main;
 
   const aspect = panel === 'nekocore' ? 'nekocore' : (panel === 'subconscious' ? 'subconscious' : (panel === 'dreams' ? 'dream' : (panel === 'orchestrator' ? 'orchestrator' : 'main')));
+  // preset()
+  // Purpose: helper wrapper used by this module's main flow.
+  // preset()
+  // WHAT THIS DOES: preset is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call preset(...) where this helper behavior is needed.
   const preset = (typeof getOpenRouterRolePreset === 'function')
     ? getOpenRouterRolePreset(aspect)
     : { def: OPENROUTER_PRESET.def };
@@ -152,7 +189,10 @@ async function openrouterConnect(panel = 'main') {
 // ============================================================
 let _nkActiveProvider = 'openrouter';
 const NK_MASKED_KEY = '********';
-
+// _nkGetKeyField()
+// WHAT THIS DOES: _nkGetKeyField is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _nkGetKeyField(...) where this helper behavior is needed.
 function _nkGetKeyField(provider) {
   if (provider === 'anthropic') {
     return {
@@ -165,7 +205,10 @@ function _nkGetKeyField(provider) {
     toggle: document.getElementById('nekocoreApiKeyToggle')
   };
 }
-
+// _nkSetMaskedKeyState()
+// WHAT THIS DOES: _nkSetMaskedKeyState is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _nkSetMaskedKeyState(...) where this helper behavior is needed.
 function _nkSetMaskedKeyState(provider, hasStoredKey) {
   const refs = _nkGetKeyField(provider);
   const input = refs.input;
@@ -179,7 +222,10 @@ function _nkSetMaskedKeyState(provider, hasStoredKey) {
 
   if (toggle) toggle.textContent = 'See';
 }
-
+// _nkBindKeyMaskInput()
+// WHAT THIS DOES: _nkBindKeyMaskInput is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _nkBindKeyMaskInput(...) where this helper behavior is needed.
 function _nkBindKeyMaskInput(provider) {
   const refs = _nkGetKeyField(provider);
   const input = refs.input;
@@ -235,7 +281,10 @@ async function nkToggleApiKey(provider) {
   input.dataset.revealed = 'true';
   toggle.textContent = 'Hide';
 }
-
+// nkPickProvider()
+// WHAT THIS DOES: nkPickProvider is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call nkPickProvider(...) where this helper behavior is needed.
 function nkPickProvider(provider) {
   _nkActiveProvider = provider;
   const types = ['openrouter', 'anthropic', 'ollama'];
@@ -254,21 +303,45 @@ async function saveNekocoreConfig() {
   if (provider === 'anthropic') {
     statusEl = document.getElementById('nekocoreAnthropicStatus');
     key = (document.getElementById('nekocoreAnthropicKey')?.value || '').trim();
+    // model()
+    // Purpose: helper wrapper used by this module's main flow.
+    // model()
+    // WHAT THIS DOES: model is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call model(...) where this helper behavior is needed.
     const model = (document.getElementById('nekocoreAnthropicModel')?.value || '').trim();
     if (!model) { _nkStatus(statusEl, 'Model is required', false); return; }
     if (!key) { _nkStatus(statusEl, 'API key is required', false); return; }
     cfg = { type: 'anthropic', endpoint: 'https://api.anthropic.com/v1/messages', apiKey: key, model };
   } else if (provider === 'ollama') {
     statusEl = document.getElementById('nekocoreOllamaStatus');
+    // url()
+    // Purpose: helper wrapper used by this module's main flow.
+    // url()
+    // WHAT THIS DOES: url is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call url(...) where this helper behavior is needed.
     const url = (document.getElementById('nekocoreOllamaUrl')?.value || 'http://localhost:11434').trim();
     const model = (document.getElementById('nekocoreOllamaModel')?.value || '').trim();
     if (!model) { _nkStatus(statusEl, 'Model is required', false); return; }
     cfg = { type: 'ollama', endpoint: url, model };
   } else {
     statusEl = document.getElementById('nekocoreConfigStatus');
+    // endpoint()
+    // Purpose: helper wrapper used by this module's main flow.
+    // endpoint()
+    // WHAT THIS DOES: endpoint is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call endpoint(...) where this helper behavior is needed.
     const endpoint = (document.getElementById('apikeyEndpoint-nekocore')?.value || '').trim()
       || 'https://openrouter.ai/api/v1/chat/completions';
     key = (document.getElementById('nekocoreApiKey')?.value || '').trim();
+    // model()
+    // Purpose: helper wrapper used by this module's main flow.
+    // model()
+    // WHAT THIS DOES: model is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call model(...) where this helper behavior is needed.
     const model = (document.getElementById('nekocoreModel')?.value || '').trim();
     if (!model) { _nkStatus(statusEl, 'Model is required', false); return; }
     if (!key) { _nkStatus(statusEl, 'API key is required', false); return; }
@@ -288,7 +361,10 @@ async function saveNekocoreConfig() {
     _nkStatus(statusEl, 'Save failed: ' + e.message, false);
   }
 }
-
+// _nkStatus()
+// WHAT THIS DOES: _nkStatus is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _nkStatus(...) where this helper behavior is needed.
 function _nkStatus(el, msg, ok) {
   if (el) { el.textContent = msg; el.style.color = ok ? 'var(--accent-green)' : 'var(--accent-red, #e55)'; }
 }
@@ -345,6 +421,10 @@ document.addEventListener('DOMContentLoaded', () => {
 // ============================================================
 // HELPERS
 // ============================================================
+// populateSelect()
+// WHAT THIS DOES: populateSelect is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call populateSelect(...) where this helper behavior is needed.
 function populateSelect(selectId, models, currentVal) {
   const sel = document.getElementById(selectId);
   if (!sel) return;

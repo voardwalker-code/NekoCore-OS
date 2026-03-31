@@ -1,3 +1,18 @@
+// ── Brain · Pixel Art Engine ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: @napi-rs/canvas. Keep import
+// and call-site contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // ★ Neko-Pixel-Pro — Pixel Art Engine v3.0 ★
 //
@@ -25,7 +40,10 @@ try {
   _canvasLoadError = e;
   console.warn('  ⚠ @napi-rs/canvas initial load failed:', e.message);
 }
-
+// getCreateCanvas()
+// WHAT THIS DOES: getCreateCanvas reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call getCreateCanvas(...), then use the returned value in your next step.
 function getCreateCanvas() {
   if (!_createCanvas) {
     try { _createCanvas = require('@napi-rs/canvas').createCanvas; _canvasLoadError = null; } catch (e) { _canvasLoadError = e; }
@@ -224,6 +242,10 @@ const GENRE_DEFAULTS = {
 // ── Engine ───────────────────────────────────────────────────
 
 class NekoPixelPro {
+  // constructor()
+  // WHAT THIS DOES: constructor is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call constructor(...) where this helper behavior is needed.
   constructor(options = {}) {
     this.gridSize = options.gridSize || GRID;
     this.modelRouter = options.modelRouter || null;
@@ -235,6 +257,10 @@ class NekoPixelPro {
    * Build a simple prompt asking the LLM for visual keywords.
    * This is a tiny task any model can handle reliably.
    */
+  // _buildKeywordPrompt()
+  // WHAT THIS DOES: _buildKeywordPrompt creates or initializes something needed by the flow.
+  // WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+  // HOW TO USE IT: call _buildKeywordPrompt(...) before code that depends on this setup.
   _buildKeywordPrompt(narrative) {
     return `Look at this dream/memory text and pick 5-8 visual elements you would draw in a tiny pixel art image for it. Return ONLY a JSON array of lowercase single words — nothing else.
 
@@ -288,6 +314,12 @@ JSON array:`;
    * Extract keywords from narrative text using regex matching.
    */
   _extractKeywordsFallback(narrative) {
+    // text()
+    // Purpose: helper wrapper used by this module's main flow.
+    // text()
+    // WHAT THIS DOES: text is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call text(...) where this helper behavior is needed.
     const text = (narrative || '').toLowerCase();
     const found = new Set();
 
@@ -320,8 +352,18 @@ JSON array:`;
     // Seeded PRNG for variety
     let seed = (Date.now() ^ (keywords.join('').length * 2654435761)) >>> 0;
     if (seed === 0) seed = 1;
+    // rand()
+    // WHAT THIS DOES: rand is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call rand(...) where this helper behavior is needed.
     const rand = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; };
+    // randInt()
+    // Purpose: helper wrapper used by this module's main flow.
     const randInt = (lo, hi) => lo + Math.floor(rand() * (hi - lo + 1));
+    // pick()
+    // WHAT THIS DOES: pick is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call pick(...) where this helper behavior is needed.
     const pick = (arr) => arr[Math.floor(rand() * arr.length)];
     const els = scene.elements;
 
@@ -355,6 +397,12 @@ JSON array:`;
       const sx = randInt(12, 52), sy = randInt(6, 16), sr = randInt(5, 8);
       els.push({ type: 'circle', x: sx, y: sy, w: sr, color: pick([pal.accent[0], '#FFD700', '#FFA500']) });
       for (let a = 0; a < 6; a++) {
+        // angle()
+        // Purpose: helper wrapper used by this module's main flow.
+        // angle()
+        // WHAT THIS DOES: angle is a helper used by this module's main flow.
+        // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+        // HOW TO USE IT: call angle(...) where this helper behavior is needed.
         const angle = (a / 6) * Math.PI * 2 + rand() * 0.3;
         const len = sr + randInt(3, 6);
         els.push({ type: 'line', x: sx, y: sy,
@@ -612,6 +660,12 @@ JSON array:`;
       const wx = randInt(22, 42), wh = randInt(16, 24), wy = groundY - wh;
       els.push({ type: 'rect', x: wx - 2, y: wy, w: 5, h: wh, color: '#E0E0E0', outline: '#9E9E9E' });
       for (let a = 0; a < 4; a++) {
+        // angle()
+        // Purpose: helper wrapper used by this module's main flow.
+        // angle()
+        // WHAT THIS DOES: angle is a helper used by this module's main flow.
+        // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+        // HOW TO USE IT: call angle(...) where this helper behavior is needed.
         const angle = (a / 4) * Math.PI * 2 + rand() * 0.5;
         const bLen = randInt(6, 10);
         els.push({ type: 'line', x: wx, y: wy + 3,
@@ -909,6 +963,12 @@ JSON array:`;
       const sx = randInt(20, 44), sy = randInt(16, 40);
       els.push({ type: 'circle', x: sx, y: sy, w: 2, color: '#333333' });
       for (let a = 0; a < 8; a++) {
+        // angle()
+        // Purpose: helper wrapper used by this module's main flow.
+        // angle()
+        // WHAT THIS DOES: angle is a helper used by this module's main flow.
+        // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+        // HOW TO USE IT: call angle(...) where this helper behavior is needed.
         const angle = (a / 8) * Math.PI * 2;
         els.push({ type: 'line', x: sx, y: sy,
           w: sx + Math.round(Math.cos(angle) * 4), h: sy + Math.round(Math.sin(angle) * 4),
@@ -975,6 +1035,12 @@ JSON array:`;
     if (kws.has('light') && !kws.has('sun')) {
       const lx = randInt(20, 44), ly = randInt(10, 30);
       for (let a = 0; a < 10; a++) {
+        // angle()
+        // Purpose: helper wrapper used by this module's main flow.
+        // angle()
+        // WHAT THIS DOES: angle is a helper used by this module's main flow.
+        // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+        // HOW TO USE IT: call angle(...) where this helper behavior is needed.
         const angle = (a / 10) * Math.PI * 2;
         const len = randInt(14, 28);
         els.push({ type: 'line', x: lx, y: ly,
@@ -990,6 +1056,12 @@ JSON array:`;
     if (kws.has('web')) {
       const wcx = randInt(20, 44), wcy = randInt(20, 44);
       for (let a = 0; a < 8; a++) {
+        // angle()
+        // Purpose: helper wrapper used by this module's main flow.
+        // angle()
+        // WHAT THIS DOES: angle is a helper used by this module's main flow.
+        // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+        // HOW TO USE IT: call angle(...) where this helper behavior is needed.
         const angle = (a / 8) * Math.PI * 2;
         const len = randInt(12, 22);
         els.push({ type: 'line', x: wcx, y: wcy,
@@ -1131,6 +1203,12 @@ JSON array:`;
     if (rx <= 0 || ry <= 0) return;
     for (let dy = -ry; dy <= ry; dy++) {
       for (let dx = -rx; dx <= rx; dx++) {
+        // d()
+        // Purpose: helper wrapper used by this module's main flow.
+        // d()
+        // WHAT THIS DOES: d is a helper used by this module's main flow.
+        // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+        // HOW TO USE IT: call d(...) where this helper behavior is needed.
         const d = (dx * dx) / (rx * rx) + (dy * dy) / (ry * ry);
         if (d <= 1.0) {
           if (outline && d > 0.7) {

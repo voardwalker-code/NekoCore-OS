@@ -1,3 +1,19 @@
+// ── Tests · Core App Migration Guards.Test ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This test file validates behavior and guards against regressions in its
+// target subsystem.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: node:test,
+// node:assert/strict, node:fs, node:path. Keep import and call-site
+// contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 'use strict';
 
 // ============================================================
@@ -22,10 +38,20 @@ const path = require('node:path');
 
 const ROOT = path.resolve(__dirname, '..', '..');
 const INDEX_HTML = path.join(ROOT, 'client', 'index.html');
+// JS()
+// Purpose: helper wrapper used by this module's main flow.
+// JS()
+// WHAT THIS DOES: JS is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call JS(...) where this helper behavior is needed.
 const JS = (...parts) => path.join(ROOT, 'client', 'js', ...parts);
 
 function readIndex() { return fs.readFileSync(INDEX_HTML, 'utf8'); }
 function read(p) { return fs.readFileSync(p, 'utf8'); }
+// indexLoads()
+// WHAT THIS DOES: indexLoads is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call indexLoads(...) where this helper behavior is needed.
 function indexLoads(fragment) { return readIndex().includes(`src="${fragment}"`); }
 
 // ============================================================

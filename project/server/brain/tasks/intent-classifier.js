@@ -1,3 +1,19 @@
+// ── Brain · Intent Classifier ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: ./task-classifier-rules,
+// ./task-module-registry. Keep import and call-site contracts aligned during
+// refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 /**
  * Intent Classifier
  * Determines if input is a task request or conversational input.
@@ -166,6 +182,10 @@ Be conservative: if the message is ambiguous, classify as "conversation".`;
  * @param {string} userMessage - The user's input
  * @returns {Object} Classification result
  */
+// classifySync()
+// WHAT THIS DOES: classifySync is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call classifySync(...) where this helper behavior is needed.
 function classifySync(userMessage) {
   if (!userMessage || typeof userMessage !== 'string') {
     return {
@@ -190,6 +210,10 @@ function classifySync(userMessage) {
  * @param {string} taskType - The task type to validate
  * @returns {boolean} True if valid
  */
+// isValidTaskType()
+// WHAT THIS DOES: isValidTaskType answers a yes/no rule check.
+// WHY IT EXISTS: guard checks are kept readable and reusable in one place.
+// HOW TO USE IT: call isValidTaskType(...) and branch logic based on true/false.
 function isValidTaskType(taskType) {
   if (!taskType) return false;
   return taskModuleRegistry.hasModule(taskType);
@@ -199,6 +223,10 @@ function isValidTaskType(taskType) {
  * Get all supported task types
  * @returns {string[]} List of task types
  */
+// getSupportedTaskTypes()
+// WHAT THIS DOES: getSupportedTaskTypes reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call getSupportedTaskTypes(...), then use the returned value in your next step.
 function getSupportedTaskTypes() {
   return taskModuleRegistry.getTaskTypes();
 }

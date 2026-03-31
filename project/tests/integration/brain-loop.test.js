@@ -1,3 +1,19 @@
+// ── Tests · Brain Loop.Test ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This test file validates behavior and guards against regressions in its
+// target subsystem.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: node:test,
+// node:assert/strict, os, fs, path. Keep import and call-site contracts
+// aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // Integration Tests — brain-loop.js
 // Tests BrainLoop construction, single tick execution with real
@@ -11,7 +27,10 @@ const os = require('os');
 const fs = require('fs');
 const path = require('path');
 const BrainLoop = require('../../server/brain/cognition/brain-loop');
-
+// makeTempDir()
+// WHAT THIS DOES: makeTempDir creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call makeTempDir(...) before code that depends on this setup.
 function makeTempDir() {
   const dir = path.join(os.tmpdir(), `rem-brain-loop-test-${Date.now()}-${Math.random().toString(36).slice(2)}`);
   fs.mkdirSync(dir, { recursive: true });

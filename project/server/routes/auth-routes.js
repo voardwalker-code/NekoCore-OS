@@ -1,3 +1,16 @@
+// ── Routes · Auth Routes ─────────────────────────────────────────────────────
+//
+// HOW AUTH ROUTING WORKS:
+// This module handles account registration/login/logout and session lookup,
+// including cookie parsing and session cookie management.
+//
+// WHAT USES THIS:
+//   auth UI flows and session-aware API requests
+//
+// EXPORTS:
+//   createAuthRoutes(ctx)
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // REM System — Auth Routes
 // POST /api/auth/register  — create account + session cookie
@@ -7,11 +20,13 @@
 // ============================================================
 'use strict';
 
+/** Build authentication route dispatcher and cookie/session helpers. */
 function createAuthRoutes(ctx) {
   const { readBody } = ctx;
   const authService = ctx.authService;
 
   // ── Cookie helper ──────────────────────────────────────────
+  /** Parse Cookie header into key/value object map. */
   function parseCookies(cookieHeader) {
     const cookies = {};
     if (!cookieHeader) return cookies;
@@ -22,7 +37,7 @@ function createAuthRoutes(ctx) {
     });
     return cookies;
   }
-
+  /** Create session Set-Cookie header value for auth token. */
   function sessionCookie(token) {
     return `rem_session=${token}; Path=/; HttpOnly; SameSite=Strict`;
   }
@@ -42,7 +57,7 @@ function createAuthRoutes(ctx) {
     if (p === '/api/auth/me'       && m === 'GET')  { getMe(req, res, apiHeaders);                        return true; }
     return false;
   }
-
+  /** Return auth bootstrap payload for initial client hydration. */
   function getBootstrap(req, res, apiHeaders) {
     const accountId = req.accountId;
     const account = accountId ? authService.getAccount(accountId) : null;
@@ -100,6 +115,7 @@ function createAuthRoutes(ctx) {
   }
 
   // ── POST /api/auth/logout ─────────────────────────────────
+  /** Destroy current session token and clear session cookie. */
   function postLogout(req, res, apiHeaders) {
     const cookies = parseCookies(req.headers.cookie);
     const token = cookies.rem_session;
@@ -114,6 +130,7 @@ function createAuthRoutes(ctx) {
   }
 
   // ── GET /api/auth/me ──────────────────────────────────────
+  /** Return account info for authenticated session. */
   function getMe(req, res, apiHeaders) {
     const accountId = req.accountId;
     if (!accountId) {

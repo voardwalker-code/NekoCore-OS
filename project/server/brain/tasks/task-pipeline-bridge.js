@@ -1,3 +1,19 @@
+// ── Brain · Task Pipeline Bridge ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: ./intent-classifier,
+// ./task-context-gatherer, ./task-executor, ./task-session,
+// ./task-project-store. Keep import and call-site contracts aligned during
+// refactors.
+//
+// EXPORTS:
+// Exposed API includes: createTaskPipelineBridge, TASK_MIN_CONFIDENCE.
+// ─────────────────────────────────────────────────────────────────────────────
+
 'use strict';
 
 const { classify } = require('./intent-classifier');
@@ -13,7 +29,10 @@ const { runPlanningSession } = require('./planning-orchestrator');
 const { executeProject } = require('./project-executor');
 
 const TASK_MIN_CONFIDENCE = 0.7;
-
+// createTaskPipelineBridge()
+// WHAT THIS DOES: createTaskPipelineBridge creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call createTaskPipelineBridge(...) before code that depends on this setup.
 function createTaskPipelineBridge(deps = {}) {
   const {
     callLLMWithRuntime,
@@ -31,7 +50,10 @@ function createTaskPipelineBridge(deps = {}) {
     taskArchiveWriterApi = taskArchiveWriter,
     taskModuleRegistryApi = taskModuleRegistry
   } = deps;
-
+  // stripTaskIntentDecorators()
+  // WHAT THIS DOES: stripTaskIntentDecorators is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call stripTaskIntentDecorators(...) where this helper behavior is needed.
   function stripTaskIntentDecorators(userMessage) {
     const raw = String(userMessage || '');
     if (!raw) return '';
@@ -56,7 +78,10 @@ function createTaskPipelineBridge(deps = {}) {
       return 'neutral';
     }
   }
-
+  // _selectPlanningEntities()
+  // WHAT THIS DOES: _selectPlanningEntities is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call _selectPlanningEntities(...) where this helper behavior is needed.
   function _selectPlanningEntities(userMessage) {
     const all = entityChatManager.listSessions ? [] : []; // no-op, kept for future extension
     void all;
@@ -92,6 +117,10 @@ function createTaskPipelineBridge(deps = {}) {
    * Heuristic: should a task be delegated to a worker entity?
    * Delegates research/analysis tasks that are sufficiently complex.
    */
+  // shouldDelegate()
+  // WHAT THIS DOES: shouldDelegate answers a yes/no rule check.
+  // WHY IT EXISTS: guard checks are kept readable and reusable in one place.
+  // HOW TO USE IT: call shouldDelegate(...) and branch logic based on true/false.
   function shouldDelegate(classification, userMessage) {
     const delegatableTypes = new Set(['research', 'analysis', 'RESEARCH', 'ANALYSIS']);
     if (!delegatableTypes.has(classification.taskType)) return false;

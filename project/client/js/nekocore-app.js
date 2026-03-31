@@ -1,12 +1,25 @@
-// ── NekoCore OS Panel ─────────────────────────────────────────────────────────
-// Self-contained client for client/nekocore.html
-// No app.js globals — runs inside an iframe.
+// ── Client · Nekocore App ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This client module drives browser-side behavior and state updates for UI
+// features.
+//
+// WHAT USES THIS:
+// Used by related flows in its subsystem. Keep call contracts stable during
+// readability-only edits.
+//
+// EXPORTS:
+// Exposed API includes: window-attached API object.
 // ─────────────────────────────────────────────────────────────────────────────
 
 'use strict';
 
 // ── Minimal toast (no app.js dependency) ─────────────────────────────────────
 
+// _toast()
+// WHAT THIS DOES: _toast is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _toast(...) where this helper behavior is needed.
 function _toast(msg, type) {
   const COLORS = {
     ok:    { bg: '#1a3d2a', border: '#22c55e', text: '#86efac' },
@@ -26,6 +39,12 @@ function _toast(msg, type) {
   el.textContent = msg;
   document.body.appendChild(el);
   requestAnimationFrame(() => requestAnimationFrame(() => { el.style.opacity = '1'; }));
+  // dismiss()
+  // Purpose: helper wrapper used by this module's main flow.
+  // dismiss()
+  // WHAT THIS DOES: dismiss is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call dismiss(...) where this helper behavior is needed.
   const dismiss = () => {
     el.style.opacity = '0';
     setTimeout(() => el.parentNode && el.parentNode.removeChild(el), 220);
@@ -36,6 +55,10 @@ function _toast(msg, type) {
 
 // ── HTML escape ───────────────────────────────────────────────────────────────
 
+// esc()
+// WHAT THIS DOES: esc is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call esc(...) where this helper behavior is needed.
 function esc(str) {
   if (str == null) return '';
   return String(str)
@@ -114,7 +137,10 @@ const API = {
 let _personaState = null;
 let _presetState = [];
 let _toolingState = null;
-
+// _setInfoPanelOpen()
+// WHAT THIS DOES: _setInfoPanelOpen changes saved state or updates data.
+// WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+// HOW TO USE IT: call _setInfoPanelOpen(...) with the new values you want to persist.
 function _setInfoPanelOpen(isOpen) {
   const panel = document.getElementById('nkInfoPanel');
   const toggle = document.getElementById('nkInfoToggle');
@@ -123,7 +149,10 @@ function _setInfoPanelOpen(isOpen) {
   toggle.textContent = isOpen ? 'Hide Voice & Info' : 'Show Voice & Info';
   toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
 }
-
+// _focusVoiceSettings()
+// WHAT THIS DOES: _focusVoiceSettings is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _focusVoiceSettings(...) where this helper behavior is needed.
 function _focusVoiceSettings() {
   _setInfoPanelOpen(true);
   const target = document.getElementById('nkUserName') || document.getElementById('nkVoiceStyle');
@@ -131,7 +160,10 @@ function _focusVoiceSettings() {
     window.setTimeout(() => target.focus(), 80);
   }
 }
-
+// _setPersonaForm()
+// WHAT THIS DOES: _setPersonaForm changes saved state or updates data.
+// WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+// HOW TO USE IT: call _setPersonaForm(...) with the new values you want to persist.
 function _setPersonaForm(persona) {
   const src = persona || {};
   const userName = document.getElementById('nkUserName');
@@ -145,7 +177,10 @@ function _setPersonaForm(persona) {
   if (mood) mood.value = src.mood || '';
   if (personality) personality.value = src.llmPersonality || '';
 }
-
+// _renderTooling()
+// WHAT THIS DOES: _renderTooling builds or updates what the user sees.
+// WHY IT EXISTS: display logic is separated from data/business logic for clarity.
+// HOW TO USE IT: call _renderTooling(...) after state changes that need UI refresh.
 function _renderTooling(tooling) {
   _toolingState = tooling || null;
   const approval = document.getElementById('nkSkillApprovalToggle');
@@ -204,7 +239,10 @@ function _renderTooling(tooling) {
     });
   });
 }
-
+// _collectPersonaForm()
+// WHAT THIS DOES: _collectPersonaForm is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _collectPersonaForm(...) where this helper behavior is needed.
 function _collectPersonaForm() {
   return {
     userName: (document.getElementById('nkUserName')?.value || '').trim(),
@@ -214,7 +252,10 @@ function _collectPersonaForm() {
     llmPersonality: (document.getElementById('nkPersonalityText')?.value || '').trim()
   };
 }
-
+// _renderPresets()
+// WHAT THIS DOES: _renderPresets builds or updates what the user sees.
+// WHY IT EXISTS: display logic is separated from data/business logic for clarity.
+// HOW TO USE IT: call _renderPresets(...) after state changes that need UI refresh.
 function _renderPresets(presets) {
   const row = document.getElementById('nkPresetRow');
   if (!row) return;
@@ -245,6 +286,10 @@ function _renderPresets(presets) {
 
 // ── Render helpers ────────────────────────────────────────────────────────────
 
+// renderStatus()
+// WHAT THIS DOES: renderStatus builds or updates what the user sees.
+// WHY IT EXISTS: display logic is separated from data/business logic for clarity.
+// HOW TO USE IT: call renderStatus(...) after state changes that need UI refresh.
 function renderStatus(data) {
   const dot   = document.getElementById('nkStatusDot');
   const label = document.getElementById('nkStatusLabel');
@@ -261,7 +306,10 @@ function renderStatus(data) {
   ready.textContent  = isReady ? '✓ Ready' : '✗ Not provisioned';
   ready.style.color  = isReady ? 'var(--accent, #34d399)' : 'var(--danger, #f87171)';
 }
-
+// renderPending()
+// WHAT THIS DOES: renderPending builds or updates what the user sees.
+// WHY IT EXISTS: display logic is separated from data/business logic for clarity.
+// HOW TO USE IT: call renderPending(...) after state changes that need UI refresh.
 function renderPending(items) {
   const list = document.getElementById('nkPendingList');
   if (!items || !items.length) {
@@ -392,6 +440,10 @@ const App = {
       if (detail) detail.textContent = data.totalCount.toLocaleString() + ' / ' + data.softLimitCount.toLocaleString() + ' (' + pct + '%)  ·  ' + remainingLabel;
       // Secondary: breakdown + disk size as context only
       if (sub) {
+        // mb()
+        // WHAT THIS DOES: mb is a helper used by this module's main flow.
+        // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+        // HOW TO USE IT: call mb(...) where this helper behavior is needed.
         const mb = (data.diskMB || 0).toFixed(1);
         const archivedExperiences = Number(data.archivedExperienceCount || 0);
         const archivedExperienceText = archivedExperiences > 0 ? '  ·  ' + archivedExperiences + ' archived experiences' : '';
@@ -403,6 +455,12 @@ const App = {
   async docsIngest() {
     const statusEl = document.getElementById('nkDocsIngestStatus');
     const dirInput = document.getElementById('nkDocsDir');
+    // docsDir()
+    // Purpose: helper wrapper used by this module's main flow.
+    // docsDir()
+    // WHAT THIS DOES: docsDir is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call docsDir(...) where this helper behavior is needed.
     const docsDir = (dirInput?.value || '').trim() || null;
     if (statusEl) statusEl.textContent = 'Ingesting…';
     try {
@@ -450,6 +508,12 @@ const App = {
 
   async saveWorkspacePath() {
     const input = document.getElementById('nkWorkspacePath');
+    // nextPath()
+    // Purpose: helper wrapper used by this module's main flow.
+    // nextPath()
+    // WHAT THIS DOES: nextPath is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call nextPath(...) where this helper behavior is needed.
     const nextPath = (input?.value || '').trim();
     if (!nextPath) {
       _toast('Workspace path is required.', 'error');
@@ -468,15 +532,26 @@ const App = {
 
 // ── Chat with NekoCore ──────────────────────────────────────────────────────
 
+// Chat()
+// WHAT THIS DOES: Chat is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call Chat(...) where this helper behavior is needed.
 const Chat = (() => {
   // In-memory history for this panel session
   const _history = [];
 
+  // _addMessage()
+  // WHAT THIS DOES: _addMessage is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call _addMessage(...) where this helper behavior is needed.
   function _addMessage(role, text) {
     _history.push({ role, content: text });
     _render(role, text);
   }
-
+  // _render()
+  // WHAT THIS DOES: _render builds or updates what the user sees.
+  // WHY IT EXISTS: display logic is separated from data/business logic for clarity.
+  // HOW TO USE IT: call _render(...) after state changes that need UI refresh.
   function _render(role, text) {
     const box  = document.getElementById('nkChatMessages');
     if (!box) return;
@@ -490,7 +565,10 @@ const Chat = (() => {
     box.appendChild(wrap);
     box.scrollTop = box.scrollHeight;
   }
-
+  // _setLoading()
+  // WHAT THIS DOES: _setLoading changes saved state or updates data.
+  // WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+  // HOW TO USE IT: call _setLoading(...) with the new values you want to persist.
   function _setLoading(on) {
     const btn   = document.getElementById('nkChatSend');
     const input = document.getElementById('nkChatInput');
@@ -513,6 +591,10 @@ const Chat = (() => {
   }
 
   let _nekoChatAbortController = null;
+  // abortNekoChatCall()
+  // WHAT THIS DOES: abortNekoChatCall is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call abortNekoChatCall(...) where this helper behavior is needed.
   function abortNekoChatCall() {
     if (_nekoChatAbortController) {
       _nekoChatAbortController.abort();
@@ -576,7 +658,10 @@ const Chat = (() => {
       _nekoChatAbortController = null;
     }
   }
-
+  // clear()
+  // WHAT THIS DOES: clear removes, resets, or shuts down existing state.
+  // WHY IT EXISTS: cleanup is explicit so stale state does not leak into new runs.
+  // HOW TO USE IT: call clear(...) when you need a safe teardown/reset path.
   function clear() {
     _history.length = 0;
     const box = document.getElementById('nkChatMessages');
@@ -632,6 +717,12 @@ window.addEventListener('message', (e) => {
     return;
   }
   if (e.data.type !== 'nk_send_message') return;
+  // text()
+  // Purpose: helper wrapper used by this module's main flow.
+  // text()
+  // WHAT THIS DOES: text is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call text(...) where this helper behavior is needed.
   const text = (e.data.text || '').trim();
   if (!text) return;
   const input = document.getElementById('nkChatInput');

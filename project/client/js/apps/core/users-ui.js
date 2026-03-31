@@ -1,10 +1,24 @@
+// ── Services · Client Users UI ───────────────────────────────────────────────
+//
+// HOW USER SWITCHING WORKS:
+// This file manages the in-app user profile switcher tied to the active
+// entity. It opens/closes the panel, lists users, marks active user, and
+// handles add/switch/clear/delete operations via API calls.
+//
+// WHAT USES THIS:
+//   chat/sidebar/users tab controls — call these helpers through global handlers
+//
+// EXPORTS:
+//   global functions for panel toggles and users app actions
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // USER SWITCHER + USERS APP UI (P3-S6)
 // ============================================================
 
 let _userPanelOpen = false;
 let _userPanelOutsideHandler = null;
-
+/** Toggle users panel open/closed. */
 function toggleUserPanel() {
   if (_userPanelOpen) closeUserPanel();
   else openUserPanel();
@@ -34,7 +48,7 @@ async function openUserPanel() {
   };
   setTimeout(() => document.addEventListener('mousedown', _userPanelOutsideHandler), 50);
 }
-
+/** Close users panel and remove outside-click handler. */
 function closeUserPanel() {
   const panel = document.getElementById('userPanel');
   if (panel) panel.style.display = 'none';
@@ -50,7 +64,7 @@ const _FEELING_EMOJI = {
   neutral:'😶', indifferent:'🫥', warm:'🙂', like:'😊', fond:'🥰',
   care:'💚', trust:'🤝', love:'❤️', devoted:'💜'
 };
-
+/** Render compact trust meter for relationship badges. */
 function _trustBar(trust) {
   const filled = Math.round((trust || 0) * 5);
   const bar = '█'.repeat(filled) + '░'.repeat(5 - filled);
@@ -235,7 +249,7 @@ async function initUserSwitcher() {
   btn.style.display = 'inline-flex';
   await usersAppRefresh();
 }
-
+/** Reset switcher UI when no entity is active. */
 function resetUserSwitcher() {
   const btn = document.getElementById('userSwitcherBtn');
   if (btn) btn.style.display = 'none';
@@ -243,7 +257,7 @@ function resetUserSwitcher() {
   if (label) label.textContent = 'User';
   closeUserPanel();
 }
-
+/** Update status text in users app panel. */
 function _usersAppSetStatus(text, type) {
   const el = document.getElementById('usersAppStatus');
   if (!el) return;

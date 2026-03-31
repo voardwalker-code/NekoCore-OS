@@ -1,12 +1,19 @@
-// ── Archive Routes ────────────────────────────────────────────
-// POST /api/archive/search
+// ── Routes · Archive Routes ────────────────────────────────────────────────────
 //
-// On-demand retrieval from the three-tier archive.
-// Accepts a free-text query (RAKE-extracted topics), optional
-// year range, and limit. Returns ranked results from archiveIndex.
+// HOW THIS MODULE WORKS:
+// This route module handles request dispatch and response shaping for one
+// API surface.
 //
-// IME Phase I4-0 — [BOUNDARY_OK] [CONTRACT_ENFORCED]
-// ─────────────────────────────────────────────────────────────
+// WHAT USES THIS:
+// Primary dependencies in this module include: path, fs,
+// ../brain/utils/rake, ../brain/utils/archive-index,
+// ../brain/utils/archive-indexes. Keep import and call-site contracts
+// aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
 
 'use strict';
 
@@ -24,8 +31,11 @@ const {
 
 // ── Route factory ─────────────────────────────────────────────
 
+// createArchiveRoutes()
+// WHAT THIS DOES: createArchiveRoutes creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call createArchiveRoutes(...) before code that depends on this setup.
 function createArchiveRoutes(ctx) {
-
   function resolveEntityId(rawEntityId) {
     try {
       if (rawEntityId) return normalizeEntityId(rawEntityId);
@@ -34,7 +44,10 @@ function createArchiveRoutes(ctx) {
       return rawEntityId || ctx.currentEntityId || 'nekocore';
     }
   }
-
+  // readSemanticTxt()
+  // WHAT THIS DOES: readSemanticTxt reads or finds data and gives it back.
+  // WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+  // HOW TO USE IT: call readSemanticTxt(...), then use the returned value in your next step.
   function readSemanticTxt(entityId, memId) {
     try {
       const episodicPath = path.join(getArchiveEpisodicPath(entityId), memId, 'semantic.txt');

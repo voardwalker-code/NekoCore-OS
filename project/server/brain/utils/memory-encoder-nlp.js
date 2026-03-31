@@ -1,3 +1,18 @@
+// ── Brain · Memory Encoder Nlp ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: ./rake, ./yake,
+// ../cognition/cognitive-feedback. Keep import and call-site contracts
+// aligned during refactors.
+//
+// EXPORTS:
+// Exposed API includes: encodeMemory.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // NLP Memory Encoder (Token Optimization T1-2)
 //
@@ -48,13 +63,20 @@ const IMPORTANCE_SIGNALS = {
 
 // ── Sentence Extraction (TextRank-lite) ───────────────────────────────────────
 
+// splitSentences()
+// WHAT THIS DOES: splitSentences is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call splitSentences(...) where this helper behavior is needed.
 function splitSentences(text) {
   return text
     .split(/(?<=[.!?])\s+/)
     .map(s => s.trim())
     .filter(s => s.length >= 10 && s.length <= 300);
 }
-
+// overlapScore()
+// WHAT THIS DOES: overlapScore is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call overlapScore(...) where this helper behavior is needed.
 function overlapScore(sentA, sentB) {
   const wordsA = new Set(sentA.toLowerCase().split(/\s+/));
   const wordsB = new Set(sentB.toLowerCase().split(/\s+/));
@@ -62,7 +84,10 @@ function overlapScore(sentA, sentB) {
   for (const w of wordsA) { if (wordsB.has(w)) shared++; }
   return shared / (Math.log(wordsA.size + 1) + Math.log(wordsB.size + 1) || 1);
 }
-
+// extractTopSentences()
+// WHAT THIS DOES: extractTopSentences is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call extractTopSentences(...) where this helper behavior is needed.
 function extractTopSentences(text, count = 2) {
   const sentences = splitSentences(text);
   if (sentences.length <= count) return sentences;
@@ -95,7 +120,10 @@ const FACTUAL_PATTERNS = [
   /(?:means|refers to|defined as)\s+.{5,60}/i,
   /(?:located|found|situated)\s+(?:in|at|near)\s+.{3,40}/i
 ];
-
+// extractKnowledge()
+// WHAT THIS DOES: extractKnowledge is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call extractKnowledge(...) where this helper behavior is needed.
 function extractKnowledge(userMessage, entityResponse) {
   const combined = userMessage + ' ' + entityResponse;
   const found = [];
@@ -125,6 +153,10 @@ function extractKnowledge(userMessage, entityResponse) {
  * @param {object} [opts] — optional overrides
  * @returns {{ topics: string[], semantic: string, narrative: string, emotion: string, importance: number, knowledge: string }}
  */
+// encodeMemory()
+// WHAT THIS DOES: encodeMemory is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call encodeMemory(...) where this helper behavior is needed.
 function encodeMemory(userMessage, entityResponse, opts = {}) {
   const combined = (userMessage || '') + ' ' + (entityResponse || '');
 

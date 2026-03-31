@@ -1,10 +1,29 @@
+// ── Brain · Task Archive Writer ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: fs, path, ../../entityPaths,
+// ./task-project-store, ../../contracts/planning-session-contract. Keep
+// import and call-site contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 'use strict';
 
 const fs = require('fs');
 const path = require('path');
 const entityPaths = require('../../entityPaths');
 const projectStore = require('./task-project-store');
-
+// parseTaskArchiveId()
+// WHAT THIS DOES: parseTaskArchiveId reshapes data from one form into another.
+// WHY IT EXISTS: conversion rules live here so the same transformation is reused.
+// HOW TO USE IT: pass input data into parseTaskArchiveId(...) and use the transformed output.
 function parseTaskArchiveId(taskArchiveId) {
   if (!taskArchiveId || typeof taskArchiveId !== 'string') return null;
   const parts = taskArchiveId.split('|');
@@ -15,35 +34,45 @@ function parseTaskArchiveId(taskArchiveId) {
     taskId: parts[2]
   };
 }
-
+// buildTaskArchiveId()
+// WHAT THIS DOES: buildTaskArchiveId creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call buildTaskArchiveId(...) before code that depends on this setup.
 function buildTaskArchiveId(entityId, projectId, taskId) {
   return [entityId, projectId, taskId].join('|');
 }
-
 function _entityRoot(entityId, opts = {}) {
   if (opts.baseEntitiesDir) {
     return path.join(opts.baseEntitiesDir, 'entities', 'entity_' + entityPaths.normalizeEntityId(entityId));
   }
   return entityPaths.getEntityRoot(entityId);
 }
-
+// _archivePath()
+// WHAT THIS DOES: _archivePath is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _archivePath(...) where this helper behavior is needed.
 function _archivePath(entityId, projectId, taskId, opts = {}) {
   return path.join(_entityRoot(entityId, opts), 'memories', 'projects', projectId, 'tasks', taskId);
 }
-
 function resolveTaskArchivePath(taskArchiveId, opts = {}) {
   const parsed = parseTaskArchiveId(taskArchiveId);
   if (!parsed) return null;
   return _archivePath(parsed.entityId, parsed.projectId, parsed.taskId, opts);
 }
-
+// _writeJsonAtomic()
+// WHAT THIS DOES: _writeJsonAtomic changes saved state or updates data.
+// WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+// HOW TO USE IT: call _writeJsonAtomic(...) with the new values you want to persist.
 function _writeJsonAtomic(filePath, value) {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
   const tmp = filePath + '.tmp-' + process.pid + '-' + Date.now();
   fs.writeFileSync(tmp, JSON.stringify(value, null, 2), 'utf8');
   fs.renameSync(tmp, filePath);
 }
-
+// _readJson()
+// WHAT THIS DOES: _readJson reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call _readJson(...), then use the returned value in your next step.
 function _readJson(filePath, fallback) {
   if (!fs.existsSync(filePath)) return fallback;
   try {
@@ -52,7 +81,10 @@ function _readJson(filePath, fallback) {
     return fallback;
   }
 }
-
+// createTaskArchive()
+// WHAT THIS DOES: createTaskArchive creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call createTaskArchive(...) before code that depends on this setup.
 function createTaskArchive(projectId, taskId, brief, opts = {}) {
   let entityId = opts.entityId || null;
   if (!entityId) {
@@ -86,7 +118,10 @@ function createTaskArchive(projectId, taskId, brief, opts = {}) {
 
   return taskArchiveId;
 }
-
+// appendStep()
+// WHAT THIS DOES: appendStep is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call appendStep(...) where this helper behavior is needed.
 function appendStep(taskArchiveId, stepData, opts = {}) {
   const archiveDir = resolveTaskArchivePath(taskArchiveId, opts);
   if (!archiveDir || !fs.existsSync(archiveDir)) return false;
@@ -122,7 +157,10 @@ function appendStep(taskArchiveId, stepData, opts = {}) {
 
   return true;
 }
-
+// appendSource()
+// WHAT THIS DOES: appendSource is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call appendSource(...) where this helper behavior is needed.
 function appendSource(taskArchiveId, source, opts = {}) {
   const archiveDir = resolveTaskArchivePath(taskArchiveId, opts);
   if (!archiveDir || !fs.existsSync(archiveDir)) return false;
@@ -131,6 +169,12 @@ function appendSource(taskArchiveId, source, opts = {}) {
   const current = _readJson(sourcesPath, []);
   const next = Array.isArray(current) ? current : [];
 
+  // entry()
+  // Purpose: helper wrapper used by this module's main flow.
+  // entry()
+  // WHAT THIS DOES: entry is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call entry(...) where this helper behavior is needed.
   const entry = (source && typeof source === 'object') ? source : { value: source };
   const identity = String(entry.url || entry.id || entry.title || JSON.stringify(entry));
 
@@ -146,7 +190,10 @@ function appendSource(taskArchiveId, source, opts = {}) {
 
   return true;
 }
-
+// saveDraft()
+// WHAT THIS DOES: saveDraft changes saved state or updates data.
+// WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+// HOW TO USE IT: call saveDraft(...) with the new values you want to persist.
 function saveDraft(taskArchiveId, draftIndex, content, ext = 'txt', opts = {}) {
   const archiveDir = resolveTaskArchivePath(taskArchiveId, opts);
   if (!archiveDir || !fs.existsSync(archiveDir)) return null;
@@ -161,7 +208,10 @@ function saveDraft(taskArchiveId, draftIndex, content, ext = 'txt', opts = {}) {
   fs.writeFileSync(filePath, String(content || ''), 'utf8');
   return filePath;
 }
-
+// finalize()
+// WHAT THIS DOES: finalize is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call finalize(...) where this helper behavior is needed.
 function finalize(taskArchiveId, finalOutput, opts = {}) {
   const archiveDir = resolveTaskArchivePath(taskArchiveId, opts);
   if (!archiveDir || !fs.existsSync(archiveDir)) return false;
@@ -187,7 +237,10 @@ function finalize(taskArchiveId, finalOutput, opts = {}) {
 // ── Planning archive methods ──
 
 const { validatePlanningRound, validatePlanningArtifacts } = require('../../contracts/planning-session-contract');
-
+// createPlanningArchive()
+// WHAT THIS DOES: createPlanningArchive creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call createPlanningArchive(...) before code that depends on this setup.
 function createPlanningArchive(taskArchiveId, sessionMeta, opts = {}) {
   const archiveDir = resolveTaskArchivePath(taskArchiveId, opts);
   if (!archiveDir) throw new Error('Invalid taskArchiveId for planning archive');
@@ -210,7 +263,10 @@ function createPlanningArchive(taskArchiveId, sessionMeta, opts = {}) {
 
   return planningDir;
 }
-
+// appendPlanningRound()
+// WHAT THIS DOES: appendPlanningRound is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call appendPlanningRound(...) where this helper behavior is needed.
 function appendPlanningRound(taskArchiveId, round, opts = {}) {
   const archiveDir = resolveTaskArchivePath(taskArchiveId, opts);
   if (!archiveDir) return false;
@@ -232,7 +288,10 @@ function appendPlanningRound(taskArchiveId, round, opts = {}) {
 
   return true;
 }
-
+// writePlanningArtifacts()
+// WHAT THIS DOES: writePlanningArtifacts changes saved state or updates data.
+// WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+// HOW TO USE IT: call writePlanningArtifacts(...) with the new values you want to persist.
 function writePlanningArtifacts(taskArchiveId, artifacts, opts = {}) {
   const archiveDir = resolveTaskArchivePath(taskArchiveId, opts);
   if (!archiveDir) return false;

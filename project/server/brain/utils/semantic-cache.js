@@ -1,3 +1,18 @@
+// ── Brain · Semantic Cache ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: ./rake, ./bm25. Keep import
+// and call-site contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 'use strict';
 /**
  * server/brain/utils/semantic-cache.js
@@ -33,6 +48,10 @@ const MIN_TOPICS_FOR_CACHE  = 2; // messages with < 2 topics are too ambiguous t
  * @param {number} [opts.ttlMs]        - Entry TTL in ms (default 15 min)
  * @param {number} [opts.threshold]    - BM25 similarity threshold (default 0.85)
  */
+// createSemanticCache()
+// WHAT THIS DOES: createSemanticCache creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call createSemanticCache(...) before code that depends on this setup.
 function createSemanticCache(opts = {}) {
   const maxEntries = opts.maxEntries ?? DEFAULT_MAX_ENTRIES;
   const ttlMs      = opts.ttlMs      ?? DEFAULT_TTL_MS;
@@ -48,6 +67,10 @@ function createSemanticCache(opts = {}) {
    * @param {string} message
    * @returns {string[]}
    */
+  // vectorize()
+  // WHAT THIS DOES: vectorize is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call vectorize(...) where this helper behavior is needed.
   function vectorize(message) {
     if (!message || typeof message !== 'string') return [];
     return extractPhrases(message.trim(), 12);
@@ -56,6 +79,10 @@ function createSemanticCache(opts = {}) {
   /**
    * Remove expired entries from the cache.
    */
+  // evictExpired()
+  // WHAT THIS DOES: evictExpired is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call evictExpired(...) where this helper behavior is needed.
   function evictExpired() {
     const now = Date.now();
     for (const [key, entry] of cache) {
@@ -68,6 +95,10 @@ function createSemanticCache(opts = {}) {
   /**
    * Evict the oldest entry if cache has reached capacity.
    */
+  // evictLRU()
+  // WHAT THIS DOES: evictLRU is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call evictLRU(...) where this helper behavior is needed.
   function evictLRU() {
     if (cache.size <= maxEntries) return;
     // Map iteration is insertion-order; first key is the oldest
@@ -80,6 +111,10 @@ function createSemanticCache(opts = {}) {
    * @param {string} message - User message text
    * @returns {{ hit: boolean, entry?: { response: string, topics: string[], score: number, originalTurnId?: string, source: string } }}
    */
+  // lookup()
+  // WHAT THIS DOES: lookup is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call lookup(...) where this helper behavior is needed.
   function lookup(message) {
     evictExpired();
 
@@ -130,6 +165,10 @@ function createSemanticCache(opts = {}) {
    * @param {object} [meta]
    * @param {string} [meta.turnId] - Optional turn identifier
    */
+  // store()
+  // WHAT THIS DOES: store is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call store(...) where this helper behavior is needed.
   function store(message, response, meta = {}) {
     const topics = vectorize(message);
     if (topics.length < MIN_TOPICS_FOR_CACHE) return; // too ambiguous to cache
@@ -153,6 +192,10 @@ function createSemanticCache(opts = {}) {
   /**
    * Clear all cache entries.
    */
+  // clear()
+  // WHAT THIS DOES: clear removes, resets, or shuts down existing state.
+  // WHY IT EXISTS: cleanup is explicit so stale state does not leak into new runs.
+  // HOW TO USE IT: call clear(...) when you need a safe teardown/reset path.
   function clear() {
     cache.clear();
     hits = 0;
@@ -162,6 +205,10 @@ function createSemanticCache(opts = {}) {
   /**
    * @returns {{ size: number, hits: number, misses: number, hitRate: number }}
    */
+  // stats()
+  // WHAT THIS DOES: stats is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call stats(...) where this helper behavior is needed.
   function stats() {
     const total = hits + misses;
     return {
@@ -191,6 +238,10 @@ const entityCaches = new Map();
  * @param {object} [opts] - Forwarded to createSemanticCache on first call
  * @returns {ReturnType<typeof createSemanticCache>}
  */
+// getEntityCache()
+// WHAT THIS DOES: getEntityCache reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call getEntityCache(...), then use the returned value in your next step.
 function getEntityCache(entityId, opts) {
   if (!entityId) return createSemanticCache(opts);
   if (!entityCaches.has(entityId)) {
@@ -203,6 +254,10 @@ function getEntityCache(entityId, opts) {
  * Clear a specific entity's cache, or all caches if no entityId given.
  * @param {string} [entityId]
  */
+// clearEntityCache()
+// WHAT THIS DOES: clearEntityCache removes, resets, or shuts down existing state.
+// WHY IT EXISTS: cleanup is explicit so stale state does not leak into new runs.
+// HOW TO USE IT: call clearEntityCache(...) when you need a safe teardown/reset path.
 function clearEntityCache(entityId) {
   if (entityId) {
     const c = entityCaches.get(entityId);

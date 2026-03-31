@@ -1,3 +1,17 @@
+// ── Client · Renderer ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This client module drives browser-side behavior and state updates for UI
+// features.
+//
+// WHAT USES THIS:
+// Used by related flows in its subsystem. Keep call contracts stable during
+// readability-only edits.
+//
+// EXPORTS:
+// Exposed API includes: window-attached API object.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // REM System — 3D Neural Network Visualization
 // Three.js-based real-time memory trace visualization
@@ -204,6 +218,10 @@ window._NVR = (() => {
   let eventSource = null;
 
   // ── Initialization ──
+  // init()
+  // WHAT THIS DOES: init creates or initializes something needed by the flow.
+  // WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+  // HOW TO USE IT: call init(...) before code that depends on this setup.
   function init(containerEl, options = {}) {
     if (isInitialized) return;
     container = containerEl;
@@ -328,6 +346,10 @@ window._NVR = (() => {
   }
 
   // ── Build 3D Graph ──
+  // buildGraph()
+  // WHAT THIS DOES: buildGraph creates or initializes something needed by the flow.
+  // WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+  // HOW TO USE IT: call buildGraph(...) before code that depends on this setup.
   function buildGraph(nodes, edges) {
     // Clear existing
     clearScene();
@@ -467,6 +489,10 @@ window._NVR = (() => {
   }
 
   // ── Overlay trace connections ──
+  // overlayTraceConnections()
+  // WHAT THIS DOES: overlayTraceConnections is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call overlayTraceConnections(...) where this helper behavior is needed.
   function overlayTraceConnections(connectionGraph) {
     if (!_edgeBatch) return;
     const colors = _edgeBatch.geometry.attributes.color.array;
@@ -489,6 +515,10 @@ window._NVR = (() => {
   }
 
   // ── Build Belief Graph Overlay ──
+  // buildBeliefGraph()
+  // WHAT THIS DOES: buildBeliefGraph creates or initializes something needed by the flow.
+  // WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+  // HOW TO USE IT: call buildBeliefGraph(...) before code that depends on this setup.
   function buildBeliefGraph(beliefs, edges) {
     // Track old belief IDs so we can remove them from simulation arrays
     const oldBeliefIds = new Set(beliefNodeMap.keys());
@@ -647,6 +677,10 @@ window._NVR = (() => {
   }
 
   // ── Glow sprite for nodes ──
+  // addGlowSprite()
+  // WHAT THIS DOES: addGlowSprite is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call addGlowSprite(...) where this helper behavior is needed.
   function addGlowSprite(mesh, size, color, scale) {
     const glowScale = scale || 4;
     const canvas = document.createElement('canvas');
@@ -675,6 +709,10 @@ window._NVR = (() => {
   }
 
   // ── Node type label sprite ──
+  // addNodeLabel()
+  // WHAT THIS DOES: addNodeLabel is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call addNodeLabel(...) where this helper behavior is needed.
   function addNodeLabel(mesh, text, nodeSize, color) {
     const canvas = document.createElement('canvas');
     canvas.width = 200;
@@ -694,6 +732,10 @@ window._NVR = (() => {
   }
 
   // ── Floating Zzz sprites for dream nodes ──
+  // addDreamZzz()
+  // WHAT THIS DOES: addDreamZzz is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call addDreamZzz(...) where this helper behavior is needed.
   function addDreamZzz(parentMesh, size, color) {
     const zCount = 3;
     for (let i = 0; i < zCount; i++) {
@@ -732,6 +774,10 @@ window._NVR = (() => {
   }
 
   // ── Core memory dendrite spines (make core memories unmissable) ──
+  // addCoreDendrites()
+  // WHAT THIS DOES: addCoreDendrites is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call addCoreDendrites(...) where this helper behavior is needed.
   function addCoreDendrites(parentMesh, size, color) {
     const spineMat = new THREE.MeshBasicMaterial({
       color,
@@ -765,6 +811,10 @@ window._NVR = (() => {
   }
 
   // ── Batched glow texture (generated once) ──
+  // _makeGlowTexture()
+  // WHAT THIS DOES: _makeGlowTexture creates or initializes something needed by the flow.
+  // WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+  // HOW TO USE IT: call _makeGlowTexture(...) before code that depends on this setup.
   function _makeGlowTexture() {
     if (_glowTexture) return _glowTexture;
     const sz = 64;
@@ -782,6 +832,10 @@ window._NVR = (() => {
   }
 
   // ── Build a single THREE.Points for all memory-node glows ──
+  // _buildGlowSprites()
+  // WHAT THIS DOES: _buildGlowSprites creates or initializes something needed by the flow.
+  // WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+  // HOW TO USE IT: call _buildGlowSprites(...) before code that depends on this setup.
   function _buildGlowSprites() {
     if (_glowPoints) { scene.remove(_glowPoints); _glowPoints = null; }
     _glowNodeIndex.clear();
@@ -800,6 +854,12 @@ window._NVR = (() => {
       positions[i * 3 + 2] = sn.z;
 
       const data = sn.data;
+      // typeKey()
+      // Purpose: helper wrapper used by this module's main flow.
+      // typeKey()
+      // WHAT THIS DOES: typeKey is a helper used by this module's main flow.
+      // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+      // HOW TO USE IT: call typeKey(...) where this helper behavior is needed.
       const typeKey = (data && data.type) || 'episodic';
       const profile = MEMORY_TYPES[typeKey] || DEFAULT_TYPE_PROFILE;
       c.setHex(profile.color);
@@ -837,6 +897,10 @@ window._NVR = (() => {
   }
 
   // ── Flash a single glow point's color ──
+  // _flashGlowSprite()
+  // WHAT THIS DOES: _flashGlowSprite is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call _flashGlowSprite(...) where this helper behavior is needed.
   function _flashGlowSprite(nodeId, hexColor) {
     if (!_glowPoints) return;
     const i = _glowNodeIndex.get(nodeId);
@@ -848,6 +912,10 @@ window._NVR = (() => {
   }
 
   // ── Build texture-atlas + instanced-quad label system ──
+  // _buildLabelSystem()
+  // WHAT THIS DOES: _buildLabelSystem creates or initializes something needed by the flow.
+  // WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+  // HOW TO USE IT: call _buildLabelSystem(...) before code that depends on this setup.
   function _buildLabelSystem() {
     if (_labelMesh) { scene.remove(_labelMesh); _labelMesh = null; }
     _labelNodeIndex.clear();
@@ -897,6 +965,12 @@ window._NVR = (() => {
 
     memNodes.forEach((sn, i) => {
       const data = sn.data;
+      // typeKey()
+      // Purpose: helper wrapper used by this module's main flow.
+      // typeKey()
+      // WHAT THIS DOES: typeKey is a helper used by this module's main flow.
+      // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+      // HOW TO USE IT: call typeKey(...) where this helper behavior is needed.
       const typeKey = (data && data.type) || 'episodic';
       const uv = uvMap.get(typeKey) || uvMap.get('_default');
       offsets[i * 2]     = uv.offsetX;
@@ -957,6 +1031,10 @@ window._NVR = (() => {
   }
 
   // ── Sync glow positions with simNode physics ──
+  // _syncGlowPositions()
+  // WHAT THIS DOES: _syncGlowPositions is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call _syncGlowPositions(...) where this helper behavior is needed.
   function _syncGlowPositions() {
     if (!_glowPoints) return;
     const posAttr = _glowPoints.geometry.attributes.position;
@@ -969,6 +1047,10 @@ window._NVR = (() => {
   }
 
   // ── Sync label positions with simNode physics ──
+  // _syncLabelPositions()
+  // WHAT THIS DOES: _syncLabelPositions is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call _syncLabelPositions(...) where this helper behavior is needed.
   function _syncLabelPositions() {
     if (!_labelMesh) return;
     for (const sn of simNodes) {
@@ -986,12 +1068,20 @@ window._NVR = (() => {
   }
 
   // ── Cached ray-target array (invalidated on node/belief changes) ──
+  // _getRayTargets()
+  // WHAT THIS DOES: _getRayTargets reads or finds data and gives it back.
+  // WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+  // HOW TO USE IT: call _getRayTargets(...), then use the returned value in your next step.
   function _getRayTargets() {
     if (!_cachedRayTargets) {
       _cachedRayTargets = [...nodeMap.values(), ...beliefNodeMap.values()];
     }
     return _cachedRayTargets;
   }
+  // _invalidateRayTargets()
+  // WHAT THIS DOES: _invalidateRayTargets is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call _invalidateRayTargets(...) where this helper behavior is needed.
   function _invalidateRayTargets() { _cachedRayTargets = null; }
 
   // ── Force-directed simulation step ──
@@ -1009,6 +1099,12 @@ window._NVR = (() => {
         let dx = ni.x - nj.x, dy = ni.y - nj.y, dz = ni.z - nj.z;
         let dist = Math.sqrt(dx * dx + dy * dy + dz * dz) || 0.01;
         const force = SIM_REPULSION / (dist * dist);
+        // fx()
+        // Purpose: helper wrapper used by this module's main flow.
+        // fx()
+        // WHAT THIS DOES: fx is a helper used by this module's main flow.
+        // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+        // HOW TO USE IT: call fx(...) where this helper behavior is needed.
         const fx = (dx / dist) * force * a;
         const fy = (dy / dist) * force * a;
         const fz = (dz / dist) * force * a;
@@ -1024,9 +1120,21 @@ window._NVR = (() => {
       if (!ni || !nj) continue;
       let dx = nj.x - ni.x, dy = nj.y - ni.y, dz = nj.z - ni.z;
       let dist = Math.sqrt(dx * dx + dy * dy + dz * dz) || 0.01;
+      // force()
+      // Purpose: helper wrapper used by this module's main flow.
+      // force()
+      // WHAT THIS DOES: force is a helper used by this module's main flow.
+      // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+      // HOW TO USE IT: call force(...) where this helper behavior is needed.
       const force = (dist - SIM_LINK_DISTANCE) * edge.strength * a * 0.1;
       const fx = (dx / dist) * force;
       const fy = (dy / dist) * force;
+      // fz()
+      // Purpose: helper wrapper used by this module's main flow.
+      // fz()
+      // WHAT THIS DOES: fz is a helper used by this module's main flow.
+      // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+      // HOW TO USE IT: call fz(...) where this helper behavior is needed.
       const fz = (dz / dist) * force;
       ni.vx += fx; ni.vy += fy; ni.vz += fz;
       nj.vx -= fx; nj.vy -= fy; nj.vz -= fz;
@@ -1049,7 +1157,10 @@ window._NVR = (() => {
     _syncGlowPositions();
     _syncLabelPositions();
   }
-
+  // updateEdgePositions()
+  // WHAT THIS DOES: updateEdgePositions changes saved state or updates data.
+  // WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+  // HOW TO USE IT: call updateEdgePositions(...) with the new values you want to persist.
   function updateEdgePositions() {
     const nodeById = new Map();
     for (const n of simNodes) nodeById.set(n.id, n);
@@ -1084,6 +1195,10 @@ window._NVR = (() => {
   }
 
   // ── Animation Loop ──
+  // animate()
+  // WHAT THIS DOES: animate is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call animate(...) where this helper behavior is needed.
   function animate() {
     animationId = requestAnimationFrame(animate);
     // Visibility gating — skip expensive work if the container is hidden
@@ -1165,6 +1280,12 @@ window._NVR = (() => {
           if (child.userData && child.userData._dreamZzz) {
             const idx = child.userData._zzzIndex;
             const phase = pulseTime * 0.8 + idx * 1.2;
+            // cycle()
+            // Purpose: helper wrapper used by this module's main flow.
+            // cycle()
+            // WHAT THIS DOES: cycle is a helper used by this module's main flow.
+            // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+            // HOW TO USE IT: call cycle(...) where this helper behavior is needed.
             const cycle = ((phase % 3) / 3); // 0→1 repeating
             child.position.y = child.userData._zzzBaseY + cycle * 1.5;
             child.material.opacity = cycle < 0.8 ? 0.8 - cycle * 0.6 : Math.max(0, (1 - cycle) * 3);
@@ -1190,6 +1311,10 @@ window._NVR = (() => {
   // ── Trace Animation (traveling particles along edges) ──
   // opts: { stepDuration?: number, particleSize?: number }
   // Live mode passes { stepDuration: 2.0, particleSize: 0.22 } for slower visible tracing
+  // animateTrace()
+  // WHAT THIS DOES: animateTrace is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call animateTrace(...) where this helper behavior is needed.
   function animateTrace(traceChain, opts) {
     if (!traceChain || traceChain.length < 2) return;
     opts = opts || {};
@@ -1219,10 +1344,19 @@ window._NVR = (() => {
 
     traceAnimations.push(anim);
   }
-
+  // updateTraceAnimations()
+  // WHAT THIS DOES: updateTraceAnimations changes saved state or updates data.
+  // WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+  // HOW TO USE IT: call updateTraceAnimations(...) with the new values you want to persist.
   function updateTraceAnimations() {
     const now = performance.now();
     traceAnimations = traceAnimations.filter(anim => {
+      // elapsed()
+      // Purpose: helper wrapper used by this module's main flow.
+      // elapsed()
+      // WHAT THIS DOES: elapsed is a helper used by this module's main flow.
+      // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+      // HOW TO USE IT: call elapsed(...) where this helper behavior is needed.
       const elapsed = (now - anim.startTime) / 1000;
       const stepDuration = anim.stepDuration || 0.8; // per-animation duration
 
@@ -1276,6 +1410,10 @@ window._NVR = (() => {
   }
 
   // ── Click Handling ──
+  // onClick()
+  // WHAT THIS DOES: onClick handles an event and routes follow-up actions.
+  // WHY IT EXISTS: event flow is easier to debug when listener logic is centralized.
+  // HOW TO USE IT: wire onClick to the relevant event source or dispatcher.
   function onClick(event) {
     const rect = renderer.domElement.getBoundingClientRect();
     mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
@@ -1333,14 +1471,20 @@ window._NVR = (() => {
       hideNodeDetail();
     }
   }
-
+  // onMouseMove()
+  // WHAT THIS DOES: onMouseMove handles an event and routes follow-up actions.
+  // WHY IT EXISTS: event flow is easier to debug when listener logic is centralized.
+  // HOW TO USE IT: wire onMouseMove to the relevant event source or dispatcher.
   function onMouseMove(event) {
     _pendingMouseEvent = event;
     if (!_mouseMoveRafId) {
       _mouseMoveRafId = requestAnimationFrame(_processMouseMove);
     }
   }
-
+  // _processMouseMove()
+  // WHAT THIS DOES: _processMouseMove is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call _processMouseMove(...) where this helper behavior is needed.
   function _processMouseMove() {
     _mouseMoveRafId = 0;
     const event = _pendingMouseEvent;
@@ -1383,13 +1527,20 @@ window._NVR = (() => {
   }
 
   // ── Helpers ──
+  // getNodeColor()
+  // WHAT THIS DOES: getNodeColor reads or finds data and gives it back.
+  // WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+  // HOW TO USE IT: call getNodeColor(...), then use the returned value in your next step.
   function getNodeColor(data) {
     if (!data) return COLORS.nodeDefault;
     if (data.activation > 0.5) return COLORS.nodeHot;
     const profile = MEMORY_TYPES[data.type] || DEFAULT_TYPE_PROFILE;
     return profile.color;
   }
-
+  // getConnectedNodeIds()
+  // WHAT THIS DOES: getConnectedNodeIds reads or finds data and gives it back.
+  // WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+  // HOW TO USE IT: call getConnectedNodeIds(...), then use the returned value in your next step.
   function getConnectedNodeIds(memId) {
     const connected = [];
     for (const edge of simEdges) {
@@ -1398,7 +1549,10 @@ window._NVR = (() => {
     }
     return connected;
   }
-
+  // highlightConnections()
+  // WHAT THIS DOES: highlightConnections is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call highlightConnections(...) where this helper behavior is needed.
   function highlightConnections(memId) {
     // Highlight batched memory edges
     if (_edgeBatch) {
@@ -1436,7 +1590,10 @@ window._NVR = (() => {
       }
     }
   }
-
+  // resetEdgeColors()
+  // WHAT THIS DOES: resetEdgeColors removes, resets, or shuts down existing state.
+  // WHY IT EXISTS: cleanup is explicit so stale state does not leak into new runs.
+  // HOW TO USE IT: call resetEdgeColors(...) when you need a safe teardown/reset path.
   function resetEdgeColors() {
     // Reset batched memory edges
     if (_edgeBatch) {
@@ -1471,6 +1628,10 @@ window._NVR = (() => {
   }
 
   // ── Select a node by memory ID (for search / SSE auto-select) ──
+  // selectNodeById()
+  // WHAT THIS DOES: selectNodeById is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call selectNodeById(...) where this helper behavior is needed.
   function selectNodeById(memId) {
     if (!isInitialized) return false;
     const mesh = nodeMap.get(memId);
@@ -1520,11 +1681,19 @@ window._NVR = (() => {
   }
 
   // ── Get all node IDs for search autocomplete ──
+  // getNodeIds()
+  // WHAT THIS DOES: getNodeIds reads or finds data and gives it back.
+  // WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+  // HOW TO USE IT: call getNodeIds(...), then use the returned value in your next step.
   function getNodeIds() {
     return Array.from(nodeMap.keys());
   }
 
   // ── UI Detail Panel ──
+  // showNodeDetail()
+  // WHAT THIS DOES: showNodeDetail builds or updates what the user sees.
+  // WHY IT EXISTS: display logic is separated from data/business logic for clarity.
+  // HOW TO USE IT: call showNodeDetail(...) after state changes that need UI refresh.
   function showNodeDetail(memId) {
     const data = nodeData.get(memId);
     if (!data) return;
@@ -1537,6 +1706,12 @@ window._NVR = (() => {
       container.appendChild(panel);
     }
 
+    // topicsStr()
+    // Purpose: helper wrapper used by this module's main flow.
+    // topicsStr()
+    // WHAT THIS DOES: topicsStr is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call topicsStr(...) where this helper behavior is needed.
     const topicsStr = (data.topics || []).slice(0, 5).map(t => `<span class="viz-tag">${escapeHtml(t)}</span>`).join('');
     const connCount = getConnectedNodeIds(memId).length;
     const typeKey = data.type || 'episodic';
@@ -1605,7 +1780,10 @@ window._NVR = (() => {
       if (summaryEl) summaryEl.innerHTML = '<span class="viz-summary-text dim">Failed to load summary</span>';
     }
   }
-
+  // hideNodeDetail()
+  // WHAT THIS DOES: hideNodeDetail is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call hideNodeDetail(...) where this helper behavior is needed.
   function hideNodeDetail() {
     const panel = document.getElementById('viz-detail-panel');
     if (panel) panel.classList.remove('visible');
@@ -1617,7 +1795,10 @@ window._NVR = (() => {
     semantic: '◆', reflection: '◎', interaction: '●', learning: '▲',
     creation: '◆', achievement: '▴', dream: '○', dream_memory: '○', chatlog: '◎'
   };
-
+  // showHoverTooltip()
+  // WHAT THIS DOES: showHoverTooltip builds or updates what the user sees.
+  // WHY IT EXISTS: display logic is separated from data/business logic for clarity.
+  // HOW TO USE IT: call showHoverTooltip(...) after state changes that need UI refresh.
   function showHoverTooltip(event, id) {
     let tooltip = document.getElementById('viz-hover-tooltip');
     if (!tooltip && container) {
@@ -1672,13 +1853,20 @@ window._NVR = (() => {
     tooltip.style.top = Math.max(8, y) + 'px';
     tooltip.style.display = 'block';
   }
-
+  // hideHoverTooltip()
+  // WHAT THIS DOES: hideHoverTooltip is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call hideHoverTooltip(...) where this helper behavior is needed.
   function hideHoverTooltip() {
     const tooltip = document.getElementById('viz-hover-tooltip');
     if (tooltip) tooltip.style.display = 'none';
   }
 
   // ── Belief Detail Panel ──
+  // showBeliefDetail()
+  // WHAT THIS DOES: showBeliefDetail builds or updates what the user sees.
+  // WHY IT EXISTS: display logic is separated from data/business logic for clarity.
+  // HOW TO USE IT: call showBeliefDetail(...) after state changes that need UI refresh.
   function showBeliefDetail(beliefId) {
     const data = beliefNodeData.get(beliefId);
     if (!data) return;
@@ -1691,9 +1879,21 @@ window._NVR = (() => {
       container.appendChild(panel);
     }
 
+    // topicsStr()
+    // Purpose: helper wrapper used by this module's main flow.
+    // topicsStr()
+    // WHAT THIS DOES: topicsStr is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call topicsStr(...) where this helper behavior is needed.
     const topicsStr = (data.topics || []).slice(0, 5).map(t => `<span class="viz-tag belief-tag">${escapeHtml(t)}</span>`).join('');
     const connCount = getConnectedNodeIds(beliefId).length;
     const sourceCount = (data.sources || []).length;
+    // connectionsList()
+    // Purpose: helper wrapper used by this module's main flow.
+    // connectionsList()
+    // WHAT THIS DOES: connectionsList is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call connectionsList(...) where this helper behavior is needed.
     const connectionsList = (data.connections || []).slice(0, 5);
     const relationsHtml = connectionsList.map(c => {
       const icon = c.relation === 'supports' ? '↑' : c.relation === 'contradicts' ? '↓' : '↔';
@@ -1723,7 +1923,10 @@ window._NVR = (() => {
     `;
     panel.classList.add('visible');
   }
-
+  // updateInfoPanel()
+  // WHAT THIS DOES: updateInfoPanel changes saved state or updates data.
+  // WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+  // HOW TO USE IT: call updateInfoPanel(...) with the new values you want to persist.
   function updateInfoPanel() {
     const info = document.getElementById('viz-info-panel');
     if (!info) return;
@@ -1740,7 +1943,10 @@ window._NVR = (() => {
       ${neuroInfo}
     `;
   }
-
+  // updateNeurochemOverlay()
+  // WHAT THIS DOES: updateNeurochemOverlay changes saved state or updates data.
+  // WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+  // HOW TO USE IT: call updateNeurochemOverlay(...) with the new values you want to persist.
   function updateNeurochemOverlay() {
     // Update the neurochemistry bar overlay in the 3D view
     let overlay = document.getElementById('viz-neuro-overlay');
@@ -1772,6 +1978,10 @@ window._NVR = (() => {
   }
 
   // ── SSE Real-time Updates — implemented by data-layer.js ──
+  // connectSSE()
+  // WHAT THIS DOES: connectSSE is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call connectSSE(...) where this helper behavior is needed.
   function connectSSE() { /* replaced at runtime by neural-viz/data-layer.js */ }
 
   function handleBrainEvent(event) {
@@ -1857,7 +2067,10 @@ window._NVR = (() => {
     }
     updateInfoPanel();
   }
-
+  // flashBeliefNode()
+  // WHAT THIS DOES: flashBeliefNode is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call flashBeliefNode(...) where this helper behavior is needed.
   function flashBeliefNode(beliefId, color, intensity) {
     const mesh = beliefNodeMap.get(beliefId);
     if (!mesh) return;
@@ -1891,6 +2104,10 @@ window._NVR = (() => {
 
   // Debounced belief reload to avoid thrashing during rapid events (e.g., deep sleep)
   let _beliefReloadTimer = null;
+  // debouncedBeliefReload()
+  // WHAT THIS DOES: debouncedBeliefReload is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call debouncedBeliefReload(...) where this helper behavior is needed.
   function debouncedBeliefReload() {
     if (_beliefReloadTimer) clearTimeout(_beliefReloadTimer);
     _beliefReloadTimer = setTimeout(() => {
@@ -1902,6 +2119,10 @@ window._NVR = (() => {
   // Debounced full graph reload for new memory events
   let _graphReloadTimer = null;
   let _pendingSelectId = null;
+  // debouncedGraphReload()
+  // WHAT THIS DOES: debouncedGraphReload is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call debouncedGraphReload(...) where this helper behavior is needed.
   function debouncedGraphReload(selectAfterLoadId) {
     if (selectAfterLoadId) _pendingSelectId = selectAfterLoadId;
     if (_graphReloadTimer) clearTimeout(_graphReloadTimer);
@@ -1919,7 +2140,10 @@ window._NVR = (() => {
       }
     }, 800);
   }
-
+  // flashNode()
+  // WHAT THIS DOES: flashNode is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call flashNode(...) where this helper behavior is needed.
   function flashNode(memId, color, intensity) {
     const mesh = nodeMap.get(memId);
     if (!mesh) return;
@@ -1943,6 +2167,10 @@ window._NVR = (() => {
   // ── Playback Mode ─────────────────────────────────────────────
   // All nodes hidden at start; revealed one-by-one with a spring birth animation.
 
+  // enterPlaybackMode()
+  // WHAT THIS DOES: enterPlaybackMode is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call enterPlaybackMode(...) where this helper behavior is needed.
   function enterPlaybackMode() {
     _playbackMode = true;
     _revealedNodeIds.clear();
@@ -1952,7 +2180,10 @@ window._NVR = (() => {
     if (_glowPoints) _glowPoints.visible = false;
     if (_labelMesh) _labelMesh.visible = false;
   }
-
+  // exitPlaybackMode()
+  // WHAT THIS DOES: exitPlaybackMode is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call exitPlaybackMode(...) where this helper behavior is needed.
   function exitPlaybackMode() {
     _playbackMode = false;
     _revealedNodeIds.clear();
@@ -1961,6 +2192,12 @@ window._NVR = (() => {
       mesh.visible = true;
       mesh.scale.set(1, 1, 1);
       const d = nodeData.get(id);
+      // tk()
+      // Purpose: helper wrapper used by this module's main flow.
+      // tk()
+      // WHAT THIS DOES: tk is a helper used by this module's main flow.
+      // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+      // HOW TO USE IT: call tk(...) where this helper behavior is needed.
       const tk = (d && d.type) || 'episodic';
       const prof = MEMORY_TYPES[tk] || DEFAULT_TYPE_PROFILE;
       mesh.material.opacity = tk === 'core_memory' ? 1.0 : (prof.isDream ? 0.75 : 0.85);
@@ -1973,6 +2210,10 @@ window._NVR = (() => {
   }
 
   // Birth-reveal a single node during playback (or flash it if already visible).
+  // revealNode()
+  // WHAT THIS DOES: revealNode is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call revealNode(...) where this helper behavior is needed.
   function revealNode(memId) {
     if (!memId) return;
     if (!_playbackMode) { flashNode(memId, COLORS.nodeActive, 0.8); return; }
@@ -1982,6 +2223,12 @@ window._NVR = (() => {
     _revealedNodeIds.add(memId);
     _revealEdgesForNode(memId);
     const d = nodeData.get(memId);
+    // tk()
+    // Purpose: helper wrapper used by this module's main flow.
+    // tk()
+    // WHAT THIS DOES: tk is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call tk(...) where this helper behavior is needed.
     const tk = (d && d.type) || 'episodic';
     const prof = MEMORY_TYPES[tk] || DEFAULT_TYPE_PROFILE;
     const targetOp = tk === 'core_memory' ? 1.0 : (prof.isDream ? 0.75 : 0.85);
@@ -1992,7 +2239,10 @@ window._NVR = (() => {
     mesh.material.emissiveIntensity = 1.2;
     _revealAnims.push({ mesh, id: memId, startTime: performance.now(), duration: 700, targetOp, prof, d });
   }
-
+  // _revealEdgesForNode()
+  // WHAT THIS DOES: _revealEdgesForNode is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call _revealEdgesForNode(...) where this helper behavior is needed.
   function _revealEdgesForNode(memId) {
     if (!_edgeBatch) return;
     const cols = _edgeBatch.geometry.attributes.color.array;
@@ -2000,6 +2250,12 @@ window._NVR = (() => {
     let changed = false;
     for (const edge of simEdges) {
       if (edge.batchIdx == null) continue;
+      // connects()
+      // Purpose: helper wrapper used by this module's main flow.
+      // connects()
+      // WHAT THIS DOES: connects is a helper used by this module's main flow.
+      // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+      // HOW TO USE IT: call connects(...) where this helper behavior is needed.
       const connects = (edge.source === memId && _revealedNodeIds.has(edge.target)) ||
                        (edge.target === memId && _revealedNodeIds.has(edge.source));
       if (connects) {
@@ -2013,6 +2269,10 @@ window._NVR = (() => {
   }
 
   // ── Scene Cleanup ──
+  // clearScene()
+  // WHAT THIS DOES: clearScene removes, resets, or shuts down existing state.
+  // WHY IT EXISTS: cleanup is explicit so stale state does not leak into new runs.
+  // HOW TO USE IT: call clearScene(...) when you need a safe teardown/reset path.
   function clearScene() {
     if (scene) {
       for (const [, mesh] of nodeMap) scene.remove(mesh);
@@ -2040,6 +2300,10 @@ window._NVR = (() => {
   }
 
   // ── Resize ──
+  // onResize()
+  // WHAT THIS DOES: onResize handles an event and routes follow-up actions.
+  // WHY IT EXISTS: event flow is easier to debug when listener logic is centralized.
+  // HOW TO USE IT: wire onResize to the relevant event source or dispatcher.
   function onResize() {
     if (!container || !camera || !renderer) return;
     camera.aspect = container.clientWidth / container.clientHeight;
@@ -2048,6 +2312,10 @@ window._NVR = (() => {
   }
 
   // ── Destroy ──
+  // destroy()
+  // WHAT THIS DOES: destroy removes, resets, or shuts down existing state.
+  // WHY IT EXISTS: cleanup is explicit so stale state does not leak into new runs.
+  // HOW TO USE IT: call destroy(...) when you need a safe teardown/reset path.
   function destroy() {
     if (animationId) cancelAnimationFrame(animationId);
     animationId = null;
@@ -2093,6 +2361,10 @@ window._NVR = (() => {
   }
 
   // ── Reset camera ──
+  // resetCamera()
+  // WHAT THIS DOES: resetCamera removes, resets, or shuts down existing state.
+  // WHY IT EXISTS: cleanup is explicit so stale state does not leak into new runs.
+  // HOW TO USE IT: call resetCamera(...) when you need a safe teardown/reset path.
   function resetCamera() {
     if (!camera || !controls) return;
     camera.position.set(0, 0, 50);
@@ -2101,6 +2373,10 @@ window._NVR = (() => {
   }
 
   // ── Deselect ──
+  // deselectNode()
+  // WHAT THIS DOES: deselectNode is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call deselectNode(...) where this helper behavior is needed.
   function deselectNode() {
     if (selectedNode) {
       const mesh = nodeMap.get(selectedNode) || beliefNodeMap.get(selectedNode);
@@ -2121,7 +2397,10 @@ window._NVR = (() => {
     selectedNode = null;
     hideNodeDetail();
   }
-
+  // escapeHtml()
+  // WHAT THIS DOES: escapeHtml is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call escapeHtml(...) where this helper behavior is needed.
   function escapeHtml(str) {
     const div = document.createElement('div');
     div.textContent = str;
@@ -2131,6 +2410,10 @@ window._NVR = (() => {
   // ── Pop-out to a separate window ──
   let popoutWindow = null;
 
+  // popOut()
+  // WHAT THIS DOES: popOut is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call popOut(...) where this helper behavior is needed.
   function popOut() {
     if (popoutWindow && !popoutWindow.closed) {
       popoutWindow.focus();
@@ -2227,6 +2510,10 @@ window._NVR = (() => {
   </div>
   <script>
     // Load Three.js → OrbitControls → neural-viz split files → init
+    // loadScript()
+    // WHAT THIS DOES: loadScript reads or finds data and gives it back.
+    // WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+    // HOW TO USE IT: call loadScript(...), then use the returned value in your next step.
     function loadScript(src, onload) {
       const s = document.createElement('script');
       s.src = src;
@@ -2283,6 +2570,10 @@ window._NVR = (() => {
   }
 
   // ── Build type legend ──
+  // buildLegend()
+  // WHAT THIS DOES: buildLegend creates or initializes something needed by the flow.
+  // WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+  // HOW TO USE IT: call buildLegend(...) before code that depends on this setup.
   function buildLegend(targetEl) {
     if (!targetEl) {
       // Create inline in the viz container
@@ -2322,6 +2613,10 @@ window._NVR = (() => {
   }
 
   // ── Filter nodes — show only the given set, hide the rest ──
+  // filterNodes()
+  // WHAT THIS DOES: filterNodes is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call filterNodes(...) where this helper behavior is needed.
   function filterNodes(nodeIdSet) {
     if (!isInitialized) return;
     const set = nodeIdSet instanceof Set ? nodeIdSet : new Set(nodeIdSet);
@@ -2335,6 +2630,10 @@ window._NVR = (() => {
   }
 
   // ── Clear filter — restore all node visibility ──
+  // clearFilter()
+  // WHAT THIS DOES: clearFilter removes, resets, or shuts down existing state.
+  // WHY IT EXISTS: cleanup is explicit so stale state does not leak into new runs.
+  // HOW TO USE IT: call clearFilter(...) when you need a safe teardown/reset path.
   function clearFilter() {
     if (!isInitialized) return;
     for (const [, mesh] of nodeMap) {
@@ -2372,12 +2671,20 @@ window._NVR = (() => {
   }
 
   // ── Update node limit and immediately reload ──
+  // setNodeLimit()
+  // WHAT THIS DOES: setNodeLimit changes saved state or updates data.
+  // WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+  // HOW TO USE IT: call setNodeLimit(...) with the new values you want to persist.
   function setNodeLimit(n) {
     MAX_VISIBLE_NODES = Math.max(0, Math.min(1000, n));
     loadGraphData();
   }
 
   // ── Neurochemistry state setter (used by data-layer.js) ──
+  // setNeurochemState()
+  // WHAT THIS DOES: setNeurochemState changes saved state or updates data.
+  // WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+  // HOW TO USE IT: call setNeurochemState(...) with the new values you want to persist.
   function setNeurochemState(state) {
     neurochemState = state;
     updateNeurochemOverlay();

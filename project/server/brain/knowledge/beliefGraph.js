@@ -1,3 +1,18 @@
+// ── Brain · BeliefGraph ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: fs, path, ../../entityPaths.
+// Keep import and call-site contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // REM System — Belief Graph + Cognitive Attention Routing
 //
@@ -27,11 +42,19 @@ class BeliefGraph {
    * @param {string} [options.beliefsDir] — override beliefs directory path
    * @param {Object} [options.cognitiveBus] — CognitiveBus for event emission
    */
+  // constructor()
+  // WHAT THIS DOES: constructor is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call constructor(...) where this helper behavior is needed.
   constructor(options = {}) {
     this.entityId = options.entityId || null;
     this.cognitiveBus = options.cognitiveBus || null;
 
     // Resolve beliefs directory
+    // if()
+    // WHAT THIS DOES: if is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call if(...) where this helper behavior is needed.
     if (options.beliefsDir) {
       this.beliefsDir = options.beliefsDir;
     } else if (this.entityId) {
@@ -58,6 +81,10 @@ class BeliefGraph {
 
   // ── Persistence ──────────────────────────────────────────
 
+  // _graphPath()
+  // WHAT THIS DOES: _graphPath is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call _graphPath(...) where this helper behavior is needed.
   _graphPath() { return path.join(this.beliefsDir, 'beliefGraph.json'); }
   _indexPath() { return path.join(this.beliefsDir, 'beliefIndex.json'); }
 

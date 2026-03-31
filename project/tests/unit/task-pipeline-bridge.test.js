@@ -1,8 +1,27 @@
+// ── Tests · Task Pipeline Bridge.Test ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This test file validates behavior and guards against regressions in its
+// target subsystem.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: node:test,
+// node:assert/strict, ../../server/brain/tasks/task-pipeline-bridge. Keep
+// import and call-site contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 
 const { createTaskPipelineBridge } = require('../../server/brain/tasks/task-pipeline-bridge');
-
+// mkFrontman()
+// WHAT THIS DOES: mkFrontman is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call mkFrontman(...) where this helper behavior is needed.
 function mkFrontman() {
   const calls = { started: [], mid: [] };
   return {

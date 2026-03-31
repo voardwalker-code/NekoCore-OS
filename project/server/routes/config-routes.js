@@ -1,9 +1,25 @@
+// ── Routes · Config Routes ───────────────────────────────────────────────────
+//
+// HOW CONFIG ROUTING WORKS:
+// This module serves runtime/global/entity config APIs, workspace file APIs,
+// proxy forwarding, sleep settings, and backup/restore operations.
+//
+// WHAT USES THIS:
+//   setup/settings UI, workspace panel, and system backup/restore tools
+//
+// EXPORTS:
+//   createConfigRoutes(ctx)
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ── Config Routes ────────────────────────────────────────────
 // /api/config, /api/entity-config, /api/proxy
 // /api/sleep/config, /api/workspace/*
 
 const { fetch } = require('../services/http-fetch');
-
+// createConfigRoutes()
+// WHAT THIS DOES: Builds config route dispatcher and related helper utilities.
+// WHY IT EXISTS: Config/workspace/backup/restore APIs share common state and helper behaviors.
+// HOW TO USE IT: Call createConfigRoutes(ctx) during server route registration.
 function createConfigRoutes(ctx) {
   const { fs, path } = ctx;
   const PROJECT_ROOT = path.join(__dirname, '..', '..');
@@ -13,17 +29,18 @@ function createConfigRoutes(ctx) {
   const ENTITIES_DIR = path.join(PROJECT_ROOT, 'entities');
   const MEMORIES_DIR = path.join(PROJECT_ROOT, 'memories');
   const BACKUP_MANIFEST = 'backup-manifest.json';
-
+  // isValidObject()
+  // WHAT THIS DOES: Returns true for plain non-array object values.
+  // WHY IT EXISTS: Manifest/config validation needs a small shared object guard.
+  // HOW TO USE IT: Call isValidObject(value) before treating JSON as object payload.
   function isValidObject(v) {
     return !!v && typeof v === 'object' && !Array.isArray(v);
   }
-
   function timestampTag() {
     const now = new Date();
     const pad = (n) => String(n).padStart(2, '0');
     return `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
   }
-
   function copyPathIfExists(src, dest) {
     if (!fs.existsSync(src)) return;
     const stat = fs.statSync(src);
@@ -35,12 +52,18 @@ function createConfigRoutes(ctx) {
       fs.copyFileSync(src, dest);
     }
   }
-
+  // removePathIfExists()
+  // WHAT THIS DOES: Removes file/directory tree when target exists.
+  // WHY IT EXISTS: Restore flows need predictable cleanup before copying replacement data.
+  // HOW TO USE IT: Call removePathIfExists(path) in restore reset steps.
   function removePathIfExists(target) {
     if (!fs.existsSync(target)) return;
     fs.rmSync(target, { recursive: true, force: true });
   }
-
+  // buildRestoreCandidates()
+  // WHAT THIS DOES: Builds canonical file/dir candidates expected in backup folder.
+  // WHY IT EXISTS: Restore process should have one centralized map of expected paths.
+  // HOW TO USE IT: Call buildRestoreCandidates(backupDir) before restore checks/copies.
   function buildRestoreCandidates(backupDir) {
     return {
       configFile: path.join(backupDir, 'Config', 'ma-config.json'),
@@ -49,7 +72,10 @@ function createConfigRoutes(ctx) {
       memoriesDir: path.join(backupDir, 'memories')
     };
   }
-
+  // createSafetySnapshot()
+  // WHAT THIS DOES: Creates pre-restore safety snapshot of current runtime files/directories.
+  // WHY IT EXISTS: Restore operations need rollback safety if source backup is incomplete or wrong.
+  // HOW TO USE IT: Call createSafetySnapshot() right before mutating live config/data dirs.
   function createSafetySnapshot() {
     const snapshotsRoot = path.join(PROJECT_ROOT, 'restore-snapshots');
     if (!fs.existsSync(snapshotsRoot)) fs.mkdirSync(snapshotsRoot, { recursive: true });
@@ -96,13 +122,19 @@ function createConfigRoutes(ctx) {
     if (p === '/api/system/webui-presence' && m === 'POST') { await postWebuiPresence(req, res, apiHeaders, readBody); return true; }
     return false;
   }
-
+  // normalizeAspectProvider()
+  // WHAT THIS DOES: Normalizes provider aliases into canonical aspect keys.
+  // WHY IT EXISTS: API callers may send variants (like "dreams") that should map consistently.
+  // HOW TO USE IT: Call normalizeAspectProvider(provider) before profile config access.
   function normalizeAspectProvider(provider) {
     const p = String(provider || '').toLowerCase().trim();
     if (p === 'dreams') return 'dream';
     return p;
   }
-
+  // readEntityProfileRef()
+  // WHAT THIS DOES: Reads entity-level config profile reference from entity.json.
+  // WHY IT EXISTS: Entity-specific profile preference should override global active profile.
+  // HOW TO USE IT: Call readEntityProfileRef(entityId) during entity config reads.
   function readEntityProfileRef(entityId) {
     if (!entityId) return null;
     try {
@@ -117,7 +149,10 @@ function createConfigRoutes(ctx) {
       return null;
     }
   }
-
+  // writeEntityProfileRef()
+  // WHAT THIS DOES: Persists entity-level config profile reference into entity.json.
+  // WHY IT EXISTS: Entity profile binding needs a durable write path.
+  // HOW TO USE IT: Call writeEntityProfileRef(entityId, profileName) from profile-ref updates.
   function writeEntityProfileRef(entityId, profileName) {
     const entityPaths = require('../entityPaths');
     const canonicalId = entityPaths.normalizeEntityId(entityId);
@@ -129,7 +164,10 @@ function createConfigRoutes(ctx) {
     fs.writeFileSync(entityFile, JSON.stringify(entity, null, 2), 'utf8');
     return entity.configProfileRef;
   }
-
+  // normalizeIncomingRuntimeConfig()
+  // WHAT THIS DOES: Validates and normalizes incoming provider runtime config payload.
+  // WHY IT EXISTS: Clients send mixed provider shapes; runtime expects canonical structure.
+  // HOW TO USE IT: Call normalizeIncomingRuntimeConfig(config) before persisting profile aspects.
   function normalizeIncomingRuntimeConfig(config) {
     if (!config || typeof config !== 'object') return null;
 
@@ -179,7 +217,10 @@ function createConfigRoutes(ctx) {
   }
 
   const REDACTED = '••••••••';
-
+  // redactKeys()
+  // WHAT THIS DOES: Recursively redacts API key fields for response payloads.
+  // WHY IT EXISTS: Config responses must avoid leaking secrets to UI/clients.
+  // HOW TO USE IT: Call redactKeys(obj) before returning config-like objects externally.
   function redactKeys(obj) {
     if (!obj || typeof obj !== 'object') return obj;
     if (Array.isArray(obj)) return obj.map(redactKeys);
@@ -195,7 +236,10 @@ function createConfigRoutes(ctx) {
     }
     return out;
   }
-
+  // mergeKeysBack()
+  // WHAT THIS DOES: Merges redacted placeholders back to stored secret values.
+  // WHY IT EXISTS: Client updates may keep masked values that should preserve original secrets.
+  // HOW TO USE IT: Call mergeKeysBack(incoming, stored) before saving updated config.
   function mergeKeysBack(incoming, stored) {
     // When client POSTs config, restore any redacted values from the stored config on disk
     if (!incoming || typeof incoming !== 'object') return incoming;
@@ -241,7 +285,10 @@ function createConfigRoutes(ctx) {
       res.end(JSON.stringify({ error: e.message }));
     }
   }
-
+  // getMaxTokens()
+  // WHAT THIS DOES: getMaxTokens reads or finds data and gives it back.
+  // WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+  // HOW TO USE IT: call getMaxTokens(...), then use the returned value in your next step.
   function getMaxTokens(req, res, apiHeaders) {
     res.writeHead(200, apiHeaders);
     res.end(JSON.stringify({ maxTokens: ctx._defaultMaxTokens }));
@@ -267,7 +314,10 @@ function createConfigRoutes(ctx) {
       res.end(JSON.stringify({ error: e.message }));
     }
   }
-
+  // getTokenLimits()
+  // WHAT THIS DOES: getTokenLimits reads or finds data and gives it back.
+  // WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+  // HOW TO USE IT: call getTokenLimits(...), then use the returned value in your next step.
   function getTokenLimits(req, res, apiHeaders) {
     const result = {};
     for (const [key, def] of Object.entries(ctx.TOKEN_LIMIT_DEFAULTS)) {
@@ -327,7 +377,10 @@ function createConfigRoutes(ctx) {
       res.end(JSON.stringify({ error: e.message }));
     }
   }
-
+  // getEntityConfig()
+  // WHAT THIS DOES: getEntityConfig reads or finds data and gives it back.
+  // WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+  // HOW TO USE IT: call getEntityConfig(...), then use the returned value in your next step.
   function getEntityConfig(req, res, apiHeaders, url) {
     const entityId = url.searchParams.get('entityId') || '';
     const provider = url.searchParams.get('provider');
@@ -383,6 +436,12 @@ function createConfigRoutes(ctx) {
 
       const targetProfile = globalCfg.profiles[globalCfg.lastActive];
       const storedAspectConfig = targetProfile[normalizedProvider] || {};
+      // mergeBase()
+      // Purpose: helper wrapper used by this module's main flow.
+      // mergeBase()
+      // WHAT THIS DOES: mergeBase is a helper used by this module's main flow.
+      // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+      // HOW TO USE IT: call mergeBase(...) where this helper behavior is needed.
       const mergeBase = (normalizedProvider === 'main' && targetProfile.apikey)
         ? {
             ...storedAspectConfig,
@@ -429,12 +488,18 @@ function createConfigRoutes(ctx) {
       res.end(JSON.stringify({ error: e.message }));
     }
   }
-
+  // toAsciiHeaderValue()
+  // WHAT THIS DOES: toAsciiHeaderValue is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call toAsciiHeaderValue(...) where this helper behavior is needed.
   function toAsciiHeaderValue(value) {
     if (typeof value !== 'string') return String(value);
     return value.replace(/[^\x20-\x7E]/g, '');
   }
-
+  // sanitizeProxyResponseHeaders()
+  // WHAT THIS DOES: sanitizeProxyResponseHeaders is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call sanitizeProxyResponseHeaders(...) where this helper behavior is needed.
   function sanitizeProxyResponseHeaders(upstream, apiHeaders) {
     const ct = upstream.headers.get('content-type') || 'application/json';
     return { ...apiHeaders, 'Content-Type': toAsciiHeaderValue(ct) };
@@ -459,7 +524,10 @@ function createConfigRoutes(ctx) {
       res.end(text);
     } catch (e) { res.writeHead(500, apiHeaders); res.end(JSON.stringify({ error: e.message })); }
   }
-
+  // getSleepConfig()
+  // WHAT THIS DOES: getSleepConfig reads or finds data and gives it back.
+  // WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+  // HOW TO USE IT: call getSleepConfig(...), then use the returned value in your next step.
   function getSleepConfig(req, res, apiHeaders) {
     try {
       const config = ctx.loadConfig();
@@ -511,7 +579,10 @@ function createConfigRoutes(ctx) {
       res.end(JSON.stringify({ ok: false, error: e.message }));
     }
   }
-
+  // getWorkspaceConfig()
+  // WHAT THIS DOES: getWorkspaceConfig reads or finds data and gives it back.
+  // WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+  // HOW TO USE IT: call getWorkspaceConfig(...), then use the returned value in your next step.
   function getWorkspaceConfig(req, res, apiHeaders) {
     const config = ctx.loadConfig();
     res.writeHead(200, apiHeaders);
@@ -535,7 +606,10 @@ function createConfigRoutes(ctx) {
       res.end(JSON.stringify({ ok: false, error: e.message }));
     }
   }
-
+  // resolveWsPath()
+  // WHAT THIS DOES: Resolves workspace-relative path and blocks path traversal.
+  // WHY IT EXISTS: Workspace APIs must not allow reads/writes outside configured root.
+  // HOW TO USE IT: Call resolveWsPath(relPath) before list/read/write/delete operations.
   function resolveWsPath(relPath) {
     const config = ctx.loadConfig();
     const wsRoot = config.workspacePath;
@@ -544,7 +618,10 @@ function createConfigRoutes(ctx) {
     if (!resolved.startsWith(path.resolve(wsRoot))) return null;
     return resolved;
   }
-
+  // getWorkspaceList()
+  // WHAT THIS DOES: Lists files/directories for one workspace-relative directory path.
+  // WHY IT EXISTS: Workspace browser needs a safe listing endpoint with file metadata.
+  // HOW TO USE IT: Route GET /api/workspace/list to getWorkspaceList(req, res, apiHeaders, url).
   function getWorkspaceList(req, res, apiHeaders, url) {
     const relPath = url.searchParams.get('path') || '.';
     const dir = resolveWsPath(relPath);
@@ -573,7 +650,10 @@ function createConfigRoutes(ctx) {
       res.end(JSON.stringify({ ok: false, error: e.message }));
     }
   }
-
+  // getWorkspaceRead()
+  // WHAT THIS DOES: Reads one workspace file and returns its text content.
+  // WHY IT EXISTS: Workspace editor needs direct file read endpoint with safety checks.
+  // HOW TO USE IT: Route GET /api/workspace/read to getWorkspaceRead(req, res, apiHeaders, url).
   function getWorkspaceRead(req, res, apiHeaders, url) {
     const relPath = url.searchParams.get('path');
     if (!relPath) { res.writeHead(400, apiHeaders); res.end(JSON.stringify({ ok: false, error: 'path required' })); return; }

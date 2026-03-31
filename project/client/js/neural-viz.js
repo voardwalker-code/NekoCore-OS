@@ -1,8 +1,26 @@
+// ── Client · Neural Viz ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This client module drives browser-side behavior and state updates for UI
+// features.
+//
+// WHAT USES THIS:
+// Used by related flows in its subsystem. Keep call contracts stable during
+// readability-only edits.
+//
+// EXPORTS:
+// Exposed API includes: window-attached API object.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // REM System — 3D Neural Network Visualization
 // Three.js-based real-time memory trace visualization
 // ============================================================
 
+// NeuralViz()
+// WHAT THIS DOES: NeuralViz is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call NeuralViz(...) where this helper behavior is needed.
 const NeuralViz = (() => {
   let scene, camera, renderer, controls;
   let container = null;
@@ -305,6 +323,10 @@ const NeuralViz = (() => {
   let eventSource = null;
 
   // ── Initialization ──
+  // init()
+  // WHAT THIS DOES: init creates or initializes something needed by the flow.
+  // WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+  // HOW TO USE IT: call init(...) before code that depends on this setup.
   function init(containerEl, options = {}) {
     if (isInitialized) return;
     container = containerEl;
@@ -399,6 +421,10 @@ const NeuralViz = (() => {
   }
 
   // ── Build 3D Graph ──
+  // buildGraph()
+  // WHAT THIS DOES: buildGraph creates or initializes something needed by the flow.
+  // WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+  // HOW TO USE IT: call buildGraph(...) before code that depends on this setup.
   function buildGraph(nodes, edges) {
     // Clear existing
     clearScene();
@@ -543,6 +569,10 @@ const NeuralViz = (() => {
   }
 
   // ── Overlay trace connections ──
+  // overlayTraceConnections()
+  // WHAT THIS DOES: overlayTraceConnections is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call overlayTraceConnections(...) where this helper behavior is needed.
   function overlayTraceConnections(connectionGraph) {
     if (!_edgeBatch) return;
     const colors = _edgeBatch.geometry.attributes.color.array;
@@ -565,6 +595,10 @@ const NeuralViz = (() => {
   }
 
   // ── Build Belief Graph Overlay ──
+  // buildBeliefGraph()
+  // WHAT THIS DOES: buildBeliefGraph creates or initializes something needed by the flow.
+  // WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+  // HOW TO USE IT: call buildBeliefGraph(...) before code that depends on this setup.
   function buildBeliefGraph(beliefs, edges) {
     // Track old belief IDs so we can remove them from simulation arrays
     const oldBeliefIds = new Set(beliefNodeMap.keys());
@@ -720,6 +754,10 @@ const NeuralViz = (() => {
   }
 
   // ── Glow sprite for nodes ──
+  // addGlowSprite()
+  // WHAT THIS DOES: addGlowSprite is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call addGlowSprite(...) where this helper behavior is needed.
   function addGlowSprite(mesh, size, color, scale) {
     const glowScale = scale || 4;
     const canvas = document.createElement('canvas');
@@ -748,6 +786,10 @@ const NeuralViz = (() => {
   }
 
   // ── Floating Zzz sprites for dream nodes ──
+  // addDreamZzz()
+  // WHAT THIS DOES: addDreamZzz is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call addDreamZzz(...) where this helper behavior is needed.
   function addDreamZzz(parentMesh, size, color) {
     const zCount = 3;
     for (let i = 0; i < zCount; i++) {
@@ -786,6 +828,10 @@ const NeuralViz = (() => {
   }
 
   // ── Core memory dendrite spines (make core memories unmissable) ──
+  // addCoreDendrites()
+  // WHAT THIS DOES: addCoreDendrites is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call addCoreDendrites(...) where this helper behavior is needed.
   function addCoreDendrites(parentMesh, size, color) {
     const spineMat = new THREE.MeshBasicMaterial({
       color,
@@ -819,6 +865,10 @@ const NeuralViz = (() => {
   }
 
   // ── Force-directed simulation step ──
+  // simulationStep()
+  // WHAT THIS DOES: simulationStep is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call simulationStep(...) where this helper behavior is needed.
   function simulationStep(alpha) {
     const a = alpha || SIM_ALPHA;
 
@@ -833,6 +883,12 @@ const NeuralViz = (() => {
         let dx = ni.x - nj.x, dy = ni.y - nj.y, dz = ni.z - nj.z;
         let dist = Math.sqrt(dx * dx + dy * dy + dz * dz) || 0.01;
         const force = SIM_REPULSION / (dist * dist);
+        // fx()
+        // Purpose: helper wrapper used by this module's main flow.
+        // fx()
+        // WHAT THIS DOES: fx is a helper used by this module's main flow.
+        // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+        // HOW TO USE IT: call fx(...) where this helper behavior is needed.
         const fx = (dx / dist) * force * a;
         const fy = (dy / dist) * force * a;
         const fz = (dz / dist) * force * a;
@@ -848,9 +904,21 @@ const NeuralViz = (() => {
       if (!ni || !nj) continue;
       let dx = nj.x - ni.x, dy = nj.y - ni.y, dz = nj.z - ni.z;
       let dist = Math.sqrt(dx * dx + dy * dy + dz * dz) || 0.01;
+      // force()
+      // Purpose: helper wrapper used by this module's main flow.
+      // force()
+      // WHAT THIS DOES: force is a helper used by this module's main flow.
+      // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+      // HOW TO USE IT: call force(...) where this helper behavior is needed.
       const force = (dist - SIM_LINK_DISTANCE) * edge.strength * a * 0.1;
       const fx = (dx / dist) * force;
       const fy = (dy / dist) * force;
+      // fz()
+      // Purpose: helper wrapper used by this module's main flow.
+      // fz()
+      // WHAT THIS DOES: fz is a helper used by this module's main flow.
+      // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+      // HOW TO USE IT: call fz(...) where this helper behavior is needed.
       const fz = (dz / dist) * force;
       ni.vx += fx; ni.vy += fy; ni.vz += fz;
       nj.vx -= fx; nj.vy -= fy; nj.vz -= fz;
@@ -870,7 +938,10 @@ const NeuralViz = (() => {
       if (n.mesh) n.mesh.position.set(n.x, n.y, n.z);
     }
   }
-
+  // updateEdgePositions()
+  // WHAT THIS DOES: updateEdgePositions changes saved state or updates data.
+  // WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+  // HOW TO USE IT: call updateEdgePositions(...) with the new values you want to persist.
   function updateEdgePositions() {
     const nodeById = new Map();
     for (const n of simNodes) nodeById.set(n.id, n);
@@ -905,6 +976,10 @@ const NeuralViz = (() => {
   }
 
   // ── Animation Loop ──
+  // animate()
+  // WHAT THIS DOES: animate is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call animate(...) where this helper behavior is needed.
   function animate() {
     animationId = requestAnimationFrame(animate);
     pulseTime += 0.016;
@@ -985,6 +1060,12 @@ const NeuralViz = (() => {
           if (child.userData && child.userData._dreamZzz) {
             const idx = child.userData._zzzIndex;
             const phase = pulseTime * 0.8 + idx * 1.2;
+            // cycle()
+            // Purpose: helper wrapper used by this module's main flow.
+            // cycle()
+            // WHAT THIS DOES: cycle is a helper used by this module's main flow.
+            // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+            // HOW TO USE IT: call cycle(...) where this helper behavior is needed.
             const cycle = ((phase % 3) / 3); // 0→1 repeating
             child.position.y = child.userData._zzzBaseY + cycle * 1.5;
             child.material.opacity = cycle < 0.8 ? 0.8 - cycle * 0.6 : Math.max(0, (1 - cycle) * 3);
@@ -1010,6 +1091,10 @@ const NeuralViz = (() => {
   // ── Trace Animation (traveling particles along edges) ──
   // opts: { stepDuration?: number (seconds per hop), particleSize?: number }
   // Live mode passes { stepDuration: 2.0, particleSize: 0.22 } for slower, more visible tracing
+  // animateTrace()
+  // WHAT THIS DOES: animateTrace is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call animateTrace(...) where this helper behavior is needed.
   function animateTrace(traceChain, opts) {
     if (!traceChain || traceChain.length < 2) return;
     opts = opts || {};
@@ -1039,10 +1124,19 @@ const NeuralViz = (() => {
 
     traceAnimations.push(anim);
   }
-
+  // updateTraceAnimations()
+  // WHAT THIS DOES: updateTraceAnimations changes saved state or updates data.
+  // WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+  // HOW TO USE IT: call updateTraceAnimations(...) with the new values you want to persist.
   function updateTraceAnimations() {
     const now = performance.now();
     traceAnimations = traceAnimations.filter(anim => {
+      // elapsed()
+      // Purpose: helper wrapper used by this module's main flow.
+      // elapsed()
+      // WHAT THIS DOES: elapsed is a helper used by this module's main flow.
+      // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+      // HOW TO USE IT: call elapsed(...) where this helper behavior is needed.
       const elapsed = (now - anim.startTime) / 1000;
       const stepDuration = anim.stepDuration || 0.8; // seconds per step (per-animation)
 
@@ -1096,6 +1190,10 @@ const NeuralViz = (() => {
   }
 
   // ── Click Handling ──
+  // onClick()
+  // WHAT THIS DOES: onClick handles an event and routes follow-up actions.
+  // WHY IT EXISTS: event flow is easier to debug when listener logic is centralized.
+  // HOW TO USE IT: wire onClick to the relevant event source or dispatcher.
   function onClick(event) {
     const rect = renderer.domElement.getBoundingClientRect();
     mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
@@ -1156,7 +1254,10 @@ const NeuralViz = (() => {
       hideNodeDetail();
     }
   }
-
+  // onMouseMove()
+  // WHAT THIS DOES: onMouseMove handles an event and routes follow-up actions.
+  // WHY IT EXISTS: event flow is easier to debug when listener logic is centralized.
+  // HOW TO USE IT: wire onMouseMove to the relevant event source or dispatcher.
   function onMouseMove(event) {
     const rect = renderer.domElement.getBoundingClientRect();
     mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
@@ -1193,13 +1294,20 @@ const NeuralViz = (() => {
   }
 
   // ── Helpers ──
+  // getNodeColor()
+  // WHAT THIS DOES: getNodeColor reads or finds data and gives it back.
+  // WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+  // HOW TO USE IT: call getNodeColor(...), then use the returned value in your next step.
   function getNodeColor(data) {
     if (!data) return COLORS.nodeDefault;
     if (data.activation > 0.5) return COLORS.nodeHot;
     const profile = MEMORY_TYPES[data.type] || DEFAULT_TYPE_PROFILE;
     return profile.color;
   }
-
+  // getConnectedNodeIds()
+  // WHAT THIS DOES: getConnectedNodeIds reads or finds data and gives it back.
+  // WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+  // HOW TO USE IT: call getConnectedNodeIds(...), then use the returned value in your next step.
   function getConnectedNodeIds(memId) {
     const connected = [];
     for (const edge of simEdges) {
@@ -1208,7 +1316,10 @@ const NeuralViz = (() => {
     }
     return connected;
   }
-
+  // highlightConnections()
+  // WHAT THIS DOES: highlightConnections is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call highlightConnections(...) where this helper behavior is needed.
   function highlightConnections(memId) {
     // Highlight batched memory edges
     if (_edgeBatch) {
@@ -1246,7 +1357,10 @@ const NeuralViz = (() => {
       }
     }
   }
-
+  // resetEdgeColors()
+  // WHAT THIS DOES: resetEdgeColors removes, resets, or shuts down existing state.
+  // WHY IT EXISTS: cleanup is explicit so stale state does not leak into new runs.
+  // HOW TO USE IT: call resetEdgeColors(...) when you need a safe teardown/reset path.
   function resetEdgeColors() {
     // Reset batched memory edges
     if (_edgeBatch) {
@@ -1281,6 +1395,10 @@ const NeuralViz = (() => {
   }
 
   // ── Select a node by memory ID (for search / SSE auto-select) ──
+  // selectNodeById()
+  // WHAT THIS DOES: selectNodeById is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call selectNodeById(...) where this helper behavior is needed.
   function selectNodeById(memId) {
     if (!isInitialized) return false;
     const mesh = nodeMap.get(memId);
@@ -1330,11 +1448,19 @@ const NeuralViz = (() => {
   }
 
   // ── Get all node IDs for search autocomplete ──
+  // getNodeIds()
+  // WHAT THIS DOES: getNodeIds reads or finds data and gives it back.
+  // WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+  // HOW TO USE IT: call getNodeIds(...), then use the returned value in your next step.
   function getNodeIds() {
     return Array.from(nodeMap.keys());
   }
 
   // ── UI Detail Panel ──
+  // showNodeDetail()
+  // WHAT THIS DOES: showNodeDetail builds or updates what the user sees.
+  // WHY IT EXISTS: display logic is separated from data/business logic for clarity.
+  // HOW TO USE IT: call showNodeDetail(...) after state changes that need UI refresh.
   function showNodeDetail(memId) {
     const data = nodeData.get(memId);
     if (!data) return;
@@ -1347,6 +1473,12 @@ const NeuralViz = (() => {
       container.appendChild(panel);
     }
 
+    // topicsStr()
+    // Purpose: helper wrapper used by this module's main flow.
+    // topicsStr()
+    // WHAT THIS DOES: topicsStr is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call topicsStr(...) where this helper behavior is needed.
     const topicsStr = (data.topics || []).slice(0, 5).map(t => `<span class="viz-tag">${escapeHtml(t)}</span>`).join('');
     const connCount = getConnectedNodeIds(memId).length;
     const typeKey = data.type || 'episodic';
@@ -1415,13 +1547,20 @@ const NeuralViz = (() => {
       if (summaryEl) summaryEl.innerHTML = '<span class="viz-summary-text dim">Failed to load summary</span>';
     }
   }
-
+  // hideNodeDetail()
+  // WHAT THIS DOES: hideNodeDetail is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call hideNodeDetail(...) where this helper behavior is needed.
   function hideNodeDetail() {
     const panel = document.getElementById('viz-detail-panel');
     if (panel) panel.classList.remove('visible');
   }
 
   // ── Belief Detail Panel ──
+  // showBeliefDetail()
+  // WHAT THIS DOES: showBeliefDetail builds or updates what the user sees.
+  // WHY IT EXISTS: display logic is separated from data/business logic for clarity.
+  // HOW TO USE IT: call showBeliefDetail(...) after state changes that need UI refresh.
   function showBeliefDetail(beliefId) {
     const data = beliefNodeData.get(beliefId);
     if (!data) return;
@@ -1434,9 +1573,21 @@ const NeuralViz = (() => {
       container.appendChild(panel);
     }
 
+    // topicsStr()
+    // Purpose: helper wrapper used by this module's main flow.
+    // topicsStr()
+    // WHAT THIS DOES: topicsStr is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call topicsStr(...) where this helper behavior is needed.
     const topicsStr = (data.topics || []).slice(0, 5).map(t => `<span class="viz-tag belief-tag">${escapeHtml(t)}</span>`).join('');
     const connCount = getConnectedNodeIds(beliefId).length;
     const sourceCount = (data.sources || []).length;
+    // connectionsList()
+    // Purpose: helper wrapper used by this module's main flow.
+    // connectionsList()
+    // WHAT THIS DOES: connectionsList is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call connectionsList(...) where this helper behavior is needed.
     const connectionsList = (data.connections || []).slice(0, 5);
     const relationsHtml = connectionsList.map(c => {
       const icon = c.relation === 'supports' ? '↑' : c.relation === 'contradicts' ? '↓' : '↔';
@@ -1466,7 +1617,10 @@ const NeuralViz = (() => {
     `;
     panel.classList.add('visible');
   }
-
+  // updateInfoPanel()
+  // WHAT THIS DOES: updateInfoPanel changes saved state or updates data.
+  // WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+  // HOW TO USE IT: call updateInfoPanel(...) with the new values you want to persist.
   function updateInfoPanel() {
     const info = document.getElementById('viz-info-panel');
     if (!info) return;
@@ -1483,7 +1637,10 @@ const NeuralViz = (() => {
       ${neuroInfo}
     `;
   }
-
+  // updateNeurochemOverlay()
+  // WHAT THIS DOES: updateNeurochemOverlay changes saved state or updates data.
+  // WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+  // HOW TO USE IT: call updateNeurochemOverlay(...) with the new values you want to persist.
   function updateNeurochemOverlay() {
     // Update the neurochemistry bar overlay in the 3D view
     let overlay = document.getElementById('viz-neuro-overlay');
@@ -1515,6 +1672,10 @@ const NeuralViz = (() => {
   }
 
   // ── SSE Real-time Updates ──
+  // connectSSE()
+  // WHAT THIS DOES: connectSSE is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call connectSSE(...) where this helper behavior is needed.
   function connectSSE() {
     if (eventSource) eventSource.close();
 
@@ -1581,7 +1742,10 @@ const NeuralViz = (() => {
       console.warn('Neural Viz: SSE connection failed', err);
     }
   }
-
+  // handleBrainEvent()
+  // WHAT THIS DOES: handleBrainEvent handles an event and routes follow-up actions.
+  // WHY IT EXISTS: event flow is easier to debug when listener logic is centralized.
+  // HOW TO USE IT: wire handleBrainEvent to the relevant event source or dispatcher.
   function handleBrainEvent(event) {
     switch (event.type) {
       case 'MEMORY_RETRIEVED':
@@ -1665,7 +1829,10 @@ const NeuralViz = (() => {
     }
     updateInfoPanel();
   }
-
+  // flashBeliefNode()
+  // WHAT THIS DOES: flashBeliefNode is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call flashBeliefNode(...) where this helper behavior is needed.
   function flashBeliefNode(beliefId, color, intensity) {
     const mesh = beliefNodeMap.get(beliefId);
     if (!mesh) return;
@@ -1699,6 +1866,10 @@ const NeuralViz = (() => {
 
   // Debounced belief reload to avoid thrashing during rapid events (e.g., deep sleep)
   let _beliefReloadTimer = null;
+  // debouncedBeliefReload()
+  // WHAT THIS DOES: debouncedBeliefReload is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call debouncedBeliefReload(...) where this helper behavior is needed.
   function debouncedBeliefReload() {
     if (_beliefReloadTimer) clearTimeout(_beliefReloadTimer);
     _beliefReloadTimer = setTimeout(() => {
@@ -1710,6 +1881,10 @@ const NeuralViz = (() => {
   // Debounced full graph reload for new memory events
   let _graphReloadTimer = null;
   let _pendingSelectId = null;
+  // debouncedGraphReload()
+  // WHAT THIS DOES: debouncedGraphReload is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call debouncedGraphReload(...) where this helper behavior is needed.
   function debouncedGraphReload(selectAfterLoadId) {
     if (selectAfterLoadId) _pendingSelectId = selectAfterLoadId;
     if (_graphReloadTimer) clearTimeout(_graphReloadTimer);
@@ -1727,7 +1902,10 @@ const NeuralViz = (() => {
       }
     }, 800);
   }
-
+  // flashNode()
+  // WHAT THIS DOES: flashNode is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call flashNode(...) where this helper behavior is needed.
   function flashNode(memId, color, intensity) {
     const mesh = nodeMap.get(memId);
     if (!mesh) return;
@@ -1750,6 +1928,10 @@ const NeuralViz = (() => {
   // In playback mode all nodes are hidden until revealed by the timeline.
   // Revealed nodes animate in with a spring-scale birth effect.
 
+  // enterPlaybackMode()
+  // WHAT THIS DOES: enterPlaybackMode is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call enterPlaybackMode(...) where this helper behavior is needed.
   function enterPlaybackMode() {
     _playbackMode = true;
     _revealedNodeIds.clear();
@@ -1760,7 +1942,10 @@ const NeuralViz = (() => {
     // Dim edges to near-invisible so the graph is dark until nodes appear
     if (_edgeBatch) _edgeBatch.material.opacity = 0.03;
   }
-
+  // exitPlaybackMode()
+  // WHAT THIS DOES: exitPlaybackMode is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call exitPlaybackMode(...) where this helper behavior is needed.
   function exitPlaybackMode() {
     _playbackMode = false;
     _revealedNodeIds.clear();
@@ -1769,6 +1954,12 @@ const NeuralViz = (() => {
       mesh.visible = true;
       mesh.scale.set(1, 1, 1);
       const d = nodeData.get(id);
+      // tk()
+      // Purpose: helper wrapper used by this module's main flow.
+      // tk()
+      // WHAT THIS DOES: tk is a helper used by this module's main flow.
+      // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+      // HOW TO USE IT: call tk(...) where this helper behavior is needed.
       const tk = (d && d.type) || 'episodic';
       const prof = MEMORY_TYPES[tk] || DEFAULT_TYPE_PROFILE;
       mesh.material.opacity = tk === 'core_memory' ? 1.0 : (prof.isDream ? 0.75 : 0.85);
@@ -1779,6 +1970,10 @@ const NeuralViz = (() => {
   }
 
   // Reveal a single node during playback (or flash it if already visible).
+  // revealNode()
+  // WHAT THIS DOES: revealNode is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call revealNode(...) where this helper behavior is needed.
   function revealNode(memId) {
     if (!memId) return;
     if (!_playbackMode) {
@@ -1798,6 +1993,12 @@ const NeuralViz = (() => {
     _revealEdgesForNode(memId);
 
     const d = nodeData.get(memId);
+    // tk()
+    // Purpose: helper wrapper used by this module's main flow.
+    // tk()
+    // WHAT THIS DOES: tk is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call tk(...) where this helper behavior is needed.
     const tk = (d && d.type) || 'episodic';
     const prof = MEMORY_TYPES[tk] || DEFAULT_TYPE_PROFILE;
     const targetOp = tk === 'core_memory' ? 1.0 : (prof.isDream ? 0.75 : 0.85);
@@ -1813,6 +2014,10 @@ const NeuralViz = (() => {
   }
 
   // Light up edges that now have both endpoints revealed
+  // _revealEdgesForNode()
+  // WHAT THIS DOES: _revealEdgesForNode is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call _revealEdgesForNode(...) where this helper behavior is needed.
   function _revealEdgesForNode(memId) {
     if (!_edgeBatch) return;
     const cols = _edgeBatch.geometry.attributes.color.array;
@@ -1820,6 +2025,12 @@ const NeuralViz = (() => {
     let changed = false;
     for (const edge of simEdges) {
       if (edge.batchIdx == null) continue;
+      // connects()
+      // Purpose: helper wrapper used by this module's main flow.
+      // connects()
+      // WHAT THIS DOES: connects is a helper used by this module's main flow.
+      // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+      // HOW TO USE IT: call connects(...) where this helper behavior is needed.
       const connects = (edge.source === memId && _revealedNodeIds.has(edge.target)) ||
                        (edge.target === memId && _revealedNodeIds.has(edge.source));
       if (connects) {
@@ -1833,6 +2044,10 @@ const NeuralViz = (() => {
   }
 
   // ── Scene Cleanup ──
+  // clearScene()
+  // WHAT THIS DOES: clearScene removes, resets, or shuts down existing state.
+  // WHY IT EXISTS: cleanup is explicit so stale state does not leak into new runs.
+  // HOW TO USE IT: call clearScene(...) when you need a safe teardown/reset path.
   function clearScene() {
     if (scene) {
       for (const [, mesh] of nodeMap) scene.remove(mesh);
@@ -1853,6 +2068,10 @@ const NeuralViz = (() => {
   }
 
   // ── Resize ──
+  // onResize()
+  // WHAT THIS DOES: onResize handles an event and routes follow-up actions.
+  // WHY IT EXISTS: event flow is easier to debug when listener logic is centralized.
+  // HOW TO USE IT: wire onResize to the relevant event source or dispatcher.
   function onResize() {
     if (!container || !camera || !renderer) return;
     camera.aspect = container.clientWidth / container.clientHeight;
@@ -1861,6 +2080,10 @@ const NeuralViz = (() => {
   }
 
   // ── Destroy ──
+  // destroy()
+  // WHAT THIS DOES: destroy removes, resets, or shuts down existing state.
+  // WHY IT EXISTS: cleanup is explicit so stale state does not leak into new runs.
+  // HOW TO USE IT: call destroy(...) when you need a safe teardown/reset path.
   function destroy() {
     if (animationId) cancelAnimationFrame(animationId);
     animationId = null;
@@ -1897,6 +2120,10 @@ const NeuralViz = (() => {
   }
 
   // ── Reset camera ──
+  // resetCamera()
+  // WHAT THIS DOES: resetCamera removes, resets, or shuts down existing state.
+  // WHY IT EXISTS: cleanup is explicit so stale state does not leak into new runs.
+  // HOW TO USE IT: call resetCamera(...) when you need a safe teardown/reset path.
   function resetCamera() {
     if (!camera || !controls) return;
     camera.position.set(0, 0, 50);
@@ -1905,6 +2132,10 @@ const NeuralViz = (() => {
   }
 
   // ── Deselect ──
+  // deselectNode()
+  // WHAT THIS DOES: deselectNode is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call deselectNode(...) where this helper behavior is needed.
   function deselectNode() {
     if (selectedNode) {
       const mesh = nodeMap.get(selectedNode) || beliefNodeMap.get(selectedNode);
@@ -1925,7 +2156,10 @@ const NeuralViz = (() => {
     selectedNode = null;
     hideNodeDetail();
   }
-
+  // escapeHtml()
+  // WHAT THIS DOES: escapeHtml is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call escapeHtml(...) where this helper behavior is needed.
   function escapeHtml(str) {
     const div = document.createElement('div');
     div.textContent = str;
@@ -1935,6 +2169,10 @@ const NeuralViz = (() => {
   // ── Pop-out to a separate window ──
   let popoutWindow = null;
 
+  // popOut()
+  // WHAT THIS DOES: popOut is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call popOut(...) where this helper behavior is needed.
   function popOut() {
     if (popoutWindow && !popoutWindow.closed) {
       popoutWindow.focus();
@@ -2086,6 +2324,10 @@ const NeuralViz = (() => {
   }
 
   // ── Build type legend ──
+  // buildLegend()
+  // WHAT THIS DOES: buildLegend creates or initializes something needed by the flow.
+  // WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+  // HOW TO USE IT: call buildLegend(...) before code that depends on this setup.
   function buildLegend(targetEl) {
     if (!targetEl) {
       // Create inline in the viz container
@@ -2125,6 +2367,10 @@ const NeuralViz = (() => {
   }
 
   // ── Filter nodes — show only the given set, hide the rest ──
+  // filterNodes()
+  // WHAT THIS DOES: filterNodes is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call filterNodes(...) where this helper behavior is needed.
   function filterNodes(nodeIdSet) {
     if (!isInitialized) return;
     const set = nodeIdSet instanceof Set ? nodeIdSet : new Set(nodeIdSet);
@@ -2135,6 +2381,10 @@ const NeuralViz = (() => {
   }
 
   // ── Clear filter — restore all node visibility ──
+  // clearFilter()
+  // WHAT THIS DOES: clearFilter removes, resets, or shuts down existing state.
+  // WHY IT EXISTS: cleanup is explicit so stale state does not leak into new runs.
+  // HOW TO USE IT: call clearFilter(...) when you need a safe teardown/reset path.
   function clearFilter() {
     if (!isInitialized) return;
     for (const [, mesh] of nodeMap) {
@@ -2164,6 +2414,10 @@ const NeuralViz = (() => {
   }
 
   // ── Update node limit and immediately reload ──
+  // setNodeLimit()
+  // WHAT THIS DOES: setNodeLimit changes saved state or updates data.
+  // WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+  // HOW TO USE IT: call setNodeLimit(...) with the new values you want to persist.
   function setNodeLimit(n) {
     MAX_VISIBLE_NODES = Math.max(0, Math.min(1000, n));
     loadGraphData();

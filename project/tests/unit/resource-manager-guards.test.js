@@ -1,3 +1,19 @@
+// ── Tests · Resource Manager Guards.Test ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This test file validates behavior and guards against regressions in its
+// target subsystem.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: node:test,
+// node:assert/strict, fs, path. Keep import and call-site contracts aligned
+// during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 'use strict';
 /**
  * Guard + unit tests for the Resource Manager App (PLAN-RESOURCE-MANAGER-APP-v1).
@@ -91,7 +107,10 @@ describe('Resource Manager — blueprint files on disk', () => {
 describe('Resource Manager — Todo schema validation', () => {
   const PRIORITIES = ['critical', 'high', 'medium', 'low'];
   const STATUSES   = ['active', 'paused', 'done', 'cancelled'];
-
+  // validateTodo()
+  // WHAT THIS DOES: validateTodo answers a yes/no rule check.
+  // WHY IT EXISTS: guard checks are kept readable and reusable in one place.
+  // HOW TO USE IT: call validateTodo(...) and branch logic based on true/false.
   function validateTodo(obj) {
     const errors = [];
     if (typeof obj.id !== 'string' || !obj.id.startsWith('todo_')) errors.push('bad id');
@@ -142,6 +161,10 @@ describe('Resource Manager — Todo schema validation', () => {
 /* ── Active-resources schema ────────────────────────────────────── */
 
 describe('Resource Manager — Active-resources schema', () => {
+  // validateActiveResources()
+  // WHAT THIS DOES: validateActiveResources answers a yes/no rule check.
+  // WHY IT EXISTS: guard checks are kept readable and reusable in one place.
+  // HOW TO USE IT: call validateActiveResources(...) and branch logic based on true/false.
   function validateActiveResources(obj) {
     const errors = [];
     const allowedKeys = ['activeTodo', 'activeTask', 'activeProject', 'activePulse', 'updatedAt'];

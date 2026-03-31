@@ -1,3 +1,19 @@
+// ── Brain · Phase Identity ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: ../../identity/life-diary,
+// ../../generation/diary-prompts. Keep import and call-site contracts
+// aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // Phase: Identity + Goals Update
 // Updates personality trends from memory patterns and decays active goals.
 // Phase 10: Checks trigger conditions for Life Diary entries.
@@ -192,6 +208,12 @@ async function _checkLifeDiaryTriggers(loop) {
     if (!runtime) return;
 
     const prompt = getLifeDiaryPrompt(identity, title, context);
+    // diaryCallLLM()
+    // Purpose: helper wrapper used by this module's main flow.
+    // diaryCallLLM()
+    // WHAT THIS DOES: diaryCallLLM is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call diaryCallLLM(...) where this helper behavior is needed.
     const diaryCallLLM = async (msg) => loop._callLLM(runtime, [
       { role: 'user', content: msg }
     ], { temperature: 0.75, maxTokens: 600 });

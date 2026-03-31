@@ -1,3 +1,18 @@
+// ── Brain · Cognitive Bus ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: events. Keep import and
+// call-site contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // REM System — Cognitive Bus Module
 // Global event bus for all cognitive systems.
@@ -7,6 +22,10 @@
 const { EventEmitter } = require('events');
 
 class CognitiveBus extends EventEmitter {
+  // constructor()
+  // WHAT THIS DOES: constructor is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call constructor(...) where this helper behavior is needed.
   constructor(options = {}) {
     super();
     this.maxListeners = 50; // Allow many subscribers
@@ -21,6 +40,10 @@ class CognitiveBus extends EventEmitter {
    * Automatically attaches timestamp if not present.
    * All systems subscribe to relevant event types.
    */
+  // emitThought()
+  // WHAT THIS DOES: emitThought is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call emitThought(...) where this helper behavior is needed.
   emitThought(event) {
     if (!event.type) {
       console.error('  ⚠ Cannot emit thought without type');
@@ -28,22 +51,38 @@ class CognitiveBus extends EventEmitter {
     }
 
     // Attach timestamp if missing
+    // if()
+    // WHAT THIS DOES: if is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call if(...) where this helper behavior is needed.
     if (!event.timestamp) {
       event.timestamp = Date.now();
     }
 
     // Attach ISO timestamp for logging
+    // if()
+    // WHAT THIS DOES: if is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call if(...) where this helper behavior is needed.
     if (!event.iso_timestamp) {
       event.iso_timestamp = new Date(event.timestamp).toISOString();
     }
 
     // Log to internal buffer if enabled
+    // if()
+    // WHAT THIS DOES: if is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call if(...) where this helper behavior is needed.
     if (this.logEnabled) {
       this.thoughtLog.push({
         ...event,
         logged_at: Date.now()
       });
       // Trim log to max size
+      // if()
+      // WHAT THIS DOES: if is a helper used by this module's main flow.
+      // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+      // HOW TO USE IT: call if(...) where this helper behavior is needed.
       if (this.thoughtLog.length > this.logSize) {
         this.thoughtLog = this.thoughtLog.slice(-this.logSize);
       }

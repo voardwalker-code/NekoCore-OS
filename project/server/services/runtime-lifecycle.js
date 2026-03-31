@@ -1,3 +1,25 @@
+// ── Services · Runtime Lifecycle ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This service module holds reusable business logic shared across runtime
+// paths.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include:
+// ../brain/cognition/phases/phase-dreams, ../entityPaths,
+// ../brain/identity/life-diary, ../brain/generation/diary-prompts,
+// ../brain/identity/dream-diary. Keep import and call-site contracts aligned
+// during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
+// createRuntimeLifecycle()
+// WHAT THIS DOES: createRuntimeLifecycle creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call createRuntimeLifecycle(...) before code that depends on this setup.
 function createRuntimeLifecycle(deps = {}) {
   let shuttingDown = false;
 
@@ -113,6 +135,12 @@ function createRuntimeLifecycle(deps = {}) {
           let dreamRuntime = deps.loadAspectRuntimeConfig('dream');
           if (!dreamRuntime) dreamRuntime = deps.loadAspectRuntimeConfig('subconscious') || deps.loadAspectRuntimeConfig('main');
           if (dreamRuntime) {
+            // dreamCallLLM()
+            // Purpose: helper wrapper used by this module's main flow.
+            // dreamCallLLM()
+            // WHAT THIS DOES: dreamCallLLM is a helper used by this module's main flow.
+            // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+            // HOW TO USE IT: call dreamCallLLM(...) where this helper behavior is needed.
             const dreamCallLLM = async (prompt) => deps.callLLMWithRuntime(dreamRuntime, [
               { role: 'system', content: 'You are the Imagination Engine of a dreaming AI entity. Write a brief, vivid dream story. First person, present tense.' },
               { role: 'user', content: prompt }
@@ -153,6 +181,12 @@ function createRuntimeLifecycle(deps = {}) {
         if (!diaryRuntime) diaryRuntime = deps.loadAspectRuntimeConfig('subconscious') || deps.loadAspectRuntimeConfig('main');
 
         if (diaryRuntime) {
+          // diaryCallLLM()
+          // Purpose: helper wrapper used by this module's main flow.
+          // diaryCallLLM()
+          // WHAT THIS DOES: diaryCallLLM is a helper used by this module's main flow.
+          // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+          // HOW TO USE IT: call diaryCallLLM(...) where this helper behavior is needed.
           const diaryCallLLM = async (prompt) => deps.callLLMWithRuntime(diaryRuntime, [
             { role: 'user', content: prompt }
           ], { temperature: 0.75, maxTokens: 600 });

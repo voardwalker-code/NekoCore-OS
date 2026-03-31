@@ -1,3 +1,19 @@
+// ── Tests · Bugtracker Guards.Test ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This test file validates behavior and guards against regressions in its
+// target subsystem.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: node:test,
+// node:assert/strict, fs, path. Keep import and call-site contracts aligned
+// during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 'use strict';
 /**
  * Guard + unit tests for the Bug Tracker App (PLAN-BUG-TRACKER-APP-v1).
@@ -86,7 +102,10 @@ describe('Bug Tracker — HTML payload guard', () => {
 describe('Bug Tracker — Schema validation', () => {
   const SEVERITIES = ['critical', 'high', 'medium', 'low'];
   const STATUSES   = ['open', 'in-progress', 'fixed', 'wont-fix', 'duplicate'];
-
+  // validateBugtrackFile()
+  // WHAT THIS DOES: validateBugtrackFile answers a yes/no rule check.
+  // WHY IT EXISTS: guard checks are kept readable and reusable in one place.
+  // HOW TO USE IT: call validateBugtrackFile(...) and branch logic based on true/false.
   function validateBugtrackFile(obj) {
     const errors = [];
     if (obj.format !== 'nekocore-bugtrack-v1') errors.push('bad format');
@@ -153,6 +172,10 @@ describe('Bug Tracker — Schema validation', () => {
 /* ── Bug ID generation ──────────────────────────────────────────── */
 
 describe('Bug Tracker — ID generation', () => {
+  // nextBugId()
+  // WHAT THIS DOES: nextBugId is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call nextBugId(...) where this helper behavior is needed.
   function nextBugId(bugs) {
     if (!bugs.length) return 'BUG-001';
     const nums = bugs.map(b => parseInt(b.id.replace('BUG-', ''), 10)).filter(n => !isNaN(n));
@@ -183,6 +206,10 @@ describe('Bug Tracker — ID generation', () => {
 /* ── Markdown report generation ─────────────────────────────────── */
 
 describe('Bug Tracker — Markdown report generation', () => {
+  // generateMarkdownReport()
+  // WHAT THIS DOES: generateMarkdownReport is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call generateMarkdownReport(...) where this helper behavior is needed.
   function generateMarkdownReport(project, bugs) {
     const open  = bugs.filter(b => b.status === 'open').length;
     const fixed = bugs.filter(b => b.status === 'fixed').length;

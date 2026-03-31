@@ -1,3 +1,19 @@
+// ── Brain · Project Executor ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: ./task-event-bus,
+// ./blueprint-loader. Keep import and call-site contracts aligned during
+// refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // Project Executor
 //
@@ -44,6 +60,10 @@ const PHASES_REGEX = /\[PROJECT_PHASES\]([\s\S]*?)\[\/PROJECT_PHASES\]/;
  * @param {string} text - LLM raw output
  * @returns {Array|null} Array of phase objects or null
  */
+// parseProjectPhases()
+// WHAT THIS DOES: parseProjectPhases reshapes data from one form into another.
+// WHY IT EXISTS: conversion rules live here so the same transformation is reused.
+// HOW TO USE IT: pass input data into parseProjectPhases(...) and use the transformed output.
 function parseProjectPhases(text) {
   if (!text) return null;
   const match = PHASES_REGEX.exec(text);
@@ -78,6 +98,10 @@ function parseProjectPhases(text) {
 /**
  * Strip the [PROJECT_PHASES] block from text.
  */
+// stripPhasesBlock()
+// WHAT THIS DOES: stripPhasesBlock is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call stripPhasesBlock(...) where this helper behavior is needed.
 function stripPhasesBlock(text) {
   return text.replace(PHASES_REGEX, '').replace(/\n{3,}/g, '\n\n').trim();
 }
@@ -87,6 +111,10 @@ function stripPhasesBlock(text) {
  * @param {Array} completedPhases - Phases that have finished
  * @returns {string} Context block for the LLM
  */
+// buildPhaseContext()
+// WHAT THIS DOES: buildPhaseContext creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call buildPhaseContext(...) before code that depends on this setup.
 function buildPhaseContext(completedPhases) {
   if (!completedPhases.length) return '';
 
@@ -378,6 +406,10 @@ Rules:
  * Build the phase-specific task message that feeds into executeTask.
  * @private
  */
+// _buildPhaseMessage()
+// WHAT THIS DOES: _buildPhaseMessage creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call _buildPhaseMessage(...) before code that depends on this setup.
 function _buildPhaseMessage(phase, originalRequest, phaseContext, phaseIndex, totalPhases) {
   let msg = `PROJECT PHASE ${phaseIndex + 1} of ${totalPhases}: ${phase.name}\n\n`;
   msg += `ORIGINAL PROJECT REQUEST: "${originalRequest}"\n\n`;

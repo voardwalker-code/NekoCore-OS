@@ -1,3 +1,20 @@
+// ── Tests · Browser Spike Acceptance ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This test file validates behavior and guards against regressions in its
+// target subsystem.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: assert,
+// ../../browser-host/event-bus, ../../browser-host/tab-model,
+// ../../browser-host/navigation, ../../browser-host/lifecycle. Keep import
+// and call-site contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 'use strict';
 
 /**
@@ -27,7 +44,10 @@ eventBus.on('*', (ev) => eventLog.push(ev));
 
 let passed = 0;
 let failed = 0;
-
+// test()
+// WHAT THIS DOES: test is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call test(...) where this helper behavior is needed.
 function test(name, fn) {
   try {
     fn();
@@ -39,7 +59,10 @@ function test(name, fn) {
     console.log(`    ${e.message}`);
   }
 }
-
+// resetAll()
+// WHAT THIS DOES: resetAll removes, resets, or shuts down existing state.
+// WHY IT EXISTS: cleanup is explicit so stale state does not leak into new runs.
+// HOW TO USE IT: call resetAll(...) when you need a safe teardown/reset path.
 function resetAll() {
   tabModel.reset();
   navigation.reset();

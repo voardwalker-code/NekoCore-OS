@@ -1,3 +1,19 @@
+// ── Tests · Context Compactor Guards.Test ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This test file validates behavior and guards against regressions in its
+// target subsystem.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: node:test,
+// node:assert/strict, ../../server/services/context-compactor. Keep import
+// and call-site contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 'use strict';
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
@@ -34,6 +50,10 @@ describe('estimateTokens', () => {
 
 // ---------- compactConversation — no compaction needed ----------
 describe('compactConversation — no-op cases', () => {
+  // mockCallLLM()
+  // WHAT THIS DOES: mockCallLLM is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call mockCallLLM(...) where this helper behavior is needed.
   const mockCallLLM = async () => 'should not be called';
 
   it('returns unchanged messages when under threshold', async () => {
@@ -84,6 +104,10 @@ describe('compactConversation — no-op cases', () => {
 
 // ---------- compactConversation — compaction triggers ----------
 describe('compactConversation — compaction triggers', () => {
+  // makeLongConvo()
+  // WHAT THIS DOES: makeLongConvo creates or initializes something needed by the flow.
+  // WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+  // HOW TO USE IT: call makeLongConvo(...) before code that depends on this setup.
   function makeLongConvo(turnCount) {
     const msgs = [{ role: 'system', content: 'You are an AI.' }];
     for (let i = 0; i < turnCount; i++) {
@@ -95,6 +119,12 @@ describe('compactConversation — compaction triggers', () => {
 
   it('compacts when over threshold and returns summary message', async () => {
     const messages = makeLongConvo(20); // ~40 conversation msgs, lots of tokens
+    // mockLLM()
+    // Purpose: helper wrapper used by this module's main flow.
+    // mockLLM()
+    // WHAT THIS DOES: mockLLM is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call mockLLM(...) where this helper behavior is needed.
     const mockLLM = async (_rt, _msgs, _opts) => 'Summary of earlier discussion.';
 
     const result = await compactConversation(mockLLM, { type: 'openrouter' }, messages, {
@@ -114,6 +144,12 @@ describe('compactConversation — compaction triggers', () => {
 
   it('preserves custom preserveLastN count', async () => {
     const messages = makeLongConvo(20);
+    // mockLLM()
+    // Purpose: helper wrapper used by this module's main flow.
+    // mockLLM()
+    // WHAT THIS DOES: mockLLM is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call mockLLM(...) where this helper behavior is needed.
     const mockLLM = async () => 'Summarized.';
 
     const result = await compactConversation(mockLLM, { type: 'anthropic' }, messages, {
@@ -135,6 +171,12 @@ describe('compactConversation — compaction triggers', () => {
         content: 'X'.repeat(200)
       }))
     ];
+    // mockLLM()
+    // Purpose: helper wrapper used by this module's main flow.
+    // mockLLM()
+    // WHAT THIS DOES: mockLLM is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call mockLLM(...) where this helper behavior is needed.
     const mockLLM = async () => 'Compacted.';
 
     const result = await compactConversation(mockLLM, { type: 'openrouter' }, messages, {
@@ -152,6 +194,12 @@ describe('compactConversation — compaction triggers', () => {
   it('passes low temperature and maxTokens to the LLM call', async () => {
     const messages = makeLongConvo(20);
     let capturedOpts;
+    // mockLLM()
+    // Purpose: helper wrapper used by this module's main flow.
+    // mockLLM()
+    // WHAT THIS DOES: mockLLM is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call mockLLM(...) where this helper behavior is needed.
     const mockLLM = async (_rt, _msgs, opts) => {
       capturedOpts = opts;
       return 'Sum.';
@@ -169,6 +217,12 @@ describe('compactConversation — compaction triggers', () => {
   it('includes entity context in summarization prompt', async () => {
     const messages = makeLongConvo(20);
     let capturedPrompt;
+    // mockLLM()
+    // Purpose: helper wrapper used by this module's main flow.
+    // mockLLM()
+    // WHAT THIS DOES: mockLLM is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call mockLLM(...) where this helper behavior is needed.
     const mockLLM = async (_rt, msgs) => {
       capturedPrompt = msgs;
       return 'Entity summary.';
@@ -187,6 +241,12 @@ describe('compactConversation — compaction triggers', () => {
 
   it('handles object result from LLM with .content', async () => {
     const messages = makeLongConvo(20);
+    // mockLLM()
+    // Purpose: helper wrapper used by this module's main flow.
+    // mockLLM()
+    // WHAT THIS DOES: mockLLM is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call mockLLM(...) where this helper behavior is needed.
     const mockLLM = async () => ({ content: 'Object summary.' });
 
     const result = await compactConversation(mockLLM, { type: 'anthropic' }, messages, {
@@ -200,6 +260,10 @@ describe('compactConversation — compaction triggers', () => {
 
 // ---------- compactConversation — failure cases ----------
 describe('compactConversation — LLM failure resilience', () => {
+  // makeLongConvo()
+  // WHAT THIS DOES: makeLongConvo creates or initializes something needed by the flow.
+  // WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+  // HOW TO USE IT: call makeLongConvo(...) before code that depends on this setup.
   function makeLongConvo(turnCount) {
     const msgs = [];
     for (let i = 0; i < turnCount; i++) {
@@ -211,6 +275,12 @@ describe('compactConversation — LLM failure resilience', () => {
 
   it('returns uncompacted when LLM throws', async () => {
     const messages = makeLongConvo(20);
+    // failLLM()
+    // Purpose: helper wrapper used by this module's main flow.
+    // failLLM()
+    // WHAT THIS DOES: failLLM is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call failLLM(...) where this helper behavior is needed.
     const failLLM = async () => { throw new Error('API timeout'); };
 
     const result = await compactConversation(failLLM, { type: 'openrouter' }, messages, {
@@ -223,6 +293,12 @@ describe('compactConversation — LLM failure resilience', () => {
 
   it('returns uncompacted when LLM returns empty string', async () => {
     const messages = makeLongConvo(20);
+    // emptyLLM()
+    // Purpose: helper wrapper used by this module's main flow.
+    // emptyLLM()
+    // WHAT THIS DOES: emptyLLM is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call emptyLLM(...) where this helper behavior is needed.
     const emptyLLM = async () => '';
 
     const result = await compactConversation(emptyLLM, { type: 'openrouter' }, messages, {
@@ -234,6 +310,12 @@ describe('compactConversation — LLM failure resilience', () => {
 
   it('returns uncompacted when LLM returns null', async () => {
     const messages = makeLongConvo(20);
+    // nullLLM()
+    // Purpose: helper wrapper used by this module's main flow.
+    // nullLLM()
+    // WHAT THIS DOES: nullLLM is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call nullLLM(...) where this helper behavior is needed.
     const nullLLM = async () => null;
 
     const result = await compactConversation(nullLLM, { type: 'openrouter' }, messages, {
@@ -264,6 +346,12 @@ describe('compactConversation — threshold calculation', () => {
       role: i % 2 === 0 ? 'user' : 'assistant',
       content: 'X'.repeat(100)
     }));
+    // mockLLM()
+    // Purpose: helper wrapper used by this module's main flow.
+    // mockLLM()
+    // WHAT THIS DOES: mockLLM is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call mockLLM(...) where this helper behavior is needed.
     const mockLLM = async () => 'Summarized.';
 
     const result = await compactConversation(mockLLM, { type: 'openrouter' }, messages, {
@@ -279,6 +367,12 @@ describe('compactConversation — threshold calculation', () => {
       { role: 'user', content: 'Hi' },
       { role: 'assistant', content: 'Hello' }
     ];
+    // mockLLM()
+    // Purpose: helper wrapper used by this module's main flow.
+    // mockLLM()
+    // WHAT THIS DOES: mockLLM is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call mockLLM(...) where this helper behavior is needed.
     const mockLLM = async () => { throw new Error('should not be called'); };
 
     const result = await compactConversation(mockLLM, { type: 'openrouter' }, messages, {

@@ -1,3 +1,17 @@
+// ── Tests · Ma Bridge.Test ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This test file validates behavior and guards against regressions in its
+// target subsystem.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: ../services/ma-bridge. Keep
+// import and call-site contracts aligned during refactors.
+//
+// EXPORTS:
+// Exposed API includes: intercept.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ── MA Bridge — Guard & Unit Tests ──────────────────────────────────────────
 // Covers:  process-manager-routes exports, ma-bridge service, /ma slash command
 // Run with: node --test tests/unit/ma-bridge.test.js  (from project/)

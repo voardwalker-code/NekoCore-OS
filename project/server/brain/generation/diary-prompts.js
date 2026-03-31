@@ -1,3 +1,18 @@
+// ── Brain · Diary Prompts ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Used by related flows in its subsystem. Keep call contracts stable during
+// readability-only edits.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // REM System — Diary Generation Prompts
 // Aspect prompts for generating Life Diary and Dream Diary entries
@@ -11,6 +26,10 @@
  * @param {object} context - { trigger, memory, neurochemistry, goals, somaticState }
  * @returns {string} LLM prompt
  */
+// getLifeDiaryPrompt()
+// WHAT THIS DOES: getLifeDiaryPrompt reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call getLifeDiaryPrompt(...), then use the returned value in your next step.
 function getLifeDiaryPrompt(entity, title, context = {}) {
   const name = entity?.name || 'Entity';
   const traits = Array.isArray(entity?.personality_traits) ? entity.personality_traits.join(', ') : 'thoughtful, introspective';
@@ -70,6 +89,10 @@ Output ONLY the diary entry prose. No extra commentary or framing.`;
  * @param {object} dream - Dream object { title, fullText, semantic, genre, origin_memories, emotion, ... }
  * @returns {string} LLM prompt
  */
+// getDreamDiaryPrompt()
+// WHAT THIS DOES: getDreamDiaryPrompt reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call getDreamDiaryPrompt(...), then use the returned value in your next step.
 function getDreamDiaryPrompt(entity, dream) {
   const name = entity?.name || 'Entity';
   const traits = Array.isArray(entity?.personality_traits) ? entity.personality_traits.join(', ') : 'thoughtful, introspective';
@@ -115,6 +138,10 @@ Output ONLY the diary entry prose. No extra commentary or framing.`;
  * @param {object} context - { neurochemistry, somaticState, goals }
  * @returns {string} LLM prompt
  */
+// getSessionSummaryPrompt()
+// WHAT THIS DOES: getSessionSummaryPrompt reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call getSessionSummaryPrompt(...), then use the returned value in your next step.
 function getSessionSummaryPrompt(entity, recentMemories = [], context = {}) {
   const name = entity?.name || 'Entity';
   const traits = Array.isArray(entity?.personality_traits) ? entity.personality_traits.join(', ') : 'thoughtful, introspective';

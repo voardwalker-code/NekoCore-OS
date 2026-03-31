@@ -1,3 +1,17 @@
+// ── Services · Workspace Tools Bridge ────────────────────────────────────────
+//
+// HOW WORKSPACE TOOL EXECUTION WORKS:
+// This module parses tool-call syntax emitted by the model, validates params,
+// executes workspace/web/memory/skill commands, and returns normalized tool
+// result blocks for follow-up orchestration.
+//
+// WHAT USES THIS:
+//   task/skill execution pipeline and model tool-call response handling
+//
+// EXPORTS:
+//   extractToolCalls(), executeToolCalls(), formatToolResults(), stripToolCalls()
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // REM System — Workspace Tools
 //
@@ -58,18 +72,19 @@ const LEGACY_RE = /\[TOOL:\s*([a-zA-Z_][\w-]*)\s*((?:\s+[a-zA-Z_][\w-]*\s*=\s*(?
 // Strip pattern: blocks first, then inline, then legacy
 const STRIP_RE = /\[TOOL:[\s\S]*?\[\s*\/\s*TOOL\s*\]|\[TOOL:\w[\w-]*\s*(?:\{[\s\S]*?\})?\s*\]|\[TOOL:\s*[a-zA-Z_][\w-]*\s*(?:\s+[a-zA-Z_][\w-]*\s*=\s*(?:"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'))*\s*\]/gi;
 
+/** Remove markdown fences wrapped around tool syntax. */
 function _preCleanToolText(text) {
   if (!text) return text;
   return text.replace(/```[\w]*\s*(\[\s*TOOL[\s\S]*?(?:\[\s*\/\s*TOOL\s*\]|\]))\s*```/gi, '$1');
 }
-
+/** Normalize tool name to lowercase snake_case. */
 function _normName(n) { return n.toLowerCase().replace(/-/g, '_'); }
 
 function _parseJSON(raw) {
   if (!raw) return {};
   try { return JSON.parse(raw); } catch { return null; }
 }
-
+/** Check whether a match range overlaps previously parsed ranges. */
 function _overlaps(pos, len, ranges) {
   const end = pos + len;
   for (const [s, e] of ranges) {
@@ -79,7 +94,7 @@ function _overlaps(pos, len, ranges) {
   }
   return false;
 }
-
+/** Validate tool params and inject block content for write/append tools. */
 function _validate(name, raw, blockContent) {
   const schema = ToolSchemas[name];
   if (!schema) return { ok: true, data: raw || {} }; // unknown tools pass through — caught at execution
@@ -97,7 +112,7 @@ function _validate(name, raw, blockContent) {
   }
   return { ok: true, data: result.data };
 }
-
+/** Parse legacy key="value" parameter syntax into an object. */
 function _parseLegacyParams(paramStr) {
   const params = {};
   const paramRegex = /([a-zA-Z_][\w-]*)\s*=\s*("((?:[^"\\]|\\.)*)"|'((?:[^'\\]|\\.)*)')/g;
@@ -119,6 +134,7 @@ function _parseLegacyParams(paramStr) {
  *
  * Returns array of { command, params, error? }
  */
+/** Extract and validate tool calls from model response text. */
 function extractToolCalls(text) {
   if (!text) return [];
   const cleaned = _preCleanToolText(text);
@@ -177,6 +193,7 @@ function extractToolCalls(text) {
 }
 
 /** Remove tool blocks from text (including block format and code-fenced tool calls). */
+/** Remove tool-call markup from response text. */
 function stripToolCalls(text) {
   if (!text) return '';
   let out = _preCleanToolText(text);
@@ -324,6 +341,7 @@ async function executeToolCalls(responseText, options = {}) {
 }
 
 // ── Safe path resolution ──
+/** Resolve path under workspace root and block traversal. */
 function resolveSafe(wsRoot, relPath) {
   if (!wsRoot) return null;
   const resolved = path.resolve(wsRoot, relPath || '.');
@@ -461,6 +479,7 @@ async function execWebFetch(webFetch, url) {
  * Format tool results into structured blocks for the LLM follow-up call.
  * Uses [TOOL_RESULT: name]...[/TOOL_RESULT] wrapper for reliable re-parsing.
  */
+/** Convert tool outputs into TOOL_RESULT blocks for follow-up model context. */
 function formatToolResults(toolResults) {
   if (!toolResults || toolResults.length === 0) return '';
   const blocks = [];

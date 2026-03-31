@@ -1,3 +1,18 @@
+// ── Services · Startup Preflight ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This service module holds reusable business logic shared across runtime
+// paths.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: fs, path, ../entityPaths.
+// Keep import and call-site contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 'use strict';
 // ============================================================
 // NekoCore OS — Startup Preflight Service
@@ -8,7 +23,10 @@
 const fs   = require('fs');
 const path = require('path');
 const entityPaths = require('../entityPaths');
-
+// backupCorruptFile()
+// WHAT THIS DOES: backupCorruptFile is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call backupCorruptFile(...) where this helper behavior is needed.
 function backupCorruptFile(filePath, label) {
   try {
     if (!fs.existsSync(filePath)) return;
@@ -19,14 +37,20 @@ function backupCorruptFile(filePath, label) {
     console.error(`  ⚠ Could not back up invalid ${label}:`, e.message);
   }
 }
-
+// ensureDirectory()
+// WHAT THIS DOES: ensureDirectory is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call ensureDirectory(...) where this helper behavior is needed.
 function ensureDirectory(dirPath, label) {
   if (fs.existsSync(dirPath)) return false;
   fs.mkdirSync(dirPath, { recursive: true });
   console.log(`  ✓ Restored ${label}: ${dirPath}`);
   return true;
 }
-
+// ensureJsonFile()
+// WHAT THIS DOES: ensureJsonFile is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call ensureJsonFile(...) where this helper behavior is needed.
 function ensureJsonFile(filePath, defaultValue, validator, label) {
   try {
     if (!fs.existsSync(filePath)) {
@@ -49,14 +73,20 @@ function ensureJsonFile(filePath, defaultValue, validator, label) {
     return true;
   }
 }
-
+// ensureTextFile()
+// WHAT THIS DOES: ensureTextFile is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call ensureTextFile(...) where this helper behavior is needed.
 function ensureTextFile(filePath, content, label) {
   if (fs.existsSync(filePath)) return false;
   fs.writeFileSync(filePath, content, 'utf8');
   console.log(`  ✓ Restored ${label}: ${filePath}`);
   return true;
 }
-
+// buildDefaultEntityPersona()
+// WHAT THIS DOES: buildDefaultEntityPersona creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call buildDefaultEntityPersona(...) before code that depends on this setup.
 function buildDefaultEntityPersona(entity) {
   const name   = entity?.name || 'Entity';
   const traits = Array.isArray(entity?.personality_traits) ? entity.personality_traits : [];
@@ -77,13 +107,19 @@ function buildDefaultEntityPersona(entity) {
     createdAt: entity?.created || new Date().toISOString()
   };
 }
-
+// buildDefaultEntityPrompt()
+// WHAT THIS DOES: buildDefaultEntityPrompt creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call buildDefaultEntityPrompt(...) before code that depends on this setup.
 function buildDefaultEntityPrompt(entity, persona) {
   const name   = entity?.name || persona?.llmName || 'Entity';
   const traits = Array.isArray(entity?.personality_traits) ? entity.personality_traits : [];
   return `YOU ARE ${String(name).toUpperCase()}\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\nYou are a persistent synthetic entity inside NekoCore.\n\nCORE IDENTITY\n- Name: ${name}\n- Traits: ${traits.join(', ') || 'curious, adaptive, reflective'}\n- Tone: ${persona?.tone || 'warm-casual'}\n- Style: ${persona?.llmStyle || 'adaptive and curious'}\n\nGUIDELINES\n- Stay in character and be consistent across sessions.\n- Use memory and continuity when available.\n- Be honest when context is missing.\n- Grow through conversation instead of resetting to generic assistant behavior.`;
 }
-
+// ensureEntityRuntimeState()
+// WHAT THIS DOES: ensureEntityRuntimeState is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call ensureEntityRuntimeState(...) where this helper behavior is needed.
 function ensureEntityRuntimeState(entityId, entity) {
   const entityRoot = entityPaths.getEntityRoot(entityId);
   const memoryRoot = entityPaths.getMemoryRoot(entityId);
@@ -135,6 +171,10 @@ function ensureEntityRuntimeState(entityId, entity) {
  * @param {Function} opts.loadConfig
  * @param {Function} opts.ensureMemoryDir
  */
+// createRunStartupPreflight()
+// WHAT THIS DOES: createRunStartupPreflight creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call createRunStartupPreflight(...) before code that depends on this setup.
 function createRunStartupPreflight({ serverDataDir, memDir, loadConfig, ensureMemoryDir }) {
   return function runStartupPreflight() {
     console.log('  ℹ Running startup preflight...');

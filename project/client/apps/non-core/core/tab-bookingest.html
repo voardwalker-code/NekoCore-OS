@@ -112,10 +112,16 @@
     // 1. Start MA
     fetch('/api/servers/ma/start', { method: 'POST' })
       .then(function (r) {
-        if (!r.ok) throw new Error('Failed to start MA server');
-        if (statusText) statusText.textContent = 'Reading file\u2026';
-        if (barEl) barEl.style.width = '30%';
-        return readFileAsText(file);
+        return r.json().catch(function () { return {}; }).then(function (d) {
+          if (d.reason === 'ma_not_found' || d.repoUrl) {
+            var repo = d.repoUrl || 'https://github.com/voardwalker-code/MA-Memory-Architect';
+            throw new Error('MA (Memory Architect) is not installed. Get it at: ' + repo);
+          }
+          if (!r.ok) throw new Error('Failed to start MA server');
+          if (statusText) statusText.textContent = 'Reading file\u2026';
+          if (barEl) barEl.style.width = '30%';
+          return readFileAsText(file);
+        });
       })
       .then(function (text) {
         if (!text.trim()) throw new Error('File is empty');

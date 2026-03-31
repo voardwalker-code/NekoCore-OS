@@ -1,3 +1,18 @@
+// ── Module · Cmd Executor ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This module belongs to the NekoCore OS codebase and provides focused
+// subsystem behavior.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: child_process, path, fs. Keep
+// import and call-site contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // REM System — Command Executor (Sandboxed)
 //
@@ -82,6 +97,10 @@ const BLOCKED_PATTERNS = [
  * @param {string} cmdStr - Raw command string from entity
  * @returns {{ ok: boolean, binary: string, args: string[], error?: string, config?: Object }}
  */
+// parseCommand()
+// WHAT THIS DOES: parseCommand reshapes data from one form into another.
+// WHY IT EXISTS: conversion rules live here so the same transformation is reused.
+// HOW TO USE IT: pass input data into parseCommand(...) and use the transformed output.
 function parseCommand(cmdStr) {
   if (!cmdStr || typeof cmdStr !== 'string') {
     return { ok: false, binary: '', args: [], error: 'No command provided' };
@@ -257,6 +276,10 @@ async function execCommand(cmdStr, workspacePath, opts = {}) {
  * Get list of allowed commands for prompt injection.
  * @returns {string} Human-readable list of available commands.
  */
+// getAvailableCommands()
+// WHAT THIS DOES: getAvailableCommands reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call getAvailableCommands(...), then use the returned value in your next step.
 function getAvailableCommands() {
   const lines = [];
   for (const [cmd, config] of Object.entries(COMMAND_WHITELIST)) {

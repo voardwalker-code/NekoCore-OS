@@ -1,3 +1,18 @@
+// ── Services · Browser Download Manager ─────────────────────────────────────
+//
+// HOW DOWNLOAD TRACKING WORKS:
+// This module keeps a live in-memory table of downloads. Each download moves
+// through states (started -> completed/failed), and each transition emits an
+// event so UI can reflect progress.
+//
+// WHAT USES THIS:
+//   browser host routes/controllers — create downloads and read status
+//
+// EXPORTS:
+//   startDownload(opts), completeDownload(downloadId, opts), failDownload(downloadId, error)
+//   getDownload(downloadId), getAllDownloads(), reset()
+// ─────────────────────────────────────────────────────────────────────────────
+
 'use strict';
 
 /**
@@ -10,17 +25,21 @@
 const crypto = require('crypto');
 const eventBus = require('./event-bus');
 
+// ── State ───────────────────────────────────────────────────────────────────
+
 /** @type {Map<string, object>} downloadId → state */
 const downloads = new Map();
 
+// ── Helpers ─────────────────────────────────────────────────────────────────
+
+/** Create a compact random download ID. */
 function _makeDownloadId() {
   return 'dl_' + crypto.randomBytes(6).toString('hex');
 }
 
-/**
- * Register a new download.
- * Returns downloadId for correlation.
- */
+// ── Core Logic ──────────────────────────────────────────────────────────────
+
+/** Register a new download and emit started state. */
 function startDownload({ url, filename, tabId }) {
   const downloadId = _makeDownloadId();
   const dl = {
@@ -40,6 +59,7 @@ function startDownload({ url, filename, tabId }) {
   return dl;
 }
 
+/** Mark a download as completed and emit terminal state. */
 function completeDownload(downloadId, { totalBytes } = {}) {
   const dl = downloads.get(downloadId);
   if (!dl) return null;
@@ -51,6 +71,7 @@ function completeDownload(downloadId, { totalBytes } = {}) {
   return dl;
 }
 
+/** Mark a download as failed and emit terminal state. */
 function failDownload(downloadId, error) {
   const dl = downloads.get(downloadId);
   if (!dl) return null;
@@ -61,17 +82,21 @@ function failDownload(downloadId, error) {
   return dl;
 }
 
+/** Return one download record by ID, or null. */
 function getDownload(downloadId) {
   return downloads.get(downloadId) || null;
 }
 
+/** Return all tracked download records. */
 function getAllDownloads() {
   return Array.from(downloads.values());
 }
 
-/** Reset (for testing). */
+/** Reset all tracked downloads (for tests). */
 function reset() {
   downloads.clear();
 }
+
+// ── Exports ─────────────────────────────────────────────────────────────────
 
 module.exports = { startDownload, completeDownload, failDownload, getDownload, getAllDownloads, reset };

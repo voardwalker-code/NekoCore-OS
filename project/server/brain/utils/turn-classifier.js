@@ -1,3 +1,18 @@
+// ── Brain · Turn Classifier ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include:
+// ../../contracts/turn-classifier-contract. Keep import and call-site
+// contracts aligned during refactors.
+//
+// EXPORTS:
+// Exposed API includes: classifyTurn.
+// ─────────────────────────────────────────────────────────────────────────────
+
 'use strict';
 
 // ============================================================
@@ -71,6 +86,10 @@ const SIMPLE_QUESTION_PATTERNS = [
  * @param {string} messageText
  * @returns {{ category: string, confidence: number, bypass: boolean }}
  */
+// classifyTurn()
+// WHAT THIS DOES: classifyTurn is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call classifyTurn(...) where this helper behavior is needed.
 function classifyTurn(messageText) {
   if (!messageText || typeof messageText !== 'string') {
     return { category: 'deep', confidence: 0, bypass: false };

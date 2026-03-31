@@ -1,3 +1,18 @@
+// ── Brain · Cognitive Feedback ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: ../utils/rake, ../utils/bm25.
+// Keep import and call-site contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 'use strict';
 
 // ============================================================
@@ -59,6 +74,10 @@ const COMPLETION_KEYWORDS = new Set([
  * Score sentiment of a text using the lexicon.
  * Returns { positive: number, negative: number, net: number [-1, +1] }
  */
+// scoreSentiment()
+// WHAT THIS DOES: scoreSentiment is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call scoreSentiment(...) where this helper behavior is needed.
 function scoreSentiment(text) {
   if (!text) return { positive: 0, negative: 0, net: 0 };
   const words = text.toLowerCase().split(/[^a-z]+/).filter(Boolean);
@@ -70,6 +89,10 @@ function scoreSentiment(text) {
   }
 
   // Exclamation density boost
+  // exclamations()
+  // WHAT THIS DOES: exclamations is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call exclamations(...) where this helper behavior is needed.
   const exclamations = (text.match(/!/g) || []).length;
   if (exclamations > 0) {
     const boost = Math.min(exclamations * 0.5, 2);
@@ -80,6 +103,10 @@ function scoreSentiment(text) {
   // Caps ratio boost (more than 20% caps = intensity)
   const alpha = text.replace(/[^a-zA-Z]/g, '');
   if (alpha.length > 5) {
+    // capsRatio()
+    // WHAT THIS DOES: capsRatio is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call capsRatio(...) where this helper behavior is needed.
     const capsRatio = (alpha.replace(/[^A-Z]/g, '').length) / alpha.length;
     if (capsRatio > 0.2) {
       const boost = capsRatio * 2;
@@ -89,6 +116,12 @@ function scoreSentiment(text) {
   }
 
   const total = pos + neg || 1;
+  // net()
+  // Purpose: helper wrapper used by this module's main flow.
+  // net()
+  // WHAT THIS DOES: net is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call net(...) where this helper behavior is needed.
   const net = (pos - neg) / total;  // normalized [-1, +1]
   return { positive: pos, negative: neg, net };
 }
@@ -96,6 +129,10 @@ function scoreSentiment(text) {
 /**
  * Count how many sensitive topics appear in the text/topics.
  */
+// countSensitivityHits()
+// WHAT THIS DOES: countSensitivityHits is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call countSensitivityHits(...) where this helper behavior is needed.
 function countSensitivityHits(topics) {
   let hits = 0;
   for (const t of topics) {
@@ -118,6 +155,10 @@ function countSensitivityHits(topics) {
  * @param {number} [params.trustDelta]      — relationship trust change (if available)
  * @returns {Object} CognitiveFeedback
  */
+// analyzeTurnFeedback()
+// WHAT THIS DOES: analyzeTurnFeedback is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call analyzeTurnFeedback(...) where this helper behavior is needed.
 function analyzeTurnFeedback(params = {}) {
   const {
     userMessage = '',

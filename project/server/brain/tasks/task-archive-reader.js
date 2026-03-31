@@ -1,9 +1,28 @@
+// ── Brain · Task Archive Reader ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: fs, path,
+// ./task-archive-writer. Keep import and call-site contracts aligned during
+// refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 'use strict';
 
 const fs = require('fs');
 const path = require('path');
 const writer = require('./task-archive-writer');
-
+// _readJson()
+// WHAT THIS DOES: _readJson reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call _readJson(...), then use the returned value in your next step.
 function _readJson(filePath, fallback) {
   if (!fs.existsSync(filePath)) return fallback;
   try {
@@ -12,7 +31,10 @@ function _readJson(filePath, fallback) {
     return fallback;
   }
 }
-
+// getStepHistory()
+// WHAT THIS DOES: getStepHistory reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call getStepHistory(...), then use the returned value in your next step.
 function getStepHistory(taskArchiveId, opts = {}) {
   const archiveDir = writer.resolveTaskArchivePath(taskArchiveId, opts);
   if (!archiveDir || !fs.existsSync(archiveDir)) return [];
@@ -26,7 +48,10 @@ function getStepHistory(taskArchiveId, opts = {}) {
     .map((f) => _readJson(path.join(stepDir, f), null))
     .filter(Boolean);
 }
-
+// getSources()
+// WHAT THIS DOES: getSources reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call getSources(...), then use the returned value in your next step.
 function getSources(taskArchiveId, opts = {}) {
   const archiveDir = writer.resolveTaskArchivePath(taskArchiveId, opts);
   if (!archiveDir || !fs.existsSync(archiveDir)) return [];
@@ -34,7 +59,10 @@ function getSources(taskArchiveId, opts = {}) {
   const sources = _readJson(path.join(archiveDir, 'sources', 'sources.json'), []);
   return Array.isArray(sources) ? sources : [];
 }
-
+// getLatestDraft()
+// WHAT THIS DOES: getLatestDraft reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call getLatestDraft(...), then use the returned value in your next step.
 function getLatestDraft(taskArchiveId, opts = {}) {
   const archiveDir = writer.resolveTaskArchivePath(taskArchiveId, opts);
   if (!archiveDir || !fs.existsSync(archiveDir)) return null;
@@ -58,7 +86,10 @@ function getLatestDraft(taskArchiveId, opts = {}) {
     content: fs.readFileSync(latest.filePath, 'utf8')
   };
 }
-
+// getTaskSummary()
+// WHAT THIS DOES: getTaskSummary reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call getTaskSummary(...), then use the returned value in your next step.
 function getTaskSummary(taskArchiveId, opts = {}) {
   const archiveDir = writer.resolveTaskArchivePath(taskArchiveId, opts);
   if (!archiveDir || !fs.existsSync(archiveDir)) return null;
@@ -100,6 +131,10 @@ function getTaskSummary(taskArchiveId, opts = {}) {
 
 // ── Planning archive reader methods ──
 
+// getPlanningRounds()
+// WHAT THIS DOES: getPlanningRounds reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call getPlanningRounds(...), then use the returned value in your next step.
 function getPlanningRounds(taskArchiveId, opts = {}) {
   const archiveDir = writer.resolveTaskArchivePath(taskArchiveId, opts);
   if (!archiveDir) return [];
@@ -125,7 +160,10 @@ function getPlanningRounds(taskArchiveId, opts = {}) {
     return { roundIndex, responses };
   });
 }
-
+// getPlanningArtifacts()
+// WHAT THIS DOES: getPlanningArtifacts reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call getPlanningArtifacts(...), then use the returned value in your next step.
 function getPlanningArtifacts(taskArchiveId, opts = {}) {
   const archiveDir = writer.resolveTaskArchivePath(taskArchiveId, opts);
   if (!archiveDir) return null;

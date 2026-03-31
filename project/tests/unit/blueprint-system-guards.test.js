@@ -1,3 +1,19 @@
+// ── Tests · Blueprint System Guards.Test ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This test file validates behavior and guards against regressions in its
+// target subsystem.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: node:test,
+// node:assert/strict, path, fs, ../../server/brain/tasks/blueprint-loader.
+// Keep import and call-site contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // Blueprint System Guard Tests
 // Validates: blueprint-loader module, file existence, phase
@@ -396,6 +412,12 @@ describe('Task runner — blueprint integration', () => {
   it('plan generation uses planning-phase blueprint', async () => {
     let capturedMessages = null;
 
+    // mockLLM()
+    // Purpose: helper wrapper used by this module's main flow.
+    // mockLLM()
+    // WHAT THIS DOES: mockLLM is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call mockLLM(...) where this helper behavior is needed.
     const mockLLM = async (_runtime, messages) => {
       if (!capturedMessages) capturedMessages = messages;
       return '[TASK_PLAN]\n- [ ] Step one\n[/TASK_PLAN]';
@@ -404,6 +426,10 @@ describe('Task runner — blueprint integration', () => {
     // runTask will call LLM for plan, then for each step, then summary
     // We capture the first call (plan generation)
     let callCount = 0;
+    // trackingLLM()
+    // WHAT THIS DOES: trackingLLM is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call trackingLLM(...) where this helper behavior is needed.
     const trackingLLM = async (runtime, messages, opts) => {
       callCount++;
       if (callCount === 1) capturedMessages = messages;
@@ -431,6 +457,12 @@ describe('Task runner — blueprint integration', () => {
     const stepMessages = [];
     let callCount = 0;
 
+    // trackingLLM()
+    // Purpose: helper wrapper used by this module's main flow.
+    // trackingLLM()
+    // WHAT THIS DOES: trackingLLM is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call trackingLLM(...) where this helper behavior is needed.
     const trackingLLM = async (_runtime, messages) => {
       callCount++;
       if (callCount >= 2 && callCount <= 3) stepMessages.push(messages);
@@ -463,6 +495,12 @@ describe('Planning orchestrator — blueprint integration', () => {
   it('moderation prompt includes planning blueprint reference', async () => {
     const capturedCalls = [];
 
+    // mockLLM()
+    // Purpose: helper wrapper used by this module's main flow.
+    // mockLLM()
+    // WHAT THIS DOES: mockLLM is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call mockLLM(...) where this helper behavior is needed.
     const mockLLM = async (_runtime, messages) => {
       capturedCalls.push(messages);
       // First N calls are entity invocations, then moderation, then synthesis
@@ -499,6 +537,12 @@ describe('Planning orchestrator — blueprint integration', () => {
   it('synthesis prompt includes planning blueprint reference', async () => {
     const capturedCalls = [];
 
+    // mockLLM()
+    // Purpose: helper wrapper used by this module's main flow.
+    // mockLLM()
+    // WHAT THIS DOES: mockLLM is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call mockLLM(...) where this helper behavior is needed.
     const mockLLM = async (_runtime, messages) => {
       capturedCalls.push(messages);
       const sysContent = messages[0]?.content || '';

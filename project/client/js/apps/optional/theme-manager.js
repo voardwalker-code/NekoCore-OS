@@ -1,3 +1,17 @@
+// ── Client Optional · Theme Manager ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This client module drives browser-side behavior and state updates for UI
+// features.
+//
+// WHAT USES THIS:
+// Used by related flows in its subsystem. Keep call contracts stable during
+// readability-only edits.
+//
+// EXPORTS:
+// Exposed API includes: window-attached API object.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // NekoCore OS — Theme Manager
 // Extracted from app.js by P3-S10
@@ -70,11 +84,13 @@ const THEME_CUSTOM_DEFAULTS = {
   inputText: '#111111',
   accent: '#34d399'
 };
-
+// _clamp()
+// WHAT THIS DOES: _clamp is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _clamp(...) where this helper behavior is needed.
 function _clamp(num, min, max) {
   return Math.max(min, Math.min(max, Number(num)));
 }
-
 function _isValidThemeEntry(id, theme) {
   if (!id || typeof id !== 'string') return false;
   if (!theme || typeof theme !== 'object') return false;
@@ -83,7 +99,10 @@ function _isValidThemeEntry(id, theme) {
   if (theme.href && !theme.href.endsWith('.css')) return false;
   return true;
 }
-
+// _isSafeThemeAssetPath()
+// WHAT THIS DOES: _isSafeThemeAssetPath answers a yes/no rule check.
+// WHY IT EXISTS: guard checks are kept readable and reusable in one place.
+// HOW TO USE IT: call _isSafeThemeAssetPath(...) and branch logic based on true/false.
 function _isSafeThemeAssetPath(path, ext) {
   const str = String(path || '').trim();
   if (!str) return false;
@@ -92,7 +111,10 @@ function _isSafeThemeAssetPath(path, ext) {
   if (ext && !str.endsWith(ext)) return false;
   return true;
 }
-
+// _normalizeBodyClasses()
+// WHAT THIS DOES: _normalizeBodyClasses reshapes data from one form into another.
+// WHY IT EXISTS: conversion rules live here so the same transformation is reused.
+// HOW TO USE IT: pass input data into _normalizeBodyClasses(...) and use the transformed output.
 function _normalizeBodyClasses(raw) {
   if (!Array.isArray(raw)) return [];
   const seen = new Set();
@@ -107,7 +129,10 @@ function _normalizeBodyClasses(raw) {
   });
   return out;
 }
-
+// _normalizeThemeExtras()
+// WHAT THIS DOES: _normalizeThemeExtras reshapes data from one form into another.
+// WHY IT EXISTS: conversion rules live here so the same transformation is reused.
+// HOW TO USE IT: pass input data into _normalizeThemeExtras(...) and use the transformed output.
 function _normalizeThemeExtras(rawExtras) {
   const extras = {
     css: [],
@@ -136,7 +161,10 @@ function _normalizeThemeExtras(rawExtras) {
   }
   return extras;
 }
-
+// _normalizeThemeManifest()
+// WHAT THIS DOES: _normalizeThemeManifest reshapes data from one form into another.
+// WHY IT EXISTS: conversion rules live here so the same transformation is reused.
+// HOW TO USE IT: pass input data into _normalizeThemeManifest(...) and use the transformed output.
 function _normalizeThemeManifest(entries) {
   const normalized = {
     'system-default': { ...BUILTIN_SHELL_THEMES['system-default'] }
@@ -178,7 +206,10 @@ async function loadThemeManifest() {
     return false;
   }
 }
-
+// _persistThemeId()
+// WHAT THIS DOES: _persistThemeId is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _persistThemeId(...) where this helper behavior is needed.
 function _persistThemeId(themeId) {
   try {
     localStorage.setItem(THEME_STORAGE_KEY, themeId);
@@ -186,13 +217,19 @@ function _persistThemeId(themeId) {
     // Ignore storage failures and continue with in-memory theme.
   }
 }
-
+// _clearThemeBodyClasses()
+// WHAT THIS DOES: _clearThemeBodyClasses removes, resets, or shuts down existing state.
+// WHY IT EXISTS: cleanup is explicit so stale state does not leak into new runs.
+// HOW TO USE IT: call _clearThemeBodyClasses(...) when you need a safe teardown/reset path.
 function _clearThemeBodyClasses() {
   if (!document.body) return;
   activeThemeBodyClasses.forEach((cls) => document.body.classList.remove(cls));
   activeThemeBodyClasses = [];
 }
-
+// _applyThemeBodyClasses()
+// WHAT THIS DOES: _applyThemeBodyClasses is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _applyThemeBodyClasses(...) where this helper behavior is needed.
 function _applyThemeBodyClasses(theme) {
   _clearThemeBodyClasses();
   if (!document.body) return;
@@ -200,7 +237,10 @@ function _applyThemeBodyClasses(theme) {
   classes.forEach((cls) => document.body.classList.add(cls));
   activeThemeBodyClasses = classes;
 }
-
+// _clearThemeExtras()
+// WHAT THIS DOES: _clearThemeExtras removes, resets, or shuts down existing state.
+// WHY IT EXISTS: cleanup is explicit so stale state does not leak into new runs.
+// HOW TO USE IT: call _clearThemeExtras(...) when you need a safe teardown/reset path.
 function _clearThemeExtras() {
   activeThemeExtraLinks.forEach((link) => {
     if (link && link.parentNode) link.parentNode.removeChild(link);
@@ -211,7 +251,10 @@ function _clearThemeExtras() {
   });
   activeThemeExtraNodes = [];
 }
-
+// _resolveThemeExtraTarget()
+// WHAT THIS DOES: _resolveThemeExtraTarget is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _resolveThemeExtraTarget(...) where this helper behavior is needed.
 function _resolveThemeExtraTarget(selector) {
   const host = document.getElementById(THEME_EXTENSION_HOST_ID);
   if (selector) {
@@ -220,7 +263,10 @@ function _resolveThemeExtraTarget(selector) {
   }
   return host || document.body;
 }
-
+// _applyThemeExtras()
+// WHAT THIS DOES: _applyThemeExtras is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _applyThemeExtras(...) where this helper behavior is needed.
 function _applyThemeExtras(theme) {
   _clearThemeExtras();
   const extras = theme?.extras || {};
@@ -263,7 +309,10 @@ function _applyThemeExtras(theme) {
       });
   });
 }
-
+// _wireThemeLinkFallback()
+// WHAT THIS DOES: _wireThemeLinkFallback is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _wireThemeLinkFallback(...) where this helper behavior is needed.
 function _wireThemeLinkFallback(themeLink, attemptedThemeId) {
   if (!themeLink) return;
   if (themeLink.__remThemeErrorHandler) {
@@ -271,6 +320,12 @@ function _wireThemeLinkFallback(themeLink, attemptedThemeId) {
     themeLink.__remThemeErrorHandler = null;
   }
   if (!attemptedThemeId || !SHELL_THEMES[attemptedThemeId] || !SHELL_THEMES[attemptedThemeId].href) return;
+  // onError()
+  // Purpose: helper wrapper used by this module's main flow.
+  // onError()
+  // WHAT THIS DOES: onError handles an event and routes follow-up actions.
+  // WHY IT EXISTS: event flow is easier to debug when listener logic is centralized.
+  // HOW TO USE IT: wire onError to the relevant event source or dispatcher.
   const onError = () => {
     themeCssErrorCount += 1;
     if (themeCssErrorCount > 1 || attemptedThemeId === THEME_FALLBACK_ID) {
@@ -286,7 +341,10 @@ function _wireThemeLinkFallback(themeLink, attemptedThemeId) {
   themeLink.addEventListener('error', onError, { once: true });
   themeLink.__remThemeErrorHandler = onError;
 }
-
+// getStoredThemeId()
+// WHAT THIS DOES: getStoredThemeId reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call getStoredThemeId(...), then use the returned value in your next step.
 function getStoredThemeId() {
   try {
     return localStorage.getItem(THEME_STORAGE_KEY) || 'system-default';
@@ -294,7 +352,10 @@ function getStoredThemeId() {
     return 'system-default';
   }
 }
-
+// updateShellThemeSummary()
+// WHAT THIS DOES: updateShellThemeSummary changes saved state or updates data.
+// WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+// HOW TO USE IT: call updateShellThemeSummary(...) with the new values you want to persist.
 function updateShellThemeSummary(themeId) {
   let resolvedThemeId = themeId;
   if (themeId === 'system-default') {
@@ -307,7 +368,10 @@ function updateShellThemeSummary(themeId) {
   const tmTheme = document.getElementById('tmThemeName');
   if (tmTheme) tmTheme.textContent = themeId === 'system-default' ? 'System (' + theme.label + ')' : theme.label;
 }
-
+// _readStoredThemeCustom()
+// WHAT THIS DOES: _readStoredThemeCustom reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call _readStoredThemeCustom(...), then use the returned value in your next step.
 function _readStoredThemeCustom() {
   try {
     const raw = localStorage.getItem(THEME_CUSTOM_STORAGE_KEY);
@@ -318,7 +382,10 @@ function _readStoredThemeCustom() {
     return { enabled: false, ...THEME_CUSTOM_DEFAULTS };
   }
 }
-
+// _saveThemeCustom()
+// WHAT THIS DOES: _saveThemeCustom changes saved state or updates data.
+// WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+// HOW TO USE IT: call _saveThemeCustom(...) with the new values you want to persist.
 function _saveThemeCustom(custom) {
   try {
     localStorage.setItem(THEME_CUSTOM_STORAGE_KEY, JSON.stringify({ ...custom, enabled: true }));
@@ -326,24 +393,36 @@ function _saveThemeCustom(custom) {
     // Ignore storage failures.
   }
 }
-
+// _hexToRgb()
+// WHAT THIS DOES: _hexToRgb is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _hexToRgb(...) where this helper behavior is needed.
 function _hexToRgb(hex) {
   const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(String(hex || ''));
   if (!m) return { r: 13, g: 21, b: 38 };
   return { r: parseInt(m[1], 16), g: parseInt(m[2], 16), b: parseInt(m[3], 16) };
 }
-
+// _rgbaFromHex()
+// WHAT THIS DOES: _rgbaFromHex is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _rgbaFromHex(...) where this helper behavior is needed.
 function _rgbaFromHex(hex, alpha) {
   const rgb = _hexToRgb(hex);
   const a = _clamp(alpha, 0, 1);
   return 'rgba(' + rgb.r + ', ' + rgb.g + ', ' + rgb.b + ', ' + a.toFixed(2) + ')';
 }
-
+// _setCustomizerStatus()
+// WHAT THIS DOES: _setCustomizerStatus changes saved state or updates data.
+// WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+// HOW TO USE IT: call _setCustomizerStatus(...) with the new values you want to persist.
 function _setCustomizerStatus(message) {
   const el = document.getElementById('themeCustomizerStatus');
   if (el) el.textContent = message;
 }
-
+// _syncSaveTargetUi()
+// WHAT THIS DOES: _syncSaveTargetUi is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _syncSaveTargetUi(...) where this helper behavior is needed.
 function _syncSaveTargetUi() {
   const saveActiveBtn = document.getElementById('themeCustomizerSaveActive');
   if (!saveActiveBtn) return;
@@ -355,16 +434,21 @@ function _syncSaveTargetUi() {
     ? 'Overwrite the currently active custom theme.'
     : 'Select a custom theme card first to save over it.';
 }
-
+// _sanitizeThemeName()
+// WHAT THIS DOES: _sanitizeThemeName is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _sanitizeThemeName(...) where this helper behavior is needed.
 function _sanitizeThemeName(value) {
   const raw = String(value || '').trim();
   return raw || 'My Custom Theme';
 }
-
+// _slugThemeName()
+// WHAT THIS DOES: _slugThemeName is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _slugThemeName(...) where this helper behavior is needed.
 function _slugThemeName(value) {
   return _sanitizeThemeName(value).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 36) || 'custom-theme';
 }
-
 function _sanitizeWallpaperImage(value) {
   const candidate = String(value || '').trim();
   if (!candidate) return '';
@@ -375,13 +459,19 @@ function _sanitizeWallpaperImage(value) {
   if (!/^[a-z0-9 _.,()\-]+$/i.test(candidate)) return '';
   return candidate;
 }
-
+// _buildWallpaperImageUrl()
+// WHAT THIS DOES: _buildWallpaperImageUrl creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call _buildWallpaperImageUrl(...) before code that depends on this setup.
 function _buildWallpaperImageUrl(fileName) {
   const safeName = _sanitizeWallpaperImage(fileName);
   if (!safeName) return '';
   return encodeURI(THEME_WALLPAPER_BASE_PATH + safeName);
 }
-
+// _renderWallpaperOptions()
+// WHAT THIS DOES: _renderWallpaperOptions builds or updates what the user sees.
+// WHY IT EXISTS: display logic is separated from data/business logic for clarity.
+// HOW TO USE IT: call _renderWallpaperOptions(...) after state changes that need UI refresh.
 function _renderWallpaperOptions() {
   const select = document.getElementById('themeWallpaperImage');
   if (!select) return;
@@ -393,7 +483,10 @@ function _renderWallpaperOptions() {
     select.appendChild(option);
   });
 }
-
+// _readUserThemes()
+// WHAT THIS DOES: _readUserThemes reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call _readUserThemes(...), then use the returned value in your next step.
 function _readUserThemes() {
   try {
     const raw = localStorage.getItem(THEME_USER_THEMES_STORAGE_KEY);
@@ -404,7 +497,10 @@ function _readUserThemes() {
     return [];
   }
 }
-
+// _writeUserThemes()
+// WHAT THIS DOES: _writeUserThemes changes saved state or updates data.
+// WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+// HOW TO USE IT: call _writeUserThemes(...) with the new values you want to persist.
 function _writeUserThemes(entries) {
   try {
     localStorage.setItem(THEME_USER_THEMES_STORAGE_KEY, JSON.stringify(Array.isArray(entries) ? entries : []));
@@ -412,7 +508,10 @@ function _writeUserThemes(entries) {
     // Ignore storage failures.
   }
 }
-
+// _injectUserThemes()
+// WHAT THIS DOES: _injectUserThemes is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _injectUserThemes(...) where this helper behavior is needed.
 function _injectUserThemes() {
   const userThemes = _readUserThemes();
   userThemes.forEach((entry) => {
@@ -438,6 +537,10 @@ function _injectUserThemes() {
 // theme restore can resolve custom theme ids before it writes fallback state.
 _injectUserThemes();
 
+// _saveCurrentAsUserTheme()
+// WHAT THIS DOES: _saveCurrentAsUserTheme changes saved state or updates data.
+// WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+// HOW TO USE IT: call _saveCurrentAsUserTheme(...) with the new values you want to persist.
 function _saveCurrentAsUserTheme(custom) {
   const themeName = _sanitizeThemeName(document.getElementById('themeCustomName')?.value);
   const baseThemeId = getStoredThemeId();
@@ -449,7 +552,10 @@ function _saveCurrentAsUserTheme(custom) {
   _injectUserThemes();
   return id;
 }
-
+// _saveCurrentToActiveUserTheme()
+// WHAT THIS DOES: _saveCurrentToActiveUserTheme changes saved state or updates data.
+// WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+// HOW TO USE IT: call _saveCurrentToActiveUserTheme(...) with the new values you want to persist.
 function _saveCurrentToActiveUserTheme(custom) {
   const activeThemeId = getStoredThemeId();
   const activeTheme = SHELL_THEMES[activeThemeId];
@@ -471,7 +577,10 @@ function _saveCurrentToActiveUserTheme(custom) {
   _injectUserThemes();
   return activeThemeId;
 }
-
+// _deleteUserThemeById()
+// WHAT THIS DOES: _deleteUserThemeById removes, resets, or shuts down existing state.
+// WHY IT EXISTS: cleanup is explicit so stale state does not leak into new runs.
+// HOW TO USE IT: call _deleteUserThemeById(...) when you need a safe teardown/reset path.
 function _deleteUserThemeById(themeId) {
   const id = String(themeId || '').trim();
   if (!id) return false;
@@ -494,7 +603,10 @@ function _deleteUserThemeById(themeId) {
   _setCustomizerStatus('Deleted custom theme.');
   return true;
 }
-
+// _applyThemeWallpaperPreset()
+// WHAT THIS DOES: _applyThemeWallpaperPreset is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _applyThemeWallpaperPreset(...) where this helper behavior is needed.
 function _applyThemeWallpaperPreset(themeId) {
   const root = document.documentElement;
   if (!root) return;
@@ -518,7 +630,10 @@ function _applyThemeWallpaperPreset(themeId) {
   );
   root.style.setProperty('--desktop-overlay', 'linear-gradient(135deg, rgba(6, 10, 18, 0.05), rgba(6, 10, 18, 0.12))');
 }
-
+// _syncCustomizerForm()
+// WHAT THIS DOES: _syncCustomizerForm is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _syncCustomizerForm(...) where this helper behavior is needed.
 function _syncCustomizerForm(custom) {
   const safeWallpaper = _sanitizeWallpaperImage(custom.wallpaperImage);
   const wallpaperIsPreset = THEME_WALLPAPER_ALLOWED.has(safeWallpaper);
@@ -546,7 +661,10 @@ function _syncCustomizerForm(custom) {
   const bgOpacityEl = document.getElementById('themeBgOpacityValue');
   if (bgOpacityEl) bgOpacityEl.textContent = Math.round(Number(custom.bgOpacity !== undefined ? custom.bgOpacity : 1) * 100) + '%';
 }
-
+// _collectCustomizerForm()
+// WHAT THIS DOES: _collectCustomizerForm is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _collectCustomizerForm(...) where this helper behavior is needed.
 function _collectCustomizerForm() {
   const get = (id, fallback) => (document.getElementById(id)?.value || fallback);
   const customWallpaper = _sanitizeWallpaperImage(get('themeWallpaperCustom', ''));
@@ -565,7 +683,10 @@ function _collectCustomizerForm() {
     accent: get('themeAccent', THEME_CUSTOM_DEFAULTS.accent)
   };
 }
-
+// _previewCustomizerForm()
+// WHAT THIS DOES: _previewCustomizerForm is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _previewCustomizerForm(...) where this helper behavior is needed.
 function _previewCustomizerForm(statusMessage) {
   const previewCustom = {
     ...THEME_CUSTOM_DEFAULTS,
@@ -575,7 +696,10 @@ function _previewCustomizerForm(statusMessage) {
   _applyThemeCustomToDom(previewCustom);
   if (statusMessage) _setCustomizerStatus(statusMessage);
 }
-
+// _applyThemeCustomToDom()
+// WHAT THIS DOES: _applyThemeCustomToDom is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _applyThemeCustomToDom(...) where this helper behavior is needed.
 function _applyThemeCustomToDom(custom) {
   const root = document.documentElement;
   if (!root || !custom) return;
@@ -619,7 +743,10 @@ function _applyThemeCustomToDom(custom) {
   root.style.setProperty('--app-input-border-focus', custom.accent);
   root.style.setProperty('--app-input-focus-ring', _rgbaFromHex(custom.accent, 0.18));
 }
-
+// _clearThemeCustomFromDom()
+// WHAT THIS DOES: _clearThemeCustomFromDom removes, resets, or shuts down existing state.
+// WHY IT EXISTS: cleanup is explicit so stale state does not leak into new runs.
+// HOW TO USE IT: call _clearThemeCustomFromDom(...) when you need a safe teardown/reset path.
 function _clearThemeCustomFromDom() {
   const root = document.documentElement;
   if (root) {
@@ -628,11 +755,13 @@ function _clearThemeCustomFromDom() {
     });
   }
 }
-
+// applyStoredThemeCustomizer()
+// WHAT THIS DOES: applyStoredThemeCustomizer is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call applyStoredThemeCustomizer(...) where this helper behavior is needed.
 function applyStoredThemeCustomizer() {
   _applyThemeCustomToDom(_readStoredThemeCustom());
 }
-
 function initThemeCustomizer() {
   const applyBtn = document.getElementById('themeCustomizerApply');
   const saveActiveBtn = document.getElementById('themeCustomizerSaveActive');
@@ -711,7 +840,10 @@ function initThemeCustomizer() {
     applyTheme(currentTheme);
   });
 }
-
+// syncThemeSelectorUI()
+// WHAT THIS DOES: syncThemeSelectorUI is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call syncThemeSelectorUI(...) where this helper behavior is needed.
 function syncThemeSelectorUI(themeId) {
   document.querySelectorAll('[data-theme-option]').forEach((button) => {
     button.classList.toggle('is-active', button.getAttribute('data-theme-option') === themeId);
@@ -720,13 +852,22 @@ function syncThemeSelectorUI(themeId) {
   renderThemeGallery();
   _syncSaveTargetUi();
 }
-
+// renderThemeGallery()
+// WHAT THIS DOES: renderThemeGallery builds or updates what the user sees.
+// WHY IT EXISTS: display logic is separated from data/business logic for clarity.
+// HOW TO USE IT: call renderThemeGallery(...) after state changes that need UI refresh.
 function renderThemeGallery() {
   const grid = document.getElementById('themeGalleryGrid');
   if (!grid) return;
   const currentId = getStoredThemeId();
   grid.innerHTML = '';
   Object.entries(SHELL_THEMES).forEach(([id, theme]) => {
+    // p()
+    // Purpose: helper wrapper used by this module's main flow.
+    // p()
+    // WHAT THIS DOES: p is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call p(...) where this helper behavior is needed.
     const p = (theme.preview && theme.preview.bg && theme.preview.fg && theme.preview.accent)
       ? theme.preview
       : { bg: '#222', fg: '#eee', accent: '#888' };
@@ -769,7 +910,10 @@ function renderThemeGallery() {
     grid.appendChild(card);
   });
 }
-
+// applyTheme()
+// WHAT THIS DOES: applyTheme is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call applyTheme(...) where this helper behavior is needed.
 function applyTheme(themeId) {
   const selected = SHELL_THEMES[themeId]
     ? themeId
@@ -784,6 +928,12 @@ function applyTheme(themeId) {
     systemThemeMediaQuery.__remListener = null;
   }
 
+  // applyResolvedTheme()
+  // Purpose: helper wrapper used by this module's main flow.
+  // applyResolvedTheme()
+  // WHAT THIS DOES: applyResolvedTheme is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call applyResolvedTheme(...) where this helper behavior is needed.
   const applyResolvedTheme = (resolvedId) => {
     const resolvedTheme = SHELL_THEMES[resolvedId] || SHELL_THEMES[THEME_FALLBACK_ID] || SHELL_THEMES['system-default'];
     resolvedWallpaperId = resolvedTheme.id;
@@ -800,12 +950,24 @@ function applyTheme(themeId) {
 
   if (selected === 'system-default') {
     systemThemeMediaQuery = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+    // resolveSystemTheme()
+    // Purpose: helper wrapper used by this module's main flow.
+    // resolveSystemTheme()
+    // WHAT THIS DOES: resolveSystemTheme is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call resolveSystemTheme(...) where this helper behavior is needed.
     const resolveSystemTheme = () => {
       const prefersDark = !systemThemeMediaQuery || systemThemeMediaQuery.matches;
       return prefersDark ? (SHELL_THEMES['neko-dark'] ? 'neko-dark' : THEME_FALLBACK_ID) : (SHELL_THEMES['neko-light'] ? 'neko-light' : THEME_FALLBACK_ID);
     };
     applyResolvedTheme(resolveSystemTheme());
     if (systemThemeMediaQuery) {
+      // listener()
+      // Purpose: helper wrapper used by this module's main flow.
+      // listener()
+      // WHAT THIS DOES: listener is a helper used by this module's main flow.
+      // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+      // HOW TO USE IT: call listener(...) where this helper behavior is needed.
       const listener = () => {
         applyResolvedTheme(resolveSystemTheme());
         _clearThemeCustomFromDom();
@@ -834,7 +996,10 @@ function applyTheme(themeId) {
   }
   syncThemeSelectorUI(selected);
 }
-
+// openThemeCustomizer()
+// WHAT THIS DOES: openThemeCustomizer creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call openThemeCustomizer(...) before code that depends on this setup.
 function openThemeCustomizer() {
   if (typeof switchMainTab === 'function') switchMainTab('themes');
   const focusCustomizer = () => {
@@ -852,7 +1017,10 @@ function openThemeCustomizer() {
 }
 
 window.openThemeCustomizer = openThemeCustomizer;
-
+// _migrateStaleThemeData()
+// WHAT THIS DOES: _migrateStaleThemeData is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call _migrateStaleThemeData(...) where this helper behavior is needed.
 function _migrateStaleThemeData() {
   try {
     const storedId = localStorage.getItem(THEME_STORAGE_KEY);

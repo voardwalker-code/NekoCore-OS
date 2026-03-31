@@ -1,9 +1,29 @@
+// ── Tests · Task Frontman.Test ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This test file validates behavior and guards against regressions in its
+// target subsystem.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: node:test,
+// node:assert/strict, ../../server/brain/tasks/task-event-bus,
+// ../../server/brain/tasks/task-frontman. Keep import and call-site
+// contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 
 const taskEventBus = require('../../server/brain/tasks/task-event-bus');
 const { createTaskFrontman } = require('../../server/brain/tasks/task-frontman');
-
+// wait()
+// WHAT THIS DOES: wait is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call wait(...) where this helper behavior is needed.
 function wait(ms = 25) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }

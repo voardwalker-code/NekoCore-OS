@@ -1,34 +1,75 @@
+// ── Services · Llm Service ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This service module holds reusable business logic shared across runtime
+// paths.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: ./http-fetch. Keep import and
+// call-site contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 const { fetch } = require('./http-fetch');
 
 class LLMService {
+  // constructor()
+  // WHAT THIS DOES: constructor is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call constructor(...) where this helper behavior is needed.
   constructor(options = {}) {
     this.somaticAwareness = options.somaticAwareness || null;
     this.defaultMaxTokens = options.defaultMaxTokens || 16000;
   }
 
+  // _sanitizeOllamaContextWindow()
+  // WHAT THIS DOES: _sanitizeOllamaContextWindow is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call _sanitizeOllamaContextWindow(...) where this helper behavior is needed.
   _sanitizeOllamaContextWindow(value) {
     const n = Number(value);
     if (!Number.isFinite(n) || n <= 0) return null;
     return Math.max(1024, Math.min(32768, Math.floor(n)));
   }
 
+  // setDefaultMaxTokens()
+  // WHAT THIS DOES: setDefaultMaxTokens changes saved state or updates data.
+  // WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+  // HOW TO USE IT: call setDefaultMaxTokens(...) with the new values you want to persist.
   setDefaultMaxTokens(value) {
     if (Number.isFinite(value) && value > 0) {
       this.defaultMaxTokens = value;
     }
   }
 
+  // setSomaticAwareness()
+  // WHAT THIS DOES: setSomaticAwareness changes saved state or updates data.
+  // WHY IT EXISTS: centralizing updates prevents inconsistent writes in multiple places.
+  // HOW TO USE IT: call setSomaticAwareness(...) with the new values you want to persist.
   setSomaticAwareness(sa) {
     this.somaticAwareness = sa;
   }
 
+  // toChatEndpoint()
+  // WHAT THIS DOES: toChatEndpoint is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call toChatEndpoint(...) where this helper behavior is needed.
   toChatEndpoint(baseEndpoint) {
+    // ep()
+    // Purpose: helper wrapper used by this module's main flow.
     const ep = (baseEndpoint || '').trim();
     if (!ep) return '';
     if (ep.endsWith('/v1/chat/completions') || ep.endsWith('/chat/completions')) return ep;
     return ep.replace(/\/$/, '') + '/v1/chat/completions';
   }
 
+  // parseJsonBlock()
+  // WHAT THIS DOES: parseJsonBlock reshapes data from one form into another.
+  // WHY IT EXISTS: conversion rules live here so the same transformation is reused.
+  // HOW TO USE IT: pass input data into parseJsonBlock(...) and use the transformed output.
   parseJsonBlock(text) {
     if (!text || typeof text !== 'string') return null;
     let cleaned = text.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();

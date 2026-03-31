@@ -1,3 +1,18 @@
+// ── Brain · Blueprint Loader ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: fs, path. Keep import and
+// call-site contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 /**
  * Blueprint Loader
  *
@@ -46,6 +61,10 @@ const MODULE_MAP = {
  * @param {string} filePath - Absolute path to the .md file
  * @returns {string}
  */
+// _loadFile()
+// WHAT THIS DOES: _loadFile reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call _loadFile(...), then use the returned value in your next step.
 function _loadFile(filePath) {
   if (_cache.has(filePath)) return _cache.get(filePath);
   try {
@@ -64,6 +83,10 @@ function _loadFile(filePath) {
  * @param {string} name — one of CORE_NAMES (e.g. 'task-decomposition')
  * @returns {string} Blueprint content or empty string
  */
+// getCoreBlueprint()
+// WHAT THIS DOES: getCoreBlueprint reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call getCoreBlueprint(...), then use the returned value in your next step.
 function getCoreBlueprint(name) {
   if (!name || typeof name !== 'string') return '';
   return _loadFile(path.join(CORE_DIR, `${name}.md`));
@@ -74,6 +97,10 @@ function getCoreBlueprint(name) {
  * Used when injecting universal instructions into task prompts.
  * @returns {string}
  */
+// getAllCoreBlueprints()
+// WHAT THIS DOES: getAllCoreBlueprints reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call getAllCoreBlueprints(...), then use the returned value in your next step.
 function getAllCoreBlueprints() {
   return CORE_NAMES
     .map(name => _loadFile(path.join(CORE_DIR, `${name}.md`)))
@@ -86,6 +113,10 @@ function getAllCoreBlueprints() {
  * @param {string} taskType — e.g. 'research', 'code', 'writing', 'analysis', 'planning'
  * @returns {string} Blueprint content or empty string
  */
+// getModuleBlueprint()
+// WHAT THIS DOES: getModuleBlueprint reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call getModuleBlueprint(...), then use the returned value in your next step.
 function getModuleBlueprint(taskType) {
   if (!taskType || typeof taskType !== 'string') return '';
   const filename = MODULE_MAP[taskType];
@@ -105,6 +136,10 @@ function getModuleBlueprint(taskType) {
  *     'summarize' → quality-gate + output-format
  * @returns {string} Assembled blueprint text for prompt injection
  */
+// getBlueprintForPhase()
+// WHAT THIS DOES: getBlueprintForPhase reads or finds data and gives it back.
+// WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+// HOW TO USE IT: call getBlueprintForPhase(...), then use the returned value in your next step.
 function getBlueprintForPhase(taskType, options = {}) {
   const { phase = 'execute' } = options;
   const parts = [];
@@ -135,6 +170,10 @@ function getBlueprintForPhase(taskType, options = {}) {
  * List all available blueprint names (core + modules).
  * @returns {{ core: string[], modules: string[] }}
  */
+// listBlueprints()
+// WHAT THIS DOES: listBlueprints is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call listBlueprints(...) where this helper behavior is needed.
 function listBlueprints() {
   return {
     core: [...CORE_NAMES],
@@ -145,6 +184,10 @@ function listBlueprints() {
 /**
  * Clear the in-memory cache (for testing or hot reload).
  */
+// clearCache()
+// WHAT THIS DOES: clearCache removes, resets, or shuts down existing state.
+// WHY IT EXISTS: cleanup is explicit so stale state does not leak into new runs.
+// HOW TO USE IT: call clearCache(...) when you need a safe teardown/reset path.
 function clearCache() {
   _cache.clear();
 }

@@ -1,3 +1,18 @@
+// ── Brain · Model Router ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: fs, path. Keep import and
+// call-site contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // REM System — Model Router Module
 // Routes LLM calls to appropriate models based on cognitive role.
@@ -7,6 +22,10 @@ const fs = require('fs');
 const path = require('path');
 
 class ModelRouter {
+  // constructor()
+  // WHAT THIS DOES: constructor is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call constructor(...) where this helper behavior is needed.
   constructor(options = {}) {
     this.configPath = path.join(
       __dirname, 
@@ -27,6 +46,10 @@ class ModelRouter {
   /**
    * Load model configuration from file
    */
+  // load()
+  // WHAT THIS DOES: load reads or finds data and gives it back.
+  // WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+  // HOW TO USE IT: call load(...), then use the returned value in your next step.
   load() {
     try {
       this.migrateLegacyConfigIfNeeded();

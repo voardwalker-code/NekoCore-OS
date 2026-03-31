@@ -1,3 +1,19 @@
+// ── Services · Chat Pipeline ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This service module holds reusable business logic shared across runtime
+// paths.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: path, fs, ../entityPaths,
+// ../brain/orchestrator, ../brain/tasks/task-frontman. Keep import and
+// call-site contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // NekoCore OS — Chat Pipeline Service
 // Extracted from server.js P2-S6-a.
@@ -37,7 +53,10 @@ const SKILL_RUNTIME_TOOL_COMMANDS = new Set([
 ]);
 
 const pendingSkillToolApprovals = new Map();
-
+// cleanupPendingSkillApprovals()
+// WHAT THIS DOES: cleanupPendingSkillApprovals is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call cleanupPendingSkillApprovals(...) where this helper behavior is needed.
 function cleanupPendingSkillApprovals(now = Date.now()) {
   const ttlMs = 5 * 60 * 1000;
   for (const [id, pending] of pendingSkillToolApprovals.entries()) {
@@ -45,7 +64,10 @@ function cleanupPendingSkillApprovals(now = Date.now()) {
     if ((now - createdAt) > ttlMs) pendingSkillToolApprovals.delete(id);
   }
 }
-
+// isSkillApprovalRequired()
+// WHAT THIS DOES: isSkillApprovalRequired answers a yes/no rule check.
+// WHY IT EXISTS: guard checks are kept readable and reusable in one place.
+// HOW TO USE IT: call isSkillApprovalRequired(...) and branch logic based on true/false.
 function isSkillApprovalRequired(entityId) {
   if (!entityId) return true;
   try {
@@ -87,6 +109,10 @@ function isSkillApprovalRequired(entityId) {
  * @param {Function} deps.setLastAspectConfigs   - (cfg) => void
  * @param {Function} deps.getBrainLoop           - () => brainLoop | null
  */
+// createChatPipeline()
+// WHAT THIS DOES: createChatPipeline creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call createChatPipeline(...) before code that depends on this setup.
 function createChatPipeline(deps) {
   const {
     brain,
@@ -132,6 +158,10 @@ function createChatPipeline(deps) {
 
   // ── Build shared callback sets (used by both processChatMessage and processPendingSkillApproval) ──
 
+  // buildMemoryCallbacks()
+  // WHAT THIS DOES: buildMemoryCallbacks creates or initializes something needed by the flow.
+  // WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+  // HOW TO USE IT: call buildMemoryCallbacks(...) before code that depends on this setup.
   function buildMemoryCallbacks() {
     const memorySearchFn = async (query) => {
       if (!query) return { ok: false, error: 'No search query provided' };
@@ -145,6 +175,12 @@ function createChatPipeline(deps) {
         };
       } catch (e) { return { ok: false, error: 'Memory search failed: ' + e.message }; }
     };
+    // memoryCreateFn()
+    // Purpose: helper wrapper used by this module's main flow.
+    // memoryCreateFn()
+    // WHAT THIS DOES: memoryCreateFn is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call memoryCreateFn(...) where this helper behavior is needed.
     const memoryCreateFn = async (params) => {
       const { semantic, importance, emotion, topics } = params;
       if (!semantic) return { ok: false, error: 'No semantic content provided' };
@@ -155,7 +191,10 @@ function createChatPipeline(deps) {
     };
     return { memorySearchFn, memoryCreateFn };
   }
-
+  // buildArchiveCallbacks()
+  // WHAT THIS DOES: buildArchiveCallbacks creates or initializes something needed by the flow.
+  // WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+  // HOW TO USE IT: call buildArchiveCallbacks(...) before code that depends on this setup.
   function buildArchiveCallbacks() {
     const archiveSearchFn = async (query, yearRangeRaw, limitRaw) => {
       const entityId = brain.entityId || null;
@@ -189,7 +228,10 @@ function createChatPipeline(deps) {
     };
     return { archiveSearchFn };
   }
-
+  // buildSkillCallbacks()
+  // WHAT THIS DOES: buildSkillCallbacks creates or initializes something needed by the flow.
+  // WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+  // HOW TO USE IT: call buildSkillCallbacks(...) before code that depends on this setup.
   function buildSkillCallbacks() {
     const skillCreateFn = async (params) => {
       if (!brain.skillManager) return { ok: false, error: 'No entity loaded — skills unavailable' };
@@ -202,11 +244,23 @@ function createChatPipeline(deps) {
         return result;
       } catch (e) { return { ok: false, error: 'Skill proposal failed: ' + e.message }; }
     };
+    // skillListFn()
+    // Purpose: helper wrapper used by this module's main flow.
+    // skillListFn()
+    // WHAT THIS DOES: skillListFn is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call skillListFn(...) where this helper behavior is needed.
     const skillListFn = async () => {
       if (!brain.skillManager) return { ok: false, error: 'No entity loaded — skills unavailable' };
       try { return { ok: true, skills: brain.skillManager.list() }; }
       catch (e) { return { ok: false, error: 'Skill listing failed: ' + e.message }; }
     };
+    // skillEditFn()
+    // Purpose: helper wrapper used by this module's main flow.
+    // skillEditFn()
+    // WHAT THIS DOES: skillEditFn is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call skillEditFn(...) where this helper behavior is needed.
     const skillEditFn = async (params) => {
       if (!brain.skillManager) return { ok: false, error: 'No entity loaded — skills unavailable' };
       const { name, description, instructions } = params;
@@ -219,6 +273,12 @@ function createChatPipeline(deps) {
         return result;
       } catch (e) { return { ok: false, error: 'Skill edit proposal failed: ' + e.message }; }
     };
+    // profileUpdateFn()
+    // Purpose: helper wrapper used by this module's main flow.
+    // profileUpdateFn()
+    // WHAT THIS DOES: profileUpdateFn is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call profileUpdateFn(...) where this helper behavior is needed.
     const profileUpdateFn = async (params) => {
       if (!brain.entityId) return { ok: false, error: 'No entity loaded — profile update unavailable' };
       try {
@@ -294,6 +354,12 @@ function createChatPipeline(deps) {
 
     const debugTraceId = String(pipelineOptions.debugTraceId || `chatpipe_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`);
     const pipelineStartTs = Date.now();
+    // dbg()
+    // Purpose: helper wrapper used by this module's main flow.
+    // dbg()
+    // WHAT THIS DOES: dbg is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call dbg(...) where this helper behavior is needed.
     const dbg = (stage, detail) => {
       const iso = new Date().toISOString();
       const ms = Date.now() - pipelineStartTs;
@@ -895,6 +961,10 @@ function createChatPipeline(deps) {
     const { archiveSearchFn } = buildArchiveCallbacks();
 
     // Override profileUpdateFn to also update local entity reference on success
+    // profileUpdateWithSync()
+    // WHAT THIS DOES: profileUpdateWithSync is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call profileUpdateWithSync(...) where this helper behavior is needed.
     const profileUpdateWithSync = async (params) => {
       const r = await profileUpdateFn(params);
       if (r.ok && entity) {
@@ -965,6 +1035,12 @@ function createChatPipeline(deps) {
         dbg('tools.exec.done', { count: toolExec.toolResults.length });
         console.log(`  🔧 Executed ${toolExec.toolResults.length} tool call(s): ${toolExec.toolResults.map(t => t.command).join(', ')}`);
         const toolResultsBlock = workspaceTools.formatToolResults(toolExec.toolResults);
+        // followUpRuntime()
+        // Purpose: helper wrapper used by this module's main flow.
+        // followUpRuntime()
+        // WHAT THIS DOES: followUpRuntime is a helper used by this module's main flow.
+        // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+        // HOW TO USE IT: call followUpRuntime(...) where this helper behavior is needed.
         const followUpRuntime = (orchestrator.isRuntimeUsable && orchestrator.isRuntimeUsable(aspectConfigs.orchestrator))
           ? aspectConfigs.orchestrator : aspectConfigs.main;
         const followUpMessages = [
@@ -1181,6 +1257,12 @@ function createChatPipeline(deps) {
   async function processSingleLlmChatMessage(userMessage, chatHistory = [], { memoryRecall = false, memorySave = false, signal = null, debugTraceId = null } = {}) {
     const traceId = String(debugTraceId || `singlellm_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`);
     const singleStartTs = Date.now();
+    // dbg()
+    // Purpose: helper wrapper used by this module's main flow.
+    // dbg()
+    // WHAT THIS DOES: dbg is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call dbg(...) where this helper behavior is needed.
     const dbg = (stage, detail) => {
       const iso = new Date().toISOString();
       const ms = Date.now() - singleStartTs;
@@ -1290,6 +1372,12 @@ function createChatPipeline(deps) {
       ms: Date.now() - orchestrationStartTs
     });
     const defaultUsage = { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 };
+    // usage()
+    // Purpose: helper wrapper used by this module's main flow.
+    // usage()
+    // WHAT THIS DOES: usage is a helper used by this module's main flow.
+    // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+    // HOW TO USE IT: call usage(...) where this helper behavior is needed.
     const usage = (llmResult && typeof llmResult === 'object' && !Array.isArray(llmResult) && llmResult.usage)
       ? llmResult.usage
       : defaultUsage;

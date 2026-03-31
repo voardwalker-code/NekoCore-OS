@@ -1,4 +1,18 @@
 #!/usr/bin/env node
+// ── Module · Neko Start ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This module belongs to the NekoCore OS codebase and provides focused
+// subsystem behavior.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: child_process, path, fs,
+// http. Keep import and call-site contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
 'use strict';
 // ── NekoCore OS Background Launcher ─────────────────────────────────────────
 // Usage:  node neko-start.js          → start server in background
@@ -24,7 +38,10 @@ if (arg === '--stop') {
 } else {
   start();
 }
-
+// start()
+// WHAT THIS DOES: start creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call start(...) before code that depends on this setup.
 function start() {
   if (fs.existsSync(PID_FILE)) {
     const pid = parseInt(fs.readFileSync(PID_FILE, 'utf8'), 10);
@@ -48,7 +65,10 @@ function start() {
   console.log(`[NekoCore OS] Stop with: node neko-start.js --stop`);
   process.exit(0);
 }
-
+// stop()
+// WHAT THIS DOES: stop removes, resets, or shuts down existing state.
+// WHY IT EXISTS: cleanup is explicit so stale state does not leak into new runs.
+// HOW TO USE IT: call stop(...) when you need a safe teardown/reset path.
 function stop() {
   if (!fs.existsSync(PID_FILE)) {
     console.log('[NekoCore OS] No PID file found — server not running.');
@@ -63,7 +83,10 @@ function stop() {
   }
   fs.unlinkSync(PID_FILE);
 }
-
+// status()
+// WHAT THIS DOES: status is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call status(...) where this helper behavior is needed.
 function status() {
   if (!fs.existsSync(PID_FILE)) {
     console.log('[NekoCore OS] Not running (no PID file).');
@@ -89,7 +112,10 @@ function status() {
     console.log(`[NekoCore OS] Process alive (PID ${pid}) but health check timed out.`);
   });
 }
-
+// isRunning()
+// WHAT THIS DOES: isRunning answers a yes/no rule check.
+// WHY IT EXISTS: guard checks are kept readable and reusable in one place.
+// HOW TO USE IT: call isRunning(...) and branch logic based on true/false.
 function isRunning(pid) {
   try { process.kill(pid, 0); return true; } catch { return false; }
 }

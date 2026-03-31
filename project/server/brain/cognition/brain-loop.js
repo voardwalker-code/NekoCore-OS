@@ -1,3 +1,19 @@
+// ── Brain · Brain Loop ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: fs, path,
+// ../bus/thought-types, ./phases, ./phases/phase-archive. Keep import and
+// call-site contracts aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ============================================================
 // REM System — Brain Loop Module
 // Thin scheduler that drives 14 cognitive phases every 30 seconds.
@@ -10,6 +26,10 @@ const ThoughtTypes = require('../bus/thought-types');
 const PHASES = require('./phases');
 
 class BrainLoop {
+  // constructor()
+  // WHAT THIS DOES: constructor is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call constructor(...) where this helper behavior is needed.
   constructor(options = {}) {
     this.memDir = options.memDir || path.join(__dirname, '../../../memories');
     this.interval = options.interval || 30000; // Check every 30s

@@ -1,3 +1,19 @@
+// ── Tests · Nekocore Memory.Test ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This test file validates behavior and guards against regressions in its
+// target subsystem.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: node:test,
+// node:assert/strict, fs, path, os. Keep import and call-site contracts
+// aligned during refactors.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
@@ -23,7 +39,10 @@ const {
   storeNekoConversationSnapshot,
   encodeNekoConversationMemory
 } = require('../../server/services/nekocore-memory');
-
+// createTestEntity()
+// WHAT THIS DOES: createTestEntity creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call createTestEntity(...) before code that depends on this setup.
 function createTestEntity(entityId) {
   const root = entityPaths.getEntityRoot(entityId);
   fs.mkdirSync(path.join(root, 'index'), { recursive: true });
@@ -34,11 +53,13 @@ function createTestEntity(entityId) {
   fs.writeFileSync(path.join(root, 'entity.json'), JSON.stringify({ id: entityId, name: entityId }, null, 2), 'utf8');
   return root;
 }
-
+// removeTestEntity()
+// WHAT THIS DOES: removeTestEntity removes, resets, or shuts down existing state.
+// WHY IT EXISTS: cleanup is explicit so stale state does not leak into new runs.
+// HOW TO USE IT: call removeTestEntity(...) when you need a safe teardown/reset path.
 function removeTestEntity(entityId) {
   fs.rmSync(entityPaths.getEntityRoot(entityId), { recursive: true, force: true });
 }
-
 function makeEntityId(prefix) {
   return `${prefix}_${Date.now()}_${Math.random().toString(16).slice(2, 8)}`;
 }

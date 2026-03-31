@@ -1,3 +1,17 @@
+// ── Services · Config Service ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This service module holds reusable business logic shared across runtime
+// paths.
+//
+// WHAT USES THIS:
+// Primary dependencies in this module include: fs, path. Keep import and
+// call-site contracts aligned during refactors.
+//
+// EXPORTS:
+// Exposed API includes: ConfigService, TOKEN_LIMIT_DEFAULTS.
+// ─────────────────────────────────────────────────────────────────────────────
+
 const fs = require('fs');
 const path = require('path');
 
@@ -73,6 +87,10 @@ const DEFAULT_GLOBAL_CONFIG = {
 };
 
 class ConfigService {
+  // constructor()
+  // WHAT THIS DOES: constructor is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call constructor(...) where this helper behavior is needed.
   constructor() {
     this._defaultMaxTokens = 16000;
     this._tokenLimits = {};
@@ -82,10 +100,18 @@ class ConfigService {
     this.refreshTokenLimitsCache();
   }
 
+  // _makeDefaultConfig()
+  // WHAT THIS DOES: _makeDefaultConfig creates or initializes something needed by the flow.
+  // WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+  // HOW TO USE IT: call _makeDefaultConfig(...) before code that depends on this setup.
   _makeDefaultConfig() {
     return JSON.parse(JSON.stringify(DEFAULT_GLOBAL_CONFIG));
   }
 
+  // _ensureConfigDir()
+  // WHAT THIS DOES: _ensureConfigDir is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call _ensureConfigDir(...) where this helper behavior is needed.
   _ensureConfigDir() {
     try {
       if (!fs.existsSync(CONFIG_DIR)) {
@@ -97,6 +123,10 @@ class ConfigService {
     }
   }
 
+  // _migrateLegacyIfNeeded()
+  // WHAT THIS DOES: _migrateLegacyIfNeeded is a helper used by this module's main flow.
+  // WHY IT EXISTS: it keeps repeated logic in one reusable place.
+  // HOW TO USE IT: call _migrateLegacyIfNeeded(...) where this helper behavior is needed.
   _migrateLegacyIfNeeded() {
     try {
       if (fs.existsSync(CONFIG_FILE)) return;
@@ -109,6 +139,10 @@ class ConfigService {
     }
   }
 
+  // load()
+  // WHAT THIS DOES: load reads or finds data and gives it back.
+  // WHY IT EXISTS: it keeps "read" logic in one place so other code stays simple.
+  // HOW TO USE IT: call load(...), then use the returned value in your next step.
   load() {
     try {
       this._ensureConfigDir();

@@ -1,3 +1,22 @@
+// ── Brain · Dream Intuition Adapter ────────────────────────────────────────────────────
+//
+// HOW THIS MODULE WORKS:
+// This brain module implements cognitive/runtime behavior used by
+// orchestration or memory systems.
+//
+// WHAT USES THIS:
+// Used by related flows in its subsystem. Keep call contracts stable during
+// readability-only edits.
+//
+// EXPORTS:
+// No explicit CommonJS exports detected; module may be IIFE/side-effect
+// based.
+// ─────────────────────────────────────────────────────────────────────────────
+
+// buildDreamIntuitionInput()
+// WHAT THIS DOES: buildDreamIntuitionInput creates or initializes something needed by the flow.
+// WHY IT EXISTS: setup steps are grouped here so startup behavior stays predictable.
+// HOW TO USE IT: call buildDreamIntuitionInput(...) before code that depends on this setup.
 function buildDreamIntuitionInput(turnSignals = {}, userMessage = '') {
   return {
     userMessage: String(userMessage || '').slice(0, 1200),
@@ -8,7 +27,10 @@ function buildDreamIntuitionInput(turnSignals = {}, userMessage = '') {
     intentHints: Array.isArray(turnSignals.intentHints) ? turnSignals.intentHints.slice(0, 6) : []
   };
 }
-
+// toDreamIntuitionArtifact()
+// WHAT THIS DOES: toDreamIntuitionArtifact is a helper used by this module's main flow.
+// WHY IT EXISTS: it keeps repeated logic in one reusable place.
+// HOW TO USE IT: call toDreamIntuitionArtifact(...) where this helper behavior is needed.
 function toDreamIntuitionArtifact(rawText) {
   const text = String(rawText || '').trim();
   if (!text) return 'No intuition links.';
@@ -21,6 +43,10 @@ async function runDreamIntuition(runtime, input, callLLM, maxTokens = 200) {
   }
 
   // T3-1: Skip 1D entirely when turn signals carry no meaningful content
+  // hasSignals()
+  // WHAT THIS DOES: hasSignals answers a yes/no rule check.
+  // WHY IT EXISTS: guard checks are kept readable and reusable in one place.
+  // HOW TO USE IT: call hasSignals(...) and branch logic based on true/false.
   const hasSignals = (input.subjects && input.subjects.length > 0)
     || (input.events && input.events.length > 0)
     || (input.intentHints && input.intentHints.length > 0);
